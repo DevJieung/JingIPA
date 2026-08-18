@@ -16,9 +16,18 @@ const SCRIPTS := {
 	"dino": "res://games/dino/scripts/game.gd",
 	"math": "res://games/math/game/battle.gd",
 	"kanoodle": "res://games/kanoodle/kanoodle.gd",
+	"torch": "res://games/torch/scripts/torch_game.gd",
 }
 
 var target_stages := 18
+## 등록된 게임이 전부 한 번씩 나올 때까지는 더 돈다. 여기까지 가도 안 나오면 실패.
+##
+## ★ 왜 필요한가: 다음 게임은 가중치 랜덤이라, 게임이 늘수록 "18번째까지 한 번도
+##   안 뽑힌 게임"이 확률적으로 생긴다 (게임 넷이면 초등 약 3%, 미취학 약 9%).
+##   그러면 코드가 멀쩡한데도 검증이 가끔 빨간불이 되고, 그 빨간불이 진짜 회귀처럼
+##   읽힌다 — 이 검사는 화면 전환 잠금 사고를 잡은 유일한 검사라 신뢰도가 곧 방어선이다.
+##   전역 난수를 고정하는 방법은 못 쓴다: 게임들이 _ready 에서 randomize() 를 부른다.
+var max_stages := 60
 var _seen: Dictionary = {}
 var _order: Array[String] = []
 var _last_iid := 0
@@ -85,7 +94,13 @@ func _process(delta: float) -> void:
 		_seen[id] = int(_seen.get(id, 0)) + 1
 		_say("  %d번째 -> %s" % [Shell.journey_stage, id])
 
-	if Shell.journey_stage >= target_stages or not Shell.journey_active:
+	if not Shell.journey_active:
+		_report()
+		return
+	if Shell.journey_stage >= target_stages and _missing().is_empty():
+		_report()
+		return
+	if Shell.journey_stage >= max_stages:
 		_report()
 		return
 	if _stuck > 45.0 or Time.get_ticks_msec() - _t0 > 600000:
@@ -115,6 +130,14 @@ func _process(delta: float) -> void:
 			_say("   판=%s 트레이=%s 손=%s done=%s busy=%s"
 					% [cur.get("_n"), (cur.get("_tray") as Array).size(),
 					   cur.get("_held"), cur.get("_done"), cur.get("_busy")])
+		elif _id_of(path) == "torch":
+			var bm: Object = cur.get("beam")
+			_say("   state=%s busy=%s found=%s/%s 빛=%s r=%s 어둠=%s"
+					% [cur.get("state"), cur.get("busy"), cur.get("found"),
+					   (cur.get("dinos") as Array).size(),
+					   bm.get("on") if bm != null else "?",
+					   bm.get("radius") if bm != null else "?",
+					   bm.get("dark") if bm != null else "?"])
 		_say("   Router._busy=%s / Shell.journey_active=%s journey_stage=%d current_game=%s"
 				% [Router.get("_busy"), Shell.journey_active, Shell.journey_stage, Shell.current_game])
 		_say("   Router.journey_stage=%d / 최근=%s" % [Router.journey_stage, str(Shell.get("_journey_recent"))])
@@ -125,6 +148,17 @@ func _process(delta: float) -> void:
 		"dino": _drive_dino(cur)
 		"math": _drive_battle(cur)
 		"kanoodle": _drive_nood(cur)
+		"torch": _drive_torch(cur)
+
+
+## 등록됐는데 아직 한 번도 안 나온 게임
+func _missing() -> PackedStringArray:
+	var out := PackedStringArray()
+	for g in GameRegistry.LIST:
+		var gid := String(g["id"])
+		if SCRIPTS.has(gid) and int(_seen.get(gid, 0)) <= 0:
+			out.append(gid)
+	return out
 
 
 ## 이 게임이 "앞으로 나아갔는가"를 한 문자열로. 안 바뀌면 멈춘 것이다.
@@ -143,6 +177,8 @@ func _progress_of(cur: Node, path: String) -> String:
 			return "%s/%s/%s" % [cur.get("found"), cur.get("stage"), cur.get("state")]
 		"kanoodle":
 			return "%s/%s/%s" % [(cur.get("_tray") as Array).size(), cur.get("stage"), cur.get("_done")]
+		"torch":
+			return "%s/%s/%s" % [cur.get("found"), cur.get("stage"), cur.get("state")]
 	return ""
 
 
@@ -215,6 +251,27 @@ func _drive_dino(g: Node) -> void:
 		return
 
 
+## 손전등 찾기 자동 플레이 — 아이가 하는 그대로 같은 자리를 두 번 두드린다.
+##
+## ★ 첫 탭은 빛만 옮기고 두 번째 탭이 찾는다. 검사기가 이 순서를 그대로 밟아야
+##   "어두운 데를 찍어도 찾아지는" 회귀가 여기서도 걸린다 (한 번에 찾아지면
+##   방이 절반의 탭으로 끝나므로 tests/torch_check.gd 가 그것까지 못 박는다).
+func _drive_torch(g: Node) -> void:
+	g.set("_slow", 0.08)
+	if bool(g.get("busy")):
+		return
+	if String(g.get("state")) == "intro":
+		g.call("skip_intro")     # 해질녘 연출은 여기서 볼 것이 아니다
+		return
+	if String(g.get("state")) != "play":
+		return
+	for d in (g.get("dinos") as Array):
+		if bool(d.get("found")):
+			continue
+		g.call("_tap", (d.call("hit_rect") as Rect2).get_center())
+		return
+
+
 func _drive_battle(b: Node) -> void:
 	if bool(b.get("_busy")) or bool(b.get("_finished")):
 		return
@@ -239,14 +296,11 @@ func _report() -> void:
 	for i in range(1, _order.size()):
 		run = run + 1 if _order[i] == _order[i - 1] else 1
 		worst = maxi(worst, run)
-	var missing := PackedStringArray()
+	var missing := _missing()
 	var unknown := PackedStringArray()
 	for g in GameRegistry.LIST:
-		var gid := String(g["id"])
-		if not SCRIPTS.has(gid):
-			unknown.append(gid)
-		elif int(_seen.get(gid, 0)) <= 0:
-			missing.append(gid)
+		if not SCRIPTS.has(String(g["id"])):
+			unknown.append(String(g["id"]))
 	if not unknown.is_empty():
 		_say("!! 검사기가 모르는 게임: %s — tests/journey_runner.gd 의 SCRIPTS 에 넣어라"
 				% ", ".join(unknown))

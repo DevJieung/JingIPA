@@ -174,6 +174,35 @@ func _paint_icon(id: String, c: Vector2, w: float) -> void:
 					draw_rect(Rect2(p, Vector2(cw - 5.0, cw - 5.0)),
 							Color("f2a03d") if on else Color("e2ded6"))
 			_text_centered("7", Vector2(c.x, c.y + 58.0), 44, INK)
+		"torch":
+			# 깜깜한 방 + 손전등 빛 웅덩이 + 그 안에 든 공룡.
+			# 이 카드 하나로 "어두운데 비추면 보인다"가 글자 없이 읽혀야 한다.
+			# ★ 상자 아래끝은 c.y + 54 까지만. 부제 글자가 c.y + 86 부근에서 시작하므로
+			#   더 내려오면 글자를 덮는다 (실제로 한 번 덮었다).
+			_round_rect(Rect2(c.x - 92.0, c.y - 78.0, 184.0, 132.0), 16.0, Color("241f3d"))
+			var lc := Vector2(c.x + 16.0, c.y + 4.0)
+			# 왼쪽 위에서 뻗어 나오는 빛줄기.
+			# ★ 네 점을 눈대중으로 찍으면 안 된다 — 축과 거의 나란해져서 폭 4px 짜리
+			#   실오라기가 나온다(실제로 그랬다). 축의 **수직** 방향으로 벌려서 만든다.
+			var tip := Vector2(c.x - 58.0, c.y - 62.0)
+			var ax := (lc - tip).normalized()
+			var pp := Vector2(-ax.y, ax.x)
+			draw_colored_polygon(PackedVector2Array([
+					tip + pp * 7.0, lc + pp * 38.0, lc - pp * 38.0, tip - pp * 7.0]),
+					Color(1.0, 0.94, 0.74, 0.11))
+			for i in 4:
+				draw_circle(lc, 46.0 - 9.0 * float(i), Color(1.0, 0.94, 0.74, 0.085))
+			var ti := DinoSpecies.index_of("stegosaurus")
+			var ttex := DinoSpecies.texture(ti)
+			if ttex != null:
+				var tdr := DinoSpecies.draw_rect_for(ti)
+				var tsc := minf(76.0 / maxf(tdr.size.x, 1.0), 54.0 / maxf(tdr.size.y, 1.0))
+				draw_texture_rect(ttex, Rect2(lc + tdr.position * tsc
+						+ Vector2(0, tdr.size.y * tsc * 0.5), tdr.size * tsc), false)
+			else:
+				_ellipse(lc, Vector2(30, 22), Color("8cc76a"))
+			# 손전등 몸통
+			_round_rect(Rect2(c.x - 88.0, c.y - 74.0, 32.0, 19.0), 7.0, Color("ffd166"))
 		"kanoodle":
 			# 격자 위에 조각 두 개
 			var g := 22.0

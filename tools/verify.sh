@@ -96,7 +96,18 @@ godot_run 600 "$TMP/nood_pre.txt" res://tests/kanoodle_check.tscn -- --pre
 grep -E '판 [0-9]+개|판정:|^!!' "$TMP/nood_pre.txt"
 expect "kanoodle_check --pre" "판정: 정상" "$TMP/nood_pre.txt"
 
-step "5b. 아무거나 — 게임을 오가는 흐름"
+step "5b. 손전등 찾기 — 방 배치 + 실제 플레이"
+# ★ 여기서만 잡히는 것: **어두운 데의 공룡이 눌러서 찾아지지 않는가.** 이게 뒤집히면
+#   게임이 그냥 "어두운 공룡 찾기"가 되는데, 화면을 눈으로 봐서는 절대 안 보인다.
+#   그리고 어둠 x 가림 x 좁은 빛의 **곱**에 상한이 있는지도 여기가 강제한다.
+godot_run 600 "$TMP/torch.txt" res://tests/torch_check.tscn
+grep -E '방 [0-9]+개|판정:|^!!' "$TMP/torch.txt"
+expect "torch_check" "판정: 정상" "$TMP/torch.txt"
+godot_run 600 "$TMP/torch_pre.txt" res://tests/torch_check.tscn -- --pre
+grep -E '방 [0-9]+개|판정:|^!!' "$TMP/torch_pre.txt"
+expect "torch_check --pre" "판정: 정상" "$TMP/torch_pre.txt"
+
+step "5c. 아무거나 — 게임을 오가는 흐름"
 # ★ 게임과 게임 **사이**를 보는 유일한 검사다. 화면 전환 잠금이 안 풀려서
 #   그 뒤 모든 전환이 조용히 무시되던 사고가 여기서 잡혔다.
 godot_run 900 "$TMP/journey.txt" res://tests/journey_check.tscn
@@ -104,7 +115,7 @@ grep -E '섬 한 바퀴|게임별|판정:|^!!' "$TMP/journey.txt"
 expect "journey_check" "판정: 정상" "$TMP/journey.txt"
 
 if [ "$QUICK" -eq 0 ]; then
-	step "5c. 개구리 용사 — 시연을 켠 채로 한 탄씩 (test_runner 가 안 보는 경로)"
+	step "5d. 개구리 용사 — 시연을 켠 채로 한 탄씩 (test_runner 가 안 보는 경로)"
 	godot_run 1500 "$TMP/battle.txt" res://tests/battle_check.tscn
 	grep -E '탄:|판정:|^!!' "$TMP/battle.txt"
 	expect "battle_check" "판정: 정상" "$TMP/battle.txt"

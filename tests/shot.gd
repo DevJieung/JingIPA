@@ -43,6 +43,13 @@ func _run() -> void:
 				Shell.profile()["kanoodle"] = {
 					"best_stage": maxi(1, arg), "skill": 0, "cleared": 0,
 				}
+			"torch":
+				scene = "res://games/torch/torch.tscn"
+				# arg 를 탄으로 쓴다 — 1탄만 찍으면 좁아진 빛도 짙어진 어둠도 못 본다.
+				Shell.profile()["torch"] = {
+					"best_stage": maxi(1, arg), "lifetime_found": 0,
+					"skill": 0, "ease_streak": 0, "cushion": 0,
+				}
 			"tiers", "map":
 				scene = Router.TIERS
 				MathGame.stars = {"0": 3, "1": 2, "2": 1, "3": 3, "4": 1}
@@ -73,6 +80,23 @@ func _run() -> void:
 			(inst as Control).size = get_viewport().get_visible_rect().size
 		if inst.has_method("_layout"):
 			inst.call("_layout")
+		# ★ 손전등 찾기는 방을 밝게 한 번 보여 준 뒤에야 해가 진다. 그냥 찍으면
+		#   밝은 방만 나온다 — 연출을 건너뛰고 공룡 하나를 비춘 채로 찍는다.
+		if kind == "torch":
+			await get_tree().process_frame
+			inst.call("skip_intro")
+			var ds: Array = inst.get("dinos")
+			# torch:0 = 아직 아무것도 안 누른 화면 (불 꺼짐 + 안내 동그라미)
+			if arg > 0 and not ds.is_empty():
+				# 한 마리는 찾아 둔다 — 찾은 공룡이 어둠 위에서 빛나는지 눈으로 보려고.
+				var c0: Vector2 = (ds[0].call("hit_rect") as Rect2).get_center()
+				inst.call("_tap", c0)
+				inst.call("_tap", c0)
+				(inst.get("hud") as Object).call("hide_card")
+				var last: Object = ds[ds.size() - 1]
+				(inst.get("beam") as Object).call("aim",
+						(last.call("hit_rect") as Rect2).get_center()
+						+ Vector2(0, 40) if ds.size() > 1 else c0)
 		for i in 40:
 			await get_tree().process_frame
 		await RenderingServer.frame_post_draw

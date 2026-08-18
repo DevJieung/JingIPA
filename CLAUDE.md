@@ -1,9 +1,10 @@
 # CLAUDE.md — 이 저장소에서 작업할 때
 
 **놀이 상자** — 아이 둘(나이 차 있음)을 위한 놀이 모음. Godot 4.7.1, 안드로이드/iOS.
-게임 셋이 하나의 앱에 들어 있고, 앞으로 더 늘어난다.
+게임 넷이 하나의 앱에 들어 있고, 앞으로 더 늘어난다.
 
 - **공룡 찾기** (`games/dino/`) — 방에 숨은 공룡을 콕 눌러 찾는다
+- **손전등 찾기** (`games/torch/`) — 깜깜한 방을 좁은 손전등으로 비춰 공룡을 찾는다
 - **셈놀이** (`games/math/`) — 블록으로 왜 그런지 보여 주는 사칙연산
 - **블록 채우기** (`games/kanoodle/`) — 조각을 기둥에 떨어뜨려 가이드 모양대로 쌓는다
 
@@ -14,6 +15,7 @@
 전체 설명은 [`README.md`](README.md). 갈무리 절차는 [`WRAPUP.md`](WRAPUP.md).
 게임별 규칙은 [`docs/dino-rules.md`](docs/dino-rules.md) · [`docs/math-rules.md`](docs/math-rules.md)
 — **둘 다 여전히 유효하다. 고치기 전에 반드시 읽어라.**
+손전등 찾기는 [`docs/torch-rules.md`](docs/torch-rules.md).
 
 ---
 
@@ -28,12 +30,13 @@ shell/            앱 셸 — 게임 목록 말고는 게임을 모른다
   boot.gd / hub.gd  진입점 / 둥지방
 core/fonts/       DinoKR.ttf (프로젝트 fallback) · Jua-Regular.ttf (개구리 용사 전용)
 games/dino/       공룡 찾기
+games/torch/      손전등 찾기 (공룡 찾기의 방·가구·공룡을 빌려 쓴다)
 games/math/       셈놀이 (오토로드 MathGame / Audio 포함)
 games/kanoodle/   블록 채우기
 tools/            verify.sh · check_font.py · screenshot.py · dino/ · frog/
 tests/            test_runner · shot · dino_dump · ns_check
                   journey_check (게임 사이) · battle_check (시연 켠 전탄)
-                  kanoodle_check (퍼즐 생성기)
+                  kanoodle_check (퍼즐 생성기) · torch_check (어둠·빛·찾기 규칙)
 ```
 
 **새 게임을 넣을 때 손대는 것은 `shell/game_registry.gd` 의 배열 한 줄과 씬 하나뿐이다.**
@@ -150,7 +153,14 @@ adb install -r rogame-test.apk
     (실제로 물렸다 — `found=254` 는 `--selftest` 를 두 번 돌린 값이었다).
 24. **`use_custom_user_dir=true` 를 지우지 마라.** 이름만 넣으면 조용히 무시되고
     `config/name` 이 저장 폴더 이름이 된다. 앱 이름을 바꾸는 순간 기록이 사라진 것처럼 보인다.
-25. **그래픽은 코드로 그린다.** 이미지 파일은 공룡 50종 PNG 뿐이다 (개구리 아트 16MB 는 걷어냈다).
+25. **어둠은 완전한 검정이 아니다.** 손전등 찾기의 어둠에는 상한이 있고
+    (`TorchGen.DARK_CEIL`), 놀이 중에는 **내려가기만** 한다. 방은 밝게 시작해서 해가 지고,
+    창의 달빛은 절대 안 꺼지며, 다 찾으면 불이 켜진다. 이 넷 중 하나라도 빼면
+    이 나이대에게는 놀이가 아니라 공포다. 어둠 x 가림 x 좁은 빛은 **곱해진다** —
+    셋을 따로 올리면 각각은 온건한데 합쳐서 "안 보이는 방"이 된다
+    (`TorchGen.hardness()` 가 그 곱을 재고 `tests/torch_check.gd` 가 상한을 강제한다).
+    자세한 것은 [`docs/torch-rules.md`](docs/torch-rules.md).
+26. **그래픽은 코드로 그린다.** 이미지 파일은 공룡 50종 PNG 뿐이다 (개구리 아트 16MB 는 걷어냈다).
     새 게임은 새 이미지 자산 0장이 원칙이다.
 
 ---
@@ -172,7 +182,8 @@ tools/verify.sh quick                                            # 빠르게
 stdbuf -oL ~/.local/bin/godot --headless --path . res://tests/journey_check.tscn   # 섬 한 바퀴
 stdbuf -oL ~/.local/bin/godot --headless --path . res://tests/battle_check.tscn    # 시연 켠 전탄
 stdbuf -oL ~/.local/bin/godot --headless --path . res://tests/kanoodle_check.tscn  # 퍼즐 생성기
-python3 tools/screenshot.py kanoodle:0 hub:0 tiers:0 battle:4                      # Xvfb 촬영
+stdbuf -oL ~/.local/bin/godot --headless --path . res://tests/torch_check.tscn     # 어둠·빛·찾기 규칙
+python3 tools/screenshot.py kanoodle:0 torch:1 torch:20 hub:0 battle:4             # Xvfb 촬영
 python3 tools/dino/render_preview.py                             # 위 JSON 을 PNG 로
 python3 tools/screenshot.py map:0 battle:8                       # Xvfb 로 실제 촬영
 python3 tools/check_font.py
@@ -216,10 +227,14 @@ ROGAME_DEBUG=1 ~/.local/bin/godot --headless --path . --quit-after 200   # 이�
 | 블록 채우기 난이도 | `games/kanoodle/nood_gen.gd` 의 `axes()` |
 | **「섬 한 바퀴」 (게임 섞기)** | `shell/shell.gd` 의 `journey_*` + `pick_journey_game()` |
 | 여행에서 게임이 나올 확률 | `shell/game_registry.gd` 의 `journey` (나이대별 가중치) |
+| 여행 한 판의 놀이 단위 | `shell/game_registry.gd` 의 `journey_units` (셸은 게임 이름을 모른다) |
 | 여행 개구리 구간의 탄 고르기 | `shell/router.gd` 의 `_pick_journey_tier()` |
 | 저장 스키마 · 프로필 · 도감 | `shell/shell.gd` |
 | 옛 저장 이관 | `shell/migrate.gd` (순수 함수) |
 | 화면 전환 · 뷰포트 | `shell/router.gd` + `Shell.enter_game()` |
+| **손전등 찾기 난이도** | `games/torch/scripts/torch_gen.gd` 의 `axes()` — **단일 진실 소스** |
+| 손전등 빛·어둠 그리기 | `games/torch/scripts/torch_beam.gd` (판정 `lit()` 도 같은 파일) |
+| 손전등 찾기 흐름·힌트 | `games/torch/scripts/torch_game.gd` |
 | **공룡 찾기 난이도** | `games/dino/scripts/room_gen.gd` 의 `axes()` — **단일 진실 소스** |
 | 가림 정도(파고듦) | `games/dino/scripts/room_gen.gd` 의 `solve_u()` / `rooms.gd` 의 `spot_transform` |
 | 가림 밴드 | `games/dino/scripts/rooms.gd` 의 `band()` — 생성기와 검사기가 같은 함수를 본다 |

@@ -35,6 +35,10 @@ const LIST := [
 		# 미취학은 셈보다 찾기를 훨씬 많이 — 그래야 랜덤이 벽이 되지 않는다.
 		"journey": {"pre": 6, "elem": 4},
 		"journey_caption": "공룡 찾기",
+		# 「섬 한 바퀴」에서 이 게임 한 판이 놀이 단위 몇 개인가.
+		# ★ 셀 줄 아는 것은 게임이 아니라 이 표다 — 셸이 게임 이름을 알면 안 되기 때문이다.
+		#   셈놀이는 0 이다: 문제마다 이미 1씩 세고 있다(count_session_question).
+		"journey_units": 3,
 	},
 	{
 		"id": "math",
@@ -50,8 +54,30 @@ const LIST := [
 		"bgm": "bgm_menu",
 		"journey": {"pre": 2, "elem": 4},
 		"journey_caption": "셈놀이",
+		"journey_units": 0,
 		# 랜덤에서는 타이틀을 거치지 않고 문제로 바로 들어간다.
 		"journey_scene": "res://games/math/game/battle.tscn",
+	},
+	{
+		"id": "torch",
+		"title": "손전등 찾기",
+		"subtitle": "깜깜한 방을 비춰 콕!",
+		"color": Color("5b4b8a"),
+		"scene": "res://games/torch/torch.tscn",
+		# ★ 공룡 찾기의 방·가구를 그대로 쓰므로 뷰포트도 **글자 그대로 같아야 한다.**
+		#   800 으로 두면 소품 y 좌표 42개(games/dino/scripts/rooms.gd)가 통째로 어긋난다.
+		"viewport": {
+			"size": Vector2i(1280, 720),
+			"keep": true,
+			# ★ 레터박스 여백 색. 어두운 방을 저녁빛 액자가 두른다 —
+			#   기기 화면이 통째로 새까매지는 일이 없게 하는 장치다 (무서움 완화).
+			"clear": Color(0.29, 0.26, 0.38),
+		},
+		"bgm": "",
+		# 미취학에게는 여행에서 갑자기 어두워지는 일이 드물어야 한다 — 가중치를 낮게.
+		"journey": {"pre": 2, "elem": 3},
+		"journey_caption": "손전등 찾기",
+		"journey_units": 3,
 	},
 	{
 		"id": "kanoodle",
@@ -67,6 +93,7 @@ const LIST := [
 		"bgm": "",
 		"journey": {"pre": 3, "elem": 4},
 		"journey_caption": "블록 채우기",
+		"journey_units": 3,
 	},
 ]
 

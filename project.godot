@@ -13,7 +13,7 @@ config/name="놀이 상자"
 ; ★ 이 ASCII 이름과 번들 ID 는 바꾸지 마라. 바꾸면 애플/안드로이드가 다른 앱으로 보고
 ;   아이 폰의 기존 저장 데이터가 통째로 남남이 된다. 표시 이름(config/name)만 바꾼다.
 config/name.ios="DinoIsland"
-config/description="공룡 찾기 · 셈놀이 · 블록 채우기 — 아이용 놀이 모음"
+config/description="공룡 찾기 · 손전등 찾기 · 셈놀이 · 블록 채우기 — 아이용 놀이 모음"
 config/version="1.0.0"
 ; ★저장 폴더 이름을 앱 표시 이름에서 분리한다.
 ;   use_custom_user_dir 이 true 여야 custom_user_dir_name 이 실제로 쓰인다 —

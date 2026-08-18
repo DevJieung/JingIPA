@@ -134,6 +134,14 @@ static func default_tuning(band: String) -> Dictionary:
 			"dino_cov_lo": 26, "dino_cov_hi": 52, "dino_cov_ceil": 66,
 			"dino_hint_sec": 8.0,
 			"dino_dex_hunt": false,
+			# 손전등 찾기 — 어린 아이는 빛이 넓고 어둠이 옅다.
+			# 이 나이대는 야간공포가 가장 흔한 구간이라 어둠 손잡이를 확실히 벌려 둔다.
+			"torch_min": 2, "torch_max": 3, "torch_step": 12.0,
+			"torch_cov_lo": 26, "torch_cov_hi": 28, "torch_cov_ceil": 36,
+			"torch_props_max": 4,
+			"torch_beam": 360.0, "torch_beam_min": 280.0,
+			"torch_dark": 0.76, "torch_dark_max": 0.84,
+			"torch_hint_sec": 8.0,
 			# 블록 채우기 — 4x4 에서 시작하고, 손이 비면 조각이 저절로 들린다.
 			# 그러면 판만 두드려도 놀이가 굴러간다 (트레이를 한 번도 안 봐도 된다).
 			"nood_autopick": true,
@@ -152,6 +160,15 @@ static func default_tuning(band: String) -> Dictionary:
 		"dino_cov_lo": 30, "dino_cov_hi": 58, "dino_cov_ceil": 80,
 		"dino_hint_sec": 13.0,
 		"dino_dex_hunt": true,
+		# 손전등 찾기 — 어둠이 숨기므로 마릿수·가구·가림%는 공룡 찾기보다 낮다.
+		# 손전등 반경 하한(200)은 규칙이 아니라 안전장치다: 더 좁히면 방 하나를
+		# 훑는 탭 수가 1/r^2 로 늘어 난이도가 아니라 노동이 된다.
+		"torch_min": 2, "torch_max": 4, "torch_step": 10.0,
+		"torch_cov_lo": 26, "torch_cov_hi": 28, "torch_cov_ceil": 40,
+		"torch_props_max": 5,
+		"torch_beam": 300.0, "torch_beam_min": 200.0,
+		"torch_dark": 0.84, "torch_dark_max": 0.90,
+		"torch_hint_sec": 13.0,
 		"nood_autopick": false,
 		"nood_n_min": 4, "nood_n_max": 6,
 		"nood_place_min": 3, "nood_place_max": 7,
@@ -312,10 +329,12 @@ func journey_advance() -> void:
 	var d: Dictionary = profile()["dino"]
 	d["journey_best"] = maxi(int(d.get("journey_best", 1)), journey_stage)
 	mark_dirty()
-	# ★ 개구리 구간은 문제마다 이미 1씩 세었다 (count_session_question).
-	#   여기서 또 더하면 여행이 두 배로 빨리 끝난다.
-	if current_game == "dino":
-		add_session_units(DINO_ROOM_UNITS)
+	# 방금 끝난 한 판이 놀이 단위 몇 개인지는 **등록표**가 안다 (journey_units).
+	# ★ 예전에는 여기 `if current_game == "dino"` 가 박혀 있었다. 셸이 게임 이름을 아는
+	#   자리였고(규칙 15), 그래서 나중에 붙은 게임들(블록 채우기·손전등 찾기)은 여행에서
+	#   놀이 단위를 **0으로 세어** 세션 상한이 조용히 늘어나 있었다.
+	#   셈놀이는 0 이다 — 문제마다 이미 1씩 센다(count_session_question).
+	add_session_units(int((GameRegistry.get_game(current_game) as Dictionary).get("journey_units", 0)))
 	if session_over_limit():
 		journey_end()
 		Router.goto_hub()
@@ -386,7 +405,7 @@ func bump_today(key: String, n: int = 1) -> void:
 	if not days.is_empty() and String((days[-1] as Dictionary).get("d", "")) == today:
 		row = days[-1]
 	else:
-		row = {"d": today, "sec": 0, "q": 0, "correct": 0, "dino": 0, "nood": 0}
+		row = {"d": today, "sec": 0, "q": 0, "correct": 0, "dino": 0, "nood": 0, "torch": 0}
 		days.append(row)
 		while days.size() > 14:
 			days.pop_front()

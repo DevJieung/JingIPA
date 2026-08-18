@@ -144,6 +144,18 @@ static func normalize_profile(raw: Variant) -> Dictionary:
 		"cleared": maxi(0, int(kn.get("cleared", 0))),
 	}
 
+	# ★ 여기 안 적힌 키는 앱을 다시 켤 때마다 **통째로 사라진다.**
+	#   normalize_profile 은 new_profile() 로 새 딕셔너리를 만든 뒤 아는 키만 베껴 넣기
+	#   때문이다. 새 게임을 넣을 때 가장 조용히 물리는 자리 — 어떤 검사도 안 잡아 준다.
+	var tc: Dictionary = r.get("torch", {})
+	p["torch"] = {
+		"best_stage": maxi(1, int(tc.get("best_stage", 1))),
+		"lifetime_found": maxi(0, int(tc.get("lifetime_found", 0))),
+		"skill": clampi(int(tc.get("skill", 0)), -8, 10),
+		"ease_streak": maxi(0, int(tc.get("ease_streak", 0))),
+		"cushion": maxi(0, int(tc.get("cushion", 0))),
+	}
+
 	p["daily"] = []
 	for row in (r.get("daily", []) as Array):
 		if typeof(row) != TYPE_DICTIONARY:
@@ -155,6 +167,7 @@ static func normalize_profile(raw: Variant) -> Dictionary:
 			"correct": int((row as Dictionary).get("correct", 0)),
 			"dino": int((row as Dictionary).get("dino", 0)),
 			"nood": int((row as Dictionary).get("nood", 0)),
+			"torch": int((row as Dictionary).get("torch", 0)),
 		})
 	while p["daily"].size() > 14:
 		p["daily"].pop_front()

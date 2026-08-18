@@ -356,7 +356,10 @@ static func axes(e: int, t: Dictionary = {}) -> Dictionary:
 		# A. 볼 것이 는다
 		"dinos": clampi(dmin + int(floor(float(e) / step)), dmin, dmax),
 		# 가구 상한 6. 7 은 예산 대비 수익이 없다 (배치가 오히려 준다).
-		"props": clampi(3 + int(floor(float(e) / 7.0)), 3, 6),
+		# ★ 상한을 손잡이로 뺀 이유: 손전등 찾기(games/torch/)는 어둠이 이미 숨기므로
+		#   가구가 6개면 낮은 가림% 자리가 물리적으로 모자란다 (실측: 후보 자리의
+		#   최저 도달 가림% 중앙값이 가구 4개면 44%, 6개면 51~55%). 기본값 6 은 그대로다.
+		"props": clampi(3 + int(floor(float(e) / 7.0)), 3, int(t.get("dino_props_max", 6))),
 		# B. 잘 안 보인다
 		"band": b,
 		# 작은 종이 뽑힐 확률. 그림 면적이 종끼리 2배 넘게 차이난다.
