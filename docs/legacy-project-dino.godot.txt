@@ -1,0 +1,42 @@
+; Engine configuration file.
+; 공룡을 찾아라! — Godot 4 프로젝트
+
+config_version=5
+
+[application]
+
+config/name="공룡을 찾아라!"
+; 아이폰에서만 영문 이름을 쓴다. 무료 애플 ID 로 서명할 때(AltStore/Sideloadly)
+; 애플이 App ID 이름에 한글·띄어쓰기·느낌표를 허용하지 않아 설치가 막힌다.
+; 유료 개발자 계정으로 서명하면 한글 이름으로 되돌려도 된다.
+config/name.ios="DinoFind"
+config/description="집 안 여러 방에 숨은 공룡을 찾는 아이용 게임"
+run/main_scene="res://main.tscn"
+config/features=PackedStringArray("4.4", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+; 0=가로, 1=세로, 4=가로(센서). 아이가 아무 방향으로 잡아도 되게 4.
+window/handheld/orientation=4
+
+[gui]
+
+theme/custom_font="res://fonts/DinoKR.ttf"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+; 폰(안드로이드/iOS)용 익스포트는 이 설정이 켜져 있어야 통과한다.
+; 꺼 두면 Godot 이 "CPU 가 ETC2/ASTC 를 좋아하는지"로 대신 판단해서,
+; arm 머신에선 되고 x86_64 (= GitHub Actions 우분투 러너)에선 조용히 거부한다.
+textures/vram_compression/import_etc2_astc=true
+anti_aliasing/quality/msaa_2d=2
+; 공룡 그림(512px)을 작게 그리므로 밉맵으로 부드럽게 줄인다
+textures/canvas_textures/default_texture_filter=3
+environment/defaults/default_clear_color=Color(0.984, 0.914, 0.812, 1)

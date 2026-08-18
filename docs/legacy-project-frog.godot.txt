@@ -1,0 +1,66 @@
+; 개구리 용사 (Frog Warrior) — Godot 4.7.1
+;
+; 손으로 작성한 설정 파일이다. 각 값의 근거는 docs/architecture.md 참고.
+; 특히 아래 셋은 빼면 안 된다:
+;   - rendering/textures/vram_compression/import_etc2_astc : 없으면 Android 익스포트가 아예 막힌다
+;   - application/config/name.ios : 애플은 App ID 이름에 영문·숫자만 받는다.
+;       지우면 무료 서명(AltStore/Sideloadly)이 한글 앱 이름으로 App ID 를 못 만들어 실패한다.
+;   - display/window/handheld/orientation : Godot 4 에서는 문자열이 아니라 정수다.
+;       0=가로 1=세로 2=역가로 3=역세로 4=센서가로 5=센서세로 6=센서
+;       이 게임은 4(센서 가로) — 태블릿을 어느 쪽으로 돌려 들어도 가로로 선다.
+;   - display/window/size/viewport_* : 기준은 가로 태블릿 1280x800.
+;       바꾸면 src/core/layout.gd 의 Layout.BASE 도 같이 바꿔야 한다.
+;   - gui/theme/custom_font : 엔진 기본 폰트에는 한글 글리프가 없어서 전부 두부가 된다
+
+config_version=5
+
+[application]
+
+config/name="개구리 용사"
+; 아이폰에서만 영문 이름을 쓴다. 애플은 App ID 이름에 영문·숫자만 허용해서,
+; 무료 서명(AltStore/Sideloadly/Personal Team)이 "개구리 용사" 로는 App ID 를 못 만든다.
+; 안드로이드·PC·웹은 위의 한글 이름을 그대로 쓴다.
+config/name.ios="FrogWarrior"
+config/description="초등 1~2학년을 위한 사칙연산 퀴즈 게임. 개구리 용사가 나쁜 뱀을 물리칩니다."
+config/version="0.1.0"
+run/main_scene="res://src/ui/splash.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://icon.svg"
+run/max_fps=60
+boot_splash/show_image=false
+boot_splash/bg_color=Color(0.624, 0.863, 1, 1)
+
+[autoload]
+
+Game="*res://src/autoload/game.gd"
+Audio="*res://src/autoload/audio.gd"
+Router="*res://src/autoload/router.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=800
+window/size/window_width_override=1000
+window/size/window_height_override=625
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=4
+
+[gui]
+
+theme/custom_font="res://assets/fonts/Jua-Regular.ttf"
+
+[input_devices]
+
+pointing/emulate_mouse_from_touch=true
+
+[physics]
+
+common/physics_ticks_per_second=30
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
+environment/defaults/default_clear_color=Color(0.624, 0.863, 1, 1)

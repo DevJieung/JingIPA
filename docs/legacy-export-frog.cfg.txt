@@ -1,0 +1,262 @@
+; 개구리 용사 — 익스포트 프리셋 (Godot 4.7.1)
+;
+; ★ 스토어에 올리기 전에 반드시 바꿔야 하는 값 ★
+;   preset.0/1  package/unique_name : "com.example.*" 는 Google Play 가 거부한다
+;   preset.2    application/bundle_identifier, application/app_store_team_id
+; 자세한 절차는 docs/build-android.md / docs/build-ios.md 참고.
+;
+; 서명 비밀번호는 이 파일에 저장되지 않는다. Godot 4.7 은 PROPERTY_USAGE_SECRET 옵션을
+; res://.godot/export_credentials.cfg 로 분리해 저장한다. 그 파일이 .gitignore 대상이다.
+
+[runnable_presets]
+
+Android="Android Test APK"
+iOS="iOS"
+
+[preset.0]
+
+name="Android Test APK"
+platform="Android"
+runnable=true
+dedicated_server=false
+custom_features=""
+export_filter="all_resources"
+include_filter=""
+exclude_filter="tests/*, tools/*, docs/*, android_icons/*, *.md"
+export_path="build/android/frogwarrior-test.apk"
+patches=PackedStringArray()
+encryption_include_filters=""
+encryption_exclude_filters=""
+seed=0
+encrypt_pck=false
+encrypt_directory=false
+script_export_mode=2
+
+[preset.0.options]
+
+custom_template/debug=""
+custom_template/release=""
+gradle_build/use_gradle_build=false
+gradle_build/gradle_build_directory="res://android"
+gradle_build/android_source_template=""
+gradle_build/compress_native_libraries=false
+gradle_build/export_format=0
+gradle_build/min_sdk=""
+gradle_build/target_sdk=""
+gradle_build/custom_theme_attributes={}
+architectures/armeabi-v7a=false
+architectures/arm64-v8a=true
+architectures/x86=false
+architectures/x86_64=true
+version/code=1
+version/name="0.1.0"
+package/unique_name="com.example.frogwarrior"
+package/name="개구리 용사"
+package/signed=true
+package/app_category=2
+package/retain_data_on_uninstall=false
+package/exclude_from_recents=false
+package/show_in_android_tv=false
+package/show_in_app_library=true
+package/show_as_launcher_app=false
+launcher_icons/main_192x192="res://android_icons/launcher_main_192.png"
+launcher_icons/adaptive_foreground_432x432="res://android_icons/adaptive_fore_432.png"
+launcher_icons/adaptive_background_432x432="res://android_icons/adaptive_back_432.png"
+launcher_icons/adaptive_monochrome_432x432="res://android_icons/adaptive_mono_432.png"
+graphics/opengl_debug=false
+shader_baker/enabled=false
+xr_features/xr_mode=0
+gesture/swipe_to_dismiss=false
+screen/immersive_mode=true
+screen/edge_to_edge=false
+screen/support_small=true
+screen/support_normal=true
+screen/support_large=true
+screen/support_xlarge=true
+screen/background_color=Color(0.624, 0.863, 1, 1)
+user_data_backup/allow=false
+command_line/extra_args=""
+permissions/custom_permissions=PackedStringArray()
+
+[preset.1]
+
+name="Android Store AAB"
+platform="Android"
+runnable=false
+dedicated_server=false
+custom_features=""
+export_filter="all_resources"
+include_filter=""
+exclude_filter="tests/*, tools/*, docs/*, android_icons/*, *.md"
+export_path="build/android/frogwarrior.aab"
+patches=PackedStringArray()
+encryption_include_filters=""
+encryption_exclude_filters=""
+seed=0
+encrypt_pck=false
+encrypt_directory=false
+script_export_mode=2
+
+[preset.1.options]
+
+custom_template/debug=""
+custom_template/release=""
+gradle_build/use_gradle_build=true
+gradle_build/gradle_build_directory="res://android"
+gradle_build/android_source_template=""
+gradle_build/compress_native_libraries=false
+gradle_build/export_format=1
+gradle_build/min_sdk=""
+gradle_build/target_sdk=""
+gradle_build/custom_theme_attributes={}
+architectures/armeabi-v7a=false
+architectures/arm64-v8a=true
+architectures/x86=false
+architectures/x86_64=true
+version/code=1
+version/name="0.1.0"
+package/unique_name="com.example.frogwarrior"
+package/name="개구리 용사"
+package/signed=true
+package/app_category=2
+package/retain_data_on_uninstall=false
+package/exclude_from_recents=false
+package/show_in_android_tv=false
+package/show_in_app_library=true
+package/show_as_launcher_app=false
+launcher_icons/main_192x192="res://android_icons/launcher_main_192.png"
+launcher_icons/adaptive_foreground_432x432="res://android_icons/adaptive_fore_432.png"
+launcher_icons/adaptive_background_432x432="res://android_icons/adaptive_back_432.png"
+launcher_icons/adaptive_monochrome_432x432="res://android_icons/adaptive_mono_432.png"
+graphics/opengl_debug=false
+shader_baker/enabled=false
+xr_features/xr_mode=0
+gesture/swipe_to_dismiss=false
+screen/immersive_mode=true
+screen/edge_to_edge=false
+screen/support_small=true
+screen/support_normal=true
+screen/support_large=true
+screen/support_xlarge=true
+screen/background_color=Color(0.624, 0.863, 1, 1)
+user_data_backup/allow=false
+command_line/extra_args=""
+permissions/custom_permissions=PackedStringArray()
+
+[preset.2]
+
+name="iOS"
+platform="iOS"
+runnable=true
+dedicated_server=false
+custom_features=""
+export_filter="all_resources"
+include_filter=""
+exclude_filter="tests/*, tools/*, docs/*, android_icons/*, *.md"
+export_path="build/ios/frogwarrior.ipa"
+patches=PackedStringArray()
+encryption_include_filters=""
+encryption_exclude_filters=""
+seed=0
+encrypt_pck=false
+encrypt_directory=false
+script_export_mode=2
+
+[preset.2.options]
+
+custom_template/debug=""
+custom_template/release=""
+architectures/arm64=true
+application/app_store_team_id="ABCDE12345"
+application/export_method_debug=1
+application/export_method_release=0
+application/code_sign_identity_debug=""
+application/code_sign_identity_release=""
+application/provisioning_profile_specifier_debug=""
+application/provisioning_profile_specifier_release=""
+application/bundle_identifier="com.example.frogwarrior"
+application/signature="????"
+application/short_version="0.1.0"
+application/version="1"
+application/additional_plist_content=""
+application/icon_interpolation=4
+application/export_project_only=false
+application/delete_old_export_files_unconditionally=false
+; 0=아이폰 / 1=아이패드 / 2=둘 다. ★2 여야 한다.
+;
+; 예전에는 0(아이폰 전용)이었다. 그러면 아이패드가 앱을 **아이폰 호환 모드**로 띄운다 —
+; 폰 크기 창 하나만 화면 가운데에 뜨고 나머지는 통째로 여백이 된다. 실제로 그렇게 보였다.
+; 이 게임의 기준 해상도가 가로 태블릿 1280x800 인데 정작 태블릿에서 그러면 안 된다.
+; (TARGETED_DEVICE_FAMILY 가 "1" -> "1,2" 로 바뀐다. dino 프로젝트도 2 를 쓴다.)
+;
+; 단 App Store 에 낼 때는 **13인치 아이패드 스크린샷**을 따로 요구한다 — docs/build-ios.md 참고.
+application/targeted_device_family=2
+application/min_ios_version="15.0"
+modules/camera=false
+entitlements/increased_memory_limit=false
+entitlements/game_center=false
+entitlements/push_notifications="Disabled"
+entitlements/additional=""
+capabilities/access_wifi=false
+capabilities/performance_gaming_tier=false
+capabilities/performance_a12=false
+capabilities/additional=PackedStringArray()
+shader_baker/enabled=false
+user_data/accessible_from_files_app=false
+user_data/accessible_from_itunes_sharing=false
+privacy/camera_usage_description=""
+privacy/camera_usage_description_localized={}
+privacy/microphone_usage_description=""
+privacy/microphone_usage_description_localized={}
+privacy/photolibrary_usage_description=""
+privacy/photolibrary_usage_description_localized={}
+privacy/file_timestamp_access_reasons=3
+privacy/system_boot_time_access_reasons=1
+privacy/disk_space_access_reasons=3
+privacy/active_keyboard_access_reasons=0
+privacy/user_defaults_access_reasons=0
+privacy/tracking_enabled=false
+privacy/tracking_domains=PackedStringArray()
+icons/icon_1024x1024="res://appstore_icon_1024.png"
+icons/icon_1024x1024_dark=""
+icons/icon_1024x1024_tinted=""
+storyboard/image_scale_mode=1
+storyboard/custom_image@2x="res://splash@2x.png"
+storyboard/custom_image@3x="res://splash@3x.png"
+storyboard/use_custom_bg_color=false
+storyboard/custom_bg_color=Color(0.624, 0.863, 1, 1)
+
+[preset.3]
+
+name="Web"
+platform="Web"
+runnable=false
+dedicated_server=false
+custom_features=""
+export_filter="all_resources"
+include_filter=""
+exclude_filter="tests/*, tools/*, docs/*, android_icons/*, *.md"
+export_path="build/web/index.html"
+patches=PackedStringArray()
+encryption_include_filters=""
+encryption_exclude_filters=""
+seed=0
+encrypt_pck=false
+encrypt_directory=false
+script_export_mode=2
+
+[preset.3.options]
+
+custom_template/debug=""
+custom_template/release=""
+variant/extensions_support=false
+variant/thread_support=false
+vram_texture_compression/for_desktop=true
+vram_texture_compression/for_mobile=true
+html/export_icon=true
+html/custom_html_shell=""
+html/head_include=""
+html/canvas_resize_policy=2
+html/focus_canvas_on_start=true
+html/experimental_virtual_keyboard=false
+progressive_web_app/enabled=false

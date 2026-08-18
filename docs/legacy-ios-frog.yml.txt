@@ -1,0 +1,142 @@
+# 아이폰용 IPA 를 굽는다. 저장소 Actions 탭에서 "Run workflow" 로 손수 돌린다.
+#
+# ★두 단계로 나눈 이유 (WRAPUP.md 3장 — 구조를 합치지 말 것):
+#   1) 우분투에서 Godot 이 **Xcode 프로젝트까지만** 만든다.
+#      맥에서 Godot 익스포트를 직접 돌리면 맥에만 있는 dylib 코드사이닝 구간을 지나야 하고
+#      (인증서 없는 CI 에서는 위험), 무엇보다 **맥 러너는 분당 10배**로 과금된다.
+#   2) 맥은 `xcodebuild` 만 돌린다. 맥에서 보내는 시간이 최소가 된다.
+#
+# ★서명하지 않은 IPA 를 만든다. 애플 인증서를 CI 에 넣지 않아도 되고,
+#   AltStore / Sideloadly 가 형의 애플 ID 로 폰에서 서명해 준다 (무료, 7일마다 갱신).
+name: iOS IPA 만들기
+
+on:
+  workflow_dispatch:
+
+env:
+  GODOT_VERSION: 4.7.1-stable
+  # Godot 익스포트 프리셋 이름과 산출물 이름. 공백 없는 ASCII 여야 한다 —
+  # 이게 그대로 PRODUCT_NAME 과 Xcode 스킴 이름이 된다.
+  PRESET: iOS
+  APP: frogwarrior
+
+jobs:
+  # --------------------------------------------------------------------- #
+  # 1단계 (우분투): Godot -> Xcode 프로젝트
+  # --------------------------------------------------------------------- #
+  xcodeproj:
+    name: Xcode 프로젝트 만들기 (우분투)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Godot 과 익스포트 템플릿 받기
+        run: |
+          set -euo pipefail
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}"
+          curl -fsSLO "$base/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          curl -fsSLO "$base/Godot_v${GODOT_VERSION}_export_templates.tpz"
+          unzip -q "Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          sudo install -m755 "Godot_v${GODOT_VERSION}_linux.x86_64" /usr/local/bin/godot
+          # .tpz 는 그냥 zip 이다. 안의 templates/ 를 버전 폴더 이름으로 옮긴다.
+          unzip -q "Godot_v${GODOT_VERSION}_export_templates.tpz"
+          dest="$HOME/.local/share/godot/export_templates/${GODOT_VERSION/-/.}"
+          mkdir -p "$dest"
+          mv templates/* "$dest/"
+          godot --version
+
+      - name: 번들 ID 덮어쓰기 (저장소 Variables 에 있으면)
+        env:
+          IOS_BUNDLE_ID: ${{ vars.IOS_BUNDLE_ID }}
+        run: |
+          set -euo pipefail
+          if [ -n "${IOS_BUNDLE_ID:-}" ]; then
+            sed -i "s|^application/bundle_identifier=.*|application/bundle_identifier=\"${IOS_BUNDLE_ID}\"|" export_presets.cfg
+            echo "번들 ID -> ${IOS_BUNDLE_ID}"
+          else
+            grep '^application/bundle_identifier=' export_presets.cfg
+          fi
+
+      - name: 임포트 (첫 임포트의 폰트 오류 4줄은 정상)
+        run: godot --headless --path . --import || true
+
+      - name: iOS 익스포트
+        run: |
+          set -euo pipefail
+          mkdir -p build/ios
+          godot --headless --path . --export-release "$PRESET" "$PWD/build/ios/$APP.ipa"
+          # 리눅스에서는 .ipa 를 못 굽는다 ("macOS에서만" 경고는 정상).
+          # Xcode 프로젝트가 나왔는지가 유일한 성공 기준이다.
+          test -d "build/ios/$APP.xcodeproj"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: xcodeproj
+          path: build/ios
+          retention-days: 3
+
+  # --------------------------------------------------------------------- #
+  # 2단계 (맥): xcodebuild -> 서명 없는 IPA
+  # --------------------------------------------------------------------- #
+  ipa:
+    name: IPA 굽기 (맥)
+    needs: xcodeproj
+    runs-on: macos-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: xcodeproj
+          path: ios
+
+      - name: xcodebuild
+        id: build
+        run: |
+          set -o pipefail
+          cd ios
+          xcodebuild \
+            -project "$APP.xcodeproj" \
+            -scheme "$APP" \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath dd \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            build 2>&1 | tee "$RUNNER_TEMP/xcodebuild.log"
+
+      - name: 실패하면 Summary 에 원인 남기기
+        if: failure()
+        run: |
+          # 로그 API 는 admin 권한이 있어야 읽힌다. Summary 는 퍼블릭이면 익명으로도 읽히므로
+          # 진단에 필요한 것만 여기에 찍어 둔다 (WRAPUP.md 6장).
+          {
+            echo '## xcodebuild 실패'
+            echo '### error: 줄'
+            echo '```'
+            grep -E '(^| )error:' "$RUNNER_TEMP/xcodebuild.log" | head -40 || echo '(error: 줄 없음)'
+            echo '```'
+            echo '### 마지막 60줄'
+            echo '```'
+            tail -60 "$RUNNER_TEMP/xcodebuild.log"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Payload 로 감싸 .ipa 만들기
+        run: |
+          set -euo pipefail
+          cd ios
+          # 번들 이름은 PRODUCT_NAME 을 따라가므로 이름을 박지 말고 찾는다.
+          app=$(find dd/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' | head -1)
+          test -n "$app" && test -d "$app"
+          rm -rf Payload && mkdir Payload
+          cp -R "$app" Payload/
+          # 서명이 없는 상태로 묶는다. 폰에 넣을 때 Sideloadly/AltStore 가 서명한다.
+          zip -qry "$APP.ipa" Payload
+          ls -lh "$APP.ipa"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP }}-ipa-${{ github.run_number }}
+          path: ios/${{ env.APP }}.ipa
+          retention-days: 14
