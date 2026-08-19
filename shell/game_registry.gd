@@ -80,6 +80,25 @@ const LIST := [
 		"journey_units": 3,
 	},
 	{
+		"id": "cham",
+		"title": "참참참",
+		"subtitle": "어느 쪽으로 뛸까?",
+		"color": Color("d95f7a"),
+		"scene": "res://games/cham/cham.tscn",
+		"viewport": {
+			"size": Vector2i(1280, 800),
+			"keep": false,
+			"clear": Color(0.984, 0.953, 0.902),
+		},
+		"bgm": "",
+		"journey": {"pre": 3, "elem": 3},
+		"journey_caption": "참참참",
+		# 한 판이 10~30초라 공룡 방(40~70초)의 3분의 1쯤이다.
+		# ★ 여기 숫자가 곧 세션 상한을 태우는 속도다. 3으로 두면 미취학(상한 10)이
+		#   참참참만 하다가 네 판, 약 1분 만에 허브로 튕긴다.
+		"journey_units": 1,
+	},
+	{
 		"id": "kanoodle",
 		"title": "블록 채우기",
 		"subtitle": "모양을 맞춰 넣기",

@@ -27,7 +27,7 @@ const GRANDFATHERED := [
 ## 게임 id -> class_name 접두사.
 ## ★ 새 게임을 넣고 여기를 안 채우면 id 를 그대로 대문자화한 이름을 요구하게 되어
 ##   ns_check 가 빨간불이 된다. 게임을 등록할 때 같이 채워라.
-const PREFIX := {"dino": "Dino", "math": "Math", "kanoodle": "Nood", "torch": "Torch"}
+const PREFIX := {"dino": "Dino", "math": "Math", "kanoodle": "Nood", "torch": "Torch", "cham": "Cham"}
 
 
 func run() -> Array:

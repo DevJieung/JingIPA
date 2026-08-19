@@ -107,7 +107,18 @@ godot_run 600 "$TMP/torch_pre.txt" res://tests/torch_check.tscn -- --pre
 grep -E '방 [0-9]+개|판정:|^!!' "$TMP/torch_pre.txt"
 expect "torch_check --pre" "판정: 정상" "$TMP/torch_pre.txt"
 
-step "5c. 아무거나 — 게임을 오가는 흐름"
+step "5c. 참참참 — 버릇 만들기 + 읽어서 잡기"
+# ★ 여기서만 잡히는 것: **버릇을 읽을 수 있는가.** 친구의 방향이 무작위가 되면
+#   게임이 그 자리에서 동전 던지기가 되는데, 화면을 봐서는 절대 안 보인다.
+#   버릇을 못 읽는 아이(발자국만 보는 아이)까지 흉내 내서 반드시 잡히는지 확인한다.
+godot_run 600 "$TMP/cham.txt" res://tests/cham_check.tscn
+grep -E '버릇 [0-9]+개|판정:|^!!' "$TMP/cham.txt"
+expect "cham_check" "판정: 정상" "$TMP/cham.txt"
+godot_run 600 "$TMP/cham_pre.txt" res://tests/cham_check.tscn -- --pre
+grep -E '버릇 [0-9]+개|판정:|^!!' "$TMP/cham_pre.txt"
+expect "cham_check --pre" "판정: 정상" "$TMP/cham_pre.txt"
+
+step "5d. 아무거나 — 게임을 오가는 흐름"
 # ★ 게임과 게임 **사이**를 보는 유일한 검사다. 화면 전환 잠금이 안 풀려서
 #   그 뒤 모든 전환이 조용히 무시되던 사고가 여기서 잡혔다.
 godot_run 900 "$TMP/journey.txt" res://tests/journey_check.tscn
@@ -115,7 +126,7 @@ grep -E '섬 한 바퀴|게임별|판정:|^!!' "$TMP/journey.txt"
 expect "journey_check" "판정: 정상" "$TMP/journey.txt"
 
 if [ "$QUICK" -eq 0 ]; then
-	step "5d. 개구리 용사 — 시연을 켠 채로 한 탄씩 (test_runner 가 안 보는 경로)"
+	step "5e. 개구리 용사 — 시연을 켠 채로 한 탄씩 (test_runner 가 안 보는 경로)"
 	godot_run 1500 "$TMP/battle.txt" res://tests/battle_check.tscn
 	grep -E '탄:|판정:|^!!' "$TMP/battle.txt"
 	expect "battle_check" "판정: 정상" "$TMP/battle.txt"

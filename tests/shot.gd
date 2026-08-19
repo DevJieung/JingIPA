@@ -50,6 +50,12 @@ func _run() -> void:
 					"best_stage": maxi(1, arg), "lifetime_found": 0,
 					"skill": 0, "ease_streak": 0, "cushion": 0,
 				}
+			"cham":
+				scene = "res://games/cham/cham.tscn"
+				Shell.profile()["cham"] = {
+					"best_stage": maxi(1, arg), "caught": 0,
+					"skill": 0, "ease_streak": 0, "cushion": 0,
+				}
 			"tiers", "map":
 				scene = Router.TIERS
 				MathGame.stars = {"0": 3, "1": 2, "2": 1, "3": 3, "4": 1}
@@ -97,6 +103,16 @@ func _run() -> void:
 				(inst.get("beam") as Object).call("aim",
 						(last.call("hit_rect") as Rect2).get_center()
 						+ Vector2(0, 40) if ds.size() > 1 else c0)
+		# ★ 참참참은 **발자국이 있는 모습**이 알맹이라, 몇 번 뛴 뒤로 맞춰 놓고 찍는다.
+		if kind == "cham":
+			await get_tree().process_frame
+			var pat: Array = inst.get("_pat")
+			var hist: Array[int] = []
+			for i in mini(4, pat.size() + 1):
+				hist.append(int(pat[i % pat.size()]))
+			inst.set("_hist", hist)
+			inst.set("_turn", hist.size())
+			inst.set("_state", "wait")
 		for i in 40:
 			await get_tree().process_frame
 		await RenderingServer.frame_post_draw

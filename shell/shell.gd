@@ -24,8 +24,10 @@ const SCHEMA := 3
 ## 30분 만에 다시 켜는 같은 아이는 안 붙잡는다.
 const ASK_PROFILE_AFTER_SEC := 10800
 
-## 한 세션의 놀이 단위 상한. 개구리 문제 1개 = 1, 공룡 방 1개 = 3.
+## 한 세션의 놀이 단위 상한. 셈놀이 문제 1개 = 1, 공룡 방 1개 = 3.
 ## 근거는 6~8세 지속주의 12~20분. 0 이면 제한 없음.
+## ★ 게임별 값은 shell/game_registry.gd 의 journey_units 에 있다 (add_round_units).
+##   아래 상수는 등록되지 않은 게임이 물었을 때의 기본값으로만 남아 있다.
 const DEFAULT_SESSION_LIMIT := 20
 const DINO_ROOM_UNITS := 3
 
@@ -142,6 +144,10 @@ static func default_tuning(band: String) -> Dictionary:
 			"torch_beam": 360.0, "torch_beam_min": 280.0,
 			"torch_dark": 0.76, "torch_dark_max": 0.84,
 			"torch_hint_sec": 8.0,
+			# 참참참 — 어린 아이는 tell(뛸 쪽으로 기우는 것)이 끝까지 크게 남는다.
+			# 버릇도 짧고 하늘로는 안 뛴다 (cham_three_at 0 = 없음).
+			"cham_len_max": 3, "cham_read_max": 2,
+			"cham_tell": 1.0, "cham_tell_min": 0.55, "cham_three_at": 0,
 			# 블록 채우기 — 4x4 에서 시작하고, 손이 비면 조각이 저절로 들린다.
 			# 그러면 판만 두드려도 놀이가 굴러간다 (트레이를 한 번도 안 봐도 된다).
 			"nood_autopick": true,
@@ -169,6 +175,9 @@ static func default_tuning(band: String) -> Dictionary:
 		"torch_beam": 300.0, "torch_beam_min": 200.0,
 		"torch_dark": 0.84, "torch_dark_max": 0.90,
 		"torch_hint_sec": 13.0,
+		# 참참참 — tell 이 옅어지고 버릇이 길어진다. 24판부터 하늘로도 뛴다.
+		"cham_len_max": 4, "cham_read_max": 3,
+		"cham_tell": 1.0, "cham_tell_min": 0.15, "cham_three_at": 16,
 		"nood_autopick": false,
 		"nood_n_min": 4, "nood_n_max": 6,
 		"nood_place_min": 3, "nood_place_max": 7,
@@ -334,7 +343,7 @@ func journey_advance() -> void:
 	#   자리였고(규칙 15), 그래서 나중에 붙은 게임들(블록 채우기·손전등 찾기)은 여행에서
 	#   놀이 단위를 **0으로 세어** 세션 상한이 조용히 늘어나 있었다.
 	#   셈놀이는 0 이다 — 문제마다 이미 1씩 센다(count_session_question).
-	add_session_units(int((GameRegistry.get_game(current_game) as Dictionary).get("journey_units", 0)))
+	add_round_units()
 	if session_over_limit():
 		journey_end()
 		Router.goto_hub()
@@ -380,6 +389,16 @@ func begin_session() -> void:
 	session_notified = false
 
 
+## 방금 한 판이 끝났다 — 그 게임의 놀이 단위를 센다.
+##
+## ★ 몇 단위인지는 **등록표가 안다** (game_registry 의 journey_units). 게임이 숫자를
+##   직접 들고 있으면 여행 안(셸이 세는 길)과 밖(게임이 세는 길)이 서로 다른 값을 쓰게 된다 —
+##   실제로 참참참에서 2 와 3 으로 갈렸고, 다른 넷은 우연히 같아서 안 드러났을 뿐이다.
+func add_round_units() -> void:
+	var g := GameRegistry.get_game(current_game)
+	add_session_units(int(g.get("journey_units", DINO_ROOM_UNITS)))
+
+
 func add_session_units(n: int) -> void:
 	session_units += n
 	var lim := int(tune("session_limit", DEFAULT_SESSION_LIMIT))
@@ -405,7 +424,7 @@ func bump_today(key: String, n: int = 1) -> void:
 	if not days.is_empty() and String((days[-1] as Dictionary).get("d", "")) == today:
 		row = days[-1]
 	else:
-		row = {"d": today, "sec": 0, "q": 0, "correct": 0, "dino": 0, "nood": 0, "torch": 0}
+		row = {"d": today, "sec": 0, "q": 0, "correct": 0, "dino": 0, "nood": 0, "torch": 0, "cham": 0}
 		days.append(row)
 		while days.size() > 14:
 			days.pop_front()

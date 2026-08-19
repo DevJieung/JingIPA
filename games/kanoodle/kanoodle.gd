@@ -752,7 +752,7 @@ func _next_stage() -> void:
 	if Shell.journey_active and not dev_mode:
 		Shell.journey_advance()
 		return
-	Shell.add_session_units(Shell.DINO_ROOM_UNITS)
+	Shell.add_round_units()
 	if Shell.session_over_limit() and not dev_mode:
 		_go_home()
 		return

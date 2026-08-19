@@ -1,12 +1,13 @@
 # CLAUDE.md — 이 저장소에서 작업할 때
 
 **놀이 상자** — 아이 둘(나이 차 있음)을 위한 놀이 모음. Godot 4.7.1, 안드로이드/iOS.
-게임 넷이 하나의 앱에 들어 있고, 앞으로 더 늘어난다.
+게임 다섯이 하나의 앱에 들어 있고, 앞으로 더 늘어난다.
 
 - **공룡 찾기** (`games/dino/`) — 방에 숨은 공룡을 콕 눌러 찾는다
 - **손전등 찾기** (`games/torch/`) — 깜깜한 방을 좁은 손전등으로 비춰 공룡을 찾는다
 - **셈놀이** (`games/math/`) — 블록으로 왜 그런지 보여 주는 사칙연산
 - **블록 채우기** (`games/kanoodle/`) — 조각을 기둥에 떨어뜨려 가이드 모양대로 쌓는다
+- **참참참** (`games/cham/`) — 친구가 어느 쪽으로 뛸지 손으로 가리켜 잡는다
 
 ★ **세계관이 없다.** 예전에는 "집 안 / 집 밖"이라는 이야기로 묶었는데, 게임들의 결이
 너무 달라서 이야기가 오히려 이질감을 키웠다. 허브는 그냥 **게임 목록 + 아무거나(랜덤)** 다.
@@ -15,7 +16,7 @@
 전체 설명은 [`README.md`](README.md). 갈무리 절차는 [`WRAPUP.md`](WRAPUP.md).
 게임별 규칙은 [`docs/dino-rules.md`](docs/dino-rules.md) · [`docs/math-rules.md`](docs/math-rules.md)
 — **둘 다 여전히 유효하다. 고치기 전에 반드시 읽어라.**
-손전등 찾기는 [`docs/torch-rules.md`](docs/torch-rules.md).
+손전등 찾기는 [`docs/torch-rules.md`](docs/torch-rules.md), 참참참은 [`docs/cham-rules.md`](docs/cham-rules.md).
 
 ---
 
@@ -33,10 +34,12 @@ games/dino/       공룡 찾기
 games/torch/      손전등 찾기 (공룡 찾기의 방·가구·공룡을 빌려 쓴다)
 games/math/       셈놀이 (오토로드 MathGame / Audio 포함)
 games/kanoodle/   블록 채우기
+games/cham/       참참참 (공룡 그림·도감만 빌려 쓴다)
 tools/            verify.sh · check_font.py · screenshot.py · dino/ · frog/
 tests/            test_runner · shot · dino_dump · ns_check
                   journey_check (게임 사이) · battle_check (시연 켠 전탄)
                   kanoodle_check (퍼즐 생성기) · torch_check (어둠·빛·찾기 규칙)
+                  cham_check (버릇 읽기)
 ```
 
 **새 게임을 넣을 때 손대는 것은 `shell/game_registry.gd` 의 배열 한 줄과 씬 하나뿐이다.**
@@ -160,7 +163,10 @@ adb install -r rogame-test.apk
     셋을 따로 올리면 각각은 온건한데 합쳐서 "안 보이는 방"이 된다
     (`TorchGen.hardness()` 가 그 곱을 재고 `tests/torch_check.gd` 가 상한을 강제한다).
     자세한 것은 [`docs/torch-rules.md`](docs/torch-rules.md).
-26. **그래픽은 코드로 그린다.** 이미지 파일은 공룡 50종 PNG 뿐이다 (개구리 아트 16MB 는 걷어냈다).
+26. **공룡 그림을 좌우로 뒤집어서 "방향"을 말하지 마라.** 50종 PNG 는 바라보는 방향이
+    종마다 달라서, 뒤집기로 무언가를 알리면 종에 따라 아이에게 거짓말이 된다.
+    (공룡 찾기는 그냥 모양이라 무해했고, 그래서 여태 안 드러났다. 참참참에서 드러났다.)
+27. **그래픽은 코드로 그린다.** 이미지 파일은 공룡 50종 PNG 뿐이다 (개구리 아트 16MB 는 걷어냈다).
     새 게임은 새 이미지 자산 0장이 원칙이다.
 
 ---
@@ -183,7 +189,8 @@ stdbuf -oL ~/.local/bin/godot --headless --path . res://tests/journey_check.tscn
 stdbuf -oL ~/.local/bin/godot --headless --path . res://tests/battle_check.tscn    # 시연 켠 전탄
 stdbuf -oL ~/.local/bin/godot --headless --path . res://tests/kanoodle_check.tscn  # 퍼즐 생성기
 stdbuf -oL ~/.local/bin/godot --headless --path . res://tests/torch_check.tscn     # 어둠·빛·찾기 규칙
-python3 tools/screenshot.py kanoodle:0 torch:1 torch:20 hub:0 battle:4             # Xvfb 촬영
+stdbuf -oL ~/.local/bin/godot --headless --path . res://tests/cham_check.tscn      # 참참참 버릇 읽기
+python3 tools/screenshot.py kanoodle:0 torch:1 cham:1 cham:26 hub:0                # Xvfb 촬영
 python3 tools/dino/render_preview.py                             # 위 JSON 을 PNG 로
 python3 tools/screenshot.py map:0 battle:8                       # Xvfb 로 실제 촬영
 python3 tools/check_font.py
@@ -232,6 +239,8 @@ ROGAME_DEBUG=1 ~/.local/bin/godot --headless --path . --quit-after 200   # 이�
 | 저장 스키마 · 프로필 · 도감 | `shell/shell.gd` |
 | 옛 저장 이관 | `shell/migrate.gd` (순수 함수) |
 | 화면 전환 · 뷰포트 | `shell/router.gd` + `Shell.enter_game()` |
+| **참참참 난이도·버릇** | `games/cham/scripts/cham_gen.gd` 의 `axes()` / `pattern()` — **단일 진실 소스** |
+| 참참참 흐름·그리기 | `games/cham/scripts/cham_game.gd` |
 | **손전등 찾기 난이도** | `games/torch/scripts/torch_gen.gd` 의 `axes()` — **단일 진실 소스** |
 | 손전등 빛·어둠 그리기 | `games/torch/scripts/torch_beam.gd` (판정 `lit()` 도 같은 파일) |
 | 손전등 찾기 흐름·힌트 | `games/torch/scripts/torch_game.gd` |

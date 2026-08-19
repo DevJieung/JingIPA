@@ -5,7 +5,7 @@
 ##   지금은 그냥 **게임 목록**이다 — 카드를 고르거나, 아무거나 누르면 랜덤으로 돈다.
 ##
 ## 게임이 늘어도 이 파일은 안 고친다. shell/game_registry.gd 의 배열만 늘리면
-## 카드가 저절로 한 장 는다 (2~5개까지 배치가 맞춰진다).
+## 카드가 저절로 한 장 는다 (2~6개까지 배치가 맞춰진다).
 extends Control
 
 const W := 1280.0
@@ -20,7 +20,11 @@ const SHADOW := Color(0, 0, 0, 0.10)
 const RANDOM_COL := Color("f2a03d")
 
 ## 손가락이 큰 아이 기준. 카드는 이보다 작아지지 않는다.
+## ★ 게임이 다섯이 되면 240 을 지킬 수 없다 (240x5 + 여백이 화면을 넘는다).
+##   그래서 다섯부터는 여백과 사이를 먼저 줄이고 하한도 200 으로 내린다 — 200 이면
+##   여섯 장까지 들어간다. 일곱 번째 게임이 오면 그때는 두 줄로 바꿔야 한다.
 const CARD_MIN_W := 240.0
+const CARD_MIN_W_MANY := 200.0
 
 var _t := 0.0
 var _panel_open := false
@@ -66,10 +70,11 @@ func _to_local(p: Vector2) -> Vector2:
 
 ## 게임 카드 자리. 개수에 따라 폭이 줄되 CARD_MIN_W 아래로는 안 간다.
 func _card_rect(i: int, n: int) -> Rect2:
-	var gap := 28.0
-	var margin := 70.0
+	var many := n >= 5
+	var gap := 16.0 if many else 28.0
+	var margin := 34.0 if many else 70.0
 	var avail := W - margin * 2.0 - gap * float(maxi(0, n - 1))
-	var w := maxf(CARD_MIN_W, avail / float(maxi(1, n)))
+	var w := maxf(CARD_MIN_W_MANY if many else CARD_MIN_W, avail / float(maxi(1, n)))
 	var total := w * float(n) + gap * float(maxi(0, n - 1))
 	var x0 := (W - total) * 0.5
 	return Rect2(x0 + float(i) * (w + gap), 190.0, w, 360.0)
@@ -179,7 +184,8 @@ func _paint_icon(id: String, c: Vector2, w: float) -> void:
 			# 이 카드 하나로 "어두운데 비추면 보인다"가 글자 없이 읽혀야 한다.
 			# ★ 상자 아래끝은 c.y + 54 까지만. 부제 글자가 c.y + 86 부근에서 시작하므로
 			#   더 내려오면 글자를 덮는다 (실제로 한 번 덮었다).
-			_round_rect(Rect2(c.x - 92.0, c.y - 78.0, 184.0, 132.0), 16.0, Color("241f3d"))
+			var bw := minf(184.0, w - 34.0)
+			_round_rect(Rect2(c.x - bw * 0.5, c.y - 78.0, bw, 132.0), 16.0, Color("241f3d"))
 			var lc := Vector2(c.x + 16.0, c.y + 4.0)
 			# 왼쪽 위에서 뻗어 나오는 빛줄기.
 			# ★ 네 점을 눈대중으로 찍으면 안 된다 — 축과 거의 나란해져서 폭 4px 짜리
@@ -203,6 +209,27 @@ func _paint_icon(id: String, c: Vector2, w: float) -> void:
 				_ellipse(lc, Vector2(30, 22), Color("8cc76a"))
 			# 손전등 몸통
 			_round_rect(Rect2(c.x - 88.0, c.y - 74.0, 32.0, 19.0), 7.0, Color("ffd166"))
+		"cham":
+			# 가운데 친구, 좌우에서 "이쪽!" 하고 가리키는 손 두 개.
+			# ★ 카드 폭 w 에 맞춰 줄인다. 게임이 늘면 카드가 좁아지는데(다섯 장 229px,
+			#   여섯 장 200px) 고정 픽셀로 그리면 그림이 카드 밖으로 삐져나간다.
+			var k := minf(1.0, (w - 26.0) / 236.0)
+			var ci := DinoSpecies.index_of("parasaurolophus")
+			var ctex := DinoSpecies.texture(ci)
+			if ctex != null:
+				var cdr := DinoSpecies.draw_rect_for(ci)
+				var csc := minf(104.0 * k / maxf(cdr.size.x, 1.0), 112.0 * k / maxf(cdr.size.y, 1.0))
+				draw_texture_rect(ctex, Rect2(c + cdr.position * csc
+						+ Vector2(0, cdr.size.y * csc * 0.5), cdr.size * csc), false)
+			else:
+				_ellipse(c, Vector2(40.0 * k, 34.0 * k), Color("f292b4"))
+			for sgn in [-1.0, 1.0]:
+				var hc := c + Vector2(sgn * 92.0 * k, 22.0)
+				var hd := Vector2(-sgn, 0.0)          # 가운데 친구를 가리킨다
+				_round_rect(Rect2(hc.x - 26.0 * k, hc.y - 23.0 * k, 52.0 * k, 46.0 * k),
+						16.0 * k, Color("ffd7b0"))
+				draw_line(hc + hd * 12.0 * k, hc + hd * 50.0 * k, Color("ffd7b0"), 18.0 * k)
+				draw_circle(hc + hd * 50.0 * k, 9.0 * k, Color("ffd7b0"))
 		"kanoodle":
 			# 격자 위에 조각 두 개
 			var g := 22.0

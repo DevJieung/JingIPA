@@ -477,7 +477,7 @@ func _room_clear() -> void:
 		Shell.journey_advance()
 		return
 	# 방 하나가 개구리 문제 3개쯤의 놀이 단위다 (공룡 찾기와 같다).
-	Shell.add_session_units(Shell.DINO_ROOM_UNITS)
+	Shell.add_round_units()
 	if Shell.session_over_limit() and not dev_mode:
 		await _fade(_go_home_from_clear)
 		return

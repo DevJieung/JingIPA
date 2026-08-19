@@ -17,6 +17,7 @@ const SCRIPTS := {
 	"math": "res://games/math/game/battle.gd",
 	"kanoodle": "res://games/kanoodle/kanoodle.gd",
 	"torch": "res://games/torch/scripts/torch_game.gd",
+	"cham": "res://games/cham/scripts/cham_game.gd",
 }
 
 var target_stages := 18
@@ -130,6 +131,11 @@ func _process(delta: float) -> void:
 			_say("   판=%s 트레이=%s 손=%s done=%s busy=%s"
 					% [cur.get("_n"), (cur.get("_tray") as Array).size(),
 					   cur.get("_held"), cur.get("_done"), cur.get("_busy")])
+		elif _id_of(path) == "cham":
+			_say("   상태=%s 잡음=%s/%s 놓침=%s 버릇=%s 발자국=%s"
+					% [cur.get("_state"), cur.get("caught"),
+					   (cur.get("axes") as Dictionary).get("catches", "?"),
+					   cur.get("misses"), str(cur.get("_pat")), str(cur.get("_hist"))])
 		elif _id_of(path) == "torch":
 			var bm: Object = cur.get("beam")
 			_say("   state=%s busy=%s found=%s/%s 빛=%s r=%s 어둠=%s"
@@ -149,6 +155,7 @@ func _process(delta: float) -> void:
 		"math": _drive_battle(cur)
 		"kanoodle": _drive_nood(cur)
 		"torch": _drive_torch(cur)
+		"cham": _drive_cham(cur)
 
 
 ## 등록됐는데 아직 한 번도 안 나온 게임
@@ -179,6 +186,8 @@ func _progress_of(cur: Node, path: String) -> String:
 			return "%s/%s/%s" % [(cur.get("_tray") as Array).size(), cur.get("stage"), cur.get("_done")]
 		"torch":
 			return "%s/%s/%s" % [cur.get("found"), cur.get("stage"), cur.get("state")]
+		"cham":
+			return "%s/%s/%s" % [cur.get("caught"), cur.get("stage"), cur.get("_state")]
 	return ""
 
 
@@ -270,6 +279,16 @@ func _drive_torch(g: Node) -> void:
 			continue
 		g.call("_tap", (d.call("hit_rect") as Rect2).get_center())
 		return
+
+
+## 참참참 자동 플레이 — 친구의 버릇을 읽어(next_dir) 맞는 손을 누른다.
+## (버릇을 못 읽는 아이까지 흉내 내는 것은 tests/cham_check.gd 가 한다.)
+func _drive_cham(g: Node) -> void:
+	g.set("_slow", 0.05)
+	if String(g.get("_state")) != "wait":
+		return
+	var z: Rect2 = g.call("hand_zone", int(g.call("next_dir")))
+	g.call("_on_tap", z.position + z.size * 0.5)
 
 
 func _drive_battle(b: Node) -> void:

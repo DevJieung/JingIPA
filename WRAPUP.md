@@ -17,6 +17,7 @@ tools/verify.sh
 - 자동 생성 7~200탄: **마릿수부족 0건, 가림한계이탈 0건**
 - 자동 테스트: **30탄까지 진행**
 - 손전등 찾기: **축한계이탈 0건, 어둠속탭 0건, 플레이실패 0건** (`판정: 정상`)
+- 참참참: **못읽을버릇 0건, 플레이실패 0건** (`판정: 정상`)
 - 개구리: **검사 159000개 이상 / 실패 0개**
 - iOS Xcode 프로젝트 · Android APK 둘 다 ok
 
@@ -25,7 +26,7 @@ tools/verify.sh
 ```bash
 ~/.local/bin/godot --headless --path . res://tests/dino_dump.tscn -- --dump
 python3 tools/dino/render_preview.py
-python3 tools/screenshot.py hub:0 torch:1 torch:20 map:0 battle:8   # Xvfb 로 실제 촬영
+python3 tools/screenshot.py hub:0 torch:1 cham:1 cham:26 map:0      # Xvfb 로 실제 촬영
 ```
 
 **눈으로 한 번 봐라.** 무언가가 가려지거나 겹치는 문제는 테스트로 안 잡힌다.
