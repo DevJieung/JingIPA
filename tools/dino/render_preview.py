@@ -101,10 +101,17 @@ ICON_DINO = "trex.png"  # 런처 아이콘에 쓸 공룡
 
 
 def make_icons():
-    """안드로이드 런처 아이콘 (-> android_icons/*.png)
+    """★ 이 함수는 더 이상 아이콘을 만들지 않는다.
 
-    games/dino/dinos/ 에 생성된 그림이 있으면 그걸 쓰고,
-    없으면 preview/icon.json (손그림) 으로 만든다."""
+    앱 아이콘은 이제 주인공 두리의 얼굴이고, tools/theme/gen_theme.py --icons 가 만든다.
+    (런처 아이콘·앱스토어 아이콘·부팅 화면이 전부 같은 얼굴이어야 한다.)
+    여기 남아 있던 공룡 아이콘 생성기가 그것을 조용히 덮어써서, 껍데기만 남긴다."""
+    print("아이콘은 tools/theme/gen_theme.py --icons 가 만듭니다 (두리 얼굴).")
+    return
+
+
+def _make_icons_dino_legacy():
+    """옛 공룡 아이콘 생성기 (참고용으로만 남겨 둔다)."""
     os.makedirs("android_icons", exist_ok=True)
     art = _load_dino(ICON_DINO)
     if art is not None:

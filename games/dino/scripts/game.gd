@@ -277,6 +277,15 @@ func _build_banner() -> void:
 	banner_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	banner_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	banner.add_child(banner_label)
+	# 두리도 같이 만세한다 — 다섯 게임이 같은 순간에 같은 표정을 짓는다 (core/look.gd)
+	var cheer := TextureRect.new()
+	cheer.texture = Look.duri("cheer")
+	cheer.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	cheer.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	cheer.position = Vector2(-166, -74)
+	cheer.size = Vector2(150, 214)
+	cheer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	banner.add_child(cheer)
 
 
 ## 공룡을 찾으면 3초쯤 떠오르는 카드 — 큰 그림 + 이름 전부

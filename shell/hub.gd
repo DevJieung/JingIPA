@@ -11,12 +11,14 @@ extends Control
 const W := 1280.0
 const H := 800.0
 
-const BG := Color("f4f2ec")
-const BG2 := Color("eae7df")
-const INK := Color("2f2a2c")
-const INK_SOFT := Color("7d7570")
-const CARD := Color("ffffff")
-const SHADOW := Color(0, 0, 0, 0.10)
+## ★ 색은 짓지 않는다 — core/look.gd 하나에서 가져온다.
+##   게임마다 제 색을 지어내면 다섯 개가 다섯 앱처럼 보인다.
+const BG := Look.BG
+const BG2 := Look.BG2
+const INK := Look.INK
+const INK_SOFT := Look.INK_SOFT
+const CARD := Look.CARD
+const SHADOW := Look.SHADOW
 const RANDOM_COL := Color("f2a03d")
 
 ## 손가락이 큰 아이 기준. 카드는 이보다 작아지지 않는다.
@@ -110,6 +112,7 @@ func _draw() -> void:
 	var n := GameRegistry.LIST.size()
 	for i in n:
 		_paint_card(i, n)
+	_paint_duri()
 	_paint_random()
 	_paint_badge()
 	_paint_gear()
@@ -180,56 +183,40 @@ func _paint_icon(id: String, c: Vector2, w: float) -> void:
 							Color("f2a03d") if on else Color("e2ded6"))
 			_text_centered("7", Vector2(c.x, c.y + 58.0), 44, INK)
 		"torch":
-			# 깜깜한 방 + 손전등 빛 웅덩이 + 그 안에 든 공룡.
-			# 이 카드 하나로 "어두운데 비추면 보인다"가 글자 없이 읽혀야 한다.
-			# ★ 상자 아래끝은 c.y + 54 까지만. 부제 글자가 c.y + 86 부근에서 시작하므로
-			#   더 내려오면 글자를 덮는다 (실제로 한 번 덮었다).
+			# 깜깜한 방에서 두리가 손전등으로 공룡을 비춘다.
+			# ★ 카드 그림에도 두리가 있어야 한다 — 다섯 장이 한 아이의 놀이로 읽힌다.
 			var bw := minf(184.0, w - 34.0)
 			_round_rect(Rect2(c.x - bw * 0.5, c.y - 78.0, bw, 132.0), 16.0, Color("241f3d"))
-			var lc := Vector2(c.x + 16.0, c.y + 4.0)
-			# 왼쪽 위에서 뻗어 나오는 빛줄기.
-			# ★ 네 점을 눈대중으로 찍으면 안 된다 — 축과 거의 나란해져서 폭 4px 짜리
-			#   실오라기가 나온다(실제로 그랬다). 축의 **수직** 방향으로 벌려서 만든다.
-			var tip := Vector2(c.x - 58.0, c.y - 62.0)
+			var lc := Vector2(c.x + 34.0, c.y + 6.0)
+			var tip := Vector2(c.x - 30.0, c.y - 30.0)
 			var ax := (lc - tip).normalized()
 			var pp := Vector2(-ax.y, ax.x)
 			draw_colored_polygon(PackedVector2Array([
-					tip + pp * 7.0, lc + pp * 38.0, lc - pp * 38.0, tip - pp * 7.0]),
-					Color(1.0, 0.94, 0.74, 0.11))
+					tip + pp * 6.0, lc + pp * 30.0, lc - pp * 30.0, tip - pp * 6.0]),
+					Color(1.0, 0.94, 0.74, 0.13))
 			for i in 4:
-				draw_circle(lc, 46.0 - 9.0 * float(i), Color(1.0, 0.94, 0.74, 0.085))
+				draw_circle(lc, 38.0 - 8.0 * float(i), Color(1.0, 0.94, 0.74, 0.085))
 			var ti := DinoSpecies.index_of("stegosaurus")
 			var ttex := DinoSpecies.texture(ti)
 			if ttex != null:
 				var tdr := DinoSpecies.draw_rect_for(ti)
-				var tsc := minf(76.0 / maxf(tdr.size.x, 1.0), 54.0 / maxf(tdr.size.y, 1.0))
+				var tsc := minf(70.0 / maxf(tdr.size.x, 1.0), 46.0 / maxf(tdr.size.y, 1.0))
 				draw_texture_rect(ttex, Rect2(lc + tdr.position * tsc
 						+ Vector2(0, tdr.size.y * tsc * 0.5), tdr.size * tsc), false)
-			else:
-				_ellipse(lc, Vector2(30, 22), Color("8cc76a"))
-			# 손전등 몸통
-			_round_rect(Rect2(c.x - 88.0, c.y - 74.0, 32.0, 19.0), 7.0, Color("ffd166"))
+			Look.draw_duri(self, "torch", Vector2(c.x - 52.0, c.y + 50.0), 116.0)
 		"cham":
-			# 가운데 친구, 좌우에서 "이쪽!" 하고 가리키는 손 두 개.
-			# ★ 카드 폭 w 에 맞춰 줄인다. 게임이 늘면 카드가 좁아지는데(다섯 장 229px,
-			#   여섯 장 200px) 고정 픽셀로 그리면 그림이 카드 밖으로 삐져나간다.
+			# 두리가 "이쪽!" 하고 가리키고, 친구가 그 앞에 서 있다.
 			var k := minf(1.0, (w - 26.0) / 236.0)
 			var ci := DinoSpecies.index_of("parasaurolophus")
 			var ctex := DinoSpecies.texture(ci)
 			if ctex != null:
 				var cdr := DinoSpecies.draw_rect_for(ci)
-				var csc := minf(104.0 * k / maxf(cdr.size.x, 1.0), 112.0 * k / maxf(cdr.size.y, 1.0))
-				draw_texture_rect(ctex, Rect2(c + cdr.position * csc
-						+ Vector2(0, cdr.size.y * csc * 0.5), cdr.size * csc), false)
+				var csc := minf(96.0 * k / maxf(cdr.size.x, 1.0), 84.0 * k / maxf(cdr.size.y, 1.0))
+				draw_texture_rect(ctex, Rect2(c + Vector2(46.0 * k, 52.0) + cdr.position * csc,
+						cdr.size * csc), false)
 			else:
-				_ellipse(c, Vector2(40.0 * k, 34.0 * k), Color("f292b4"))
-			for sgn in [-1.0, 1.0]:
-				var hc := c + Vector2(sgn * 92.0 * k, 22.0)
-				var hd := Vector2(-sgn, 0.0)          # 가운데 친구를 가리킨다
-				_round_rect(Rect2(hc.x - 26.0 * k, hc.y - 23.0 * k, 52.0 * k, 46.0 * k),
-						16.0 * k, Color("ffd7b0"))
-				draw_line(hc + hd * 12.0 * k, hc + hd * 50.0 * k, Color("ffd7b0"), 18.0 * k)
-				draw_circle(hc + hd * 50.0 * k, 9.0 * k, Color("ffd7b0"))
+				_ellipse(c + Vector2(46.0 * k, 20.0), Vector2(34.0 * k, 28.0 * k), Color("f292b4"))
+			Look.draw_duri(self, "point", c + Vector2(-46.0 * k, 60.0), 132.0 * k)
 		"kanoodle":
 			# 격자 위에 조각 두 개
 			var g := 22.0
@@ -245,6 +232,16 @@ func _paint_icon(id: String, c: Vector2, w: float) -> void:
 						g - 3.0, g - 3.0), Color("b83e7f"))
 		_:
 			_ellipse(c, Vector2(52, 52), Color("bfb8ad"))
+
+
+## 두리 — 이 앱의 주인공.
+##
+## ★ 이야기가 아니라 **안내자**다. 인사만 하고 아무것도 요구하지 않는다 —
+##   "나를 따라와"도 "이걸 해"도 없다. 하는 일은 다섯 개가 한 앱이라는 것을
+##   글자 없이 말해 주는 것뿐이다. (세계관을 지어내지 않는다는 이 저장소의 결정은 그대로다.)
+func _paint_duri() -> void:
+	var bob := sin(_t * 1.6) * 5.0
+	Look.draw_duri(self, "", Vector2(196.0, 778.0 + bob), 204.0)
 
 
 ## "아무거나!" — 게임을 랜덤으로 이어서 돈다.

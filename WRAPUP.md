@@ -26,7 +26,8 @@ tools/verify.sh
 ```bash
 ~/.local/bin/godot --headless --path . res://tests/dino_dump.tscn -- --dump
 python3 tools/dino/render_preview.py
-python3 tools/screenshot.py hub:0 torch:1 cham:1 cham:26 map:0      # Xvfb 로 실제 촬영
+python3 tools/screenshot.py hub:0 torch:1 cham:1 title:0 map:0      # Xvfb 로 실제 촬영
+python3 tools/theme/gen_theme.py --icons                            # 아이콘을 고쳤으면
 ```
 
 **눈으로 한 번 봐라.** 무언가가 가려지거나 겹치는 문제는 테스트로 안 잡힌다.

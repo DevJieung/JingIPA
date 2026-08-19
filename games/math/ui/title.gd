@@ -18,6 +18,7 @@ var _title_bob := 0.0
 var _wide := false
 ## 제목·별을 그릴 가로 중심. 가로 배치에서는 화면 가운데가 아니라 왼쪽 절반의 가운데다.
 var _hero_cx := 0.0
+var _duri: TextureRect
 
 
 func _ready() -> void:
@@ -27,11 +28,16 @@ func _ready() -> void:
 	#   세션은 Shell 이 앱 부팅에서 한 번만 시작한다.
 
 	# ★ 배경 그림과 개구리 기사는 없앴다 — 서사를 걷어내고 알맹이만 남겼다.
-	var bg := ColorRect.new()
-	bg.color = Palette.PANEL
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg)
+	#   빈자리에는 앱의 주인공 두리가 선다 (core/look.gd — 이야기가 아니라 안내자다).
+	# ★ 배경을 **자식 ColorRect 로 두지 않는다.** Control 의 _draw 는 자식보다 먼저
+	#   그려지므로, 배경 노드를 자식으로 붙이면 이 화면의 제목("셈놀이")과 별 개수가
+	#   통째로 덮여 안 보인다 — 실제로 그렇게 가려져 있었다. 배경은 _draw 첫 줄에서 칠한다.
+	_duri = TextureRect.new()
+	_duri.texture = Look.duri()
+	_duri.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_duri.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_duri.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_duri)
 
 	_start = BigButton.make(Loc.t("start"), Palette.BTN_GREEN, BigButton.Icon.PLAY)
 	_start.font_size = 46
@@ -111,6 +117,13 @@ func _layout() -> void:
 	_sound.size = Vector2(88, 88)
 	_sound.position = Vector2(20.0, 40.0)
 
+	# 두리는 제목 아래에 선다 (가로 배치는 왼쪽 절반, 세로 배치는 가운데)
+	var dh := clampf(h * 0.42, 180.0, 340.0)
+	_duri.size = Vector2(dh * 0.7, dh)
+	# 제목과 별 아래에 선다 (별 줄이 제목 바로 밑이라 그보다 더 내려가야 한다)
+	_duri.position = Vector2(_hero_cx - _duri.size.x * 0.5,
+			h * (0.40 if _wide else 0.34))
+
 	_gate.set_anchors_preset(Control.PRESET_FULL_RECT)
 
 	_start.text = Loc.t("start") if MathGame.highest_cleared() < 0 else Loc.t("continue")
@@ -172,6 +185,7 @@ func _layout_gate_pad(w: float, h: float) -> void:
 
 
 func _draw() -> void:
+	draw_rect(Rect2(Vector2.ZERO, size), Palette.PANEL)
 	# 가로 배치에서는 오른쪽이 버튼 기둥이므로 제목과 별을 왼쪽 절반 안에만 그린다.
 	var cx := _hero_cx if _hero_cx > 1.0 else size.x * 0.5
 	var avail := (size.x * 0.55 if _wide else size.x) - 60.0
@@ -190,7 +204,7 @@ func _draw() -> void:
 	var total := MathGame.total_stars()
 	if total > 0:
 		var bx := cx - 66.0
-		var by := top + 140.0 + bob * 0.5
+		var by := top + 92.0 + bob * 0.5
 		Glyphs.draw_star(self, Vector2(bx, by), 24.0, Palette.STAR,
 				Palette.shade(Palette.STAR, -0.35), 3.0)
 		Fonts.draw_centered_outlined(self, "%d / %d" % [total, MathGame.max_stars()],

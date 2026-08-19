@@ -22,9 +22,9 @@ extends Control
 const W := 1280.0
 const H := 800.0
 
-const BG := Color("f4f2ec")
-const INK := Color("2f2a2c")
-const INK_SOFT := Color("7d7570")
+const BG := Look.BG
+const INK := Look.INK
+const INK_SOFT := Look.INK_SOFT
 const CELL_EMPTY := Color("e2ded6")
 const CELL_LINE := Color("cdc7bc")
 const GHOST_OK := Color(1, 1, 1, 0.55)
@@ -469,6 +469,8 @@ func _paint_done() -> void:
 	_outline_rect(box, Color("f2c74a"), 6.0)
 	_text_centered("다 채웠어요!", Vector2(W * 0.5, box.position.y + 62.0), 52, INK)
 	_text_centered("다음 판으로 가요", Vector2(W * 0.5, box.position.y + 112.0), 24, INK_SOFT)
+	# 두리가 같이 만세한다 (다섯 게임이 같은 순간에 같은 표정을 짓는다)
+	Look.draw_duri(self, "cheer", Vector2(box.position.x - 30.0, box.end.y + 190.0), 210.0)
 
 
 # --------------------------------------------------------------------------- #

@@ -26,7 +26,7 @@ const LIST := [
 		"viewport": {
 			"size": Vector2i(1280, 720),
 			"keep": true,
-			"clear": Color(0.984, 0.914, 0.812),
+			"clear": Color(0.969, 0.941, 0.894),   # Look.BG
 		},
 		# 공룡 찾기는 배경음이 없다. 빈 문자열이면 셸이 BGM 을 끈다 —
 		# 이걸 안 두면 전투 BGM 이 공룡 찾기 내내 루프로 깔린다.
@@ -49,7 +49,7 @@ const LIST := [
 		"viewport": {
 			"size": Vector2i(1280, 800),
 			"keep": false,
-			"clear": Color(0.624, 0.863, 1.0),
+			"clear": Color(0.969, 0.941, 0.894),   # Look.BG
 		},
 		"bgm": "bgm_menu",
 		"journey": {"pre": 2, "elem": 4},
@@ -88,7 +88,7 @@ const LIST := [
 		"viewport": {
 			"size": Vector2i(1280, 800),
 			"keep": false,
-			"clear": Color(0.984, 0.953, 0.902),
+			"clear": Color(0.969, 0.941, 0.894),   # Look.BG
 		},
 		"bgm": "",
 		"journey": {"pre": 3, "elem": 3},
@@ -107,7 +107,7 @@ const LIST := [
 		"viewport": {
 			"size": Vector2i(1280, 800),
 			"keep": false,
-			"clear": Color(0.957, 0.949, 0.925),
+			"clear": Color(0.969, 0.941, 0.894),   # Look.BG
 		},
 		"bgm": "",
 		"journey": {"pre": 3, "elem": 4},

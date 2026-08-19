@@ -7,13 +7,13 @@ config_version=5
 
 [application]
 
-config/name="놀이 상자"
+config/name="두리의 모험"
 ; 애플은 App ID 이름에 영문·숫자만 받는다. 지우면 무료 서명(AltStore/Sideloadly)이
 ; 한글 이름으로 App ID 를 못 만들어 설치가 막힌다. ★삭제 금지
 ; ★ 이 ASCII 이름과 번들 ID 는 바꾸지 마라. 바꾸면 애플/안드로이드가 다른 앱으로 보고
 ;   아이 폰의 기존 저장 데이터가 통째로 남남이 된다. 표시 이름(config/name)만 바꾼다.
 config/name.ios="DinoIsland"
-config/description="공룡 찾기 · 손전등 찾기 · 셈놀이 · 블록 채우기 · 참참참 — 아이용 놀이 모음"
+config/description="두리와 함께 하는 다섯 가지 놀이 — 공룡 찾기 · 손전등 찾기 · 셈놀이 · 블록 채우기 · 참참참"
 config/version="1.0.0"
 ; ★저장 폴더 이름을 앱 표시 이름에서 분리한다.
 ;   use_custom_user_dir 이 true 여야 custom_user_dir_name 이 실제로 쓰인다 —
@@ -30,8 +30,11 @@ run/main_scene="res://shell/boot.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 run/max_fps=60
-boot_splash/show_image=false
-boot_splash/bg_color=Color(0.976, 0.945, 0.882, 1)
+; 앱을 여는 첫 순간에도 두리가 있어야 한다 — 런처 아이콘과 같은 얼굴이다.
+boot_splash/show_image=true
+boot_splash/image="res://splash@2x.png"
+boot_splash/fullsize=false
+boot_splash/bg_color=Color(0.969, 0.941, 0.894, 1)
 
 [autoload]
 
@@ -106,4 +109,4 @@ anti_aliasing/quality/msaa_2d=2
 textures/canvas_textures/default_texture_filter=3
 ; 실제로 이 색이 보이는 곳은 레터박스 여백과 부팅 순간뿐이다.
 ; 게임별 색은 Shell.enter_game() 이 RenderingServer.set_default_clear_color() 로 바꾼다.
-environment/defaults/default_clear_color=Color(0.976, 0.945, 0.882, 1)
+environment/defaults/default_clear_color=Color(0.969, 0.941, 0.894, 1)

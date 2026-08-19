@@ -1,6 +1,11 @@
-# 놀이 상자 🦕 ➕ ▦
+# 두리의 모험 🧒 🦕
 
 아이 둘을 위한 놀이 모음. 게임 다섯이 하나의 앱에 들어 있고, 앞으로 더 늘어난다.
+
+주인공은 **두리**(만 4세)입니다. 허브에서 손을 흔들고, 판을 깨면 같이 만세합니다 —
+**이야기가 아니라 안내자**예요. 다섯 개가 한 앱이라는 것을 글자 없이 말해 주는 역할입니다.
+화풍은 이미 있던 공룡 50종에 맞췄습니다: **손으로 칠한 수집용 피규어**, 곧 장난감 상자 속 세상.
+자세한 것은 [`docs/look-rules.md`](docs/look-rules.md).
 
 앱을 열면 **게임 목록**이 나옵니다. 세계관도 이야기도 없습니다 — 카드를 고르거나,
 **「아무거나!」** 를 누르면 게임이 번갈아 나오며 판이 쭉 이어집니다.
@@ -169,7 +174,8 @@ shell/       앱 셸 (게임 목록 말고는 게임을 모른다)
 core/fonts/  DinoKR.ttf · Jua-Regular.ttf
 games/dino/  공룡 찾기   games/torch/  손전등 찾기
 games/math/  셈놀이      games/kanoodle/  블록 채우기   games/cham/  참참참
-tools/       verify.sh · check_font.py · screenshot.py · dino/ · frog/
+core/look.gd 앱 전체의 색 · 주인공 두리    core/art/ 두리 그림
+tools/       verify.sh · check_font.py · screenshot.py · dino/ · theme/
 tests/       test_runner · shot · dino_dump · ns_check · journey_check
              battle_check · kanoodle_check · torch_check · cham_check
 docs/        게임별 규칙 · 빌드 · iOS 서명

@@ -32,13 +32,15 @@ extends Control
 const W := 1280.0
 const H := 800.0
 
-const BG := Color("fbf3e6")
-const BG2 := Color("f3e9d8")
-const INK := Color("3b3038")
-const INK_SOFT := Color("8b7d84")
-const FLOOR := Color("e7d9c2")
-const SKIN := Color("ffd7b0")
-const SKIN_HI := Color("ffe9d4")
+const BG := Look.BG
+const BG2 := Look.BG2
+const INK := Look.INK
+const INK_SOFT := Look.INK_SOFT
+## ★ 바닥과 손은 **바탕보다 확실히 진해야** 한다. 크림 바탕에 살구색 손을 그대로 얹으면
+##   손이 배경에 녹아서, 아이가 "누를 것"을 못 알아본다 (한 번 그랬다).
+const FLOOR := Color("ddc9a8")
+const SKIN := Color("f9c092")
+const SKIN_HI := Color("ffdcb8")
 const MARK := Color("c9a86a")
 const MARK_NOW := Color("e8734a")
 
@@ -565,7 +567,7 @@ func _paint_marks() -> void:
 	var gap := 72.0
 	var y := GROUND + 36.0
 	var wide := float(n) * gap + 28.0
-	_round_rect(Rect2(W * 0.5 - wide * 0.5, y - 27.0, wide, 54.0), 26.0, Color(1, 1, 1, 0.45))
+	_round_rect(Rect2(W * 0.5 - wide * 0.5, y - 27.0, wide, 54.0), 26.0, Color(1, 1, 1, 0.72))
 	for i in n:
 		var at := Vector2(W * 0.5 - float(n - 1) * gap * 0.5 + float(i) * gap, y)
 		var col := MARK_NOW if i == n - 1 else MARK
@@ -718,7 +720,9 @@ func _paint_clear() -> void:
 	var box := Rect2(W * 0.5 - 300.0, 150.0, 600.0, 130.0)
 	_round_rect(box, 40.0, Color(1, 1, 1, 0.94))
 	var msg := "%d판 돌파!" % stage if stage % 10 == 0 else "친구 다 잡았다!"
-	_text_centered(msg, Vector2(W * 0.5, box.position.y + 84.0), 52, Color("e8734a"))
+	_text_centered(msg, Vector2(W * 0.5, box.position.y + 84.0), 52, Look.ACCENT)
+	# 두리가 같이 만세한다 (다섯 게임이 같은 순간에 같은 표정을 짓는다)
+	Look.draw_duri(self, "cheer", Vector2(box.position.x - 40.0, box.end.y + 24.0), 210.0)
 
 
 ## 공룡 그림 하나. 발이 at 에 닿게, 키를 h 로 맞춰서.

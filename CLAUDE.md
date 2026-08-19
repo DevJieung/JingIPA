@@ -1,7 +1,8 @@
 # CLAUDE.md — 이 저장소에서 작업할 때
 
-**놀이 상자** — 아이 둘(나이 차 있음)을 위한 놀이 모음. Godot 4.7.1, 안드로이드/iOS.
+**두리의 모험** — 아이 둘(나이 차 있음)을 위한 놀이 모음. Godot 4.7.1, 안드로이드/iOS.
 게임 다섯이 하나의 앱에 들어 있고, 앞으로 더 늘어난다.
+주인공은 **두리**(만 4세) — 이야기가 아니라 **안내자**다 ([`docs/look-rules.md`](docs/look-rules.md)).
 
 - **공룡 찾기** (`games/dino/`) — 방에 숨은 공룡을 콕 눌러 찾는다
 - **손전등 찾기** (`games/torch/`) — 깜깜한 방을 좁은 손전등으로 비춰 공룡을 찾는다
@@ -17,6 +18,7 @@
 게임별 규칙은 [`docs/dino-rules.md`](docs/dino-rules.md) · [`docs/math-rules.md`](docs/math-rules.md)
 — **둘 다 여전히 유효하다. 고치기 전에 반드시 읽어라.**
 손전등 찾기는 [`docs/torch-rules.md`](docs/torch-rules.md), 참참참은 [`docs/cham-rules.md`](docs/cham-rules.md).
+룩앤필(주인공·색·아이콘)은 [`docs/look-rules.md`](docs/look-rules.md).
 
 ---
 
@@ -29,13 +31,15 @@ shell/            앱 셸 — 게임 목록 말고는 게임을 모른다
   game_registry.gd  ★ 게임이 등록되는 유일한 곳 (「섬 한 바퀴」 가중치도 여기)
   migrate.gd        옛 저장 파일 -> v3 (순수 함수라 헤드리스로 테스트된다)
   boot.gd / hub.gd  진입점 / 둥지방
-core/fonts/       DinoKR.ttf (프로젝트 fallback) · Jua-Regular.ttf (개구리 용사 전용)
+core/look.gd      ★ 앱 전체의 색 · 주인공 두리 · 공통 배경 (게임이 색을 짓지 않게)
+core/art/         두리 네 포즈 (tools/theme/gen_theme.py 가 만든다)
+core/fonts/       DinoKR.ttf (프로젝트 fallback) · Jua-Regular.ttf (셈놀이 전용)
 games/dino/       공룡 찾기
 games/torch/      손전등 찾기 (공룡 찾기의 방·가구·공룡을 빌려 쓴다)
 games/math/       셈놀이 (오토로드 MathGame / Audio 포함)
 games/kanoodle/   블록 채우기
 games/cham/       참참참 (공룡 그림·도감만 빌려 쓴다)
-tools/            verify.sh · check_font.py · screenshot.py · dino/ · frog/
+tools/            verify.sh · check_font.py · screenshot.py · dino/ · theme/
 tests/            test_runner · shot · dino_dump · ns_check
                   journey_check (게임 사이) · battle_check (시연 켠 전탄)
                   kanoodle_check (퍼즐 생성기) · torch_check (어둠·빛·찾기 규칙)
@@ -166,8 +170,15 @@ adb install -r rogame-test.apk
 26. **공룡 그림을 좌우로 뒤집어서 "방향"을 말하지 마라.** 50종 PNG 는 바라보는 방향이
     종마다 달라서, 뒤집기로 무언가를 알리면 종에 따라 아이에게 거짓말이 된다.
     (공룡 찾기는 그냥 모양이라 무해했고, 그래서 여태 안 드러났다. 참참참에서 드러났다.)
-27. **그래픽은 코드로 그린다.** 이미지 파일은 공룡 50종 PNG 뿐이다 (개구리 아트 16MB 는 걷어냈다).
-    새 게임은 새 이미지 자산 0장이 원칙이다.
+27. **놀이에 쓰이는 그래픽은 코드로 그린다.** 이미지 파일은 공룡 50종 PNG 와
+    주인공 두리 네 장뿐이다. 방·가구·블록 조각·손은 전부 코드다 — (a) 판정이 그 도형에서
+    나오고(가림%·클릭·낙하), (b) 화면 없는 이 머신에서 그리기 명령을 재현해 검증하기
+    때문이다. **새 게임의 놀이 화면은 이미지 0장이 원칙이다.**
+    두리·아이콘·부팅 화면 같은 **장식만** 그림을 쓴다 ([`docs/look-rules.md`](docs/look-rules.md)).
+28. **색을 짓지 마라.** `core/look.gd` 의 `Look` 에서 가져와라. 게임마다 제 색을 지어내면
+    다섯 개가 다섯 앱처럼 보인다. 게임의 정체성 색만 `game_registry.gd` 의 `color` 에 둔다.
+29. **`config/name.ios` 와 번들 ID 는 절대 바꾸지 마라.** 표시 이름(`config/name`)만 바꾼다.
+    바꾸는 순간 아이 폰의 기존 저장 데이터가 남남이 된다.
 
 ---
 
@@ -193,6 +204,9 @@ stdbuf -oL ~/.local/bin/godot --headless --path . res://tests/cham_check.tscn   
 python3 tools/screenshot.py kanoodle:0 torch:1 cham:1 cham:26 hub:0                # Xvfb 촬영
 python3 tools/dino/render_preview.py                             # 위 JSON 을 PNG 로
 python3 tools/screenshot.py map:0 battle:8                       # Xvfb 로 실제 촬영
+python3 tools/theme/gen_theme.py --list            # 두리 자산 목록
+python3 tools/theme/gen_theme.py --only duri --tries 6  # 주인공 후보 뽑아 보기
+python3 tools/theme/gen_theme.py --icons          # 두리 얼굴로 아이콘·부팅화면 다시
 python3 tools/check_font.py
 python3 tools/dino/gen_dinos.py --list                           # 공룡 50종
 ROGAME_DEBUG=1 ~/.local/bin/godot --headless --path . --quit-after 200   # 이관 진단
@@ -235,6 +249,8 @@ ROGAME_DEBUG=1 ~/.local/bin/godot --headless --path . --quit-after 200   # 이�
 | **「섬 한 바퀴」 (게임 섞기)** | `shell/shell.gd` 의 `journey_*` + `pick_journey_game()` |
 | 여행에서 게임이 나올 확률 | `shell/game_registry.gd` 의 `journey` (나이대별 가중치) |
 | 여행 한 판의 놀이 단위 | `shell/game_registry.gd` 의 `journey_units` (셸은 게임 이름을 모른다) |
+| **앱 색 · 주인공 두리** | `core/look.gd` 의 `Look` — 색을 게임에서 짓지 않는다 |
+| 두리 그림 · 아이콘 | `tools/theme/gen_theme.py` (로컬 Krea 2, 화풍 앵커가 여기 있다) |
 | 여행 개구리 구간의 탄 고르기 | `shell/router.gd` 의 `_pick_journey_tier()` |
 | 저장 스키마 · 프로필 · 도감 | `shell/shell.gd` |
 | 옛 저장 이관 | `shell/migrate.gd` (순수 함수) |
