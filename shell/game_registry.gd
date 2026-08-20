@@ -99,6 +99,23 @@ const LIST := [
 		"journey_units": 1,
 	},
 	{
+		"id": "rps",
+		"title": "가위바위보",
+		"subtitle": "이기는 손을 내기",
+		"color": Color("2f9c8f"),
+		"scene": "res://games/rps/rps.tscn",
+		"viewport": {
+			"size": Vector2i(1280, 800),
+			"keep": false,
+			"clear": Color(0.969, 0.941, 0.894),   # Look.BG
+		},
+		"bgm": "",
+		"journey": {"pre": 3, "elem": 3},
+		"journey_caption": "가위바위보",
+		# 한 판이 5~7 라운드, 20~40초쯤이다 (참참참보다 조금 길고 공룡 방보다 짧다).
+		"journey_units": 2,
+	},
+	{
 		"id": "kanoodle",
 		"title": "블록 채우기",
 		"subtitle": "모양을 맞춰 넣기",

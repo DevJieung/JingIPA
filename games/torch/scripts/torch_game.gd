@@ -384,7 +384,15 @@ func _tap(p: Vector2) -> void:
 	if hit != null and beam.lit(hit.hit_rect().get_center()):
 		_on_found(hit)
 		return
-	if beam.lit(p):
+	# ★ `hit == null` 이 빠져 있었다. 손가락 밑에 공룡이 있는데 그 공룡의 중심이
+	#   아직 안 밝은 경우(판정 반경 HIT=0.90 이 눈에 보이는 빛 웅덩이 0.98 보다 좁다),
+	#   여기 가구 분기가 탭을 통째로 먹고 **손전등이 그 자리로 가지도 않았다.**
+	#   아이는 보이는 공룡을 정확히 눌렀는데 "틀림" 소리만 듣고, 같은 데를 다시 눌러도
+	#   똑같다 — 이 나이대에게 그건 틀린 것과 구분되지 않는다 (규칙 2·11).
+	#   숨는 자리가 전부 가구 옆·뒤라(가림 평균 50%) 방마다 2~4곳씩 있었다.
+	#   이제 공룡 위를 누른 탭은 언제나 _aim 으로 간다 — 빛이 그리로 옮겨 가고
+	#   공룡이 몸을 흔든다("여기 뭔가 있다"). 다음 탭이 그 공룡을 찾는다.
+	if hit == null and beam.lit(p):
 		# 빛 안인데 공룡이 아니다 — 벌은 없고 가구가 반응만 한다.
 		for i in range(props.size() - 1, -1, -1):
 			if props[i].rect().has_point(p):
@@ -477,16 +485,12 @@ func _room_clear() -> void:
 		Shell.journey_advance()
 		return
 	# 방 하나가 개구리 문제 3개쯤의 놀이 단위다 (공룡 찾기와 같다).
-	Shell.add_round_units()
-	if Shell.session_over_limit() and not dev_mode:
-		await _fade(_go_home_from_clear)
+	# ★ 상한에 닿았으면 셸이 쉼표를 찍고 허브로 보낸다 — 여기서 제 페이드로 덮은 뒤
+	#   Router 를 부르면 [덮임 -> 방이 다시 보임 -> 다시 덮임] 으로 한 번 깜빡였다.
+	#   아이 눈에는 "넘어가려다 실패한 것"으로 보인다.
+	if Shell.round_done(dev_mode):
 		return
 	await _fade(_build_room)
-
-
-func _go_home_from_clear() -> void:
-	# 상한에 닿았다 — 놀이를 끊지 않고 집으로 돌려보낸다.
-	Router.goto_hub()
 
 
 func _go_home() -> void:

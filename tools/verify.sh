@@ -59,6 +59,18 @@ else
 	echo "   ok: shell/ core/ games/ 어디도 커맨드라인을 읽지 않음"
 fi
 
+step '0a. 셸에 가드 없는 await <트윈>.finished 가 없는가 (규칙 16)'
+# ★ 셸에서 트윈의 finished 를 맨몸으로 기다리면, 그 트윈이 한 번이라도 finished 를
+#   안 내는 순간 화면이 덮인 채로 굳고 그 뒤 모든 전환이 조용히 무시된다.
+#   실제로 두 번 물렸다 (Router._change 의 잠금, Router._show_caption 의 캡션).
+#   기다릴 거면 _first_of(트윈, 타이머) 로 먼저 오는 쪽을 받는다.
+if grep -rnE '^[^#]*await [A-Za-z_][A-Za-z0-9_]*\.finished' --include='*.gd' shell/ 2>/dev/null; then
+	echo "!! 셸에 가드 없는 await ....finished 가 있습니다. Router._first_of 로 감싸세요."
+	fail=1
+else
+	echo "   ok: 셸의 모든 대기가 트윈·타이머 중 먼저 오는 쪽을 받음"
+fi
+
 step "1. 전역 이름 규칙"
 godot_run 180 "$TMP/ns.txt" res://tests/ns_check.tscn
 ns_rc=$?
@@ -118,7 +130,30 @@ godot_run 600 "$TMP/cham_pre.txt" res://tests/cham_check.tscn -- --pre
 grep -E '버릇 [0-9]+개|판정:|^!!' "$TMP/cham_pre.txt"
 expect "cham_check --pre" "판정: 정상" "$TMP/cham_pre.txt"
 
-step "5d. 아무거나 — 게임을 오가는 흐름"
+step "5d. 가위바위보 — 규칙과 안내"
+# ★ 여기서만 잡히는 것: **화면에 그린 손·목표와 판정이 어긋나는 것.** 그림은 멀쩡한데
+#   아이가 맞게 냈는데 틀렸다고 나오는 상태라, 눈으로는 절대 안 보인다.
+#   그리고 축이 헐거워져 "아무렇게나 찍어도 잘한다로 읽히는" 것도 숫자로 막는다.
+godot_run 600 "$TMP/rps.txt" res://tests/rps_check.tscn
+grep -E '판 [0-9]+개|판정:|^!!' "$TMP/rps.txt"
+expect "rps_check" "판정: 정상" "$TMP/rps.txt"
+godot_run 600 "$TMP/rps_pre.txt" res://tests/rps_check.tscn -- --pre
+grep -E '판 [0-9]+개|판정:|^!!' "$TMP/rps_pre.txt"
+expect "rps_check --pre" "판정: 정상" "$TMP/rps_pre.txt"
+
+step "5e0. 세션 상한 — 「많이 놀았다」가 쉼표인가 자물쇠인가"
+# ★ 이 길은 여태 어떤 검사도 안 지나갔다. journey_check 는 상한을 꺼 버리고(session_limit=0),
+#   게임별 검사기는 dev_mode 라 상한 분기를 통째로 건너뛴다. 그 사이에 상한이
+#   "한 번 넘으면 앱을 죽일 때까지 방마다 허브로 튕김"이 돼 있었다 —
+#   아이 눈에는 "다 찾았는데 다음 방이 안 나온다"로만 보인다.
+godot_run 400 "$TMP/session.txt" res://tests/session_check.tscn
+grep -E '프로필:|게임|판정:|^!!' "$TMP/session.txt"
+expect "session_check" "판정: 정상" "$TMP/session.txt"
+godot_run 400 "$TMP/session_pre.txt" res://tests/session_check.tscn -- --pre
+grep -E '프로필:|판정:|^!!' "$TMP/session_pre.txt"
+expect "session_check --pre" "판정: 정상" "$TMP/session_pre.txt"
+
+step "5e. 아무거나 — 게임을 오가는 흐름"
 # ★ 게임과 게임 **사이**를 보는 유일한 검사다. 화면 전환 잠금이 안 풀려서
 #   그 뒤 모든 전환이 조용히 무시되던 사고가 여기서 잡혔다.
 godot_run 900 "$TMP/journey.txt" res://tests/journey_check.tscn
@@ -126,7 +161,7 @@ grep -E '섬 한 바퀴|게임별|판정:|^!!' "$TMP/journey.txt"
 expect "journey_check" "판정: 정상" "$TMP/journey.txt"
 
 if [ "$QUICK" -eq 0 ]; then
-	step "5e. 개구리 용사 — 시연을 켠 채로 한 탄씩 (test_runner 가 안 보는 경로)"
+	step "5f. 개구리 용사 — 시연을 켠 채로 한 탄씩 (test_runner 가 안 보는 경로)"
 	godot_run 1500 "$TMP/battle.txt" res://tests/battle_check.tscn
 	grep -E '탄:|판정:|^!!' "$TMP/battle.txt"
 	expect "battle_check" "판정: 정상" "$TMP/battle.txt"

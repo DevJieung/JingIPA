@@ -17,7 +17,7 @@
 #   서명 Secrets 가 없으면 -> 서명 없는 IPA (Sideloadly/AltStore 로 직접 서명해서 설치)
 #   서명 Secrets 가 있으면 -> 서명된 IPA   (받아서 바로 설치)
 #
-# 무엇을 넣어야 하는지는 IOS.md 에 순서대로 적어 뒀습니다.
+# 무엇을 넣어야 하는지는 docs/ios-signing.md 에 순서대로 적어 뒀습니다.
 
 name: iOS IPA 만들기
 

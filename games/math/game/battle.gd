@@ -739,6 +739,12 @@ func _on_result_action(id: String) -> void:
 		"next":
 			Router.goto_battle(_tier + 1)
 		"map":
+			# ★ "오늘은 여기까지 하고 쉬어요"를 보고 나가는 길이면 여기서 세션을 새로 연다.
+			#   안 그러면 지도로 나갔다 다음 탄에 들어가도 곧바로 같은 안내로 끝나고,
+			#   무한 모드는 첫 문제도 못 낸다 — 다른 다섯 게임이 물렸던 것과 같은 사고다.
+			if _session_break_pending or MathGame.session_over_limit():
+				Shell.take_session_break()
+				_session_break_pending = false
 			Router.goto_tiers()
 		"again":
 			Router.goto_endless()

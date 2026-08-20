@@ -23,10 +23,11 @@ const RANDOM_COL := Color("f2a03d")
 
 ## 손가락이 큰 아이 기준. 카드는 이보다 작아지지 않는다.
 ## ★ 게임이 다섯이 되면 240 을 지킬 수 없다 (240x5 + 여백이 화면을 넘는다).
-##   그래서 다섯부터는 여백과 사이를 먼저 줄이고 하한도 200 으로 내린다 — 200 이면
-##   여섯 장까지 들어간다. 일곱 번째 게임이 오면 그때는 두 줄로 바꿔야 한다.
+##   그래서 다섯부터는 여백과 사이를 먼저 줄이고 하한도 내린다 — 186 이면 여섯 장이
+##   양옆 여백까지 남기고 들어간다 (200 으로 두면 여섯 장이 화면 끝에 딱 붙어서
+##   맨 끝 카드가 잘린 것처럼 보였다). 일곱 번째 게임이 오면 그때는 두 줄로 바꿔야 한다.
 const CARD_MIN_W := 240.0
-const CARD_MIN_W_MANY := 200.0
+const CARD_MIN_W_MANY := 186.0
 
 var _t := 0.0
 var _panel_open := false
@@ -155,8 +156,22 @@ func _paint_card(i: int, n: int) -> void:
 	var cx := r.position.x + r.size.x * 0.5
 	var top := r.position.y - press
 	_paint_icon(String(g["id"]), Vector2(cx, top + 230.0), r.size.x)
-	_text_centered(String(g["title"]), Vector2(cx, top + 62.0), 38, Color("ffffff"))
-	_text_centered(String(g.get("subtitle", "")), Vector2(cx, top + 316.0), 21, INK_SOFT)
+	# ★ 글자 크기를 박아 두면 게임이 늘어 카드가 좁아질 때 제목이 옆 카드를 침범한다.
+	#   (여섯 번째 게임에서 실제로 그랬다.) 카드 폭에 맞춰 줄인다.
+	var tw := r.size.x - 18.0
+	_text_centered(String(g["title"]), Vector2(cx, top + 62.0),
+			_fit_size(String(g["title"]), 38, tw), Color("ffffff"))
+	var sub := String(g.get("subtitle", ""))
+	_text_centered(sub, Vector2(cx, top + 316.0), _fit_size(sub, 21, tw), INK_SOFT)
+
+
+## 이 폭 안에 들어가는 가장 큰 글자 크기 (want 이하)
+func _fit_size(s: String, want: int, wide: float) -> int:
+	var f := ThemeDB.fallback_font
+	var px := want
+	while px > 12 and f.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > wide:
+		px -= 1
+	return px
 
 
 ## 카드 그림 — 전부 코드로 그린다. 공룡만 이미 있는 PNG 를 쓴다.
@@ -217,6 +232,16 @@ func _paint_icon(id: String, c: Vector2, w: float) -> void:
 			else:
 				_ellipse(c + Vector2(46.0 * k, 20.0), Vector2(34.0 * k, 28.0 * k), Color("f292b4"))
 			Look.draw_duri(self, "point", c + Vector2(-46.0 * k, 60.0), 132.0 * k)
+		"rps":
+			# 위에서 내려온 바위와 아래에서 올라온 보가 만난다 — 이 놀이 그대로.
+			# 별이 아래(=내 손) 쪽에 붙어 있는 것까지 게임 화면과 같은 말이다.
+			# ★ 아래로 너무 내리면 편 손의 손가락이 카드 밑줄(부제)을 물어뜯는다.
+			var k := minf(1.0, (w - 26.0) / 210.0)
+			Look.draw_hand(self, c + Vector2(-32.0 * k, -60.0 * k), 34.0 * k,
+					Look.HAND_ROCK, Vector2.DOWN, Look.SKIN)
+			Look.draw_hand(self, c + Vector2(26.0 * k, 28.0 * k), 34.0 * k,
+					Look.HAND_PAPER, Vector2.UP, Look.SKIN)
+			_paint_star(c + Vector2(88.0 * k, 28.0 * k), 17.0 * k, Look.GOLD)
 		"kanoodle":
 			# 격자 위에 조각 두 개
 			var g := 22.0
@@ -232,6 +257,15 @@ func _paint_icon(id: String, c: Vector2, w: float) -> void:
 						g - 3.0, g - 3.0), Color("b83e7f"))
 		_:
 			_ellipse(c, Vector2(52, 52), Color("bfb8ad"))
+
+
+func _paint_star(c: Vector2, r: float, col: Color) -> void:
+	var pts := PackedVector2Array()
+	for i in 10:
+		var a := -PI * 0.5 + TAU * float(i) / 10.0
+		pts.append(c + Vector2(cos(a) * (r if i % 2 == 0 else r * 0.45),
+				sin(a) * (r if i % 2 == 0 else r * 0.45)))
+	draw_colored_polygon(pts, col)
 
 
 ## 두리 — 이 앱의 주인공.

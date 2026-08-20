@@ -155,6 +155,14 @@ static func default_tuning(band: String) -> Dictionary:
 			"nood_place_min": 2, "nood_place_max": 4,
 			"nood_guide_at": 16, "nood_rotate_at": 999,
 			"nood_hint_sec": 10.0,
+			# 가위바위보 — 카드 두 장에서 시작하고, **"져라"는 아예 안 나온다.**
+			# 일부러 지는 것은 억제 조절이라 만 4세에게는 아직 이르다 (규칙 8의 F축이 아니라
+			# 그냥 못 하는 것이고, 못 하는 것을 계속 내밀면 그게 평가가 된다).
+			# 관계 고리도 절반 아래로는 안 옅어진다.
+			"rps_rounds_min": 5, "rps_rounds_max": 6,
+			"rps_cards_min": 2, "rps_cards_at": 6,
+			"rps_goals_max": 2,
+			"rps_help": 1.0, "rps_help_min": 0.55,
 		}
 	return {
 		"demo_first": false,
@@ -183,6 +191,11 @@ static func default_tuning(band: String) -> Dictionary:
 		"nood_place_min": 3, "nood_place_max": 7,
 		"nood_guide_at": 10, "nood_rotate_at": 22,
 		"nood_hint_sec": 18.0,
+		# 가위바위보 — 처음부터 세 장, 나중에는 "져라"까지. 관계 고리는 끝내 사라진다.
+		"rps_rounds_min": 5, "rps_rounds_max": 7,
+		"rps_cards_min": 3, "rps_cards_at": 1,
+		"rps_goals_max": 3,
+		"rps_help": 1.0, "rps_help_min": 0.0,
 	}
 
 
@@ -343,10 +356,10 @@ func journey_advance() -> void:
 	#   자리였고(규칙 15), 그래서 나중에 붙은 게임들(블록 채우기·손전등 찾기)은 여행에서
 	#   놀이 단위를 **0으로 세어** 세션 상한이 조용히 늘어나 있었다.
 	#   셈놀이는 0 이다 — 문제마다 이미 1씩 센다(count_session_question).
-	add_round_units()
-	if session_over_limit():
-		journey_end()
-		Router.goto_hub()
+	# ★ round_done() 이 상한을 보고 쉼표까지 찍는다 (세션을 새로 열고 허브로 보낸다).
+	#   예전에는 여기서 journey_end() + goto_hub() 만 했고 세션은 안 건드려서,
+	#   상한 이후의 「아무거나」가 **한 판만 하고 끝나는 것**을 무한히 반복했다.
+	if round_done():
 		return
 	_journey_go(pick_journey_game())
 
@@ -389,6 +402,37 @@ func begin_session() -> void:
 	session_notified = false
 
 
+## 상한에 닿아 허브로 돌려보냈다 — **그 나감이 곧 쉼이므로 여기서 세션을 새로 연다.**
+##
+## ★ 이걸 안 하면 상한은 "쉼표"가 아니라 **영구 자물쇠**가 된다. session_units 를
+##   0 으로 되돌리는 곳이 앱 부팅(shell/boot.gd) 하나뿐이라, 한 번 넘긴 뒤로는
+##   방을 깰 때마다 예외 없이 허브로 튕긴다 — 다시 들어가서 한 방, 또 허브, 또 한 방.
+##   아이 눈에는 "다 찾았는데 다음 방이 안 나온다"로만 보인다(규칙 11).
+##   게다가 안드로이드는 홈 버튼으로 나가도 프로세스가 살아 있어서 boot.gd 가 다시
+##   안 돌고, 그 상태가 **며칠씩** 이어진다. 실제로 물렸다 — 부모가 이 증상으로 신고했다.
+##   제한이 없는 것보다 나쁜 상태였다.
+func take_session_break() -> void:
+	begin_session()
+
+
+## 한 판이 끝났다. 놀이 단위를 세고, 상한에 닿았으면 **쉼표를 찍고 허브로 보낸다.**
+##
+## 돌려주는 값이 true 면 게임은 다음 판을 만들지 말고 그냥 돌아가면 된다 —
+## 화면을 옮기는 일은 셸이 한다(규칙 15: 게임은 다음에 무엇이 오는지 몰라도 된다).
+##
+## ★ 게임 쪽에서 제 페이드로 덮은 뒤 Router.goto_hub() 를 부르면 화면이 한 번 깜빡인다:
+##   [게임이 덮음 -> cb 가 Router 를 부름 -> 게임이 제 페이드를 되밝힘 -> Router 가 다시 덮음].
+##   아이 눈에는 "넘어가려다 실패한 것"으로 보인다. 그래서 덮는 일도 여기 한 곳에 모은다.
+func round_done(dev := false) -> bool:
+	add_round_units()
+	if dev or not session_over_limit():
+		return false
+	take_session_break()
+	journey_end()
+	Router.goto_rest()
+	return true
+
+
 ## 방금 한 판이 끝났다 — 그 게임의 놀이 단위를 센다.
 ##
 ## ★ 몇 단위인지는 **등록표가 안다** (game_registry 의 journey_units). 게임이 숫자를
@@ -424,7 +468,8 @@ func bump_today(key: String, n: int = 1) -> void:
 	if not days.is_empty() and String((days[-1] as Dictionary).get("d", "")) == today:
 		row = days[-1]
 	else:
-		row = {"d": today, "sec": 0, "q": 0, "correct": 0, "dino": 0, "nood": 0, "torch": 0, "cham": 0}
+		row = {"d": today, "sec": 0, "q": 0, "correct": 0,
+				"dino": 0, "nood": 0, "torch": 0, "cham": 0, "rps": 0}
 		days.append(row)
 		while days.size() > 14:
 			days.pop_front()

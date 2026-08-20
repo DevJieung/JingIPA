@@ -1,8 +1,8 @@
-## 블록 채우기 — 조각을 기둥에 떨어뜨려 가이드 모양대로 쌓는다.
+## 블록 채우기 — 조각을 기둥에 떨어뜨려 빈 칸을 메운다.
 ##
-## ★ 조각은 테트리스처럼 **내려가다 걸리는 곳에 선다.** 빈 칸에 그냥 박아 넣는
-##   자유 배치가 아니다. 그래서 "어디에 놓을까" 가 아니라 "어느 기둥으로
-##   떨어뜨릴까 · 무엇을 먼저 떨어뜨릴까" 가 문제가 된다.
+## ★ 조각은 테트리스처럼 **내려가다 걸리는 곳에 선다.** 손가락으로 집어 빈 칸에
+##   박아 넣는 것이 아니다. 그래서 "어느 기둥으로 떨어뜨릴까 · 무엇을 먼저
+##   떨어뜨릴까" 가 문제가 된다.
 ##
 ## ★ 조작 규칙은 **하나뿐**이다:
 ##     손이 비었을 때 탭  -> 그 조각을 손에 든다 (트레이든 판 위든)
@@ -10,13 +10,21 @@
 ##   트레이와 판을 구분하지 않는다. 상태는 "지금 든 조각" 하나뿐이라
 ##   만 4세가 잃어버릴 것이 없다. 취소 버튼도, 드래그도, 길게 누르기도 없다.
 ##
-## ★ 실패가 없다. 가이드 자리가 아닌 곳에 앉으면 그 칸들이 잠깐 흔들리고 조각은
+## ★ **모양만 맞으면 어디든 들어간다.** 예전에는 생성기 해답에 적힌 그 자리에 앉아야만
+##   들어갔다. 그래서 모양이 딱 맞는 빈 자리에 제대로 넣어도 튕겨 나왔고 — 아이 눈에는
+##   "맞는데 안 되는" 것이라 이 놀이에서 제일 나쁜 경험이었다. 지금 판정은 자리가
+##   아니라 **가능성**이다: 떨어뜨린 자리에 앉혀도 남은 조각으로 판을 끝까지 채울 수
+##   있으면 들어간다 (`NoodGen.fits`). 해답은 계약이 아니라 "지금 계획"(`_plan`)일
+##   뿐이고, 아이가 다른 길로 가면 계획을 다시 세운다 (`_refresh`).
+##
+## ★ 실패가 없다. 판을 못 채우게 만드는 수를 두면 그 칸들이 잠깐 흔들리고 조각은
 ##   손에 그대로 남는다. 시간 제한도, 점수도, 게임오버도 없다.
 ##   낙하도 재촉이 아니다 — 아이가 탭한 뒤에만 시작하고 FALL_SEC 안에 끝난다.
 ##
 ## ★ 판이 막다르게 끝나지 않는 이유: (1) 생성기가 "떨어뜨려서 풀리는 판"만 낸다
-##   (NoodGen.pick_top), (2) 그래도 아이가 순서를 어긋나게 놓으면 판 위의 조각을
-##   도로 들어 되돌릴 수 있다. 둘 다 있어야 한다 — (1)만으로는 부족하다.
+##   (NoodGen.pick_top), (2) 판을 못 채우게 되는 수는 애초에 안 들어간다
+##   (NoodGen.fits), (3) 그래도 판 위의 조각을 도로 들 수 있고, 그러다 구멍이
+##   묻히면 힌트가 **들어낼 조각**을 가리킨다 (_lift_hint). 셋 다 있어야 한다.
 extends Control
 
 const W := 1280.0
@@ -32,6 +40,19 @@ const GHOST_OK := Color(1, 1, 1, 0.55)
 ##   예전에는 조각 s4 와 똑같은 색이라, 아이 눈에 "안 된다"가 "조각이 하나 더 있다"로 보였다.
 const GHOST_NO := Color("9a938c")
 const TRAY_BG := Color("eae7df")
+## 이미 채워져 있어 아이가 손댈 수 없는 칸 = **벽**.
+## ★ 미리 놓인 조각을 제 색으로 그리면 "내가 넣은 조각"과 구분이 안 가서, 아직 남은
+##   구멍이 어디인지가 한눈에 안 들어온다. 그래서 색을 통째로 뺀다.
+##   빈 칸(밝은 베이지)과도, 가장 어두운 조각(t4 보라 · p5 자주)과도 확실히 갈리도록
+##   **거의 검정**에 가깝게 잡는다. 색은 Look 에 있다 (게임이 색을 짓지 않는다).
+const WALL := Look.WALL
+const WALL_LINE := Look.WALL_LINE
+## 힌트 강조. 갇힌 판에서는 이 강조가 **유일한 탈출 안내**라 반드시 보여야 한다.
+## ★ 흰색도 금색도 쓰면 안 된다 — 빈 칸이 이미 밝은 베이지(e2ded6)라 대비가
+##   1.1:1 밖에 안 나와서 사실상 안 보인다. 그래서 **테두리는 짙은 글자색**으로 긋고
+##   (빈 칸에서도 조각 위에서도 보인다) 안쪽만 강조색으로 물들인다.
+const HINT_LINE := Look.INK
+const HINT_FILL := Look.ACCENT
 
 ## 손가락이 큰 아이 기준 칸 하한. 이 아래로는 격자를 안 키운다.
 const CELL_MIN := 92.0
@@ -49,7 +70,8 @@ var _puzzle: Dictionary = {}
 var _grid: PackedInt32Array = PackedInt32Array()
 ## 판 위의 조각들: {"pi", "cells", "fixed"}
 var _board: Array = []
-## 트레이(아직 안 놓은 조각): {"pi", "cells"(정답 자리), "rot"(지금 보이는 모양)}
+## 트레이(아직 안 놓은 조각): {"pi", "rot"(지금 보이는 모양)}
+## ★ "정답 자리"를 들고 있지 않다. 자리는 정해져 있지 않다 — 계획은 _plan 에 있다.
 var _tray: Array = []
 ## 손에 든 것: {"from": "tray"|"board", "idx": int}
 var _held: Dictionary = {}
@@ -64,13 +86,28 @@ var _busy := false
 var _misses := 0
 var _hint_cells: Array = []
 var _idle := 0.0
-## 가둠 표: 해답 인덱스 s -> s 를 먼저 놓으면 갇히는 조각들의 해답 인덱스
-var _blocks: Dictionary = {}
+## 지금 계획 — _tray 와 같은 길이. _plan[i] = i 번 조각이 갈 자리(칸 배열), 없으면 [].
+## ★ 정답이 아니라 **한 가지 답**이다. 아이가 다른 자리에 넣으면 _refresh() 가 다시 세운다.
+##   안내 점·힌트가 이걸 그린다. 그래서 안내는 늘 지금 판에 대해 참이다.
+var _plan: Array = []
+## _tray 와 같은 길이. "지금 이 조각을 놓을 자리가 하나라도 있는가"를 미리 세어 둔 것.
+var _can_place: Array = []
+## 지금 판을 끝까지 채울 수 있는가 (되들다가 구멍이 묻히면 false 가 된다).
+var _plan_ok := false
+## **확실히** 갇혔는가 (계획이 없고, 탐색이 포기해서 모르는 것도 아니다).
+## 이때만 "판 위의 조각을 들어내라"고 안내한다.
+var _stuck := false
+## 계획의 **첫 수** — 지금 떨어뜨리면 _plan 에 적힌 그 자리에 앉는 조각. 힌트가 이걸 쓴다.
+var _plan_next := -1
 ## 아직 차례가 아닌 조각을 눌렀을 때의 흔들림 (트레이 자리 / 남은 세기)
 var _wobble_i := -1
 var _wobble_t := 0.0
 
 var _axes: Dictionary = {}
+## 계획 탐색이 **한 판 내내 같이 쓰는 주머니** (막힌 판 기억).
+## ★ 같은 판을 자리마다 수십 번 물어보므로, 이게 없으면 어려운 판에서 같은 계산을
+##   계속 다시 하다가 탐색 한도에 걸린다. 판이 바뀔 때 새로 판다.
+var _bag: Dictionary = {}
 
 
 func _ready() -> void:
@@ -124,24 +161,47 @@ func _build() -> void:
 	rng.randomize()
 
 	_puzzle = {}
-	# 못 만들면 한 단계씩 쉽게 해서 다시 — 아이 앞에 빈 화면이 뜨는 일은 없어야 한다.
+	# 못 만들거나 첫 계획이 안 서면 한 단계씩 쉽게 해서 다시 —
+	# 아이 앞에 멈춘 판이 뜨는 일은 없어야 한다.
 	var cfg := _axes.duplicate()
 	for retry in 4:
 		_puzzle = NoodGen.make(cfg, rng)
 		if not _puzzle.is_empty():
-			break
+			_setup()
+			if _plan_ok:
+				return
 		cfg["place"] = maxi(1, int(cfg["place"]) - 1)
 		cfg["n"] = maxi(4, int(cfg["n"]) - 1)
-	if _puzzle.is_empty():
-		# 최후의 보루: 4x4 를 가장 단순한 조각들로
+	# 최후의 보루: 4x4 를 가장 단순한 조각들로
+	for retry in 4:
 		_puzzle = NoodGen.make({"n": 4, "place": 2, "pieces": ["o4", "i2", "i3", "l3"]}, rng)
+		if not _puzzle.is_empty():
+			break
+	_setup()
 
+
+## 만들어진 _puzzle 을 판에 깐다.
+func _setup() -> void:
+	if _puzzle.is_empty():
+		# 생성기가 4x4 최단순 설정에서도 실패했다는 뜻이다 — 있어서는 안 되는 일이라
+		# 조용히 넘어가지 않는다 (판이 그대로 남아 아이 화면은 멈춘 것처럼 보인다).
+		push_error("블록 채우기: 판을 하나도 못 만들었습니다")
+		# ★ 잠금은 반드시 풀어 둔다. _next_stage() 가 _busy 를 켜 놓고 여기로 오는데,
+		#   여기서 그냥 나가면 "집으로"까지 안 눌리는 화면이 남는다.
+		_busy = false
+		_done = false
+		return
 	_n = int(_puzzle["n"])
+	_bag = NoodGen.new_bag()
 	_grid = PackedInt32Array()
 	_grid.resize(_n * _n)
 	_grid.fill(-1)
 	_board.clear()
 	_tray.clear()
+	_plan.clear()
+	_can_place.clear()
+	_plan_ok = false
+	_stuck = false
 	_held = {}
 	_falling = {}
 	_done = false
@@ -155,7 +215,7 @@ func _build() -> void:
 	var sol: Array = _puzzle["solution"]
 	for i in (_puzzle["fixed"] as Array):
 		var e2: Dictionary = sol[int(i)]
-		_put_on_board(int(e2["pi"]), e2["cells"], true, int(i))
+		_put_on_board(int(e2["pi"]), e2["cells"], true)
 	for item in (_puzzle["tray"] as Array):
 		var cells: Array = (item["cells"] as Array)
 		var shape := _shape_of(cells)
@@ -163,41 +223,26 @@ func _build() -> void:
 			# 트레이에 아무 방향으로 내놓는다 — 아이가 돌려서 맞춰야 한다.
 			var rots: Array = NoodPieces.rotations(int(item["pi"]))
 			shape = rots[randi() % rots.size()]
-		_tray.append({"pi": int(item["pi"]), "cells": cells, "rot": shape,
-				"sol": int(item["sol"])})
+		_tray.append({"pi": int(item["pi"]), "rot": shape})
+		# 생성기의 해답을 **첫 계획**으로 깔아 둔다. 정답이 아니라 밑그림이다 —
+		# 아이가 다른 자리에 넣는 순간 _refresh() 가 다시 세운다.
+		_plan.append(cells.duplicate())
 
-	# 누가 누구를 가두는지 판마다 한 번 표로 만든다.
-	#   _blocks[s] = s 를 먼저 떨어뜨리면 갇혀 버리는 조각들
-	# 이 표가 조각 고르는 순서를 아래에서부터로 강제한다 (_ready_now 참고).
-	_blocks = {}
-	var bl := NoodGen.blockers_of(sol, _n)
-	for it in _tray:
-		var r := int((it as Dictionary)["sol"])
-		for s in (bl[r] as Dictionary):
-			if not _blocks.has(int(s)):
-				_blocks[int(s)] = []
-			(_blocks[int(s)] as Array).append(r)
+	_refresh()
 
 
-func _put_on_board(pi: int, cells: Array, fixed: bool, sol: int) -> void:
+func _put_on_board(pi: int, cells: Array, fixed: bool) -> void:
 	var idx := _board.size()
-	_board.append({"pi": pi, "cells": (cells as Array).duplicate(), "fixed": fixed,
-			"sol": sol})
+	_board.append({"pi": pi, "cells": (cells as Array).duplicate(), "fixed": fixed})
 	for c in cells:
 		_grid[(c as Vector2i).y * _n + (c as Vector2i).x] = idx
 
 
-## 절대 좌표 배열 -> (0,0) 기준 모양
+## 절대 좌표 배열 -> (0,0) 기준 모양.
+## ★ 정렬까지 해서 늘 같은 순서로 나온다 — 계획 탐색이 모양 자체를 열쇠로 쓰기 때문에
+##   같은 모양이 두 가지 순서로 오면 쌍둥이를 못 알아본다.
 func _shape_of(cells: Array) -> Array:
-	var mx := 9999
-	var my := 9999
-	for c in cells:
-		mx = mini(mx, (c as Vector2i).x)
-		my = mini(my, (c as Vector2i).y)
-	var out: Array = []
-	for c in cells:
-		out.append(Vector2i((c as Vector2i).x - mx, (c as Vector2i).y - my))
-	return out
+	return NoodPieces.normalize(cells)
 
 
 # --------------------------------------------------------------------------- #
@@ -309,7 +354,6 @@ func _paint_board() -> void:
 	var br := _board_rect()
 	var c := _cell()
 	var guide := int(_puzzle.get("guide", 0))
-	var sol: Array = _puzzle.get("solution", [])
 
 	# 바탕 칸
 	for y in _n:
@@ -318,46 +362,52 @@ func _paint_board() -> void:
 			draw_rect(r.grow(-3.0), CELL_EMPTY)
 
 	# 안내 — 단계가 오를수록 덜 알려 준다 (난이도 축 B)
+	#
+	# ★ 생성기 해답이 아니라 **지금 계획**(_plan)을 그린다. 모양만 맞으면 어디든
+	#   들어가는 놀이라, 해답을 그리면 아이가 다른 자리에 넣은 순간 안내가 거짓말이 된다.
 	if guide == 0:
 		# ★ 칸을 통째로 칠하지 않는다. 옅게라도 칠하면 "이미 놓인 조각"과 헷갈려서
 		#   아이 눈에 다 채워진 판으로 보인다. 가운데에 **작은 점**만 찍는다 —
 		#   "여기에 이 색 조각이 온다"는 힌트이지 조각 자체가 아니다.
-		for i in sol.size():
-			var e: Dictionary = sol[i]
-			for cc in (e["cells"] as Array):
-				if _grid[(cc as Vector2i).y * _n + (cc as Vector2i).x] >= 0:
+		for i in _plan.size():
+			var pcol := Color(NoodPieces.color_of(int(_tray[i]["pi"])), 0.55)
+			for cc: Vector2i in (_plan[i] as Array):
+				if _grid[cc.y * _n + cc.x] >= 0:
 					continue
-				var mid := br.position + Vector2((float((cc as Vector2i).x) + 0.5) * c,
-						(float((cc as Vector2i).y) + 0.5) * c)
-				draw_circle(mid, c * 0.17, Color(NoodPieces.color_of(int(e["pi"])), 0.55))
+				var mid := br.position + Vector2((float(cc.x) + 0.5) * c,
+						(float(cc.y) + 0.5) * c)
+				draw_circle(mid, c * 0.17, pcol)
 	elif guide == 1:
-		# 조각 경계선만
-		for i in sol.size():
-			var e: Dictionary = sol[i]
-			_outline_cells(br, c, e["cells"], Color(CELL_LINE, 0.9), 3.0)
+		# 조각 경계선만.
+		# ★ 격자선보다 **확실히 진하게** 그린다. 예전에는 격자선과 같은 색이라 눈에
+		#   아예 안 보였고, 그래서 안내 1단계가 사실상 2단계(안내 없음)와 같았다 —
+		#   난이도 축 하나가 조용히 사라져 있었다.
+		for i in _plan.size():
+			_outline_cells(br, c, _plan[i], Color(INK_SOFT, 0.75), 5.0)
 
-	# 놓인 조각
-	for i in _board.size():
-		var b: Dictionary = _board[i]
+	# 이미 채워져 있던 칸 = **벽**.
+	# ★ 미리 놓인 조각을 제 색으로 그리면 "내가 넣은 조각"과 구분이 안 가서, 아직 남은
+	#   구멍이 어디인지가 한눈에 안 들어온다. 그래서 색을 빼고 통째로 한 덩어리로
+	#   그린다 — 조각 경계도 안 그린다. 벽에는 경계가 필요 없고, 경계가 있으면
+	#   그것도 "채워야 할 모양"으로 읽힌다.
+	var wall: Array = []
+	for b: Dictionary in _board:
+		if bool(b["fixed"]):
+			wall.append_array(b["cells"] as Array)
+	for cc: Vector2i in wall:
+		draw_rect(Rect2(br.position + Vector2(float(cc.x) * c, float(cc.y) * c),
+				Vector2(c, c)).grow(-3.0), WALL)
+	_outline_cells(br, c, wall, WALL_LINE, 5.0)
+
+	# 아이가 놓은 조각 — 색 그대로. 색이 남아 있다는 것이 "다시 들 수 있다"는 뜻이다.
+	for b: Dictionary in _board:
+		if bool(b["fixed"]):
+			continue
 		var col: Color = NoodPieces.color_of(int(b["pi"]))
-		# 미리 놓여 있는 조각 — 색은 그대로 진하게 두고 **못 든다는 것만** 표시한다.
-		# 회색으로 죽이면 안내 점과 구분이 안 간다.
-		if bool(b["fixed"]):
-			col = col.lerp(Color(0.55, 0.53, 0.50), 0.12)
-		for cc in (b["cells"] as Array):
-			var r := Rect2(br.position + Vector2(float((cc as Vector2i).x) * c,
-					float((cc as Vector2i).y) * c), Vector2(c, c))
-			draw_rect(r.grow(-3.0), col)
+		for cc: Vector2i in (b["cells"] as Array):
+			draw_rect(Rect2(br.position + Vector2(float(cc.x) * c, float(cc.y) * c),
+					Vector2(c, c)).grow(-3.0), col)
 		_outline_cells(br, c, b["cells"], col.darkened(0.35), 5.0)
-		if bool(b["fixed"]):
-			# 못 드는 조각에는 옅은 빗금 — 눌러도 안 들리는 이유가 보인다
-			for cc in (b["cells"] as Array):
-				var p0 := br.position + Vector2(float((cc as Vector2i).x) * c,
-						float((cc as Vector2i).y) * c)
-				for k in 3:
-					var o2 := float(k) * c * 0.33 + c * 0.16
-					draw_line(p0 + Vector2(o2, 4.0), p0 + Vector2(4.0, o2),
-							Color(1, 1, 1, 0.28), 3.0)
 
 	# 격자선
 	for i in _n + 1:
@@ -366,11 +416,22 @@ func _paint_board() -> void:
 		draw_line(br.position + Vector2(0, t), br.position + Vector2(br.size.x, t), CELL_LINE, 2.0)
 	_outline_rect(br, INK_SOFT, 4.0)
 
-	# 힌트 — 시간이 지나면 정답 자리 하나가 숨 쉰다
-	for cc in _hint_cells:
-		var r := Rect2(br.position + Vector2(float((cc as Vector2i).x) * c,
-				float((cc as Vector2i).y) * c), Vector2(c, c))
-		draw_rect(r.grow(-6.0), Color(1, 1, 1, 0.20 + 0.25 * absf(sin(_t * 2.4))))
+	# 힌트 — 자리 하나가 숨 쉰다.
+	# ★ 그 위에 **누를 칸**(조각의 기준칸)을 따로 찍는다. 세로로는 아무 데나 눌러도 되지만
+	#   가로 기둥은 정해져 있어서, 강조된 칸 아무 데나 누르면 조각이 옆으로 밀려 앉는다 —
+	#   시킨 대로 했는데 튕기는 것이 되고, 그게 힌트가 거짓말하는 최악의 경우다.
+	if not _hint_cells.is_empty():
+		var pulse := 0.5 + 0.5 * absf(sin(_t * 2.4))
+		for cc: Vector2i in _hint_cells:
+			var r := Rect2(br.position + Vector2(float(cc.x) * c, float(cc.y) * c),
+					Vector2(c, c))
+			draw_rect(r.grow(-6.0), Color(HINT_FILL, 0.16 + 0.16 * pulse))
+		_outline_cells(br, c, _hint_cells, Color(HINT_LINE, 0.45 + 0.45 * pulse), 8.0)
+		var an := _anchor_of(_hint_cells)
+		var mid := br.position + Vector2((float(an.x) + 0.5) * c, (float(an.y) + 0.5) * c)
+		var rad := c * 0.19 * (0.92 + 0.08 * pulse)
+		draw_circle(mid, rad, Color(HINT_LINE, 0.35 + 0.35 * pulse))
+		draw_circle(mid, rad * 0.68, Color(HINT_FILL, 0.6 + 0.4 * pulse))
 
 	# 안 맞는 자리에 놓으려 했을 때 — 벌이 아니라 흔들림
 	for sh in _shake:
@@ -442,7 +503,9 @@ func _paint_tray() -> void:
 		if i == _wobble_i and _wobble_t > 0.0:
 			o.x += sin(_t * 40.0) * 6.0 * _wobble_t
 		var col: Color = NoodPieces.color_of(int(_tray[i]["pi"]))
-		if not _ready_now(i):
+		# ★ 손에 든 조각은 흐리게 만들지 않는다. "떠 있다(들었다)"와 "쉬고 있다(아직 안 된다)"를
+		#   한 조각에 동시에 그리면 아이에게는 그냥 뜻 모를 상태가 된다.
+		if lift <= 0.0 and not _ready_now(i):
 			# 아직 차례가 아닌 조각은 쉬고 있다. 지우지는 않는다 — 앞으로 뭐가 남았는지
 			# 보이는 편이 낫고, 사라지면 아이는 "없어졌다"로 읽는다.
 			col = Color(col, 0.34)
@@ -494,7 +557,9 @@ func _gui_input(event: InputEvent) -> void:
 
 func _on_tap(p: Vector2) -> void:
 	_idle = 0.0
-	_hint_cells.clear()
+	# ★ 갇힌 판에서는 안내를 지우지 않는다. 지우면 두드릴수록 탈출구가 사라진다.
+	if not _stuck:
+		_hint_cells.clear()
 
 	if _done:
 		_next_stage()
@@ -515,8 +580,8 @@ func _on_tap(p: Vector2) -> void:
 				_held = {}          # 같은 걸 다시 누르면 내려놓는다
 				return
 			if not _ready_now(i):
-				# ★ 아직 이 조각의 차례가 아니다. 먼저 떨어뜨리면 아래로 내려와야 할
-				#   조각이 갇힌다. "안 돼" 대신 살짝 흔들어서 "조금 있다가"로 읽히게 한다.
+				# ★ 지금은 이 조각이 들어갈 자리가 한 곳도 없다 (먼저 떨어뜨리면 판을
+				#   못 채우게 된다). "안 돼" 대신 살짝 흔들어서 "조금 있다가"로 읽히게 한다.
 				_wobble_i = i
 				_wobble_t = 1.0
 				return
@@ -531,10 +596,11 @@ func _on_tap(p: Vector2) -> void:
 	if _held.is_empty():
 		var at := _grid[cell.y * _n + cell.x]
 		if at >= 0:
-			# 놓인 조각을 눌렀다 -> 도로 든다 (미리 놓인 것은 못 든다).
-			# ★ 이 되돌리기가 막다른 판을 막는 마지막 방어선이다. 가이드 자리에
-			#   제대로 놓은 조각이라도, 아직 안 놓은 조각의 낙하 경로를 위에서
-			#   막고 있을 수 있다. 그때 아이가 스스로 빠져나오는 유일한 길이다.
+			# 놓인 조각을 눌렀다 -> 도로 든다 (미리 놓인 벽은 못 든다).
+			# ★ 이 되돌리기는 판정과 별개로 늘 열려 있다. 아이는 "여기 말고 저기"를
+			#   해 보고 싶어 하고, 그걸 막으면 놀이가 아니라 시험이 된다.
+			#   ⚠ 이 길로는 갇힐 수 있다 — 위에 조각이 얹힌 것을 들어내면 그 자리가
+			#   묻힌 구멍이 된다. 그때는 힌트가 들어낼 조각을 가리킨다 (_lift_hint).
 			var b: Dictionary = _board[at]
 			if bool(b["fixed"]):
 				_shake.append({"cells": (b["cells"] as Array).duplicate(), "t": 1.0})
@@ -544,11 +610,23 @@ func _on_tap(p: Vector2) -> void:
 		# 손이 비었는데 빈 칸을 눌렀다. 어린 아이는 먼저 판을 두드린다 —
 		# 지금 차례인 조각을 자동으로 들려 주면 "판만 두드려도" 놀이가 굴러간다.
 		if bool(Shell.tune("nood_autopick", false)):
+			# ★ 두드린 기둥에 **정말 들어가는** 조각을 고른다. 아무거나 집어서
+			#   떨어뜨리면 판만 두드리는 아이에게는 흔들림만 돌아온다.
+			for i in _tray.size():
+				if not _ready_now(i):
+					continue
+				var lz := _landing(_tray[i]["rot"], cell.x)
+				if lz.is_empty() or not _fits(i, lz["cells"]):
+					continue
+				_held = {"from": "tray", "idx": i}
+				_hover = cell
+				_start_drop(cell.x)
+				return
+			# 그 기둥에 맞는 게 없으면 지금 놓을 수 있는 조각을 **들어만** 준다.
+			# 아이가 다른 기둥을 두드리면 된다 — 헛방을 만들어 주는 것보다 낫다.
 			for i in _tray.size():
 				if _ready_now(i):
 					_held = {"from": "tray", "idx": i}
-					_hover = cell
-					_start_drop(cell.x)
 					return
 		return
 
@@ -580,6 +658,80 @@ func _anchor_of(shape: Array) -> Vector2i:
 	return a
 
 
+# --------------------------------------------------------------------------- #
+# 계획 — "여기 놓아도 판을 끝까지 채울 수 있는가"
+# --------------------------------------------------------------------------- #
+
+## 각 트레이 조각이 **아이가 실제로 만들 수 있는** 모양들.
+##
+## ★ 돌리기 버튼이 없는 판에서는 지금 보이는 모양 하나뿐이다. 여기서 모든 회전을
+##   허용해 버리면 "계획은 있는데 아이는 그 모양을 못 만드는" 판이 나온다 —
+##   그러면 조각이 트레이에서 영영 안 빠진다.
+func _shapes() -> Array:
+	var rotate := bool(_puzzle.get("rotate", false))
+	var out: Array = []
+	for it: Dictionary in _tray:
+		out.append(NoodPieces.rotations(int(it["pi"])) if rotate
+				else [_shape_of(it["rot"])])
+	return out
+
+
+## 이 모양을 col 기둥으로 떨어뜨리면 앉을 자리. 못 들어가면 {}.
+## 반환: {"cells", "dx", "dy"} — 누른 기둥에는 조각의 **기준칸**이 온다 (_anchor_of).
+func _landing(shape: Array, col: int) -> Dictionary:
+	if shape.is_empty():
+		return {}
+	var dx := col - _anchor_of(shape).x
+	var dy := NoodGen.drop_dy(_grid, _n, shape, dx)
+	if dy == NoodGen.NO_DROP:
+		return {}
+	var cells: Array = []
+	for cc: Vector2i in shape:
+		cells.append(Vector2i(cc.x + dx, cc.y + dy))
+	return {"cells": cells, "dx": dx, "dy": dy}
+
+
+## 트레이 조각 i 를 cells 에 앉혀도 남은 조각으로 판을 끝까지 채울 수 있는가.
+func _fits(i: int, cells: Array) -> bool:
+	return NoodGen.fits(_grid, _n, _shapes(), i, cells, _bag)
+
+
+## 판이 바뀌었다 — 계획과 "지금 놓을 수 있는 조각"을 다시 센다.
+##
+## ★ 판이 바뀌는 순간(놓기 · 되들기 · 새 판)에만 부른다. 매 프레임 부르면 안 된다.
+## ★ 지금 계획을 **먼저 시도할 자리**로 넘긴다. 그래야 아이가 계획대로 놓는 동안
+##   나머지 안내 점이 가만히 있는다 — 이유 없이 색이 바뀌면 그게 헷갈림이 된다.
+func _refresh() -> void:
+	var res := NoodGen.survey(_grid, _n, _shapes(), _plan, _bag)
+	_can_place = res["ready"]
+	_plan_ok = bool(res["ok"])
+	# ★ "못 채운다"와 "탐색이 포기했다(capped)"는 다르다. 포기한 것을 갇힌 것으로
+	#   뭉개면 멀쩡한 판에서 아이에게 "조각을 들어내라"고 시키게 된다.
+	_stuck = not _plan_ok and not bool(res["capped"])
+	if _plan_ok:
+		_plan = res["at"]
+		var order: Array = res["order"]
+		# ★ 계획의 **첫 수**를 따로 들고 있어야 한다. _plan[i] 는 "다 놓고 났을 때
+		#   i 가 있을 자리"라, 차례가 뒤인 조각은 지금 떨어뜨리면 더 아래로 간다.
+		#   힌트가 그걸 가리키면 시킨 대로 했는데 안 되는 최악의 경우가 된다.
+		_plan_next = int(order[0]) if not order.is_empty() else -1
+		return
+	# 계획이 없다. 안내를 지운다 — 거짓말하느니 침묵이 낫다.
+	_plan = []
+	for i in _tray.size():
+		_plan.append([])
+	_plan_next = -1
+	if not _stuck:
+		_hint_cells.clear()
+		return
+	# ★ 확실히 갇혔다 (되들다가 구멍이 조각 밑에 묻혔다). 빠져나가는 길을
+	#   **기다리지 말고 바로** 보여 준다. 이 상태에서 안내를 기다림(idle)에 걸어 두면,
+	#   답답해서 자꾸 두드리는 아이에게는 영영 안 나온다 — 탭마다 기다림이 0으로
+	#   돌아가기 때문이다. 그러면 유일한 탈출구가 닫힌 것과 같다.
+	var lift := _lift_hint()
+	_hint_cells = ((_board[lift]["cells"] as Array).duplicate() if lift >= 0 else [])
+
+
 ## 든 조각을 col 기둥으로 떨어뜨리기 시작한다. 실제 결과는 _land() 가 정한다.
 ##
 ## ★ 누른 기둥에는 조각의 **기준칸**이 온다 (_anchor_of). 조각을 감싸는 네모의
@@ -591,32 +743,30 @@ func _start_drop(col: int) -> void:
 	if shape.is_empty():
 		return
 	var idx := int(_held["idx"])
-	var an := _anchor_of(shape)
-	var dx := col - an.x
-	var dy := NoodGen.drop_dy(_grid, _n, shape, dx)
-	if dy == NoodGen.NO_DROP:
+	var lz := _landing(shape, col)
+	if lz.is_empty():
 		# 이 기둥으로는 아예 못 들어간다 (조각이 판 옆으로 삐져나가거나 이미 꽉 찼다).
 		# 떨어뜨리는 흉내조차 안 낸다 — 기둥만 흔들어서 "여기는 아니야"를 말한다.
 		_shake.append({"cells": _column_cells(col), "t": 1.0})
 		_misses += 1
 		return
-	var cells: Array = []
-	for cc in shape:
-		cells.append(Vector2i((cc as Vector2i).x + dx, (cc as Vector2i).y + dy))
 	_falling = {
 		"pi": int(_tray[idx]["pi"]),
 		"shape": shape,
-		"cells": cells,
-		"dx": dx,
-		"dy": dy,
+		"cells": lz["cells"],
+		"dx": int(lz["dx"]),
+		"dy": int(lz["dy"]),
 		"idx": idx,
 		"t": 0.0,
-		"ok": _same_cells(cells, _tray[idx]["cells"]),
+		# ★ 이 한 줄이 이 놀이의 판정 전부다. "해답에 적힌 자리인가"가 아니라
+		#   **"여기 앉혀도 남은 조각으로 판을 끝까지 채울 수 있는가"** 를 본다.
+		#   그래서 모양만 맞으면 어디든 들어가고, 그러면서도 막다른 판은 안 생긴다.
+		"ok": _fits(idx, lz["cells"]),
 	}
 	_idle = 0.0
 
 
-## 낙하가 끝났다. 가이드 자리면 붙고, 아니면 조각이 손에 그대로 돌아온다.
+## 낙하가 끝났다. 판을 끝까지 채울 수 있는 자리면 붙고, 아니면 손에 그대로 돌아온다.
 func _land() -> void:
 	var f := _falling
 	_falling = {}
@@ -629,26 +779,15 @@ func _land() -> void:
 		return
 	var idx := int(f["idx"])
 	var pi := int(_tray[idx]["pi"])
-	var sol := int(_tray[idx]["sol"])
 	_tray.remove_at(idx)
-	_put_on_board(pi, cells, false, sol)
+	_plan.remove_at(idx)
+	_wobble_i = -1                  # 자리가 밀리므로 엉뚱한 조각이 흔들리지 않게
+	_put_on_board(pi, cells, false)
 	_held = {}
 	_hover = Vector2i(-1, -1)
+	_refresh()
 	if _tray.is_empty():
 		_finish()
-
-
-## 두 칸 묶음이 같은 자리인가 (순서는 상관없다).
-func _same_cells(a: Array, b: Array) -> bool:
-	if a.size() != b.size():
-		return false
-	var have := {}
-	for cc in a:
-		have["%d,%d" % [(cc as Vector2i).x, (cc as Vector2i).y]] = true
-	for cc in b:
-		if not have.has("%d,%d" % [(cc as Vector2i).x, (cc as Vector2i).y]):
-			return false
-	return true
 
 
 func _column_cells(col: int) -> Array:
@@ -662,37 +801,29 @@ func _column_cells(col: int) -> Array:
 
 ## 트레이 조각 i 를 지금 떨어뜨려도 되는가.
 ##
-## ★ "제자리에 앉는가"로 판단하면 안 된다 — **앉기는 잘 앉는데 다른 조각을 가두는**
-##   경우가 있다. 옆 기둥의 고정 조각에 얹혀 제자리에 딱 앉았는데, 그 바람에
-##   바로 아래 칸으로 내려와야 할 조각의 길을 막아 버리는 식이다. 그러면 그 조각은
-##   영원히 못 들어가고 아이는 못 끝낸다 (실제로 여행 검사 10번째에서 물렸다).
+## ★ 기준은 **"이 조각을 지금 놓을 수 있는 자리가 하나라도 있는가"** 다.
+##   자리가 정해져 있지 않으니 "제자리에 앉는가"로는 물을 수 없고, 예전의 가둠 표
+##   (해답 기준으로 누가 누구를 가두는지)도 자유 배치에서는 의미가 없다.
 ##
-##   그래서 기준은 **"이 조각이 가두는 조각이 이미 다 놓였는가"** 다. 이 규칙만 지키면
-##   (1) 떨어뜨린 조각은 반드시 제자리에 앉고, (2) 남은 조각도 반드시 들어갈 수 있다.
-##   증명: 이 조각을 받쳐 줄 조각과 위에서 막을 조각은 모두 "가두는" 관계로 묶여 있어서
-##   순서가 강제된다. 그래서 아이가 어떤 순서로 골라도 판이 끝난다.
+##   ★ **"제자리에 앉는가"로 판단하면 안 된다**는 옛 교훈은 그대로 유효하다 —
+##     앉기는 잘 앉는데 다른 조각을 가두는 경우가 있었다 (여행 검사 10번째에서 물렸다).
+##     지금은 그것까지 포함해서 "끝까지 채울 수 있는가"로 본다 (NoodGen.survey).
+##
+##   세는 것은 판이 바뀔 때 _refresh() 가 미리 한다. 여기서는 읽기만 한다 —
+##   매 프레임 다시 세면 안 된다. 판 전체를 뒤지는 탐색이다.
 func _ready_now(i: int) -> bool:
-	for s in _blocks.get(int(_tray[i]["sol"]), []):
-		if _in_tray(int(s)):
-			return false
-	return true
-
-
-## 해답 인덱스 s 의 조각이 아직 트레이에 있는가 (= 판에 안 놓였는가).
-func _in_tray(s: int) -> bool:
-	for it in _tray:
-		if int((it as Dictionary)["sol"]) == s:
-			return true
-	return false
+	return i >= 0 and i < _can_place.size() and bool(_can_place[i])
 
 
 func _pick_up(idx: int) -> void:
 	var b: Dictionary = _board[idx]
 	var shape := _shape_of(b["cells"])
 	_remove_board(idx)
-	_tray.append({"pi": int(b["pi"]), "cells": (b["cells"] as Array), "rot": shape,
-			"sol": int(b["sol"])})
+	_tray.append({"pi": int(b["pi"]), "rot": shape})
+	_plan.append([])
+	_wobble_i = -1
 	_held = {"from": "tray", "idx": _tray.size() - 1}
+	_refresh()
 
 
 func _remove_board(idx: int) -> void:
@@ -709,6 +840,11 @@ func _remove_board(idx: int) -> void:
 func _rotate_held() -> void:
 	if _held.is_empty() or String(_held["from"]) != "tray":
 		return
+	if not bool(_puzzle.get("rotate", false)):
+		# 돌리기 버튼이 없는 판이다. 여기서 몰래 돌리면 계획이 보는 모양과 아이가 든
+		# 모양이 어긋난다 (계획은 "이 판에서 쓸 수 있는 모양"만 놓고 세운다).
+		# 검사기가 이 함수를 직접 부를 수 있어서 여기서 막는다.
+		return
 	var i := int(_held["idx"])
 	var pi := int(_tray[i]["pi"])
 	var rots: Array = NoodPieces.rotations(pi)
@@ -721,18 +857,57 @@ func _rotate_held() -> void:
 	_tray[i]["rot"] = rots[(at + 1) % rots.size()]
 
 
-## 오래 막혀 있으면 정답 자리 하나를 숨 쉬게 한다. 벌도 재촉도 아니다.
+## 오래 막혀 있으면 지금 계획의 자리 하나를 숨 쉬게 한다. 벌도 재촉도 아니다.
 ##
-## ★ **지금 차례인** 조각만 가리킨다. 중력이 있어서 "자리는 비었지만 아직 놓으면
+## ★ **지금 놓을 수 있는** 조각만 가리킨다. 중력이 있어서 "자리는 비었지만 아직 놓으면
 ##   안 되는" 조각이 생기는데, 그런 걸 가리키면 아이는 시킨 대로 했는데도 조각이
 ##   안 들리는 걸 보게 된다 — 힌트가 거짓말이 되는 최악의 경우다.
 func _show_hint() -> void:
 	if _tray.is_empty():
 		return
-	for i in _tray.size():
-		if _ready_now(i):
-			_hint_cells = (_tray[i]["cells"] as Array).duplicate()
-			return
+	# ★ 계획의 **첫 수**만 가리킨다. _plan[i] 는 "다 놓고 났을 때 있을 자리"라,
+	#   차례가 뒤인 조각을 가리키면 아이는 시킨 대로 떨어뜨렸는데 더 아래로 가서
+	#   튕기는 것을 보게 된다 — 힌트가 거짓말이 되는 최악의 경우다.
+	if _plan_next >= 0 and _plan_next < _plan.size() \
+			and not (_plan[_plan_next] as Array).is_empty():
+		_hint_cells = (_plan[_plan_next] as Array).duplicate()
+		return
+	# 계획이 아예 없다 = 되들다가 구멍이 조각 밑에 묻혔다. 그러면 **들어낼 조각**을
+	# 가리킨다. 이것이 막다른 판을 막는 마지막 방어선이고, 없으면 아이는 판만 보게 된다.
+	var lift := _lift_hint()
+	if lift >= 0:
+		_hint_cells = (_board[lift]["cells"] as Array).duplicate()
+
+
+## 계획이 사라졌을 때 도로 들어야 할 판 위의 조각. 없으면 -1.
+##
+## ★ 힌트를 누를 때만 부른다 (판마다 조각 수만큼 계획을 다시 세운다).
+func _lift_hint() -> int:
+	var shapes := _shapes()
+	var rotate := bool(_puzzle.get("rotate", false))
+	var best := -1
+	var top := 9999
+	for i in _board.size():
+		var b: Dictionary = _board[i]
+		if bool(b["fixed"]):
+			continue
+		var g := _grid.duplicate()
+		for cc: Vector2i in (b["cells"] as Array):
+			g[cc.y * _n + cc.x] = -1
+		var sh := shapes.duplicate()
+		sh.append(NoodPieces.rotations(int(b["pi"])) if rotate
+				else [_shape_of(b["cells"])])
+		if bool(NoodGen.plan(g, _n, sh, [], _bag)["ok"]):
+			return i
+		# 하나만 들어서는 안 풀리면 **맨 위** 조각부터 걷어낸다. 위에서부터 걷으면
+		# 반드시 처음 상태로 돌아가므로 아이가 갇히지 않는다.
+		var my := 9999
+		for cc: Vector2i in (b["cells"] as Array):
+			my = mini(my, cc.y)
+		if my < top:
+			top = my
+			best = i
+	return best
 
 
 # --------------------------------------------------------------------------- #
@@ -742,7 +917,7 @@ func _show_hint() -> void:
 func _finish() -> void:
 	_done = true
 	_busy = true
-	_save()
+	_save(true)
 	await get_tree().create_timer(0.9 if not dev_mode else 0.05).timeout
 	_busy = false
 
@@ -754,25 +929,32 @@ func _next_stage() -> void:
 	if Shell.journey_active and not dev_mode:
 		Shell.journey_advance()
 		return
-	Shell.add_round_units()
-	if Shell.session_over_limit() and not dev_mode:
-		_go_home()
+	# ★ 상한에 닿았으면 셸이 쉼표를 찍고 허브로 보낸다 (Shell.round_done) —
+	#   세션을 새로 열지 않으면 그 뒤로는 한 판마다 튕겨 나간다.
+	if Shell.round_done(dev_mode):
 		return
 	_build()
 
 
-func _save() -> void:
+## 기록을 남긴다. score 가 참일 때만 **"한 판 깼다"를 센다.**
+##
+## ★ 예전에는 `_finish()` 와 `_next_stage()` 가 둘 다 이걸 불렀고, 그 사이에 `_done` 이
+##   안 꺼져서 **한 판이 두 번 세어졌다.** 숨은 난이도 손잡이(skill)가 판마다 +2 씩 올라
+##   **다섯 판 만에 상한(+10)에 붙었다** — 아이 눈에는 이유 없이 갑자기 어려워지는 것으로만
+##   보인다(규칙 11 위반). 부모 화면의 "오늘 몇 판"도 두 배였다.
+##   그래서 세는 일과 저장하는 일을 갈라 두었다. `_done` 으로 판단하지 마라.
+func _save(score := false) -> void:
 	var d := _state()
 	d["best_stage"] = maxi(int(d.get("best_stage", 1)), stage)
-	if _done:
+	if score:
 		d["cleared"] = int(d.get("cleared", 0)) + 1
 		# 헤매지 않고 끝냈으면 조용히 한 칸 어렵게 (아이 눈에 아무 표시도 안 나간다)
 		if _misses == 0:
 			d["skill"] = clampi(int(d.get("skill", 0)) + 1, -6, 10)
 		elif _misses >= 6:
 			d["skill"] = clampi(int(d.get("skill", 0)) - 1, -6, 10)
+		Shell.bump_today("nood")
 	Shell.mark_dirty()
-	Shell.bump_today("nood")
 
 
 func _go_home() -> void:

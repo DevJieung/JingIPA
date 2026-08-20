@@ -26,7 +26,7 @@
 
   | 단계 | 어디서 | 하는 일 |
   |---|---|---|
-  | `project` | 우분투 | Godot 내려받기 → 애셋 임포트 → **Xcode 프로젝트 생성** → 104MB 꾸러미로 전달 |
+  | `project` | 우분투 | Godot 내려받기 → 애셋 임포트 → **Xcode 프로젝트 생성** → 꾸러미로 전달 |
   | `ipa` | 맥 | 꾸러미 풀고 **`xcodebuild`** → IPA → 결과물 업로드 (태그면 릴리스까지) |
 
   서명 Secrets 유무는 `ipa` 단계가 알아서 판단합니다.
@@ -38,9 +38,28 @@
 싼 우분투 러너에 맡기고 맥은 `xcodebuild` 만 시킵니다. 맥 러너는 분당 10배로 깎이니
 **요금 면에서도 이쪽이 이득**입니다.
 
-리눅스에서 Xcode 프로젝트가 나오는 것은 이 저장소에서 **확인 완료**입니다
-(`godot --headless --path . --export-release "iOS" build/ios/dinofind.ipa`, 종료 코드 0).
-`.ipa 는 macOS 에서만 빌드할 수 있습니다` 경고는 정상입니다.
+리눅스에서 Xcode 프로젝트가 나오는 것은 이 저장소에서 **확인 완료**입니다 —
+`tools/verify.sh` 의 7단계가 매번 그걸 굽고 "이번 실행보다 새로 만들어졌는가"까지 봅니다.
+`.ipa 는 macOS 에서만 빌드할 수 있습니다` 경고는 정상이고 종료 코드는 0 입니다.
+
+### ⚠ 이름 세 개가 서로 물려 있다
+
+```
+project.godot   config/name.ios = "DinoIsland"    <- 앱이 스스로를 부르는 이름
+ios.yml         env.APP         = "DinoIsland"    <- 익스포트 경로의 파일 이름
+                                                     = PRODUCT_NAME = xcodebuild -scheme
+```
+
+Godot 은 **익스포트 경로의 파일 이름**으로 `<이름>.xcodeproj` 와 스킴을 만듭니다
+(로컬에서 `build/ios/rogame.ipa` 로 뽑으면 `rogame.xcodeproj` · 스킴 `rogame` 이 나온다).
+워크플로는 `$APP.ipa` 로 뽑고 `-scheme "$APP"` 으로 구우므로 자기들끼리는 항상 맞지만,
+`APP` 은 `config/name.ios` 와 **같게 두세요** — 다르면 폰에 깔린 앱 이름과 빌드 산출물
+이름이 갈려서 반드시 헷갈립니다.
+
+애플은 App ID 이름에 **영문·숫자만** 받습니다. 표시 이름(`config/name` = "두리의 모험")과
+따로 `config/name.ios` 가 있는 이유입니다.
+⚠ `config/name.ios` 와 번들 ID 는 **절대 바꾸지 마세요** — 바꾸는 순간 아이 폰의 기존
+저장 데이터가 남남이 됩니다 (CLAUDE.md 규칙 29).
 
 ---
 
@@ -48,26 +67,16 @@
 
 ### 1단계. GitHub 에 올리기 (공통)
 
-이 폴더는 아직 git 저장소가 아닙니다. 처음 한 번만:
+저장소는 <https://github.com/DevJieung/JingIPA> 입니다.
 
 ```bash
-cd ~/pjt/dino
-git init -b main
-git config user.name  "이름"
-git config user.email "drpepper1219@gmail.com"
-git add .
-git commit -m "공룡을 찾아라! + iOS 빌드"
-```
-
-그다음 GitHub 에서 빈 저장소를 하나 만들고(README 체크 해제):
-
-```bash
-git remote add origin https://github.com/<계정>/dino.git
+cd ~/pjt/rogame
+git remote add origin https://github.com/DevJieung/JingIPA.git   # 이미 있으면 건너뜀
 git push -u origin main
 ```
 
-- 저장소 크기는 20MB 정도(공룡 그림 100장 포함)라 그냥 올라갑니다. `build/`, `.godot/` 는
-  `.gitignore` 로 빠집니다.
+- 저장소 크기는 25MB 안팎(공룡 그림 50종 + 두리 4장 포함)이라 그냥 올라갑니다.
+  `build/`, `.godot/`, `.claude/` 는 `.gitignore` 로 빠집니다.
 - **퍼블릭이면 러너가 무료**입니다. 프라이빗이면 우분투는 1배, 맥은 10배로 깎입니다.
   무거운 Godot 작업은 우분투가 하고 맥은 `xcodebuild` 만 하므로 맥 사용 시간은 5분 안팎입니다.
 
@@ -76,20 +85,20 @@ git push -u origin main
 GitHub 저장소 → **Actions** 탭 → 왼쪽 **iOS IPA 만들기** → 오른쪽 **Run workflow** →
 `release` 그대로 두고 초록 버튼.
 
-끝나면 그 실행 화면 아래 **Artifacts** 에 `dinofind-ipa-1` 이 생깁니다. 내려받아 압축을 풀면
-`dinofind-unsigned.ipa` (ⓐ) 또는 `dinofind.ipa` (ⓑ) 가 들어 있습니다.
+끝나면 그 실행 화면 아래 **Artifacts** 에 `rogame-ipa-<번호>` 가 생깁니다. 내려받아 압축을 풀면
+`DinoIsland-unsigned.ipa` (ⓐ) 또는 `DinoIsland.ipa` (ⓑ) 가 들어 있습니다.
 
 ### 3단계-ⓐ. 서명 없이 폰에 넣기 (무료)
 
 윈도우나 맥 PC 한 대가 필요합니다. **맥 기준 순서**(윈도우도 거의 같습니다):
 
-1. **IPA 받기** — 실행 화면 맨 아래 **Artifacts** → `dinofind-ipa-N` → zip 으로 내려받아 압축 풀기.
+1. **IPA 받기** — 실행 화면 맨 아래 **Artifacts** → `rogame-ipa-N` → zip 으로 내려받아 압축 풀기.
 2. **Sideloadly 설치** — <https://sideloadly.io> 에서 macOS 판을 받아 `응용 프로그램` 으로 끌어다 놓고,
    처음 열 때만 **오른쪽 클릭 → 열기** (그냥 더블클릭하면 맥이 막습니다).
 3. **아이폰을 케이블로 연결** → 폰에 뜨는 **"이 컴퓨터를 신뢰하시겠습니까?" → 신뢰** → 폰 암호.
 4. Sideloadly 창 맨 위에서 폰이 잡혔는지 보고, **IPA 파일을 창 안으로 끌어다 놓기**.
 5. **Apple ID** 칸에 본인 애플 ID 를 넣고 **Start** → 비밀번호, (2단계 인증이면) 폰에 뜬 **6자리 코드**.
-6. 폰 홈 화면에 공룡 아이콘이 생깁니다. 열기 전에 한 번만:
+6. 폰 홈 화면에 두리 아이콘이 생깁니다. 열기 전에 한 번만:
    **설정 → 일반 → VPN 및 기기 관리 → 본인 애플 ID → 신뢰**.
 
 무료 애플 ID 서명은 **7일 뒤 만료**됩니다. 그러면 앱이 안 열리는데, 3~5번을 다시 하면 됩니다
@@ -111,10 +120,10 @@ GitHub 저장소 → **Actions** 탭 → 왼쪽 **iOS IPA 만들기** → 오른
 **2) 인증서(.p12) 만들기** — 맥 없이 이 리눅스에서 됩니다.
 
 ```bash
-cd ~/pjt/dino/build            # 아무 데나 (git 에 안 올라가는 곳)
+cd ~/pjt/rogame/build          # git 에 안 올라가는 곳 (.gitignore 의 build/)
 openssl genrsa -out ios.key 2048
 openssl req -new -key ios.key -out ios.csr \
-    -subj "/emailAddress=drpepper1219@gmail.com/CN=Dino Find/C=KR"
+    -subj "/emailAddress=drpepper1219@gmail.com/CN=Duri Adventure/C=KR"
 ```
 
 `ios.csr` 를 <https://developer.apple.com/account/resources/certificates/list> 에서
@@ -136,12 +145,12 @@ base64 -w0 ios.p12 > ios.p12.b64
 
 **4) 프로비저닝 프로파일 만들기**
    - Identifiers → **+** → App IDs → App → Bundle ID 를 직접 입력
-     (예: `com.내이름.dinofind` — 아래 `IOS_BUNDLE_ID` 와 **똑같아야** 합니다).
+     **`com.devjieung.dinoisland`** (아래 `IOS_BUNDLE_ID` · `export_presets.cfg` 와 **똑같아야** 합니다).
    - Profiles → **+** → **iOS App Development** → 방금 App ID → 인증서 선택 → 기기 선택 →
      이름 짓고 → `.mobileprovision` 내려받기.
 
 ```bash
-base64 -w0 dinofind.mobileprovision > profile.b64
+base64 -w0 DinoIsland.mobileprovision > profile.b64
 ```
 
 **5) GitHub 에 넣기** — 저장소 → Settings → Secrets and variables → Actions
@@ -159,11 +168,14 @@ base64 -w0 dinofind.mobileprovision > profile.b64
 
   | 이름                | 값                          | 설명                                     |
   | ------------------- | --------------------------- | ---------------------------------------- |
-  | `IOS_BUNDLE_ID`     | `com.내이름.dinofind`       | App ID 와 같은 값 (안 넣으면 예제값 사용) |
+  | `IOS_BUNDLE_ID`     | `com.devjieung.dinoisland`  | App ID 와 같은 값 (안 넣으면 프리셋 값 사용) |
   | `IOS_EXPORT_METHOD` | `development`               | 내 기기용. 여러 대 배포는 `ad-hoc`        |
   | `MACOS_RUNNER`      | (보통 비워 둠)              | 맥 이미지 고정하고 싶을 때 `macos-15` 등  |
 
-넣고 다시 **Run workflow** 하면 이번엔 서명된 `dinofind.ipa` 가 나옵니다.
+넣고 다시 **Run workflow** 하면 이번엔 서명된 `DinoIsland.ipa` 가 나옵니다.
+
+⚠ `.p12` · `.mobileprovision` · `.b64` 는 **저장소에 올리지 마세요.** `.gitignore` 가
+확장자로 막고 있고 `tools/verify.sh` 8단계가 커밋된 비밀 파일을 찾아냅니다.
 등록한 기기에서 링크로 받아 바로 설치할 수 있고, 1년 갑니다.
 
 ---
@@ -189,7 +201,8 @@ git tag v1.0.0 && git push origin v1.0.0
 | `xcodebuild` 실패                                 | 실행 화면 맨 위 **Summary** 에 `error:` 줄과 마지막 60줄을 찍어 둡니다.   |
 | Xcode 버전이 안 맞는다는 오류                      | Variables 에 `MACOS_RUNNER` 를 `macos-15` / `macos-latest` 로 바꿔 보세요. |
 | 설치했는데 "신뢰할 수 없는 개발자"                 | 폰 → 설정 → 일반 → VPN 및 기기 관리 → 신뢰                              |
-| AltStore/Sideloadly 가 **앱 이름**에서 오류        | 애플은 App ID 이름에 영문·숫자만 받습니다. `project.godot` 의 `config/name.ios="DinoFind"` 를 지우지 마세요(한글 이름이 그대로 넘어가면 막힙니다). |
+| Sideloadly 가 **앱 이름**에서 오류                 | 애플은 App ID 이름에 영문·숫자만 받습니다. `project.godot` 의 `config/name.ios="DinoIsland"` 를 지우지 마세요(한글 이름이 그대로 넘어가면 막힙니다). |
+| `scheme "DinoIsland" not found`                   | `ios.yml` 의 `env.APP` 만 바꾸면 익스포트 경로·스킴이 같이 따라갑니다. 한쪽만 고치면 이 오류가 납니다. |
 
 ## 알아 둘 것
 

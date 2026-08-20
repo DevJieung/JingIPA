@@ -21,6 +21,10 @@ const PARENT := "res://games/math/ui/parent.tscn"
 
 const FADE_TIME := 0.22
 
+## 쉬러 갈 때 두리가 하는 말. 놀이 밖의 화폐도, 평가도, 재촉도 아니다 —
+## 방금 있었던 **사건**만 말한다.
+const REST_LINE := "많이 놀았다!"
+
 ## 전투 화면이 읽어 가는 값.
 var pending_tier := 0
 var pending_endless := false
@@ -54,6 +58,18 @@ func _ready() -> void:
 
 func goto_hub() -> void:
 	_change(HUB, "")
+
+
+## 놀이 단위 상한에 닿아 쉬러 간다. 허브로 가는 길에 두리가 한 번 인사한다.
+##
+## ★ 예전에는 아무 말 없이 화면만 바뀌었다. 아이는 방을 다 찾아 축하 배너를 보고
+##   기뻐한 직후에 갑자기 게임 목록에 서 있게 되는데, 이 나이대는 그것을
+##   "내가 뭘 잘못 눌러서 놀이가 끊겼다"로 읽는다. 무슨 일이 일어났는지는
+##   글을 못 읽는 아이에게도 **그림으로** 와야 한다.
+##
+## ★ 문구는 사람이 아니라 사건을 말한다 (규칙 7). "잘했어요"도 "그만해"도 아니다.
+func goto_rest() -> void:
+	_change(HUB, "", REST_LINE, true)
 
 
 ## 등록된 게임으로 들어간다. 셸은 게임 이름을 모른다 — 등록표만 본다.
@@ -131,7 +147,7 @@ func goto_endless() -> void:
 
 # --------------------------------------------------------------------------- #
 
-func _change(path: String, game_id: String, caption: String = "") -> void:
+func _change(path: String, game_id: String, caption: String = "", duri := false) -> void:
 	if OS.has_environment("ROGAME_DEBUG"):
 		print("[router] _change(%s, %s) busy=%s" % [path.get_file(), game_id, _busy])
 	if _busy:
@@ -139,7 +155,7 @@ func _change(path: String, game_id: String, caption: String = "") -> void:
 	_busy = true
 	await _fade_to(1.0)
 	if caption != "":
-		await _show_caption(caption)
+		await _show_caption(caption, duri)
 	# ★ 화면이 완전히 덮인 지금 뷰포트를 갈아 끼운다.
 	if game_id.is_empty():
 		if Shell.current_game != "":
@@ -168,22 +184,58 @@ func _change(path: String, game_id: String, caption: String = "") -> void:
 
 ## 화면이 덮인 동안 "몇 번째 · 어디로" 를 한 번 띄운다.
 ## 글을 못 읽는 아이에게도 "장면이 바뀐다"는 신호가 되고, 읽는 아이에겐 기대가 된다.
-func _show_caption(text: String) -> void:
+## ★ duri 가 참이면 글자 위에 두리가 같이 뜬다. 글을 못 읽는 아이에게는
+##   그림이 문장이다 — 쉬러 가는 순간에는 이쪽이 본문이고 글자가 각주다.
+func _show_caption(text: String, duri := false) -> void:
+	var box := Control.new()
+	box.set_anchors_preset(Control.PRESET_FULL_RECT)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.modulate = Color(1, 1, 1, 0.0)
+	add_child(box)
+
 	var l := Label.new()
 	l.text = text
 	l.add_theme_font_size_override("font_size", 54)
-	l.add_theme_color_override("font_color", Color(1, 1, 1, 0.0))
+	l.add_theme_color_override("font_color", Color(1, 1, 1, 1.0))
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	l.set_anchors_preset(Control.PRESET_FULL_RECT)
+	if duri:
+		l.offset_top = 150.0
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(l)
+	box.add_child(l)
+
+	if duri:
+		# 새 그림은 안 만든다 — 인사 포즈 한 장을 그대로 쓴다 (규칙 27).
+		var img := TextureRect.new()
+		img.texture = Look.duri("")
+		img.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		img.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		# 화면 한가운데를 기준으로 잡는다 — 게임(1280x720)과 허브(1280x800) 사이에서
+		# 이 캡션이 뜨므로 절대 좌표로 두면 한쪽에서 어긋난다.
+		img.anchor_left = 0.5
+		img.anchor_right = 0.5
+		img.anchor_top = 0.5
+		img.anchor_bottom = 0.5
+		img.offset_left = -105.0
+		img.offset_right = 105.0
+		img.offset_top = -250.0
+		img.offset_bottom = 50.0
+		img.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		box.add_child(img)
+
+	var hold := 1.15 if duri else 0.55
 	var tw := create_tween()
-	tw.tween_property(l, "theme_override_colors/font_color", Color(1, 1, 1, 1.0), 0.18)
-	tw.tween_interval(0.55)
-	tw.tween_property(l, "theme_override_colors/font_color", Color(1, 1, 1, 0.0), 0.18)
-	await tw.finished
-	l.queue_free()
+	tw.tween_property(box, "modulate:a", 1.0, 0.18)
+	tw.tween_interval(hold)
+	tw.tween_property(box, "modulate:a", 0.0, 0.18)
+	# ★ 규칙 16. 여기가 Router 에 마지막으로 남아 있던 맨 `await tw.finished` 였다 —
+	#   하필 화면이 100% 덮인 순간이라, 트윈이 한 번이라도 finished 를 안 내면
+	#   **까만 화면 그대로 영영 멈춘다**(_busy 도 true 로 남아 그 뒤 모든 전환이 무시된다).
+	#   _fade_to 와 똑같이 트윈·타이머 중 먼저 오는 쪽을 받는다.
+	var guard := get_tree().create_timer(hold + 0.36 + 0.35, true, false, true)
+	await _first_of(tw.finished, guard.timeout)
+	box.queue_free()
 
 
 func _fade_to(alpha: float) -> void:

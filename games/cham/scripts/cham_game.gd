@@ -39,8 +39,8 @@ const INK_SOFT := Look.INK_SOFT
 ## ★ 바닥과 손은 **바탕보다 확실히 진해야** 한다. 크림 바탕에 살구색 손을 그대로 얹으면
 ##   손이 배경에 녹아서, 아이가 "누를 것"을 못 알아본다 (한 번 그랬다).
 const FLOOR := Color("ddc9a8")
-const SKIN := Color("f9c092")
-const SKIN_HI := Color("ffdcb8")
+const SKIN := Look.SKIN
+const SKIN_HI := Look.SKIN_HI
 const MARK := Color("c9a86a")
 const MARK_NOW := Color("e8734a")
 
@@ -272,8 +272,11 @@ func hint_dir() -> int:
 ##   적대적 리뷰가 잡았다. 검사기는 이제 여기서 나온 값만 보고 방향을 고른다.
 static func tell_pose(dir: int, tell: float) -> Dictionary:
 	if dir == ChamGen.UP:
-		# 하늘로 뛰기 전에는 웅크린다 (떠 있으면 이미 뛴 것처럼 보인다)
-		return {"dx": 0.0, "dy": 12.0 * tell, "rot": 0.0, "squash": 1.0 - 0.16 * tell}
+		# 하늘로 뛰기 전에는 웅크린다 (떠 있으면 이미 뛴 것처럼 보인다).
+		# ★ 웅크림의 세기(0.26)는 눈대중이 아니다 — tell 이 가장 옅어졌을 때도 옆으로
+		#   서는 것만큼은 보여야 한다 (ChamGen.TELL_SQUASH_MAX). 0.16 이었을 때는
+		#   높은 탄에서 웅크림이 2.4% 밖에 안 돼 하늘 신호만 먼저 사라졌다.
+		return {"dx": 0.0, "dy": 16.0 * tell, "rot": 0.0, "squash": 1.0 - 0.26 * tell}
 	var s := -1.0 if dir == ChamGen.LEFT else 1.0
 	return {"dx": s * 70.0 * tell, "dy": 0.0, "rot": s * 0.28 * tell, "squash": 1.0}
 
@@ -458,9 +461,9 @@ func _next_stage() -> void:
 		return
 	# 한 판이 몇 단위인지는 **등록표가 안다** (game_registry 의 journey_units).
 	# 게임이 숫자를 직접 들면 여행 안과 밖이 서로 다른 값으로 세어진다.
-	Shell.add_round_units()
-	if Shell.session_over_limit() and not dev_mode:
-		_go_home()
+	# ★ 상한에 닿았으면 셸이 쉼표를 찍고 허브로 보낸다 (Shell.round_done) —
+	#   세션을 새로 열지 않으면 그 뒤로는 한 판마다 튕겨 나간다.
+	if Shell.round_done(dev_mode):
 		return
 	_build_stage()
 

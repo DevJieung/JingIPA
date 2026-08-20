@@ -156,6 +156,15 @@ static func normalize_profile(raw: Variant) -> Dictionary:
 		"cushion": maxi(0, int(ch.get("cushion", 0))),
 	}
 
+	var rp: Dictionary = r.get("rps", {})
+	p["rps"] = {
+		"best_stage": maxi(1, int(rp.get("best_stage", 1))),
+		"hits": maxi(0, int(rp.get("hits", 0))),
+		"skill": clampi(int(rp.get("skill", 0)), -8, 10),
+		"ease_streak": maxi(0, int(rp.get("ease_streak", 0))),
+		"cushion": maxi(0, int(rp.get("cushion", 0))),
+	}
+
 	var tc: Dictionary = r.get("torch", {})
 	p["torch"] = {
 		"best_stage": maxi(1, int(tc.get("best_stage", 1))),
@@ -178,6 +187,7 @@ static func normalize_profile(raw: Variant) -> Dictionary:
 			"nood": int((row as Dictionary).get("nood", 0)),
 			"torch": int((row as Dictionary).get("torch", 0)),
 			"cham": int((row as Dictionary).get("cham", 0)),
+			"rps": int((row as Dictionary).get("rps", 0)),
 		})
 	while p["daily"].size() > 14:
 		p["daily"].pop_front()

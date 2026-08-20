@@ -36,7 +36,7 @@ func _run() -> void:
 		var arg := int(parts[1]) if parts.size() > 1 else 0
 		var scene := ""
 		match kind:
-			"kanoodle":
+			"kanoodle", "kanoodlehint":
 				scene = "res://games/kanoodle/kanoodle.tscn"
 				# arg 를 탄으로 쓴다 — 쉬운 판만 찍으면 "아직 차례가 아닌 조각"이
 				# 옅게 나오는 모습이나 큰 격자를 눈으로 확인할 수가 없다.
@@ -48,6 +48,13 @@ func _run() -> void:
 				# arg 를 탄으로 쓴다 — 1탄만 찍으면 좁아진 빛도 짙어진 어둠도 못 본다.
 				Shell.profile()["torch"] = {
 					"best_stage": maxi(1, arg), "lifetime_found": 0,
+					"skill": 0, "ease_streak": 0, "cushion": 0,
+				}
+			"rps", "rpsmeet", "rpsclear":
+				scene = "res://games/rps/rps.tscn"
+				# arg 를 탄으로 쓴다 — 1탄만 찍으면 옅어진 관계 고리도 "져라"도 못 본다.
+				Shell.profile()["rps"] = {
+					"best_stage": maxi(1, arg), "hits": 0,
 					"skill": 0, "ease_streak": 0, "cushion": 0,
 				}
 			"cham":
@@ -69,6 +76,10 @@ func _run() -> void:
 						"count": Shell.FAMILY_MEETS if i < 9 else 1,
 					}
 				MathGame.stars = {"0": 3, "1": 2, "2": 1}
+			"rest":
+				# 「많이 놀았다」— 상한에 닿아 쉬러 가는 순간. Router 의 캡션은
+				# 화면이 덮인 동안만 떠서 다른 방법으로는 눈으로 볼 수가 없다.
+				scene = Router.HUB
 			"title":
 				scene = Router.TITLE
 			"battle":
@@ -113,6 +124,60 @@ func _run() -> void:
 			inst.set("_hist", hist)
 			inst.set("_turn", hist.size())
 			inst.set("_state", "wait")
+		# ★ 가위바위보의 알맹이는 **두 손이 만난 순간**이다 (별이 어느 쪽에 붙는가).
+		#   그냥 찍으면 손이 하나뿐인 대기 화면만 나온다.
+		# ★ 판을 깬 화면은 **상 주는 순간**이라 눈으로 꼭 봐야 한다. 예전에 축하 상자가
+		#   친구 손을 반으로 자르고 두리가 공룡 등에 올라탄 적이 있다.
+		if kind == "rpsclear":
+			await get_tree().process_frame
+			for step in 200:
+				if String(inst.get("_state")) == "clear":
+					break
+				if String(inst.get("_state")) == "wait":
+					var w2: int = RpsGen.answer(int(inst.call("friend_hand")),
+							int(inst.call("goal_now")))
+					var c2: Rect2 = inst.call("card_rect", int(inst.call("card_index", w2)))
+					inst.call("_on_tap", c2.position + c2.size * 0.5)
+				inst.call("_process", 0.05)
+			inst.set("_slow", 400.0)
+		if kind == "rpsmeet":
+			await get_tree().process_frame
+			# ★ 들어오는 연출("enter")이 끝나기 전에는 탭이 안 먹는다. 프레임만 기다리면
+			#   실시간이라 안 끝나므로 _process 를 직접 돌려 대기 상태로 만든다.
+			for i in 20:
+				if String(inst.get("_state")) == "wait":
+					break
+				inst.call("_process", 0.2)
+			# 일부러 **틀린** 손을 낸다 — 틀렸을 때 왜 그런지 보여 주는 화면이 알맹이다.
+			var want: int = RpsGen.answer(int(inst.call("friend_hand")),
+					int(inst.call("goal_now")))
+			for h in (inst.call("cards_now") as Array):
+				if int(h) != want:
+					var ci := int(inst.call("card_index", int(h)))
+					var cr: Rect2 = inst.call("card_rect", ci)
+					inst.call("_on_tap", cr.position + cr.size * 0.5)
+					break
+			# 손이 만날 때까지, 그리고 "왜 그런지"가 다 그려질 때까지 손으로 돌린다
+			for i in 40:
+				if String(inst.get("_state")) == "no":
+					break
+				inst.call("_process", 0.02)
+			for i in 12:
+				inst.call("_process", 0.05)
+			# ★ 이 뒤로 엔진이 40프레임을 더 돌린다. 그동안 연출이 지나가 버리면
+			#   찍히는 것은 다시 대기 화면이다 — 그래서 시간을 거의 세워 둔다.
+			inst.set("_slow", 400.0)
+		# ★ 힌트는 오래 막혀 있어야 뜨는 것이라 그냥 찍으면 절대 안 나온다.
+		#   갇힌 판에서는 이게 **유일한 탈출 안내**라 눈으로 확인할 길이 있어야 한다.
+		if kind == "kanoodlehint":
+			await get_tree().process_frame
+			inst.call("_show_hint")
+		# ★ 쉬러 가는 화면은 **덮인 채로** 떠야 제 모습이다 (허브가 비쳐 보이면 안 된다).
+		if kind == "rest":
+			await get_tree().process_frame
+			(Router.get("_fade") as ColorRect).visible = true
+			(Router.get("_fade") as ColorRect).color.a = 1.0
+			Router.call("_show_caption", Router.REST_LINE, true)
 		for i in 40:
 			await get_tree().process_frame
 		await RenderingServer.frame_post_draw

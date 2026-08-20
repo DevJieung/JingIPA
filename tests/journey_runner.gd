@@ -18,6 +18,7 @@ const SCRIPTS := {
 	"kanoodle": "res://games/kanoodle/kanoodle.gd",
 	"torch": "res://games/torch/scripts/torch_game.gd",
 	"cham": "res://games/cham/scripts/cham_game.gd",
+	"rps": "res://games/rps/scripts/rps_game.gd",
 }
 
 var target_stages := 18
@@ -136,6 +137,12 @@ func _process(delta: float) -> void:
 					% [cur.get("_state"), cur.get("caught"),
 					   (cur.get("axes") as Dictionary).get("catches", "?"),
 					   cur.get("misses"), str(cur.get("_pat")), str(cur.get("_hist"))])
+		elif _id_of(path) == "rps":
+			_say("   상태=%s 맞힘=%s/%s 틀림=%s 친구손=%s 목표=%s 카드=%s"
+					% [cur.get("_state"), cur.get("hit"),
+					   (cur.get("axes") as Dictionary).get("rounds", "?"),
+					   cur.get("misses"), cur.call("friend_hand"), cur.call("goal_now"),
+					   str(cur.call("cards_now"))])
 		elif _id_of(path) == "torch":
 			var bm: Object = cur.get("beam")
 			_say("   state=%s busy=%s found=%s/%s 빛=%s r=%s 어둠=%s"
@@ -156,6 +163,7 @@ func _process(delta: float) -> void:
 		"kanoodle": _drive_nood(cur)
 		"torch": _drive_torch(cur)
 		"cham": _drive_cham(cur)
+		"rps": _drive_rps(cur)
 
 
 ## 등록됐는데 아직 한 번도 안 나온 게임
@@ -188,14 +196,19 @@ func _progress_of(cur: Node, path: String) -> String:
 			return "%s/%s/%s" % [cur.get("found"), cur.get("stage"), cur.get("state")]
 		"cham":
 			return "%s/%s/%s" % [cur.get("caught"), cur.get("stage"), cur.get("_state")]
+		"rps":
+			return "%s/%s/%s" % [cur.get("hit"), cur.get("stage"), cur.get("_state")]
 	return ""
 
 
-## 블록 채우기 자동 플레이 — **지금 떨어뜨릴 수 있는** 조각을 골라 제 기둥에 떨어뜨린다.
-## (퍼즐이 해답을 들고 있으므로 검사기가 풀이를 따로 안 짜도 된다.)
+## 블록 채우기 자동 플레이 — **지금 떨어뜨릴 수 있는** 조각을 골라 계획한 기둥에 떨어뜨린다.
+##
+## ★ 자리는 정해져 있지 않다 (모양만 맞으면 어디든 들어간다). 그래서 "정답 자리"가
+##   아니라 게임이 지금 세워 둔 계획(_plan)을 따라간다. 계획은 판이 바뀔 때마다
+##   다시 서므로, 검사기는 그때그때 물어보기만 하면 된다.
 ##
 ## ★ 조각이 떨어져서 쌓이므로 "아무 조각이나 아무 때나"가 아니다. 위에 얹힐 조각을
-##   먼저 떨어뜨리면 제자리까지 못 내려가고 튕겨 나오는데, 그러면 판이 안 줄어들어서
+##   먼저 떨어뜨리면 판을 못 채우게 되어 튕겨 나오는데, 그러면 판이 안 줄어들어서
 ##   검사기가 "멈췄다"로 읽는다. 그래서 순서를 여기서 지켜 준다.
 func _drive_nood(g: Node) -> void:
 	if bool(g.get("_busy")):
@@ -209,22 +222,18 @@ func _drive_nood(g: Node) -> void:
 	if tray.is_empty():
 		return
 
-	# 지금 차례인 조각을 찾는다 (아래에서부터). 하나도 없으면 손을 놓는다 —
-	# 진행이 멈추므로 검사기의 "막힘" 감시에 걸린다 (조용히 넘어가면 안 된다).
-	#
-	# ★ 일부러 **맨 앞**이 아니라 트레이 순서대로 처음 나오는 것을 고른다. 게임이
-	#   순서를 제대로 강제하는지 보려면 검사기가 정답 순서를 알고 있으면 안 된다.
-	var pick := -1
-	for i in tray.size():
-		if bool(g.call("_ready_now", i)):
-			pick = i
-			break
-	if pick < 0:
+	# 게임이 가리키는 **다음 수**를 그대로 따라간다 (힌트가 쓰는 것과 같은 값이다).
+	# 없으면 손을 놓는다 — 진행이 멈추므로 검사기의 "막힘" 감시에 걸린다
+	# (조용히 넘어가면 안 된다). 검사기가 정답 순서를 미리 알고 있으면 안 되므로
+	# 그때그때 게임에게 묻는다.
+	var plan: Array = g.get("_plan")
+	var pick := int(g.get("_plan_next"))
+	if pick < 0 or pick >= tray.size() or (plan[pick] as Array).is_empty():
 		return
 
 	var slot: Rect2 = g.call("_tray_slot", pick)
 	g.call("_on_tap", slot.position + slot.size * 0.5)
-	var want: Array = (tray[pick] as Dictionary)["cells"]
+	var want: Array = plan[pick]
 	var want_key := NoodPieces.key(NoodPieces.normalize(g.call("_shape_of", want)))
 	for r in 4:
 		var t2: Array = g.get("_tray")
@@ -279,6 +288,20 @@ func _drive_torch(g: Node) -> void:
 			continue
 		g.call("_tap", (d.call("hit_rect") as Rect2).get_center())
 		return
+
+
+## 가위바위보 자동 플레이 — 친구 손과 목표를 보고 규칙대로 카드를 고른다.
+## (여기는 흐름 검사라 규칙 자체는 tests/rps_check.gd 가 따로 본다.)
+func _drive_rps(g: Node) -> void:
+	g.set("_slow", 0.05)
+	if String(g.get("_state")) != "wait":
+		return
+	var want := RpsGen.answer(int(g.call("friend_hand")), int(g.call("goal_now")))
+	var i := int(g.call("card_index", want))
+	if i < 0:
+		return                      # 정답 카드가 없다 = 생성이 어긋났다 (멈춤으로 잡힌다)
+	var r: Rect2 = g.call("card_rect", i)
+	g.call("_on_tap", r.position + r.size * 0.5)
 
 
 ## 참참참 자동 플레이 — 친구의 버릇을 읽어(next_dir) 맞는 손을 누른다.

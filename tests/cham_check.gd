@@ -51,13 +51,17 @@ func _ready() -> void:
 		var variety := _variety(plen, dirs)
 		# ★ 잡을 횟수가 버릇 길이보다 **반드시 길어야** 한다. 아니면 판이 무료 tell 창
 		#   안에서 끝나서, 발자국도 버릇도 tell 이 옅어지는 축도 전부 장식이 된다.
+		# ★ 이 탄의 tell 로 **세 방향이 전부** 읽히는가. 하나만 먼저 사라지면 그 방향은
+		#   찍기가 되는데, 버릇에 그 방향이 들어간 판에서만 나타나서 검사가 "가끔"
+		#   빨간불이 된다 — 실제로 그랬다 (하늘 웅크림이 e=40 에서 2.4%).
+		var tell_read := _tell_readable(tell, dirs)
 		var ax_ok := worst <= ChamGen.TAPS_MAX and plen >= 2 and plen <= ChamGen.LEN_MAX \
 				and need > plen and dirs >= 2 and dirs <= 3 and tell >= 0.0 and tell <= 1.0 \
-				and (plen < 3 or variety >= VARIETY_MIN)
+				and (plen < 3 or variety >= VARIETY_MIN) and tell_read
 		if not ax_ok:
 			bad_axes += 1
-			print("!! E=%d 축이 한계를 넘었다: 버릇 %d, 잡기 %d(버릇보다 길어야 한다), 방향 %d, 가짓수 %d, 최악 %d탭"
-					% [e, plen, need, dirs, variety, worst])
+			print("!! E=%d 축이 한계를 넘었다: 버릇 %d, 잡기 %d(버릇보다 길어야 한다), 방향 %d, 가짓수 %d, 최악 %d탭, tell읽힘 %s"
+					% [e, plen, need, dirs, variety, worst, str(tell_read)])
 		var fail := 0
 		for r in ROUNDS:
 			rng.seed = hash("c_%d_%d" % [e, r])
@@ -79,10 +83,13 @@ func _ready() -> void:
 			print("!! 예비 버릇이 읽을 수 없다 (길이 %d): %s" % [n, str(ChamGen.fallback(n))])
 
 	var play_bad := await _play_stages()
+	# 세션 상한에 닿았을 때 정말 나가는가 (dev_mode 가 막고 있어 아무도 안 밟던 길)
+	var limit_bad := await _limit_check()
 
-	var ok := bad_axes == 0 and bad_pat == 0 and play_bad == 0 and fb_bad == 0
-	print("%s 버릇 %d개: 축한계이탈 %d건, 못읽을버릇 %d건, 예비버릇이상 %d건, 플레이실패 %d건"
-			% ["  " if ok else "!!", made, bad_axes, bad_pat, fb_bad, play_bad])
+	var ok := bad_axes == 0 and bad_pat == 0 and play_bad == 0 and fb_bad == 0 \
+			and limit_bad == 0
+	print("%s 버릇 %d개: 축한계이탈 %d건, 못읽을버릇 %d건, 예비버릇이상 %d건, 플레이실패 %d건, 상한탈출이상 %d건"
+			% ["  " if ok else "!!", made, bad_axes, bad_pat, fb_bad, play_bad, limit_bad])
 	print("   판정: %s" % ("정상" if ok else "이상 — 위 !! 줄을 보세요"))
 	get_tree().quit(0 if ok else 1)
 
@@ -171,6 +178,18 @@ func _settle(g: Node) -> void:
 		g.call("_process", 0.5)
 
 
+## 이 tell 세기로 방향 하나하나가 다 읽히는가 (그리기가 내놓는 값만 본다)
+func _tell_readable(tell: float, dirs: int) -> bool:
+	var cg := load("res://games/cham/scripts/cham_game.gd")
+	for d in [ChamGen.LEFT, ChamGen.RIGHT] + ([ChamGen.UP] if dirs >= 3 else []):
+		var tp: Dictionary = cg.tell_pose(int(d), tell)
+		var ok := absf(float(tp["dx"])) > ChamGen.TELL_DX_MIN \
+				or float(tp["squash"]) < ChamGen.TELL_SQUASH_MAX
+		if not ok:
+			return false
+	return true
+
+
 ## 이 (길이, 방향수)에서 읽을 수 있는 버릇이 몇 가지인가 (전수)
 func _variety(plen: int, dirs: int) -> int:
 	var n := 0
@@ -197,11 +216,11 @@ func _variety(plen: int, dirs: int) -> int:
 func _pick_dir(g: Node, use_tell: bool) -> int:
 	if use_tell:
 		var tp: Dictionary = g.call("tell_pose_now")
-		if float(tp["dx"]) < -6.0:
+		if float(tp["dx"]) < -ChamGen.TELL_DX_MIN:
 			return ChamGen.LEFT
-		if float(tp["dx"]) > 6.0:
+		if float(tp["dx"]) > ChamGen.TELL_DX_MIN:
 			return ChamGen.RIGHT
-		if float(tp["squash"]) < 0.97:
+		if float(tp["squash"]) < ChamGen.TELL_SQUASH_MAX:
 			return ChamGen.UP
 	var h: Array = g.get("_hist")
 	var n := h.size()
@@ -214,3 +233,30 @@ func _pick_dir(g: Node, use_tell: bool) -> int:
 		if ok:
 			return int(h[n - k])
 	return ChamGen.LEFT
+
+
+## 세션 상한에 닿았을 때 **정말 집으로 나가는가.**
+##
+## ★ 이 길은 아무도 안 밟는다: 검사기들이 dev_mode 를 켜고 놀기 때문에 상한 판정 자체가
+##   건너뛰어진다. 그런데 여기가 막히면 화면이 축하 장면에서 **얼어붙고 「집으로」조차
+##   안 눌린다** — 아이는 앱을 껐다 켜는 수밖에 없다. 판이 끝나면 _state 가 "gone" 이
+##   되는데, _go_home() 이 바로 그 "gone" 을 보고 그냥 돌아가기 때문이다.
+##
+## ★ **여기서부터는 await 를 하지 마라.** Router.goto_hub() 는 첫 await 에서 멈춰 있고,
+##   프레임을 한 번이라도 넘기면 그 코루틴이 이어져 **검사 씬을 진짜로 갈아 치운다**
+##   (그러면 검사가 결과를 못 찍고 사라진다). 그래서 이 검사는 맨 마지막에 온다.
+func _limit_check() -> int:
+	var bad := 0
+	var g := _make(1)
+	await get_tree().process_frame
+	Router.set("_busy", false)           # 잠겨 있으면 goto_hub 가 조용히 무시된다
+	Shell.journey_active = false         # 여행 중이면 상한 길로 안 온다
+	Shell.session_notified = true        # 알림 신호는 이 검사의 대상이 아니다
+	Shell.session_units = 999999
+	g.set("dev_mode", false)             # ★ dev_mode 가 상한 판정을 통째로 막는다
+	g.call("_next_stage")
+	if not bool(Router.get("_busy")):
+		bad += 1
+		print("!! 상한에 닿았는데 집으로 안 갔다 — 축하 장면에서 얼어붙는다")
+	g.queue_free()
+	return bad

@@ -759,18 +759,12 @@ func _room_clear() -> void:
 		busy = true
 		Shell.journey_advance()
 		return
-	# 방 하나가 개구리 문제 3개쯤의 놀이 단위다. 세션은 두 게임을 합쳐서 센다.
-	Shell.add_round_units()
-	if Shell.session_over_limit() and not dev_mode:
-		await _fade(_go_home_from_clear)
+	# 방 하나가 개구리 문제 3개쯤의 놀이 단위다. 세션은 여섯 게임을 합쳐서 센다.
+	# ★ 상한에 닿았으면 셸이 쉼표를 찍고 허브로 보낸다 (Shell.round_done).
+	#   여기서 제 페이드로 덮은 뒤 Router 를 부르면 화면이 한 번 깜빡였다.
+	if Shell.round_done(dev_mode):
 		return
 	await _fade(_build_room)
-
-
-func _go_home_from_clear() -> void:
-	# 상한에 닿았다 — 놀이를 끊지 않고 집으로 돌려보낸다.
-	# 게임 안에서 끊으면 벌이지만 허브에서 닫히면 하루의 끝이다.
-	Router.goto_hub()
 
 
 ## 적응형 조정. 방 하나가 끝날 때마다 딱 한 번.
@@ -812,15 +806,20 @@ func _hide_banner() -> void:
 	banner.visible = false
 
 
+## ★ 트윈의 finished 를 기다리지 않는다 (규칙 16). 트윈이 한 번이라도 finished 를
+##   안 내면 여기서 영영 안 깨어나고, 그러면 **화면이 하얗게 덮인 채로 굳는다** —
+##   busy 도 true 로 남아서 아이가 무엇을 눌러도 아무 일이 안 일어난다.
+##   같은 시간짜리 타이머만 기다린다 (손전등 찾기의 _fade 와 같은 모양).
 func _fade(cb: Callable) -> void:
 	busy = true
 	var tw := create_tween()
 	tw.tween_property(fade, "color", Color(1, 1, 1, 1), 0.30 * _slow)
-	await tw.finished
+	await get_tree().create_timer(maxf(0.01, 0.33 * _slow), true, false, true).timeout
+	if not is_inside_tree():
+		return
 	cb.call()
 	var tw2 := create_tween()
 	tw2.tween_property(fade, "color", Color(1, 1, 1, 0), 0.35 * _slow)
-	await tw2.finished
 
 
 # ================================================================= 매 프레임

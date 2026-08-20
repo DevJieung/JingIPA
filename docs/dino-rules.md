@@ -94,7 +94,7 @@ python3 tools/check_species.py                     # 공룡 목록 두 곳이 �
   `.github/workflows/ios.yml` 은 **우분투에서 Xcode 프로젝트를 만들어 맥으로 넘겨
   `xcodebuild` 만 시킵니다.** 맥에서 Godot 익스포트를 그냥 돌리면 인증서 없는 CI 에서
   실패합니다(4.7 의 dylib 코드사이닝이 `export_project_only` 검사보다 앞에 있음).
-  사람이 할 일은 [`IOS.md`](IOS.md).
+  사람이 할 일은 [`ios-signing.md`](ios-signing.md).
 - **`project.godot` 의 `textures/vram_compression/import_etc2_astc=true` 를 지우지 마세요.**
   이게 없으면 Godot 이 CPU 종류로 대신 판단해서, 이 arm 머신에선 폰용 익스포트가 되지만
   x86_64 (GitHub Actions 우분투 러너)에선 **오류 메시지도 없이** 거부합니다.

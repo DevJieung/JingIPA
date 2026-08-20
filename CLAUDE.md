@@ -1,7 +1,7 @@
 # CLAUDE.md — 이 저장소에서 작업할 때
 
 **두리의 모험** — 아이 둘(나이 차 있음)을 위한 놀이 모음. Godot 4.7.1, 안드로이드/iOS.
-게임 다섯이 하나의 앱에 들어 있고, 앞으로 더 늘어난다.
+게임 여섯이 하나의 앱에 들어 있고, 앞으로 더 늘어난다.
 주인공은 **두리**(만 4세) — 이야기가 아니라 **안내자**다 ([`docs/look-rules.md`](docs/look-rules.md)).
 
 - **공룡 찾기** (`games/dino/`) — 방에 숨은 공룡을 콕 눌러 찾는다
@@ -9,6 +9,7 @@
 - **셈놀이** (`games/math/`) — 블록으로 왜 그런지 보여 주는 사칙연산
 - **블록 채우기** (`games/kanoodle/`) — 조각을 기둥에 떨어뜨려 가이드 모양대로 쌓는다
 - **참참참** (`games/cham/`) — 친구가 어느 쪽으로 뛸지 손으로 가리켜 잡는다
+- **가위바위보** (`games/rps/`) — 친구 손을 보고 이기는(비기는·지는) 손을 낸다
 
 ★ **세계관이 없다.** 예전에는 "집 안 / 집 밖"이라는 이야기로 묶었는데, 게임들의 결이
 너무 달라서 이야기가 오히려 이질감을 키웠다. 허브는 그냥 **게임 목록 + 아무거나(랜덤)** 다.
@@ -17,7 +18,8 @@
 전체 설명은 [`README.md`](README.md). 갈무리 절차는 [`WRAPUP.md`](WRAPUP.md).
 게임별 규칙은 [`docs/dino-rules.md`](docs/dino-rules.md) · [`docs/math-rules.md`](docs/math-rules.md)
 — **둘 다 여전히 유효하다. 고치기 전에 반드시 읽어라.**
-손전등 찾기는 [`docs/torch-rules.md`](docs/torch-rules.md), 참참참은 [`docs/cham-rules.md`](docs/cham-rules.md).
+손전등 찾기는 [`docs/torch-rules.md`](docs/torch-rules.md), 참참참은 [`docs/cham-rules.md`](docs/cham-rules.md),
+가위바위보는 [`docs/rps-rules.md`](docs/rps-rules.md).
 룩앤필(주인공·색·아이콘)은 [`docs/look-rules.md`](docs/look-rules.md).
 
 ---
@@ -31,7 +33,7 @@ shell/            앱 셸 — 게임 목록 말고는 게임을 모른다
   game_registry.gd  ★ 게임이 등록되는 유일한 곳 (「섬 한 바퀴」 가중치도 여기)
   migrate.gd        옛 저장 파일 -> v3 (순수 함수라 헤드리스로 테스트된다)
   boot.gd / hub.gd  진입점 / 둥지방
-core/look.gd      ★ 앱 전체의 색 · 주인공 두리 · 공통 배경 (게임이 색을 짓지 않게)
+core/look.gd      ★ 앱 전체의 색 · 주인공 두리 · 손 그리기 (게임이 색·손을 짓지 않게)
 core/art/         두리 네 포즈 (tools/theme/gen_theme.py 가 만든다)
 core/fonts/       DinoKR.ttf (프로젝트 fallback) · Jua-Regular.ttf (셈놀이 전용)
 games/dino/       공룡 찾기
@@ -39,11 +41,13 @@ games/torch/      손전등 찾기 (공룡 찾기의 방·가구·공룡을 빌�
 games/math/       셈놀이 (오토로드 MathGame / Audio 포함)
 games/kanoodle/   블록 채우기
 games/cham/       참참참 (공룡 그림·도감만 빌려 쓴다)
+games/rps/        가위바위보 (손은 core/look.gd 의 draw_hand — 허브 카드와 같은 손)
 tools/            verify.sh · check_font.py · screenshot.py · dino/ · theme/
 tests/            test_runner · shot · dino_dump · ns_check
                   journey_check (게임 사이) · battle_check (시연 켠 전탄)
                   kanoodle_check (퍼즐 생성기) · torch_check (어둠·빛·찾기 규칙)
-                  cham_check (버릇 읽기)
+                  cham_check (버릇 읽기) · rps_check (규칙·안내·찍기 상한)
+                  session_check (「많이 놀았다」가 쉼표인가 자물쇠인가)
 ```
 
 **새 게임을 넣을 때 손대는 것은 `shell/game_registry.gd` 의 배열 한 줄과 씬 하나뿐이다.**
@@ -104,6 +108,17 @@ adb install -r rogame-test.apk
    공룡 찾기는 **힌트 발동 횟수**만, 개구리 용사는 **누적 첫시도 정답 횟수**만 본다.
    초시계는 (a) 화면에 안 보이는 타이머이고, (b) 아이가 자리를 비우면 무너지고,
    (c) 4지선다 찍기를 숙련으로 오독한다(2연속 확률 1/16).
+9-1. **한 판을 두 번 세지 마라.** 끝난 판을 저장할 때 `_done` 같은 **아직 안 꺼진 깃발**로
+    "깼는가"를 판단하면, 끝낸 순간과 "다음 판" 버튼에서 두 번 세어진다. 블록 채우기가
+    그랬다 — 숨은 손잡이(skill)가 판마다 +2 씩 올라 **다섯 판 만에 상한**에 붙었고,
+    아이 눈에는 이유 없이 갑자기 어려워지는 것으로만 보였다(규칙 11 위반).
+    부모 화면의 "오늘 몇 판"도 두 배였다. **세는 일과 저장하는 일을 갈라 둬라**
+    (`kanoodle.gd` 의 `_save(score)`).
+9-2. **새 게임의 축은 "찍어도 통과하는가"를 먼저 재고 정한다.** 규칙 9 는 초시계를
+    금지하는 데서 끝나지 않는다 — **선택지가 적고 판이 짧으면 찍기가 숙련으로 읽힌다.**
+    가위바위보는 그래서 라운드 하한이 5다 (4로 내리면 카드 2장에서 찍기 통과율이
+    9.8% 로 규칙 9 의 문턱 6.25% 를 넘는다). 공식과 상한은
+    `RpsGen.guess_pass()` 에 있고 `tests/rps_check.gd` 가 강제한다.
 10. **새 축은 한 번에 하나씩, 그것도 한 마리/한 문제에만 먼저.** 축 도입 간격 최소 3방.
     어려운 판 뒤에는 쉬운 판. 10탄 배수(축하 방)는 항상 조금 쉽게.
 11. **아이에게 "너 못한다"는 신호를 절대 보이지 않는다.** 난이도가 내려가도
@@ -141,10 +156,44 @@ adb install -r rogame-test.apk
     ⚠ **블록 채우기는 조각이 떨어져서 쌓인다(중력).** 그래서 덮은 것을 아무렇게나
     빼면 안 된다 — 위에 뭔가 얹힌 조각은 떨어뜨려도 제자리까지 못 내려간다.
     빼는 조각은 반드시 **위쪽이 뚫린 덩어리**여야 한다 (`NoodGen.pick_top`).
-    그리고 **"제자리에 앉는가"로 놓을 차례를 판단하지 마라** — 옆 기둥에 얹혀
-    제자리에 잘 앉으면서 아래 조각의 길을 막는 경우가 있다. 기준은
-    **"이 조각이 가두는 조각이 이미 다 놓였는가"** 다 (`kanoodle.gd` 의 `_ready_now`).
-    실제로 물렸다: 여행 검사 10번째에서 마지막 조각이 영영 못 들어갔다.
+    ⚠ 다만 이 해답은 **아이가 맞춰야 할 정답이 아니다.** 첫 계획일 뿐이다 — 아래 19-1 참고.
+19-1. **블록 채우기는 모양만 맞으면 어디든 들어간다.** 예전에는 해답에 적힌 그 자리에
+    앉아야만 들어갔고, 그래서 모양이 딱 맞는 빈 자리에 제대로 넣어도 튕겨 나왔다
+    (같은 모양 조각이 둘일 때 특히). 아이 눈에는 "맞는데 안 되는" 것이라 제일 나쁘다.
+    지금 판정은 자리가 아니라 **가능성**이다 — **"여기 앉혀도 남은 조각으로 판을
+    끝까지 채울 수 있는가"** (`NoodGen.fits`). 그래서 자유롭게 넣으면서도 막다른 판이
+    안 생긴다.
+    - 해답은 계약이 아니라 **지금 계획**(`kanoodle.gd` 의 `_plan`)이다. 아이가 다른
+      자리에 넣으면 `_refresh()` 가 다시 세운다. **안내 점·경계선·힌트는 전부 이
+      계획을 그린다** — 생성기 해답을 그리면 그 순간 안내가 거짓말이 된다.
+    - 힌트는 반드시 **계획의 첫 수**(`_plan_next`)만 가리켜라. `_plan[i]` 는 "다 놓고
+      났을 때 있을 자리"라, 차례가 뒤인 조각을 가리키면 아이는 시킨 대로 떨어뜨렸는데
+      더 아래로 가서 튕기는 것을 본다.
+    - **"제자리에 앉는가"로 놓을 차례를 판단하지 마라**는 옛 교훈은 그대로다 — 옆 기둥에
+      얹혀 제자리에 잘 앉으면서 아래 조각의 길을 막는 경우가 있다(여행 검사 10번째에서
+      물렸다). 지금은 그것까지 포함해 "끝까지 채울 수 있는가"로 본다
+      (`NoodGen.survey` -> `kanoodle.gd` 의 `_can_place` / `_ready_now`).
+    - 탐색은 격자가 아니라 **기둥 높이**만 본다. 조각이 위에서만 내려오므로 지나갈 수
+      있는 판은 전부 "기둥마다 아래부터 빈틈없이 찬" 모양이기 때문이다. 낙하 자리는
+      `NoodGen.land_at()` **한 곳에서만** 계산한다 (격자 쪽 `drop_dy()` 와 같은 답을
+      내야 하고, `tests/kanoodle_check.gd` 의 `_equiv_check` 가 둘을 맞대어 본다).
+      ⚠ **ㄷ 자처럼 기둥이 끊긴 조각을 `pieces.gd` 에 넣지 마라** — 기둥 표가 거짓말이
+      된다 (`_contig_check` 가 막는다).
+    - **막힌 판 기억(`_bag`)은 한 판 내내 이어 쓴다.** 같은 판을 자리마다 수십 번
+      물어보기 때문에, 판마다 새로 파면 어려운 판에서 탐색 한도(`PLAN_CAP`)에 걸린다.
+      한 번 물렸다: 계획 다시 세우기가 4.6ms(417판) → **0.9ms(20판)** 로 줄었고
+      한도 초과가 사라졌다. 한도에 걸리면 **너그러운 쪽**(놓게 해 준다)으로 답하고,
+      혹시 못 채우는 자리가 들어가면 다음 `_refresh` 가 잡아서 힌트가 들어낼 조각을
+      가리킨다. `tests/kanoodle_check.gd` 가 "탐색포기 0건"을 강제한다.
+    - 되돌리기(판 위의 조각 도로 들기)로는 **여전히 갇힐 수 있다** — 위에 얹힌 조각을
+      들어내면 그 자리가 묻힌 구멍이 된다. 그때는 힌트가 **들어낼 조각**을 가리킨다
+      (`_lift_hint`). 이 셋(생성·판정·탈출)이 다 있어야 판이 막다르게 안 끝난다.
+      ⚠ 갇힌 동안에는 힌트를 **기다림 없이 바로** 띄우고, 탭이 그걸 지우지 않게 한다
+      (`_stuck`). 답답해서 자꾸 두드리는 아이는 탭마다 기다림이 0으로 돌아가서
+      유일한 탈출 안내를 영영 못 본다.
+    - 힌트 색에 **흰색·금색을 쓰지 마라.** 빈 칸이 이미 밝은 베이지(e2ded6)라 대비가
+      1.1:1 밖에 안 나온다 — 눈으로는 "힌트가 안 뜬다"로만 보인다.
+      `python3 tools/screenshot.py kanoodlehint:1` 로 직접 찍어서 확인해라.
 20. **뷰포트를 통일하지 않는다.** 기본 1280x800 expand, 공룡 찾기 진입 시에만
     런타임으로 1280x720 keep 으로 전환한다(`Shell.enter_game`).
     720 으로 통일하면 노치 있는 아이폰에서 개구리 답 버튼이 24px 화면 밖으로 나가고,
@@ -179,6 +228,22 @@ adb install -r rogame-test.apk
     다섯 개가 다섯 앱처럼 보인다. 게임의 정체성 색만 `game_registry.gd` 의 `color` 에 둔다.
 29. **`config/name.ios` 와 번들 ID 는 절대 바꾸지 마라.** 표시 이름(`config/name`)만 바꾼다.
     바꾸는 순간 아이 폰의 기존 저장 데이터가 남남이 된다.
+30. **놀이 단위 상한은 벽이 아니라 쉼표다.** 상한에 닿아 허브로 돌려보낼 때 반드시
+    세션을 새로 연다 (`Shell.round_done` -> `take_session_break`).
+    ⚠ `session_units` 를 0 으로 되돌리는 곳이 앱 부팅(`shell/boot.gd`) 하나뿐이면,
+    한 번 넘긴 뒤로는 **방을 깰 때마다 예외 없이 허브로 튕긴다** — 다시 들어가서 한 방,
+    또 허브, 또 한 방. 아이 눈에는 "다 찾았는데 다음 방이 안 나온다"로만 보인다(규칙 11).
+    안드로이드는 홈 버튼으로 나가도 프로세스가 살아 있어 `boot.gd` 가 다시 안 돌고,
+    그 상태가 **며칠씩** 이어진다. 제한이 없는 것보다 나쁘다 — 실제로 물렸고,
+    부모가 "다음 스테이지로 안 넘어간다"로 신고했다.
+    ⚠ 그리고 **말없이 화면만 바꾸지 마라.** 두리가 한 번 인사하고 나간다
+    (`Router.goto_rest`). 축하 배너를 보고 기뻐한 직후에 갑자기 게임 목록에 서 있으면,
+    이 나이대는 그걸 "내가 뭘 잘못 눌러서 놀이가 끊겼다"로 읽는다.
+    ⚠ 허브로 보내는 일은 **셸이 한다.** 게임이 제 페이드로 덮은 뒤 `Router.goto_hub()`
+    를 부르면 [덮임 -> 방이 다시 보임 -> 다시 덮임] 으로 한 번 깜빡이고,
+    아이 눈에는 "넘어가려다 실패한 것"으로 보인다.
+    `tests/session_check.gd` 가 강제한다 (게임별 검사기는 `dev_mode` 라 이 분기를
+    통째로 건너뛰고, 여행 검사는 상한을 꺼 버려서 여태 아무도 안 봤다).
 
 ---
 
@@ -201,7 +266,8 @@ stdbuf -oL ~/.local/bin/godot --headless --path . res://tests/battle_check.tscn 
 stdbuf -oL ~/.local/bin/godot --headless --path . res://tests/kanoodle_check.tscn  # 퍼즐 생성기
 stdbuf -oL ~/.local/bin/godot --headless --path . res://tests/torch_check.tscn     # 어둠·빛·찾기 규칙
 stdbuf -oL ~/.local/bin/godot --headless --path . res://tests/cham_check.tscn      # 참참참 버릇 읽기
-python3 tools/screenshot.py kanoodle:0 torch:1 cham:1 cham:26 hub:0                # Xvfb 촬영
+stdbuf -oL ~/.local/bin/godot --headless --path . res://tests/session_check.tscn   # 「많이 놀았다」 쉼표
+python3 tools/screenshot.py kanoodle:0 kanoodlehint:14 torch:1 cham:1 rps:1 rpsmeet:1 hub:0
 python3 tools/dino/render_preview.py                             # 위 JSON 을 PNG 로
 python3 tools/screenshot.py map:0 battle:8                       # Xvfb 로 실제 촬영
 python3 tools/theme/gen_theme.py --list            # 두리 자산 목록
@@ -244,17 +310,23 @@ ROGAME_DEBUG=1 ~/.local/bin/godot --headless --path . --quit-after 200   # 이�
 | **블록 채우기 조각 세트** | `games/kanoodle/pieces.gd` 의 `LIST` |
 | 블록 채우기 퍼즐 생성 | `games/kanoodle/nood_gen.gd` 의 `tile()` / `make()` / `pick_top()` |
 | 블록 채우기 낙하 규칙 | `games/kanoodle/nood_gen.gd` 의 `drop_dy()` — 게임·생성기·검사기가 같은 함수를 본다 |
-| 블록 채우기 놓을 차례 | `games/kanoodle/kanoodle.gd` 의 `_ready_now()` + `_blocks` 표 |
+| **블록 채우기 자리 판정** | `games/kanoodle/nood_gen.gd` 의 `fits()` / `plan()` / `survey()` |
+| 블록 채우기 놓을 차례 · 안내 | `games/kanoodle/kanoodle.gd` 의 `_refresh()` + `_plan` / `_plan_next` |
 | 블록 채우기 난이도 | `games/kanoodle/nood_gen.gd` 의 `axes()` |
 | **「섬 한 바퀴」 (게임 섞기)** | `shell/shell.gd` 의 `journey_*` + `pick_journey_game()` |
 | 여행에서 게임이 나올 확률 | `shell/game_registry.gd` 의 `journey` (나이대별 가중치) |
 | 여행 한 판의 놀이 단위 | `shell/game_registry.gd` 의 `journey_units` (셸은 게임 이름을 모른다) |
+| **놀이 단위 상한 · 쉼표** | `shell/shell.gd` 의 `round_done()` / `take_session_break()` — 게임은 이 한 줄만 부른다 |
+| 쉬러 갈 때 두리 인사 | `shell/router.gd` 의 `goto_rest()` / `_show_caption()` |
 | **앱 색 · 주인공 두리** | `core/look.gd` 의 `Look` — 색을 게임에서 짓지 않는다 |
 | 두리 그림 · 아이콘 | `tools/theme/gen_theme.py` (로컬 Krea 2, 화풍 앵커가 여기 있다) |
 | 여행 개구리 구간의 탄 고르기 | `shell/router.gd` 의 `_pick_journey_tier()` |
 | 저장 스키마 · 프로필 · 도감 | `shell/shell.gd` |
 | 옛 저장 이관 | `shell/migrate.gd` (순수 함수) |
 | 화면 전환 · 뷰포트 | `shell/router.gd` + `Shell.enter_game()` |
+| **가위바위보 난이도·규칙** | `games/rps/scripts/rps_gen.gd` 의 `axes()` / `answer()` — **단일 진실 소스** |
+| 가위바위보 흐름·그리기 | `games/rps/scripts/rps_game.gd` |
+| 손 그리기 (가위·바위·보) | `core/look.gd` 의 `draw_hand()` — 허브 카드와 게임이 같은 함수를 본다 |
 | **참참참 난이도·버릇** | `games/cham/scripts/cham_gen.gd` 의 `axes()` / `pattern()` — **단일 진실 소스** |
 | 참참참 흐름·그리기 | `games/cham/scripts/cham_game.gd` |
 | **손전등 찾기 난이도** | `games/torch/scripts/torch_gen.gd` 의 `axes()` — **단일 진실 소스** |

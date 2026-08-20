@@ -116,8 +116,8 @@ func _ready() -> void:
 ##   "잘했다"로 오독해서 헤매는 아이의 난이도까지 올린다. 실제로 그렇게 짜여 있었다.
 func _play_stages() -> int:
 	var bad := 0
-	print("   %5s %7s %9s %9s %7s %7s %8s"
-			% ["탄", "공룡", "어둠속탭", "비추고탭", "첫안내", "힌트", "결과"])
+	print("   %5s %7s %9s %9s %7s %7s %6s %8s"
+			% ["탄", "공룡", "어둠속탭", "비추고탭", "첫안내", "힌트", "먹힌탭", "결과"])
 	for si in PLAY_STAGES:
 		var st := int(si)
 		# ★ 탄과 연출 배속을 **_ready 가 돌기 전에** 정해 둔다. add_child 한 뒤에 고쳐서
@@ -170,6 +170,14 @@ func _play_stages() -> int:
 						% [st, int(g.call("dry_limit"))])
 		g.set("hints_this_room", 0)
 
+		# 6. 가구 위에 걸친 공룡을 눌러도 손전등이 반드시 움직이는가.
+		#    (여기가 제일 안 보이는 사고다 — 아래 _stuck_taps 주석 참고)
+		var stuck := await _stuck_taps(st)
+		if stuck > 0:
+			print("!! %d탄: 공룡 위를 눌렀는데 손전등이 안 움직인 자리 %d곳 "
+					% [st, stuck]
+					+ "(가구가 대신 반응하고 끝났다 — 규칙 2·11)")
+
 		var dark_found := 0
 		var lit_missed := 0
 		for d in dinos:
@@ -190,14 +198,14 @@ func _play_stages() -> int:
 		# 3. 다 찾았으면 방이 끝나 있어야 한다
 		var cleared := String(g.get("state")) == "clear"
 		var row_ok: bool = dark_found == 0 and lit_missed == 0 and cleared \
-				and (st > 2 or guide == "공룡위") and hint == "뜸"
+				and (st > 2 or guide == "공룡위") and hint == "뜸" and stuck == 0
 		if not row_ok:
 			bad += 1
 			if not cleared:
 				print("!! %d탄: 다 찾았는데 방이 안 끝났다 (state=%s found=%d/%d)"
 						% [st, String(g.get("state")), int(g.get("found")), dinos.size()])
-		print("   %5d %7d %9d %9d %7s %7s %8s"
-				% [st, dinos.size(), dark_found, lit_missed, guide, hint,
+		print("   %5d %7d %9d %9d %7s %7s %6d %8s"
+				% [st, dinos.size(), dark_found, lit_missed, guide, hint, stuck,
 				   "정상" if row_ok else "이상"])
 		(g.get("sfx") as Object).call("stop_all")
 		g.queue_free()
@@ -219,3 +227,65 @@ func _empty_spot(dinos: Array) -> Dictionary:
 				bd = m
 				best = p
 	return {"pos": best, "dist": bd}
+
+
+## 가구에 걸친 공룡을 눌렀는데 **손전등이 안 움직이는** 자리를 센다.
+##
+## ★ 왜 이게 사고인가: 이 게임의 규칙은 "비춰 보고, 보고 나서 누른다"이고,
+##   첫 탭은 **절대 무반응이 아니어야 한다**(_tap 위의 주석). 그런데 판정 반경(HIT=0.90)이
+##   눈에 보이는 빛 웅덩이(0.98)보다 좁아서, 빛 가장자리에 걸친 공룡은 아이 눈에 보이는데
+##   중심이 "안 밝다"로 읽힌다. 그 상태에서 손가락 밑에 가구가 있으면 가구 분기가
+##   탭을 통째로 먹고 **손전등이 그 자리로 가지도 않는다.** 같은 데를 다시 눌러도 똑같다 —
+##   아이는 보이는 공룡을 정확히 누르면서 계속 "틀림" 소리만 듣는다(규칙 2·11 위반).
+##   이 게임의 숨는 자리는 전부 가구 옆·뒤라(가림 평균 50%) 드문 조합이 아니다.
+##
+## 자리는 찾지 않고 **만든다**: 공룡 판정 네모와 가구 네모가 겹치는 곳을 p 로 잡고,
+## 손전등을 공룡 중심에서 0.93r 떨어진 곳(중심은 안 밝다)에 두되 p 쪽으로 둔다
+## (그러면 |빛-p| = 0.93r - |p-중심| < 0.9r 이라 p 는 밝다).
+## ★ 방을 **따로 하나 더** 띄워서 본다. 이 검사는 탭을 실제로 넣어 보므로,
+##   같은 방에서 돌리면 겹쳐 선 옆 공룡이 먼저 찾아져서 뒤따르는 "어둠 속 탭" 검사가
+##   거짓 실패로 물든다 (실제로 그랬다).
+func _stuck_taps(st: int) -> int:
+	Shell.profile()["torch"] = {
+		"best_stage": st, "lifetime_found": 0,
+		"skill": 0, "ease_streak": 0, "cushion": 0,
+	}
+	var g: Node = load("res://games/torch/torch.tscn").instantiate()
+	g.set("dev_mode", true)
+	g.set("_slow", 0.02)
+	add_child(g)
+	await get_tree().process_frame
+	g.call("skip_intro")
+	var dinos: Array = g.get("dinos")
+	var beam: Object = g.get("beam")
+	var props: Array = g.get("props")
+	var r := float(beam.get("radius"))
+	var bad := 0
+	for d in dinos:
+		if bool(d.get("found")):
+			continue
+		var hr: Rect2 = d.call("hit_rect")
+		var c := hr.get_center()
+		for pr in props:
+			var inter := (pr.call("rect") as Rect2).intersection(hr)
+			if inter.size.x < 8.0 or inter.size.y < 8.0:
+				continue
+			var p := inter.get_center()
+			if p.distance_to(c) < r * 0.05:
+				continue        # 너무 가까우면 중심까지 같이 밝아진다
+			beam.call("aim", c + (p - c).normalized() * (r * 0.93))
+			if bool(beam.call("lit", c)) or not bool(beam.call("lit", p)):
+				continue        # 만들려던 상황이 아니다
+			var before: Vector2 = beam.get("pos")
+			var found_before := int(g.get("found"))
+			g.call("_tap", p)
+			# 탭이 **무엇이든** 했으면 된다: 빛이 옮겨 갔거나(=다음 탭이 찾는다)
+			# 겹쳐 선 옆 공룡이 찾아졌거나. 둘 다 아니면 아이에게는 무반응이다.
+			if int(g.get("found")) == found_before \
+					and (beam.get("pos") as Vector2).is_equal_approx(before):
+				bad += 1
+			break
+	(g.get("sfx") as Object).call("stop_all")
+	g.queue_free()
+	await get_tree().process_frame
+	return bad
