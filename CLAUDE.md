@@ -82,6 +82,27 @@ adb install -r rogame-test.apk
   오류가 아니다. `[ DONE ] export` 와 `Signed` 가 보이면 성공이다.
 - **APK 가 안 나오면 조용히 넘어가지 말고 왜 실패했는지 말해라.**
 
+그리고 **커밋하고 push 해라.** 원격은 <https://github.com/DevJieung/JingIPA> (`origin`) 하나고,
+자격증명은 `~/.ghtoken` + 전역 credential 헬퍼로 이미 걸려 있다 — 그냥 `git push` 하면 된다.
+검증이 하나라도 깨졌으면 push 하지 말고 보고해라. ⚠ **토큰을 화면에 찍지 마라**
+(`... 2>&1 | sed 's/github_pat_[A-Za-z0-9_]*/<토큰>/g'`).
+
+**아이폰용이 필요하면 IPA 는 GitHub Actions 가 굽는다** (이 머신은 aarch64 라 못 굽는다).
+푸시한 뒤 워크플로를 걸고, 초록불만 보지 말고 **IPA 를 받아서 안까지 열어 확인해라** —
+화면이 없는 이 머신에서 결과를 볼 수 있는 방법이 그것뿐이다. 약 2분 걸린다.
+
+```bash
+# ⚠ 토큰을 -H 로 넘기면 프로세스 인자에 올라가 ps/pgrep 으로 새어 나간다. stdin 으로 준다.
+gh_api() { local u="$1"; shift; printf 'header = "Authorization: Bearer %s"\n' \
+  "$(cat "$HOME/.ghtoken")" | curl -sS --config - "$@" "$u"; }
+API=https://api.github.com/repos/DevJieung/JingIPA
+gh_api "$API/actions/workflows/ios.yml/dispatches" -X POST \
+  -H "Accept: application/vnd.github+json" -d '{"ref":"main","inputs":{"build_type":"release"}}'
+```
+
+전체 절차(실행 찾기·기다리기·실패 원인 보기·IPA 열어 보기·토큰 권한 셋)는
+[`WRAPUP.md`](WRAPUP.md) 4~5번에 있다. 서명 재료는 [`docs/ios-signing.md`](docs/ios-signing.md).
+
 ---
 
 ## 절대 깨면 안 되는 것
@@ -275,6 +296,12 @@ python3 tools/theme/gen_theme.py --only duri --tries 6  # 주인공 후보 뽑�
 python3 tools/theme/gen_theme.py --icons          # 두리 얼굴로 아이콘·부팅화면 다시
 python3 tools/check_font.py
 python3 tools/dino/gen_dinos.py --list                           # 공룡 50종
+
+git push                                                         # ~/.ghtoken 으로 그냥 된다
+# 아이폰용 IPA — 절차·gh_api 정의는 WRAPUP.md 5번 (토큰을 -H 로 넘기지 마라)
+gh_api "$API/actions/workflows/ios.yml/dispatches" -X POST \
+     -d '{"ref":"main","inputs":{"build_type":"release"}}'
+gh_api "$API/actions/runs?per_page=3"                            # 결과 보기
 ROGAME_DEBUG=1 ~/.local/bin/godot --headless --path . --quit-after 200   # 이관 진단
 ```
 
@@ -344,6 +371,7 @@ ROGAME_DEBUG=1 ~/.local/bin/godot --headless --path . --quit-after 200   # 이�
 | 개구리 적응형 | `games/frog/game/battle.gd` 의 `_update_adapt()` |
 | 나이대별 손잡이 | `shell/shell.gd` 의 `default_tuning()` |
 | 부모 화면 | `games/frog/ui/parent.gd` |
+| **아이폰용 IPA** | `.github/workflows/ios.yml` — 절차는 `WRAPUP.md` 5번, 서명은 `docs/ios-signing.md` |
 | 화면 글자 (개구리) | `games/frog/core/loc.gd` |
 
 **규칙이나 탄을 추가하면 `tests/` 에 조건 검사도 함께 추가하라.**
