@@ -50,7 +50,7 @@ func _run() -> void:
 					"best_stage": maxi(1, arg), "lifetime_found": 0,
 					"skill": 0, "ease_streak": 0, "cushion": 0,
 				}
-			"rps", "rpsmeet", "rpsclear":
+			"rps", "rpsmeet", "rpsok", "rpsclear":
 				scene = "res://games/rps/rps.tscn"
 				# arg 를 탄으로 쓴다 — 1탄만 찍으면 옅어진 관계 고리도 "져라"도 못 본다.
 				Shell.profile()["rps"] = {
@@ -156,6 +156,27 @@ func _run() -> void:
 							int(inst.call("goal_now")))
 					var c2: Rect2 = inst.call("card_rect", int(inst.call("card_index", w2)))
 					inst.call("_on_tap", c2.position + c2.size * 0.5)
+				inst.call("_process", 0.05)
+			inst.set("_slow", 400.0)
+		# ★ **맞힌 순간**이 이 게임에서 제일 중요한 화면이다 — 아이가 "내가 맞혔다"를
+		#   글자 없이 알아야 하는 유일한 지점이라, 축하가 정말 눈에 띄는지 눈으로 본다.
+		#   (여기가 약해서 "이겼는지 알아차리기 힘들다"는 말이 나왔다.)
+		if kind == "rpsok":
+			await get_tree().process_frame
+			for i in 20:
+				if String(inst.get("_state")) == "wait":
+					break
+				inst.call("_process", 0.2)
+			var w3: int = RpsGen.answer(int(inst.call("friend_hand")),
+					int(inst.call("goal_now")))
+			var c3: Rect2 = inst.call("card_rect", int(inst.call("card_index", w3)))
+			inst.call("_on_tap", c3.position + c3.size * 0.5)
+			for i in 60:
+				if String(inst.get("_state")) == "ok":
+					break
+				inst.call("_process", 0.05)
+			# 축하가 한창인 순간에서 멈춘다 (막 터진 직후)
+			for i in 5:
 				inst.call("_process", 0.05)
 			inst.set("_slow", 400.0)
 		if kind == "rpsmeet":

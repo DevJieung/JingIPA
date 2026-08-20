@@ -9,7 +9,7 @@
 - **셈놀이** (`games/math/`) — 블록으로 왜 그런지 보여 주는 사칙연산
 - **블록 채우기** (`games/kanoodle/`) — 조각을 기둥에 떨어뜨려 가이드 모양대로 쌓는다
 - **참참참** (`games/cham/`) — 친구가 어느 쪽으로 뛸지 손으로 가리켜 잡는다
-  (손은 가위바위보와 **같은 그림**이다 — `core/look.gd`)
+  (손은 가위바위보의 **가위 손을 기울인 것**이다 — `core/look.gd`)
 - **가위바위보** (`games/rps/`) — 친구 손을 보고 이기는(비기는·지는) 손을 낸다
   (손 셋은 공룡·두리와 같은 화풍의 그림이다 — 규칙 27 의 ⚠ 를 읽어라)
 
@@ -251,27 +251,35 @@ gh_api "$API/actions/workflows/ios.yml/dispatches" -X POST \
 26. **공룡 그림을 좌우로 뒤집어서 "방향"을 말하지 마라.** 50종 PNG 는 바라보는 방향이
     종마다 달라서, 뒤집기로 무언가를 알리면 종에 따라 아이에게 거짓말이 된다.
     (공룡 찾기는 그냥 모양이라 무해했고, 그래서 여태 안 드러났다. 참참참에서 드러났다.)
-    ⚠ 예외가 하나 있고, 예외인 **이유**가 규칙 자체다: 참참참의 **손**은 뒤집는다
-    (`Look.draw_hand` 의 `flip`). 거기는 손이 **둘**이라, 오른손 그림을 뒤집으면 그냥
-    왼손이 되고 그게 곧 아이 자신의 두 손이다 — 없는 말을 지어내는 것이 아니다.
-    가위바위보는 손이 **하나뿐**이라 뒤집으면 이유 없이 왼손·오른손이 오간다. 금지다.
-    **"뒤집어도 참인가"를 묻지, "뒤집으면 편한가"를 묻지 마라.**
+    ⚠ 예외가 둘 있고, 둘 다 **"뒤집어도 참인가"에 답이 있어서** 예외다.
+    (1) 참참참의 **손**은 뒤집는다 (`Look.draw_hand` 의 `flip`). 거기는 손이 **둘**이라
+    오른손 그림을 뒤집으면 그냥 왼손이고, 그게 곧 아이 자신의 두 손이다. 가위바위보는
+    손이 하나뿐이라 뒤집으면 이유 없이 왼손·오른손이 오간다 — 거기서는 금지다.
+    (2) 참참참에서 친구가 **뛴 뒤에** 그쪽으로 몸을 돌린다. 이건 이 규칙이 스스로 허락한
+    길을 따라간 것이다 — **50종의 방향 표를 먼저 만들었다**
+    (`DinoSpecies.FACE`, 눈으로 50장을 보고 적었다. 49종이 오른쪽, 딤오포돈만 정면).
+    표에 없거나 정면인 종은 **안 돌린다**. 모르는 채로 뒤집는 것이 이 규칙이 막는 일이다.
+    ⚠ 그리고 **뛰기 전에는 절대 안 돌린다.** 돌리면 그건 tell 이 아니라 답이라
+    난이도 축이 통째로 무너진다. `tests/cham_check.gd` 의 `_face_check` 가 강제한다.
+    ⚠ 그림을 다시 뽑으면 방향이 바뀔 수 있는데 이 머신에서는 아무도 못 본다. 그래서
+    `DinoSpecies.ART_SHA` 에 지문을 같이 적어 두고, 지문이 다르면 검사가 실패한다 —
+    "눈으로 다시 보고 표를 고쳐라"는 뜻이다 (`tools/dino/face_table.py`).
 27. **판정이 걸린 그래픽은 코드로 그린다.** 방·가구·블록 조각은 전부 코드다 —
     (a) 판정이 그 도형에서 나오고(가림%·클릭·낙하), (b) 화면 없는 이 머신에서
     그리기 명령을 재현해 검증하기 때문이다. **새 게임의 놀이 화면은 이미지 0장에서 시작한다.**
-    그림은 공룡 50종 · 두리 네 장 · **손 다섯**(가위·바위·보 + 참참참의
-    가리키는 손 둘)뿐이다
+    그림은 공룡 50종 · 두리 네 장 · **손 셋**(가위·바위·보)뿐이다.
+    참참참도 **같은 세 장**을 쓴다 — 거기서는 가위 손을 손목 축으로 기울여서 방향을 말한다
+    (옆을 가리키는 손을 따로 뽑아 봤더니 작게 그렸을 때 기괴했다)
     ([`docs/look-rules.md`](docs/look-rules.md)).
     ⚠ 손이 예외인 이유는 "예뻐서"가 아니라 **판정이 그림을 안 보기 때문**이다 —
     누르는 것은 카드 네모(참참참은 화면 아래 반쪽)고,
     손의 자리와 크기는 여전히 `core/look.gd` 의 **도형이 정한다**
     (`HAND_WRIST` · `HAND_LIFT` 가 도형에서 역산한 값이다). 그림이 없으면 도형으로 돈다.
     **그 도형을 지우는 순간 예외가 아니라 위반이 된다.**
-    ⚠ 그리고 손 다섯은 **한 벌**이다. 손목 밴드를 자로 삼아 같은 512x512 틀에 앉혀 두었다
+    ⚠ 그리고 손 셋은 **한 벌**이다. 손목 밴드를 자로 삼아 같은 512x512 틀에 앉혀 두었다
     (`tools/theme/gen_theme.py` 의 `fit_hand`). 한 장만 다시 뽑아 끼우면 두 게임의 손이
     서로 다른 사람 손이 되는데 **화면 없는 이 머신에서는 눈으로 안 잡힌다** —
-    `tests/rps_check.gd` 의 `_art_check` 가 다섯 장 전부의 크기와 밴드 자리를 잰다
-    (참참참 것까지 거기서 잰다 — 같은 것을 두 번 재지 않는다).
+    `tests/rps_check.gd` 의 `_art_check` 가 세 장의 크기와 밴드 자리를 잰다.
 28. **색을 짓지 마라.** `core/look.gd` 의 `Look` 에서 가져와라. 게임마다 제 색을 지어내면
     다섯 개가 다섯 앱처럼 보인다. 게임의 정체성 색만 `game_registry.gd` 의 `color` 에 둔다.
 29. **`config/name.ios` 와 번들 ID 는 절대 바꾸지 마라.** 표시 이름(`config/name`)만 바꾼다.
@@ -316,11 +324,14 @@ stdbuf -oL ~/.local/bin/godot --headless --path . res://tests/torch_check.tscn  
 stdbuf -oL ~/.local/bin/godot --headless --path . res://tests/cham_check.tscn      # 참참참 버릇 읽기
 stdbuf -oL ~/.local/bin/godot --headless --path . res://tests/session_check.tscn   # 「많이 놀았다」 쉼표
 python3 tools/screenshot.py kanoodle:0 kanoodlehint:14 torch:1 cham:1 rps:1 rpsmeet:1 hub:0
+python3 tools/screenshot.py rpsok:1 chamcatch:1 chamhint:1   # 잘했을 때 · 잡은 순간 · 힌트
 python3 tools/dino/render_preview.py                             # 위 JSON 을 PNG 로
 python3 tools/screenshot.py map:0 battle:8                       # Xvfb 로 실제 촬영
 python3 tools/theme/gen_theme.py --list            # 두리 자산 목록
 python3 tools/theme/gen_theme.py --only duri --tries 6  # 주인공 후보 뽑아 보기
-python3 tools/theme/gen_theme.py --only hand --force               # 손 다섯 (한 벌)
+python3 tools/theme/gen_theme.py --only hand --force               # 손 셋 (한 벌)
+python3 tools/dino/face_table.py --sheet     # 공룡 50종이 어느 쪽을 보는지 대조표
+python3 tools/dino/face_table.py --sha       # 그림 지문 갱신 (방향을 다시 본 뒤에)
 python3 tools/theme/gen_theme.py --icons          # 두리 얼굴로 아이콘·부팅화면 다시
 python3 tools/check_font.py
 python3 tools/dino/gen_dinos.py --list                           # 공룡 50종
@@ -382,7 +393,10 @@ ROGAME_DEBUG=1 ~/.local/bin/godot --headless --path . --quit-after 200   # 이�
 | 화면 전환 · 뷰포트 | `shell/router.gd` + `Shell.enter_game()` |
 | **가위바위보 난이도·규칙** | `games/rps/scripts/rps_gen.gd` 의 `axes()` / `answer()` — **단일 진실 소스** |
 | 가위바위보 흐름·그리기 | `games/rps/scripts/rps_game.gd` |
-| 손 그리기 (다섯 손) | `core/look.gd` 의 `draw_hand()` — 허브·가위바위보·참참참이 같은 함수를 본다 |
+| 손 그리기 (세 손) | `core/look.gd` 의 `draw_hand()` — 허브·가위바위보·참참참이 같은 함수를 본다 |
+| **잘했을 때 터지는 고리** | `core/look.gd` 의 `draw_pop()` — 게임마다 다른 축하를 짓지 마라 |
+| **공룡 50종의 방향 표** | `games/dino/scripts/dino_species.gd` 의 `FACE` / `ART_SHA` (+ `tools/dino/face_table.py`) |
+| 참참참 손 기울기 | `games/cham/scripts/cham_game.gd` 의 `HAND_TILT` / `hand_aim()` |
 | **손 그림 다시 뽑기** | `tools/theme/gen_theme.py` 의 `HAND` — 다섯을 **같이** 뽑아라 (한 벌) |
 | **참참참 난이도·버릇** | `games/cham/scripts/cham_gen.gd` 의 `axes()` / `pattern()` — **단일 진실 소스** |
 | 참참참 흐름·그리기 | `games/cham/scripts/cham_game.gd` |

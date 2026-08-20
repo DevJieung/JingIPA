@@ -133,25 +133,6 @@ ASSETS: list[dict] = [
                 "wide apart pointing up, fingers fully extended, palm flat, "
                 "back of the hand facing the camera", 4237)),
 
-    # ── 참참참의 가리키는 손 ────────────────────────────────────────────────
-    # ★ 옆을 가리키는 손은 **오른쪽을 가리키는 것 한 장뿐**이다. 왼쪽은 게임이 좌우로
-    #   뒤집어 쓴다 (core/look.gd 의 draw_hand flip). 두 장을 따로 뽑으면 손가락 길이도
-    #   주먹 각도도 미묘하게 달라져서, 나란히 놓았을 때 아이가 "다른 손 둘"로 본다.
-    #   뒤집으면 좌우가 **반드시** 대칭이고, 오른손을 뒤집은 것은 그냥 왼손이라
-    #   거짓말도 아니다 (규칙 26 의 예외인 이유 — docs/cham-rules.md 6절).
-    # ★ 방향이 약하면 이 놀이가 통째로 망가진다. 손가락이 **확실히 옆으로** 뻗어야 한다 —
-    #   위로 살짝 든 정도로는 작게 그렸을 때 "주먹에 혹이 붙은 것"으로만 보인다.
-    dict(id="hand_point", ko="손 — 가리키기 (오른쪽)", cut=True, fit=True,
-         **hand("the whole hand turned on its side, the index finger extended "
-                "straight out horizontally to the right and parallel to the ground, "
-                "pointing far to the right, the middle ring and little fingers "
-                "curled into a fist, the thumb resting on top of them, "
-                "seen from the back of the hand", 4100)),
-    dict(id="hand_point_up", ko="손 — 가리키기 (위)", cut=True, fit=True,
-         **hand("the index finger extended straight up, pointing up, the middle "
-                "finger and ring finger and little finger curled into a fist, "
-                "the thumb resting across the curled fingers, "
-                "back of the hand facing the camera", 4100)),
 ]
 
 # ★ 얼굴 클로즈업은 따로 만들지 않는다. 화면을 꽉 채운 얼굴은 배경 지우기가 흰 얼굴을

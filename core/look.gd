@@ -46,9 +46,6 @@ const ART := "res://core/art/"
 const HAND_SCISSORS := 0
 const HAND_ROCK := 1
 const HAND_PAPER := 2
-## 가리키는 손 (참참참). 그림은 **오른쪽**을 가리킨다 — 왼쪽은 flip 으로 뒤집어 쓴다.
-const HAND_POINT := 3
-const HAND_POINT_UP := 4
 
 ## --- 손 그림의 틀 -------------------------------------------------------- ##
 ## ★ **tools/theme/gen_theme.py 의 HAND_CUFF_W · HAND_CUFF_V 와 같은 수다.**
@@ -78,10 +75,6 @@ static func hand_tex(kind: int) -> Texture2D:
 			id = "hand_scissors"
 		HAND_PAPER:
 			id = "hand_paper"
-		HAND_POINT:
-			id = "hand_point"
-		HAND_POINT_UP:
-			id = "hand_point_up"
 	if _cache.has(id):
 		return _cache[id]
 	var path := ART + id + ".png"
@@ -106,6 +99,9 @@ static func hand_tex(kind: int) -> Texture2D:
 ## dir 은 손목에서 손이 뻗는 쪽 (내 손은 위, 상대 손은 아래).
 ## col 은 도형일 때 살빛이고, 그림일 때는 **투명도만** 쓴다 (그림이 제 색을 갖고 있다).
 ## 회전·확대가 필요하면 부르는 쪽이 draw_set_transform 을 걸고 at 에 Vector2.ZERO 를 준다.
+##
+## dir 은 어느 쪽으로든 좋다 — 참참참은 손을 **비스듬히 기울여서** 방향을 말한다
+## (Vector2.UP.rotated(...)). 손목이 축이므로 부르는 쪽이 at 을 그렇게 잡는다.
 ##
 ## flip 은 **좌우로 뒤집기**다. 기본은 끄기 — 함부로 켜지 마라.
 ## ★ 켜도 되는 곳은 지금 **참참참 하나뿐**이고, 이유가 있다: 거기는 손이 **둘**이다.
@@ -142,11 +138,6 @@ static func draw_hand(ci: CanvasItem, at: Vector2, r: float, kind: int,
 			_cap(ci, at + pp * r * 0.55, at + pp * r * 1.20 + dir * r * 0.42, r * 0.15, col)
 			_round_rect(ci, Rect2(at + Vector2(-r * 0.72, -r * 0.52), Vector2(r * 1.44, r * 1.04)),
 					r * 0.32, col)
-		HAND_POINT, HAND_POINT_UP:
-			# 뻗은 검지 하나 — "이쪽!". 옆을 가리키는 손은 손목축의 직각 방향으로 뻗는다.
-			var fd := dir if kind == HAND_POINT_UP else (pp * (-1.0 if flip else 1.0))
-			_cap(ci, at + fd * r * 0.35, at + fd * r * 1.18, r * 0.24, col)
-			_fist(ci, at, r, dir, pp, col, dark, 3)
 		_:
 			_fist(ci, at, r, dir, pp, col, dark, 4)
 
@@ -212,6 +203,28 @@ static func _round_rect(ci: CanvasItem, r: Rect2, rad: float, col: Color) -> voi
 	for corner in [Vector2(rad, rad), Vector2(r.size.x - rad, rad),
 			Vector2(rad, r.size.y - rad), Vector2(r.size.x - rad, r.size.y - rad)]:
 		ci.draw_circle(r.position + corner, rad, col)
+
+
+## 잘됐을 때 터지는 금빛 고리. a 는 0 -> 1 (0 이 터지는 순간).
+##
+## ★ 게임들이 **같은 함수**를 본다. "잘됐다"가 놀이마다 다른 모양이면 아이는 축하를
+##   매번 새로 배워야 한다. 색종이(Confetti)와 **겹쳐** 쓰라고 만든 것이다 —
+##   색종이는 흩어져서 "신난다"를 말하고, 이 고리는 "바로 여기서 일어났다"를 말한다.
+##   맞혔는지 아닌지가 눈에 안 들어온다는 말이 나온 뒤에 생겼다.
+## ★ 고리를 셋 겹쳐서 시차를 준다. 하나면 "동그라미가 하나 지나갔다"로 끝나고,
+##   터졌다는 느낌이 안 난다.
+static func draw_pop(ci: CanvasItem, at: Vector2, a: float, r0: float, col := GOLD) -> void:
+	if a <= 0.0 or a >= 1.4:
+		return
+	for k in 3:
+		var t := a - float(k) * 0.14
+		if t <= 0.0 or t >= 1.0:
+			continue
+		var rr := r0 * (0.5 + 2.2 * t)
+		var w := r0 * 0.22 * (1.0 - t)
+		if w <= 0.6:
+			continue
+		ci.draw_arc(at, rr, 0.0, TAU, 48, Color(col, 0.6 * (1.0 - t)), w, true)
 
 
 # --------------------------------------------------------------------------- #

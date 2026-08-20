@@ -372,7 +372,12 @@ func _judge() -> void:
 		Shell.bump_today("rps")
 		_save_record()
 		sfx.play("find", 1.0 + 0.06 * float(hit - 1))
-		fx.burst(MINE_AT + Vector2(0, -40.0), _fx(20), DinoSpecies.data(_sp)["col"])
+		# ★ 크게 터뜨린다. "이겼는지 알아차리기 힘들다"는 말이 나온 뒤에 20 -> 52 로
+		#   올리고, 이긴 손과 별 자리 둘에서 터뜨린다. 별 하나만으로는 이 나이대가
+		#   "내가 맞혔다"를 못 읽는다 — 별은 **왜** 이겼는지를 말하는 그림이지
+		#   "잘했다"를 말하는 그림이 아니었다.
+		fx.burst(MINE_AT + Vector2(0, -40.0), _fx(52), DinoSpecies.data(_sp)["col"])
+		fx.burst(Vector2(MARK_X, (FRIEND_AT.y + MINE_AT.y) * 0.5), _fx(24), Look.GOLD)
 		if not _met:
 			_met = true
 			# 도감은 집 공용이다 — 여기서 만난 공룡도 같은 칸을 채운다.
@@ -614,13 +619,15 @@ func _paint_field() -> void:
 	var shown := _state == "show" or _state == "ok" or _state == "no"
 	if shown and _pick >= 0:
 		res = RpsGen.outcome(_pick, fh)
-	# 두 손의 크기 — 이긴 손이 조금 커지고 진 손이 조금 작아진다.
+	# 두 손의 크기 — 이긴 손이 커지고 진 손이 작아진다.
 	# ★ 이것이 "왜 그런지"의 알맹이다. 별은 그 위에 얹는 표식일 뿐이다.
+	# ★ 0.16 이었을 때는 차이가 4px 도 안 나서 아무도 못 봤다. 0.30 이면 두 손의
+	#   크기 차가 한눈에 들어온다 (아이가 글자 없이 읽어야 하는 유일한 것이다).
 	var grow := 0.0
 	if _state == "ok" or _state == "no":
 		grow = clampf(_anim * 2.2, 0.0, 1.0)
-	var f_sc := 1.0 + 0.16 * grow * float(-res)
-	var m_sc := 1.0 + 0.16 * grow * float(res)
+	var f_sc := 1.0 + 0.30 * grow * float(-res)
+	var m_sc := 1.0 + 0.30 * grow * float(res)
 	var f_rot := 0.0
 	if res > 0:
 		f_rot = 0.22 * grow          # 진 손이 힘없이 기운다
@@ -651,10 +658,22 @@ func _paint_field() -> void:
 		#   색으로 "내 손"을 구분하면 신호가 둘이 되고, 옅은 색은 크림 바탕에 녹는다.
 		_hand_at(at, rr, _pick, Vector2.UP, SKIN, m_rot, 1.0)
 
+	# ★ 맞혔을 때만 **금빛이 터진다.** 틀렸을 때는 안 터진다 — 벌을 주는 것이 아니라,
+	#   맞혔을 때와 아닐 때가 눈에 확 다르게 보여야 아이가 "내가 맞혔다"를 안다.
+	#   (틀린 화면은 그대로 조용히 "무슨 일이 일어났는지"만 보여 준다.)
+	if _state == "ok" and not Shell.reduce_motion:
+		var pa := clampf(_anim, 0.0, 1.4) * 1.6
+		Look.draw_pop(self, MINE_AT, pa, HAND_R * 1.05)
+		Look.draw_pop(self, Vector2(MARK_X, (FRIEND_AT.y + MINE_AT.y) * 0.5), pa - 0.18, 46.0)
+
 	# 결과 표식 — 목표 팻말과 **똑같은 그림**이라 그대로 견주면 된다.
 	if (_state == "ok" or _state == "no") and _pick >= 0:
 		var pulse: float = clampf(_anim * 3.0, 0.0, 1.0)
-		_paint_verdict(Vector2(MARK_X, (FRIEND_AT.y + MINE_AT.y) * 0.5), 34.0, res, pulse)
+		# 맞혔으면 별이 한 번 크게 튀어 오른다 (튀는 것 자체가 "됐다"는 신호다)
+		var pop := 1.0
+		if _state == "ok":
+			pop = 1.0 + 0.55 * sin(clampf(_anim * 2.4, 0.0, 1.0) * PI)
+		_paint_verdict(Vector2(MARK_X, (FRIEND_AT.y + MINE_AT.y) * 0.5), 34.0 * pop, res, pulse)
 
 
 func _paint_cards() -> void:

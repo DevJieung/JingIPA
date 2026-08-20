@@ -46,11 +46,18 @@ const MARK_NOW := Color("e8734a")
 
 ## 바닥선 (친구의 발이 닿는 높이)
 const GROUND := 470.0
-## 손 크기. 손 한가운데(hand_center)는 y=672 이고, 그림 손은 `at` 위로 1.20r ·
-## 아래로 1.48r 을 차지한다. 95 면 위끝이 y=558 (탭 영역 위끝 548 안쪽)이고
-## 손목 끝은 y=813 으로 화면 아래(800)를 살짝 넘는다 — 그래서 팔을 안 그려도
-## "아래에서 올라온 손"으로 읽힌다. 더 키우면 손끝이 발자국 줄을 문다.
+## 손 크기. 손목이 축이고 손이 그 위로 1.05r 만큼 올라앉는다 (Look.HAND_LIFT).
 const HAND_R := 95.0
+## 손목(소매)이 앉는 자리의 높이. 화면 아래끝(800)에 거의 닿아서, 팔을 따로 안 그려도
+## "아래에서 올라온 손"으로 읽힌다.
+const WRIST_Y := 772.0
+## 손이 옆으로 기우는 각 (약 60도). **이것이 방향을 말하는 전부다.**
+## ★ 예전에는 옆을 가리키는 손 그림을 따로 뽑아 썼는데, 손가락 하나가 옆으로 뻗은
+##   장난감 손은 작게 그려 놓으면 기괴했다. 지금은 가위바위보의 **가위 손**(검지·중지를
+##   펴고 주먹 쥔 손)을 손목 축으로 기울인다 — 그림은 늘어나지 않고, 방향은 더 잘 읽힌다.
+## ★ 45도로 낮추면 두 손이 "그냥 비스듬한 손 둘"로 보인다. 90도로 올리면 손목이
+##   옆으로 눕는다 (아래에서 올라온 손이 아니라 옆에서 들어온 팔이 된다).
+const HAND_TILT := 1.05
 ## 친구 그림의 키
 const FRIEND_H := 230.0
 
@@ -313,14 +320,27 @@ func dir_count() -> int:
 	return int(axes.get("dirs", 2))
 
 
-## 이 방향을 가리키는 손의 한가운데
-func hand_center(dir: int) -> Vector2:
+## 이 방향 손의 **손목**이 앉는 자리. 여기가 고정이고 손이 이 점을 축으로 기운다.
+func hand_wrist(dir: int) -> Vector2:
 	if dir_count() >= 3:
 		match dir:
-			ChamGen.LEFT: return Vector2(250.0, 672.0)
-			ChamGen.UP: return Vector2(640.0, 672.0)
-			_: return Vector2(1030.0, 672.0)
-	return Vector2(330.0, 672.0) if dir == ChamGen.LEFT else Vector2(950.0, 672.0)
+			ChamGen.LEFT: return Vector2(300.0, WRIST_Y)
+			ChamGen.UP: return Vector2(640.0, WRIST_Y)
+			_: return Vector2(980.0, WRIST_Y)
+	return Vector2(380.0, WRIST_Y) if dir == ChamGen.LEFT else Vector2(900.0, WRIST_Y)
+
+
+## 이 방향 손의 손가락이 뻗는 쪽 (기울기). 위 손만 똑바로 선다.
+func hand_aim(dir: int) -> Vector2:
+	if dir == ChamGen.UP:
+		return Vector2.UP
+	return Vector2.UP.rotated(-HAND_TILT if dir == ChamGen.LEFT else HAND_TILT)
+
+
+## 이 방향을 가리키는 손(주먹)의 한가운데. 손목에서 손가락 쪽으로 Look.HAND_LIFT 만큼.
+## ★ 잡힌 친구가 앉는 자리도, 힌트 무리도 전부 여기를 본다 — 손이 기울면 같이 따라간다.
+func hand_center(dir: int) -> Vector2:
+	return hand_wrist(dir) + hand_aim(dir) * (Look.HAND_LIFT * HAND_R)
 
 
 ## 이 방향의 탭 영역. 아래쪽을 통째로 나눠 써서 손가락이 큰 아이도 못 빗나간다.
@@ -425,7 +445,12 @@ func _land() -> void:
 		sfx.play("find", 1.0 + 0.06 * float(caught - 1))
 		# ★ 색종이는 친구가 **실제로 있는 자리**(손바닥 위)에서 터져야 한다.
 		#   _land_spot 은 빗나갔을 때 떨어지는 바닥 자리라 엉뚱한 데서 터졌다.
-		fx.burst(_catch_spot(_dir) + Vector2(0, -110), _fx(22), DinoSpecies.data(_sp)["col"])
+		# ★ 크게 터뜨린다. "잡았는지 잘 모르겠다"는 말이 나온 뒤에 22 -> 54 로 올렸다.
+		#   두 군데서 터진다 — 손 위(친구가 있는 자리)와 그 아래(손). 한 군데서만
+		#   터지면 친구 그림에 가려서 색종이가 절반쯤 안 보인다.
+		var cs := _catch_spot(_dir)
+		fx.burst(cs + Vector2(0, -110), _fx(54), DinoSpecies.data(_sp)["col"])
+		fx.burst(cs + Vector2(0, 10), _fx(26), Look.GOLD)
 		if not _met:
 			_met = true
 			# 도감에 처음 들어가는 종이면 그때 한 번만 비가 내린다.
@@ -594,12 +619,16 @@ func _paint_arrow(at: Vector2, dir: int, r: float, col: Color) -> void:
 ## ★ 손 그림은 [`core/look.gd`](../../../core/look.gd) 에 있다 — 가위바위보와 **같은 손**이다.
 ##   두 게임이 다른 손을 쓰면 한 앱으로 안 읽힌다 (원래 색을 같이 쓴 것과 같은 이유).
 ##   그림이 없으면 거기 있는 도형으로 돈다.
+## ★ 방향은 **손을 기울여서** 말한다 (hand_aim). 손목이 축이라 소매는 늘 화면
+##   아래끝에 그대로 있고 손만 그쪽으로 눕는다 — 진짜로 손목을 꺾는 것과 같은 움직임이다.
+##   손 모양은 가위바위보의 **가위 손**(검지·중지를 펴고 주먹)을 그대로 쓴다.
 ## ★ 왼손은 오른손 그림을 **뒤집은 것**이다. 여기는 손이 **둘**이라 뒤집으면 그냥
 ##   왼손이 되고, 그게 곧 아이 자신의 두 손이다 (Look.draw_hand 의 flip 설명).
 ## ★ 힌트를 **살빛으로** 말하지 않는다. 그림은 제 색을 갖고 있어서 금색을 섞을 수가
 ##   없기 때문이다. 대신 손 **뒤에서 금빛 무리가 숨을 쉰다** — 신호는 그대로 남고
 ##   여전히 "틀렸다"는 말은 어디에도 없다.
 func _paint_hand(dir: int) -> void:
+	var aim := hand_aim(dir)
 	var c := hand_center(dir)
 	var lift := 0.0
 	if _state == "jump" and dir == _pick:
@@ -614,21 +643,45 @@ func _paint_hand(dir: int) -> void:
 		hint = 0.5 + 0.5 * sin(_t * 3.0)
 		if Shell.reduce_motion:
 			hint = 0.5
-	var at := c - Vector2(0, 30.0 * lift + bounce)
+	# 고른 손은 그 손이 뻗은 쪽으로 쑥 나간다 (위로만 올리면 기운 손이 어색하다)
+	var at := c + aim * (30.0 * lift) - Vector2(0, bounce)
 	if hint > 0.0:
 		# ★ 손 **뒤에** 깐다. 위에 얹으면 그림을 덮어서 무슨 손인지 안 보인다.
-		#   한가운데를 `at` 보다 조금 아래로 내린다 — 그림 손은 `at` 아래쪽이 더 길다.
+		#   한가운데를 손목 쪽으로 조금 내린다 — 그림 손은 `at` 뒤쪽이 더 길다.
 		#   ★ 동그라미 셋을 겹쳐서 가장자리를 흐린다. 한 겹이면 테두리가 칼같이 잘려서
 		#     "안내"가 아니라 "표시된 것"으로 보인다 — 이 나이대에는 그게 지목이 된다.
-		var hc := at + Vector2(0, HAND_R * 0.14)
+		var hc := at - aim * (HAND_R * 0.14)
 		for hk in 3:
 			var hr := HAND_R * (1.34 + 0.08 * hint) * (1.0 - 0.16 * float(hk))
 			draw_circle(hc, hr, Color(Look.GOLD, (0.05 + 0.11 * hint)))
 	var col := SKIN_HI if lift > 0.01 else SKIN
-	var kind := Look.HAND_POINT_UP if dir == ChamGen.UP else Look.HAND_POINT
-	# ★ 손목은 화면 아래끝(y=800)에 거의 닿는다 — 그래서 팔을 따로 안 그려도
+	# ★ 손목은 화면 아래끝(800)에 거의 닿는다 — 그래서 팔을 따로 안 그려도
 	#   "아래에서 올라온 손"으로 읽힌다. HAND_R 을 키우면 손목이 화면 밖으로 나간다.
-	Look.draw_hand(self, at, HAND_R, kind, Vector2.UP, col, dir == ChamGen.LEFT)
+	Look.draw_hand(self, at, HAND_R, Look.HAND_SCISSORS, aim, col, dir == ChamGen.LEFT)
+	# 잡은 순간 — 그 손에서 금빛이 터진다. "여기서 일어났다"를 말하는 것이다.
+	if _state == "catch" and dir == _pick and not Shell.reduce_motion:
+		Look.draw_pop(self, c, clampf(_anim, 0.0, 1.4) * 1.6, HAND_R * 0.95)
+
+
+## 친구가 지금 그림에서 **어느 쪽을 보고 있는가** (1 = 그림 그대로, -1 = 뒤집힘).
+##
+## ★ 이 게임에서 유일하게 그림을 뒤집는 곳이고, 그래서 조건이 좁다:
+##   **뛴 뒤에만** 돌린다 (jump · catch · miss). 뛰기 전(wait)에 돌리면 답을 미리
+##   알려 주는 것이라 난이도 축이 통째로 무너진다. 여기가 "이겼는지 알아차리기"를
+##   돕는 장치이지 tell 이 아니다.
+## ★ 뒤집어도 되는 이유는 **방향 표**가 있기 때문이다 (DinoSpecies.FACE, 규칙 26).
+##   표에 없거나 정면을 보는 종(0)은 **안 돌린다** — 모르는 채로 뒤집는 것이
+##   그 규칙이 막으려는 일이다.
+func friend_face() -> float:
+	if _state != "jump" and _state != "catch" and _state != "miss":
+		return 1.0
+	if _dir == ChamGen.UP:
+		return 1.0                  # 하늘로 뛰면 돌아볼 쪽이 없다
+	var art := DinoSpecies.face_of(_sp)
+	if art == 0:
+		return 1.0                  # 정면을 보는 그림 — 뒤집어도 아무 말이 안 된다
+	var want := -1 if _dir == ChamGen.LEFT else 1
+	return float(want * art)
 
 
 ## 친구. 상태에 따라 자리·기울기·납작함이 달라진다.
@@ -689,12 +742,10 @@ func _paint_friend() -> void:
 		"clear":
 			pos = Vector2(W * 0.5, GROUND - absf(sin(_t * 6.0)) * 22.0)
 			squash = 1.0 + sin(_t * 12.0) * 0.05
-	# ★ 그림을 좌우로 뒤집지 않는다. 공룡 PNG 50장은 **바라보는 방향이 종마다 다르다** —
-	#   같은 face 값으로 그려도 어떤 종은 왼쪽을, 어떤 종은 오른쪽을 본다.
-	#   그래서 "고개 돌린 쪽"을 신호로 쓰면 종에 따라 아이에게 **거짓말**을 하게 된다.
-	#   (공룡 찾기에서는 뒤집혀도 그냥 모양이라 상관없었고, 그래서 여태 안 드러났다.)
-	#   여기서 신호는 전부 기하학적인 것뿐이다: 기울기 · 옆으로 선 정도 · 발밑 먼지.
-	var face := 1.0
+	# ★ 뛴 뒤에는 친구가 **뛴 쪽으로 몸을 돌린다** (friend_face). 예전에는 여기서
+	#   절대 안 뒤집었는데, 그건 50종의 방향 표가 없었기 때문이다 — 이제 표가 있다
+	#   (DinoSpecies.FACE). 뛰기 전에는 여전히 안 돌린다: 그건 tell 이 아니라 답이다.
+	var face := friend_face()
 	# 그림자
 	var sh: float = clampf(1.0 - (GROUND - pos.y) / 260.0, 0.25, 1.0)
 	_ellipse(Vector2(pos.x, GROUND + 4.0), Vector2(66.0 * sh, 14.0 * sh), Color(0, 0, 0, 0.10))

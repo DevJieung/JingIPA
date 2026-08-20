@@ -178,3 +178,135 @@ static func art_missing() -> bool:
 		if texture(i) != null:
 			return false
 	return true
+
+
+# --------------------------------------------------------------------------- #
+# 이 종의 그림이 **바라보는 쪽**
+# --------------------------------------------------------------------------- #
+
+## 1 = 오른쪽 · -1 = 왼쪽 · 0 = 정면 (뒤집어도 아무 말도 안 되므로 안 뒤집는다).
+##
+## ★ 규칙 26 이 "뒤집기를 다시 넣고 싶으면 먼저 50종의 방향 표부터 만들어라"고 한 그 표다.
+##   50장을 하나씩 눈으로 보고 적었다 (tools/dino/face_table.py --sheet 가 대조표를 만든다).
+##   지금은 49종이 오른쪽이고, 딤오포돈만 **정면**을 본다 — 날개를 펴고 카메라를 본다.
+## ★ 이 표가 있어야 참참참이 "친구가 뛴 쪽으로 고개를 돌리는" 것을 **거짓말 없이** 할 수 있다.
+##   표 없이 그냥 뒤집으면, 원래 왼쪽을 보던 종에서는 아이에게 반대를 말하게 된다.
+## ★ 이 표는 **뛴 뒤에만** 쓴다. 뛰기 전(wait)에 고개를 돌리면 답을 미리 알려 주는 것이고,
+##   그러면 난이도 축이 통째로 무너진다 (tests/cham_check.gd 가 강제한다).
+const FACE := {
+	"trex": 1,
+	"triceratops": 1,
+	"stegosaurus": 1,
+	"brachiosaurus": 1,
+	"diplodocus": 1,
+	"ankylosaurus": 1,
+	"parasaurolophus": 1,
+	"spinosaurus": 1,
+	"pteranodon": 1,
+	"pachycephalosaurus": 1,
+	"velociraptor": 1,
+	"dilophosaurus": 1,
+	"oviraptor": 1,
+	"iguanodon": 1,
+	"carnotaurus": 1,
+	"allosaurus": 1,
+	"giganotosaurus": 1,
+	"maiasaura": 1,
+	"ceratosaurus": 1,
+	"compsognathus": 1,
+	"gallimimus": 1,
+	"deinonychus": 1,
+	"utahraptor": 1,
+	"microraptor": 1,
+	"archaeopteryx": 1,
+	"quetzalcoatlus": 1,
+	"rhamphorhynchus": 1,
+	"dimorphodon": 0,
+	"mosasaurus": 1,
+	"plesiosaurus": 1,
+	"elasmosaurus": 1,
+	"ichthyosaurus": 1,
+	"dimetrodon": 1,
+	"apatosaurus": 1,
+	"camarasaurus": 1,
+	"mamenchisaurus": 1,
+	"argentinosaurus": 1,
+	"brontosaurus": 1,
+	"kentrosaurus": 1,
+	"nodosaurus": 1,
+	"protoceratops": 1,
+	"styracosaurus": 1,
+	"pachyrhinosaurus": 1,
+	"torosaurus": 1,
+	"corythosaurus": 1,
+	"lambeosaurus": 1,
+	"edmontosaurus": 1,
+	"therizinosaurus": 1,
+	"ornithomimus": 1,
+	"troodon": 1,
+}
+
+## 그림의 지문 (sha256 앞 12자리). **방향 표가 낡았는지 잡는 유일한 장치다.**
+##
+## ★ 공룡을 다시 뽑으면 방향이 바뀔 수 있는데 화면 없는 이 머신에서는 아무도 못 본다.
+##   그러면 참참참이 아이에게 반대 방향을 말한다 — 규칙 26 이 막으려던 바로 그 일이다.
+##   지문이 다르면 tests/cham_check.gd 가 실패시킨다: 눈으로 다시 보고 FACE 를 고친 뒤
+##   `python3 tools/dino/face_table.py --sha` 로 지문을 갱신하라는 뜻이다.
+const ART_SHA := {
+	"trex": "1a1b5c41fd45",
+	"triceratops": "313b6256b28d",
+	"stegosaurus": "562cab054226",
+	"brachiosaurus": "861fb713b59a",
+	"diplodocus": "a0d9430e7b89",
+	"ankylosaurus": "62ba78e5b5e9",
+	"parasaurolophus": "6dc3160f9f60",
+	"spinosaurus": "f2ee3d96f2fb",
+	"pteranodon": "a3b6b3404ad4",
+	"pachycephalosaurus": "721763bf3625",
+	"velociraptor": "eb3a84d73faa",
+	"dilophosaurus": "c4e5d0ff5751",
+	"oviraptor": "1332c9cd5dfd",
+	"iguanodon": "86463d5eca80",
+	"carnotaurus": "8d40e18e3a2e",
+	"allosaurus": "3fe11970dd48",
+	"giganotosaurus": "da8e2dc3190c",
+	"maiasaura": "68de2744a77a",
+	"ceratosaurus": "181709eee529",
+	"compsognathus": "bc64a2d5f9e5",
+	"gallimimus": "a82eda384b27",
+	"deinonychus": "a9dbaddafe29",
+	"utahraptor": "fa74a3572479",
+	"microraptor": "8f6b22df66f8",
+	"archaeopteryx": "f33dd4b30c0a",
+	"quetzalcoatlus": "457f2a7bef2a",
+	"rhamphorhynchus": "8f4f27513e6d",
+	"dimorphodon": "e89eca72b2cc",
+	"mosasaurus": "89fc870b36c1",
+	"plesiosaurus": "cc636c2d45fd",
+	"elasmosaurus": "84525a28ef3d",
+	"ichthyosaurus": "7e55785d2b8c",
+	"dimetrodon": "88ab56b441d1",
+	"apatosaurus": "0f8096b55d82",
+	"camarasaurus": "87e2b74857fc",
+	"mamenchisaurus": "f04f55904543",
+	"argentinosaurus": "eb81ea45574d",
+	"brontosaurus": "51605a11eab8",
+	"kentrosaurus": "d776bc1eacc7",
+	"nodosaurus": "e9301b4440ba",
+	"protoceratops": "a1e531e4d250",
+	"styracosaurus": "74b9ad32baa5",
+	"pachyrhinosaurus": "dbd552bbaba6",
+	"torosaurus": "32d5a5461762",
+	"corythosaurus": "b871f91a8eb3",
+	"lambeosaurus": "4128c6b9ee46",
+	"edmontosaurus": "f54ed880a91d",
+	"therizinosaurus": "a95f7e827d7a",
+	"ornithomimus": "6aa18a6f233d",
+	"troodon": "7ee49f8aba46",
+}
+
+
+## 이 종이 바라보는 쪽 (1 오른쪽 · -1 왼쪽 · 0 정면). 표에 없으면 0 — **안 뒤집는다.**
+## ★ 모르면 "오른쪽"으로 넘겨짚지 않는다. 모르는 채로 뒤집는 것이 이 표가 막으려는 일이다.
+static func face_of(i: int) -> int:
+	return int(FACE.get(String(data(i)["id"]), 0))

@@ -412,19 +412,18 @@ func _limit_check() -> int:
 
 ## 손 그림이 **한 벌인가**, 그리고 core/look.gd 가 말하는 자리에 손목이 있는가.
 ##
-## ★ 여기서 재는 것은 가위바위보만이 아니라 **앱 전체의 손 다섯**이다
-##   (가위·바위·보 + 참참참의 가리키는 손 둘). 다섯은 따로 있는 그림이 아니라 한 벌이다 —
-##   tools/theme/gen_theme.py 의 fit_hand 가 손목 밴드를 자로 삼아 전부 같은 틀에 앉힌다.
-##   한 장만 다시 뽑아 끼우면 손목 굵기와 높이가 어긋나서 두 게임의 손이 서로 다른
-##   사람 손처럼 보이는데, **화면이 없는 이 머신에서는 눈으로 절대 안 잡힌다.**
-##   (참참참에 따로 검사를 두지 않는 것은 같은 것을 두 번 재지 않기 위해서다.)
+## ★ 여기서 재는 것은 가위바위보만이 아니라 **앱 전체의 손 셋**이다 — 참참참도
+##   같은 세 장을 쓴다 (거기서는 가위 손을 기울여서 방향을 말한다). 셋은 따로 있는
+##   그림이 아니라 한 벌이다 — tools/theme/gen_theme.py 의 fit_hand 가 손목 밴드를
+##   자로 삼아 전부 같은 틀에 앉힌다. 한 장만 다시 뽑아 끼우면 손목 굵기와 높이가
+##   어긋나서 두 게임의 손이 서로 다른 사람 손처럼 보이는데,
+##   **화면이 없는 이 머신에서는 눈으로 절대 안 잡힌다.**
 ## ★ 그림이 아예 없으면 통과다. 없으면 도형 손으로 도는 것이 정상이기 때문이다
 ##   (Look.draw_hand 의 되돌아갈 자리). 다만 **일부만** 있으면 실패다 —
 ##   한 손만 그림이면 그게 제일 이상해 보인다.
 func _art_check() -> int:
-	var kinds := [Look.HAND_SCISSORS, Look.HAND_ROCK, Look.HAND_PAPER,
-			Look.HAND_POINT, Look.HAND_POINT_UP]
-	var names := ["가위", "바위", "보", "가리키기", "가리키기(위)"]
+	var kinds := [Look.HAND_SCISSORS, Look.HAND_ROCK, Look.HAND_PAPER]
+	var names := ["가위", "바위", "보"]
 	var have := 0
 	for k in kinds:
 		if Look.hand_tex(int(k)) != null:

@@ -86,10 +86,14 @@ func _ready() -> void:
 	# 세션 상한에 닿았을 때 정말 나가는가 (dev_mode 가 막고 있어 아무도 안 밟던 길)
 	var limit_bad := await _limit_check()
 
+	# 고개 돌리기가 **거짓말을 안 하는가** (방향 표 · 답 미리 알려 주지 않기)
+	var face_bad := await _face_check()
+
 	var ok := bad_axes == 0 and bad_pat == 0 and play_bad == 0 and fb_bad == 0 \
-			and limit_bad == 0
-	print("%s 버릇 %d개: 축한계이탈 %d건, 못읽을버릇 %d건, 예비버릇이상 %d건, 플레이실패 %d건, 상한탈출이상 %d건"
-			% ["  " if ok else "!!", made, bad_axes, bad_pat, fb_bad, play_bad, limit_bad])
+			and limit_bad == 0 and face_bad == 0
+	print("%s 버릇 %d개: 축한계이탈 %d건, 못읽을버릇 %d건, 예비버릇이상 %d건, 플레이실패 %d건, 상한탈출이상 %d건, 고개돌리기이상 %d건"
+			% ["  " if ok else "!!", made, bad_axes, bad_pat, fb_bad, play_bad, limit_bad,
+				face_bad])
 	print("   판정: %s" % ("정상" if ok else "이상 — 위 !! 줄을 보세요"))
 	get_tree().quit(0 if ok else 1)
 
@@ -259,4 +263,83 @@ func _limit_check() -> int:
 		bad += 1
 		print("!! 상한에 닿았는데 집으로 안 갔다 — 축하 장면에서 얼어붙는다")
 	g.queue_free()
+	return bad
+
+
+# --------------------------------------------------------------------------- #
+# 고개 돌리기 — 이 게임에서 그림을 뒤집는 유일한 곳
+# --------------------------------------------------------------------------- #
+
+## 친구가 **뛴 쪽으로 몸을 돌리는** 것이 거짓말이 아닌지 본다.
+##
+## ★ 규칙 26 은 "그림을 뒤집어 방향을 말하지 마라"이고, 예외를 허락하는 조건이
+##   딱 하나 적혀 있다 — **50종의 방향 표를 먼저 만들어라.** 그 표가 낡으면
+##   (그림을 다시 뽑았는데 표는 그대로면) 아이는 반대 방향을 보게 되고,
+##   **화면 없는 이 머신에서는 아무도 못 본다.** 그래서 여기서 잰다.
+##
+## 넷을 본다:
+##   1. 50종 전부가 FACE 표에 있는가 (모르는 종은 안 돌리지만, 빠진 것도 알아야 한다)
+##   2. 그림의 지문이 표와 같은가 (다르면 눈으로 다시 보라는 뜻이다)
+##   3. **뛰기 전(wait)에는 절대 안 돌린다** — 돌리면 그건 tell 이 아니라 답이다
+##   4. 뛴 뒤에는 정말 그쪽을 본다 (표가 말하는 원래 방향까지 셈에 넣어서)
+func _face_check() -> int:
+	var bad := 0
+	var ids: Array = []
+	for i in DinoSpecies.count():
+		ids.append(String(DinoSpecies.data(i)["id"]))
+	# 1 · 2 — 표가 50종을 다 덮는가, 그리고 그림이 그때 그 그림인가
+	var miss := 0
+	var stale := 0
+	for i in DinoSpecies.count():
+		var id := String(DinoSpecies.data(i)["id"])
+		if not DinoSpecies.FACE.has(id):
+			miss += 1
+			if miss <= 3:
+				print("!! 방향 표에 %s 가 없다 — tools/dino/face_table.py --sheet 로 보고 적어라" % id)
+			continue
+		var want := String(DinoSpecies.ART_SHA.get(id, ""))
+		var now := FileAccess.get_sha256(DinoSpecies.DIR + id + ".png").substr(0, 12)
+		if want.is_empty() or now.is_empty():
+			continue
+		if want != now:
+			stale += 1
+			if stale <= 3:
+				print("!! %s 그림이 바뀌었다 (%s -> %s) — 방향을 눈으로 다시 보고 FACE 를 고친 뒤"
+						% [id, want, now])
+				print("   python3 tools/dino/face_table.py --sha 로 지문을 갱신해라")
+	bad += miss + stale
+
+	# 3 · 4 — 실제로 게임을 돌려서 본다
+	for st in [1, 9, 20]:
+		Shell.profile()["cham"] = {
+			"best_stage": st, "caught": 0, "skill": 0, "ease_streak": 0, "cushion": 0,
+		}
+		var g: Node = load("res://games/cham/cham.tscn").instantiate()
+		g.set("dev_mode", true)
+		g.set("_slow", 0.02)
+		add_child(g)
+		await get_tree().process_frame
+		g.set("_state", "wait")
+		# 3. 기다리는 동안은 늘 제 방향 그대로여야 한다 (답을 미리 주면 안 된다)
+		if absf(float(g.call("friend_face")) - 1.0) > 0.001:
+			bad += 1
+			print("!! %d탄: 뛰기 전에 고개가 돌아 있다 — 답을 미리 알려 주는 것이다" % st)
+		# 4. 뛴 뒤에는 뛴 쪽을 본다
+		var sp := int(g.get("_sp"))
+		var art := DinoSpecies.face_of(sp)
+		for d in [ChamGen.LEFT, ChamGen.RIGHT]:
+			g.set("_dir", d)
+			g.set("_pick", d)
+			g.set("_state", "jump")
+			var got := float(g.call("friend_face"))
+			var want2 := 1.0
+			if art != 0:
+				want2 = float((-1 if d == ChamGen.LEFT else 1) * art)
+			if absf(got - want2) > 0.001:
+				bad += 1
+				print("!! %d탄: %s 로 뛰었는데 보는 쪽이 %.0f (기대 %.0f, 그림 방향 %d)"
+						% [st, "왼쪽" if d == ChamGen.LEFT else "오른쪽", got, want2, art])
+		g.queue_free()
+		await get_tree().process_frame
+	print("   방향 표: %d종 (빠짐 %d · 그림 바뀜 %d)" % [DinoSpecies.FACE.size(), miss, stale])
 	return bad
