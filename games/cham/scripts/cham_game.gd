@@ -46,6 +46,11 @@ const MARK_NOW := Color("e8734a")
 
 ## 바닥선 (친구의 발이 닿는 높이)
 const GROUND := 470.0
+## 손 크기. 손 한가운데(hand_center)는 y=672 이고, 그림 손은 `at` 위로 1.20r ·
+## 아래로 1.48r 을 차지한다. 95 면 위끝이 y=558 (탭 영역 위끝 548 안쪽)이고
+## 손목 끝은 y=813 으로 화면 아래(800)를 살짝 넘는다 — 그래서 팔을 안 그려도
+## "아래에서 올라온 손"으로 읽힌다. 더 키우면 손끝이 발자국 줄을 문다.
+const HAND_R := 95.0
 ## 친구 그림의 키
 const FRIEND_H := 230.0
 
@@ -585,6 +590,15 @@ func _paint_arrow(at: Vector2, dir: int, r: float, col: Color) -> void:
 
 
 ## 손. 아이가 고른 손은 위로 뻗고, 오래 못 맞히면 맞는 손이 조용히 숨을 쉰다.
+##
+## ★ 손 그림은 [`core/look.gd`](../../../core/look.gd) 에 있다 — 가위바위보와 **같은 손**이다.
+##   두 게임이 다른 손을 쓰면 한 앱으로 안 읽힌다 (원래 색을 같이 쓴 것과 같은 이유).
+##   그림이 없으면 거기 있는 도형으로 돈다.
+## ★ 왼손은 오른손 그림을 **뒤집은 것**이다. 여기는 손이 **둘**이라 뒤집으면 그냥
+##   왼손이 되고, 그게 곧 아이 자신의 두 손이다 (Look.draw_hand 의 flip 설명).
+## ★ 힌트를 **살빛으로** 말하지 않는다. 그림은 제 색을 갖고 있어서 금색을 섞을 수가
+##   없기 때문이다. 대신 손 **뒤에서 금빛 무리가 숨을 쉰다** — 신호는 그대로 남고
+##   여전히 "틀렸다"는 말은 어디에도 없다.
 func _paint_hand(dir: int) -> void:
 	var c := hand_center(dir)
 	var lift := 0.0
@@ -601,26 +615,20 @@ func _paint_hand(dir: int) -> void:
 		if Shell.reduce_motion:
 			hint = 0.5
 	var at := c - Vector2(0, 30.0 * lift + bounce)
-	var col := SKIN_HI if lift > 0.01 else SKIN
 	if hint > 0.0:
-		col = SKIN.lerp(Color("ffe066"), 0.55 * hint)
-	var d := Vector2.LEFT if dir == ChamGen.LEFT else (Vector2.RIGHT if dir == ChamGen.RIGHT else Vector2.UP)
-	var pp := Vector2(-d.y, d.x)
-	# 팔 (화면 아래에서 올라온다)
-	_round_rect(Rect2(at.x - 34.0, at.y + 20.0, 68.0, 140.0), 24.0, col.darkened(0.07))
-	# 주먹
-	_round_rect(Rect2(at.x - 62.0, at.y - 52.0, 124.0, 104.0), 36.0, col)
-	# 접힌 손가락 마디 셋
-	for i in 3:
-		draw_circle(at - d * 26.0 + pp * (float(i) - 1.0) * 33.0, 16.0, col.darkened(0.05))
-	# 엄지
-	draw_circle(at + pp * 50.0 - d * 4.0, 19.0, col)
-	# 쭉 뻗은 검지 — "이쪽!"
-	# ★ 길이 100 은 눈대중이 아니다: 하늘 손은 검지가 위로 뻗는데, 116 이면 끝이
-	#   자기 탭 영역(y 548~) 위로 12px 삐져나간다 — 제일 눈에 띄는 지점을 눌렀는데
-	#   자기 손이 아닌 것으로 읽히면 안 된다.
-	draw_line(at + d * 30.0, at + d * 100.0, col, 40.0)
-	draw_circle(at + d * 100.0, 19.0, col)
+		# ★ 손 **뒤에** 깐다. 위에 얹으면 그림을 덮어서 무슨 손인지 안 보인다.
+		#   한가운데를 `at` 보다 조금 아래로 내린다 — 그림 손은 `at` 아래쪽이 더 길다.
+		#   ★ 동그라미 셋을 겹쳐서 가장자리를 흐린다. 한 겹이면 테두리가 칼같이 잘려서
+		#     "안내"가 아니라 "표시된 것"으로 보인다 — 이 나이대에는 그게 지목이 된다.
+		var hc := at + Vector2(0, HAND_R * 0.14)
+		for hk in 3:
+			var hr := HAND_R * (1.34 + 0.08 * hint) * (1.0 - 0.16 * float(hk))
+			draw_circle(hc, hr, Color(Look.GOLD, (0.05 + 0.11 * hint)))
+	var col := SKIN_HI if lift > 0.01 else SKIN
+	var kind := Look.HAND_POINT_UP if dir == ChamGen.UP else Look.HAND_POINT
+	# ★ 손목은 화면 아래끝(y=800)에 거의 닿는다 — 그래서 팔을 따로 안 그려도
+	#   "아래에서 올라온 손"으로 읽힌다. HAND_R 을 키우면 손목이 화면 밖으로 나간다.
+	Look.draw_hand(self, at, HAND_R, kind, Vector2.UP, col, dir == ChamGen.LEFT)
 
 
 ## 친구. 상태에 따라 자리·기울기·납작함이 달라진다.

@@ -79,6 +79,12 @@ var _held: Dictionary = {}
 ##   {"pi", "shape", "cells"(착지 자리), "dx", "dy", "idx"(트레이 자리), "t", "ok"}
 var _falling: Dictionary = {}
 var _hover := Vector2i(-1, -1)
+## 지금 누른 기둥에서 조각이 앉을 자리 (테트리스의 그림자). _snap 이 판 전체를 뒤지는
+## 탐색이라 **매 프레임 다시 세면 안 된다** — 아래 _seq 로 바뀔 때만 다시 센다.
+var _ghost: Dictionary = {}
+var _ghost_key := Vector3i(-9, -9, -9)
+## 조각이 앉을 자리에 영향을 주는 것이 바뀔 때마다 오른다 (판 · 트레이 · 돌리기).
+var _seq := 0
 var _shake: Array = []          # [{cells, t}]
 var _t := 0.0
 var _done := false
@@ -443,17 +449,22 @@ func _paint_board() -> void:
 			draw_rect(r.grow(-4.0), Color(GHOST_NO, 0.35 * k))
 
 	# 손에 든 조각이 이 기둥에서 **어디에 앉는지** (테트리스의 그림자).
-	# 맞는 자리인지 아닌지는 알려 주지 않는다 — 그걸 알려 주면 퍼즐이 사라진다.
+	# ★ 반드시 _snap 이 고른 그 자리를 그린다. 예전처럼 "누른 칸에 기준칸"으로 따로
+	#   계산하면, 조각이 실제로는 옆으로 밀려 앉는데 그림자는 딴 데를 가리킨다 —
+	#   보이는 것과 되는 것이 다른 것이 이 놀이에서 제일 나쁘다.
+	# ★ _snap 은 판 전체를 뒤지는 탐색이라 **매 프레임 부르면 안 된다.** 자리에
+	#   영향을 주는 것(누른 기둥 · 든 조각 · _seq)이 바뀔 때만 다시 센다.
+	# ★ 이래도 "맞는 자리인지"를 미리 알려 주지는 않는다. 실기기에는 hover 가 없어서
+	#   (_hover 는 마우스 움직임이나 탭에서만 온다) 그림자는 누른 뒤에야 보인다.
 	if not _held.is_empty() and _falling.is_empty() and _hover.x >= 0:
-		var shape := _held_shape()
-		var ga := _anchor_of(shape)
-		var gdx := _hover.x - ga.x
-		var gdy := NoodGen.drop_dy(_grid, _n, shape, gdx)
-		if gdy != NoodGen.NO_DROP:
-			for cc in shape:
-				var gx: int = (cc as Vector2i).x + gdx
-				var gy: int = (cc as Vector2i).y + gdy
-				var r := Rect2(br.position + Vector2(float(gx) * c, float(gy) * c),
+		var gkey := Vector3i(_hover.x, int(_held.get("idx", -1)), _seq)
+		if gkey != _ghost_key:
+			_ghost_key = gkey
+			_ghost = _snap(int(_held["idx"]), _held_shape(), _hover.x)
+		if not _ghost.is_empty():
+			for cc in (_ghost["cells"] as Array):
+				var g: Vector2i = cc
+				var r := Rect2(br.position + Vector2(float(g.x) * c, float(g.y) * c),
 						Vector2(c, c))
 				draw_rect(r.grow(-6.0), GHOST_OK)
 
@@ -615,8 +626,8 @@ func _on_tap(p: Vector2) -> void:
 			for i in _tray.size():
 				if not _ready_now(i):
 					continue
-				var lz := _landing(_tray[i]["rot"], cell.x)
-				if lz.is_empty() or not _fits(i, lz["cells"]):
+				var lz := _snap(i, _tray[i]["rot"], cell.x)
+				if lz.is_empty() or not bool(lz["ok"]):
 					continue
 				_held = {"from": "tray", "idx": i}
 				_hover = cell
@@ -676,12 +687,11 @@ func _shapes() -> Array:
 	return out
 
 
-## 이 모양을 col 기둥으로 떨어뜨리면 앉을 자리. 못 들어가면 {}.
-## 반환: {"cells", "dx", "dy"} — 누른 기둥에는 조각의 **기준칸**이 온다 (_anchor_of).
-func _landing(shape: Array, col: int) -> Dictionary:
+## 이 모양을 dx 만큼 옆으로 밀어 떨어뜨리면 앉을 자리. 못 들어가면 {}.
+## 반환: {"cells", "dx", "dy"} — 여기는 **물리**만 본다 (판을 끝까지 채울 수 있는지는 안 본다).
+func _land_at(shape: Array, dx: int) -> Dictionary:
 	if shape.is_empty():
 		return {}
-	var dx := col - _anchor_of(shape).x
 	var dy := NoodGen.drop_dy(_grid, _n, shape, dx)
 	if dy == NoodGen.NO_DROP:
 		return {}
@@ -689,6 +699,61 @@ func _landing(shape: Array, col: int) -> Dictionary:
 	for cc: Vector2i in shape:
 		cells.append(Vector2i(cc.x + dx, cc.y + dy))
 	return {"cells": cells, "dx": dx, "dy": dy}
+
+
+## 누른 기둥으로 떨어뜨릴 자리를 고른다 — **대강 맞으면 들어가게.**
+##
+## ★ 예전에는 누른 칸에 조각의 기준칸(_anchor_of, 왼쪽 위)이 그대로 왔다. 그래서
+##   아이는 조각이 놓일 자리의 **맨 왼쪽 칸**을 정확히 눌러야 했고, 빈틈 한가운데를
+##   누르면 조각이 오른쪽으로 밀려 나가 튕겼다. 아이 눈에는 "보이는 자리에 넣었는데
+##   안 되는" 것이라 제일 나쁘다 — 규칙 19-1 이 자리 판정을 버린 것과 **같은 이유**다.
+##   ("맞는데 안 되는" 것을 없애는 것이 이 게임 판정의 유일한 목표다.)
+##
+## ★ 지금은 **누른 기둥을 덮는** 자리들 중에서 고른다:
+##     1. 먼저 예전 자리(기준칸이 누른 칸에 오는 것)를 본다 — 그래서 예전에 되던 것은
+##        전부 그대로 되고, **튕기던 것만** 들어간다. 순수한 덤이다.
+##     2. 안 되면 가까운 쪽부터 옆으로 밀어 본다. 같은 거리면 왼쪽을 먼저 —
+##        기준칸이 왼쪽 위라, 아이가 조각의 오른쪽을 눌렀을 가능성이 높다.
+##
+## ★ 그래도 아무 데나 되는 것은 아니다. **누른 기둥을 덮지 않는 자리는 안 본다** —
+##   조각을 어디쯤 놓을지는 여전히 아이가 정한다. 그게 이 놀이다.
+##
+## ★ 하나도 못 채우면 예전 자리(물리적으로 앉기는 하는 자리)를 그대로 돌려준다.
+##   그래야 조각이 떨어져서 흔들리는 것을 아이가 본다 — 아무 일도 안 일어나는 것보다
+##   "여기는 아니구나"가 훨씬 잘 읽힌다 (벌이 아니라 반응, 규칙 2).
+##
+## 반환: {"cells", "dx", "dy", "ok"} 또는 {} (그 기둥에는 어떻게 해도 못 들어간다)
+func _snap(idx: int, shape: Array, col: int) -> Dictionary:
+	if shape.is_empty():
+		return {}
+	var minx := (shape[0] as Vector2i).x
+	var maxx := minx
+	for cc: Vector2i in shape:
+		minx = mini(minx, cc.x)
+		maxx = maxi(maxx, cc.x)
+	# 조각이 누른 기둥을 덮는 dx 의 범위
+	var lo := col - maxx
+	var hi := col - minx
+	var naive := col - _anchor_of(shape).x
+	var order: Array[int] = [naive]
+	for k in range(1, maxi(naive - lo, hi - naive) + 1):
+		if naive - k >= lo:
+			order.append(naive - k)
+		if naive + k <= hi:
+			order.append(naive + k)
+
+	var fallback: Dictionary = {}
+	for dx in order:
+		var lz := _land_at(shape, dx)
+		if lz.is_empty():
+			continue
+		if _fits(idx, lz["cells"]):
+			lz["ok"] = true
+			return lz
+		if fallback.is_empty():
+			lz["ok"] = false
+			fallback = lz               # 예전 자리가 먼저 오므로 대개 그 자리다
+	return fallback
 
 
 ## 트레이 조각 i 를 cells 에 앉혀도 남은 조각으로 판을 끝까지 채울 수 있는가.
@@ -702,6 +767,7 @@ func _fits(i: int, cells: Array) -> bool:
 ## ★ 지금 계획을 **먼저 시도할 자리**로 넘긴다. 그래야 아이가 계획대로 놓는 동안
 ##   나머지 안내 점이 가만히 있는다 — 이유 없이 색이 바뀌면 그게 헷갈림이 된다.
 func _refresh() -> void:
+	_seq += 1                       # 그림자 캐시를 무르게 한다 (판·트레이가 바뀌었다)
 	var res := NoodGen.survey(_grid, _n, _shapes(), _plan, _bag)
 	_can_place = res["ready"]
 	_plan_ok = bool(res["ok"])
@@ -734,8 +800,8 @@ func _refresh() -> void:
 
 ## 든 조각을 col 기둥으로 떨어뜨리기 시작한다. 실제 결과는 _land() 가 정한다.
 ##
-## ★ 누른 기둥에는 조각의 **기준칸**이 온다 (_anchor_of). 조각을 감싸는 네모의
-##   좌상단이 아니다 — ㄴ 자 조각에서 그러면 아이가 허공을 눌러야 한다.
+## ★ 누른 기둥을 **덮는** 자리 중에서 고른다 (_snap). 예전에는 누른 칸에 조각의
+##   기준칸이 그대로 와서, 빈틈 한가운데를 누르면 조각이 오른쪽으로 밀려 튕겼다.
 func _start_drop(col: int) -> void:
 	if not _falling.is_empty() or _held.is_empty():
 		return
@@ -743,7 +809,7 @@ func _start_drop(col: int) -> void:
 	if shape.is_empty():
 		return
 	var idx := int(_held["idx"])
-	var lz := _landing(shape, col)
+	var lz := _snap(idx, shape, col)
 	if lz.is_empty():
 		# 이 기둥으로는 아예 못 들어간다 (조각이 판 옆으로 삐져나가거나 이미 꽉 찼다).
 		# 떨어뜨리는 흉내조차 안 낸다 — 기둥만 흔들어서 "여기는 아니야"를 말한다.
@@ -761,7 +827,8 @@ func _start_drop(col: int) -> void:
 		# ★ 이 한 줄이 이 놀이의 판정 전부다. "해답에 적힌 자리인가"가 아니라
 		#   **"여기 앉혀도 남은 조각으로 판을 끝까지 채울 수 있는가"** 를 본다.
 		#   그래서 모양만 맞으면 어디든 들어가고, 그러면서도 막다른 판은 안 생긴다.
-		"ok": _fits(idx, lz["cells"]),
+		#   (_snap 이 이미 그 답을 들고 왔다 — 여기서 다시 세지 않는다.)
+		"ok": bool(lz["ok"]),
 	}
 	_idle = 0.0
 
@@ -855,6 +922,7 @@ func _rotate_held() -> void:
 			at = k
 			break
 	_tray[i]["rot"] = rots[(at + 1) % rots.size()]
+	_seq += 1                       # 모양이 바뀌었으니 그림자도 다시 센다
 
 
 ## 오래 막혀 있으면 지금 계획의 자리 하나를 숨 쉬게 한다. 벌도 재촉도 아니다.

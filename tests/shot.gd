@@ -57,7 +57,7 @@ func _run() -> void:
 					"best_stage": maxi(1, arg), "hits": 0,
 					"skill": 0, "ease_streak": 0, "cushion": 0,
 				}
-			"cham":
+			"cham", "chamcatch", "chamhint":
 				scene = "res://games/cham/cham.tscn"
 				Shell.profile()["cham"] = {
 					"best_stage": maxi(1, arg), "caught": 0,
@@ -115,7 +115,7 @@ func _run() -> void:
 						(last.call("hit_rect") as Rect2).get_center()
 						+ Vector2(0, 40) if ds.size() > 1 else c0)
 		# ★ 참참참은 **발자국이 있는 모습**이 알맹이라, 몇 번 뛴 뒤로 맞춰 놓고 찍는다.
-		if kind == "cham":
+		if kind == "cham" or kind == "chamcatch" or kind == "chamhint":
 			await get_tree().process_frame
 			var pat: Array = inst.get("_pat")
 			var hist: Array[int] = []
@@ -124,6 +124,24 @@ func _run() -> void:
 			inst.set("_hist", hist)
 			inst.set("_turn", hist.size())
 			inst.set("_state", "wait")
+		# ★ 다섯 번 놓치면 맞는 쪽 손이 숨을 쉰다 — 이 게임에서 난이도를 내리는
+		#   유일한 통로다(규칙 11). 손을 그림으로 바꾼 뒤로는 살빛으로 말할 수가 없어서
+		#   금빛 무리로 바뀌었고, **그게 정말 보이는지**는 눈으로만 알 수 있다.
+		if kind == "chamhint":
+			inst.set("_miss_streak", 5)
+			inst.set("_state", "wait")
+		# ★ 참참참은 **잡은 순간**이 상 주는 장면이다 — 친구가 손 위에 앉는다.
+		#   손을 그림으로 바꾼 뒤로는 "제대로 손 위에 앉는가"를 눈으로 봐야 한다
+		#   (예전에 축하 상자가 친구 손을 반으로 자른 적이 있다).
+		if kind == "chamcatch":
+			for step in 300:
+				if String(inst.get("_state")) == "catch":
+					break
+				if String(inst.get("_state")) == "wait":
+					var z: Rect2 = inst.call("hand_zone", int(inst.call("next_dir")))
+					inst.call("_on_tap", z.position + z.size * 0.5)
+				inst.call("_process", 0.05)
+			inst.set("_slow", 400.0)
 		# ★ 가위바위보의 알맹이는 **두 손이 만난 순간**이다 (별이 어느 쪽에 붙는가).
 		#   그냥 찍으면 손이 하나뿐인 대기 화면만 나온다.
 		# ★ 판을 깬 화면은 **상 주는 순간**이라 눈으로 꼭 봐야 한다. 예전에 축하 상자가

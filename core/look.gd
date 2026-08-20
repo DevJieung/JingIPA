@@ -46,6 +46,9 @@ const ART := "res://core/art/"
 const HAND_SCISSORS := 0
 const HAND_ROCK := 1
 const HAND_PAPER := 2
+## 가리키는 손 (참참참). 그림은 **오른쪽**을 가리킨다 — 왼쪽은 flip 으로 뒤집어 쓴다.
+const HAND_POINT := 3
+const HAND_POINT_UP := 4
 
 ## --- 손 그림의 틀 -------------------------------------------------------- ##
 ## ★ **tools/theme/gen_theme.py 의 HAND_CUFF_W · HAND_CUFF_V 와 같은 수다.**
@@ -75,6 +78,10 @@ static func hand_tex(kind: int) -> Texture2D:
 			id = "hand_scissors"
 		HAND_PAPER:
 			id = "hand_paper"
+		HAND_POINT:
+			id = "hand_point"
+		HAND_POINT_UP:
+			id = "hand_point_up"
 	if _cache.has(id):
 		return _cache[id]
 	var path := ART + id + ".png"
@@ -96,14 +103,21 @@ static func hand_tex(kind: int) -> Texture2D:
 ##   남아 있을 것*이다. 손은 판정에 안 쓰이지만(누르는 것은 카드 네모다) 자리와
 ##   크기는 여전히 도형이 정하고, 그림은 거기 맞춰 앉는다 (HAND_WRIST · HAND_LIFT).
 ##
-## dir 은 손가락이 뻗는 쪽 (내 손은 위, 상대 손은 아래).
+## dir 은 손목에서 손이 뻗는 쪽 (내 손은 위, 상대 손은 아래).
 ## col 은 도형일 때 살빛이고, 그림일 때는 **투명도만** 쓴다 (그림이 제 색을 갖고 있다).
 ## 회전·확대가 필요하면 부르는 쪽이 draw_set_transform 을 걸고 at 에 Vector2.ZERO 를 준다.
+##
+## flip 은 **좌우로 뒤집기**다. 기본은 끄기 — 함부로 켜지 마라.
+## ★ 켜도 되는 곳은 지금 **참참참 하나뿐**이고, 이유가 있다: 거기는 손이 **둘**이다.
+##   오른손 그림을 뒤집으면 그냥 **왼손**이 되고, 두 손을 나란히 놓으면 그게 곧
+##   아이 자신의 두 손이다 — 거짓이 아니라 오히려 맞는 그림이다.
+##   반대로 가위바위보는 손이 하나뿐이라, 뒤집으면 이유 없이 왼손·오른손이 왔다 갔다
+##   한다. 그건 그림으로 없는 말을 하는 것이라 규칙 26 이 막는 그 자리다.
 static func draw_hand(ci: CanvasItem, at: Vector2, r: float, kind: int,
-		dir: Vector2, col: Color) -> void:
+		dir: Vector2, col: Color, flip := false) -> void:
 	var tex := hand_tex(kind)
 	if tex != null:
-		_draw_hand_tex(ci, tex, at, r, dir, col.a)
+		_draw_hand_tex(ci, tex, at, r, dir, col.a, flip)
 		return
 	var pp := Vector2(-dir.y, dir.x)
 	var dark := Color(col.darkened(0.08), col.a)
@@ -128,6 +142,11 @@ static func draw_hand(ci: CanvasItem, at: Vector2, r: float, kind: int,
 			_cap(ci, at + pp * r * 0.55, at + pp * r * 1.20 + dir * r * 0.42, r * 0.15, col)
 			_round_rect(ci, Rect2(at + Vector2(-r * 0.72, -r * 0.52), Vector2(r * 1.44, r * 1.04)),
 					r * 0.32, col)
+		HAND_POINT, HAND_POINT_UP:
+			# 뻗은 검지 하나 — "이쪽!". 옆을 가리키는 손은 손목축의 직각 방향으로 뻗는다.
+			var fd := dir if kind == HAND_POINT_UP else (pp * (-1.0 if flip else 1.0))
+			_cap(ci, at + fd * r * 0.35, at + fd * r * 1.18, r * 0.24, col)
+			_fist(ci, at, r, dir, pp, col, dark, 3)
 		_:
 			_fist(ci, at, r, dir, pp, col, dark, 4)
 
@@ -141,7 +160,7 @@ static func draw_hand(ci: CanvasItem, at: Vector2, r: float, kind: int,
 ##   그림으로 없는 말을 하지 않는다는 규칙 26 과 같은 자리다. 상대 손이 180도 돌아
 ##   있는 것은 실제로 마주 앉은 사람의 손이 그렇게 보이기 때문이라 거짓말이 아니다.
 static func _draw_hand_tex(ci: CanvasItem, tex: Texture2D, at: Vector2, r: float,
-		dir: Vector2, a: float) -> void:
+		dir: Vector2, a: float, flip := false) -> void:
 	var ts := Vector2(tex.get_width(), tex.get_height())
 	if ts.x <= 0.0 or ts.y <= 0.0 or r <= 0.0 or a <= 0.004:
 		return
@@ -149,6 +168,8 @@ static func _draw_hand_tex(ci: CanvasItem, tex: Texture2D, at: Vector2, r: float
 	# 그림의 아래쪽(+y)이 dir 의 반대를 본다. ex 는 거기서 90도 돌린 것 — 회전이라 안 뒤집힌다.
 	var ey := -dir.normalized()
 	var ex := ey.rotated(-PI * 0.5)
+	if flip:
+		ex = -ex                    # 오른손 -> 왼손 (참참참의 두 손. draw_hand 의 ★ 를 읽어라)
 	# `at` 에 해당하는 그림 속 자리 — 밴드 한가운데에서 손가락 쪽으로 HAND_LIFT * r 이다.
 	# ★ 그 길이를 그림 픽셀로 되돌리면 r 이 **약분된다**. 그래서 이 점은 크기와 무관한
 	#   그림 안의 고정점이고, 손을 키우거나 줄여도 기준이 안 흔들린다.

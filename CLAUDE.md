@@ -9,6 +9,7 @@
 - **셈놀이** (`games/math/`) — 블록으로 왜 그런지 보여 주는 사칙연산
 - **블록 채우기** (`games/kanoodle/`) — 조각을 기둥에 떨어뜨려 가이드 모양대로 쌓는다
 - **참참참** (`games/cham/`) — 친구가 어느 쪽으로 뛸지 손으로 가리켜 잡는다
+  (손은 가위바위보와 **같은 그림**이다 — `core/look.gd`)
 - **가위바위보** (`games/rps/`) — 친구 손을 보고 이기는(비기는·지는) 손을 낸다
   (손 셋은 공룡·두리와 같은 화풍의 그림이다 — 규칙 27 의 ⚠ 를 읽어라)
 
@@ -188,6 +189,15 @@ gh_api "$API/actions/workflows/ios.yml/dispatches" -X POST \
     - 해답은 계약이 아니라 **지금 계획**(`kanoodle.gd` 의 `_plan`)이다. 아이가 다른
       자리에 넣으면 `_refresh()` 가 다시 세운다. **안내 점·경계선·힌트는 전부 이
       계획을 그린다** — 생성기 해답을 그리면 그 순간 안내가 거짓말이 된다.
+    - **누른 칸에 조각의 왼쪽 위 칸을 그대로 앉히지 마라.** 그러면 아이는 조각이 놓일
+      자리의 **맨 왼쪽**을 정확히 눌러야 하고, 빈틈 한가운데를 누르면 조각이 오른쪽으로
+      밀려 나가 튕긴다 — 이것도 "맞는데 안 되는" 것이라 19-1 이 고친 것과 같은 병이다.
+      지금은 **누른 기둥을 덮는** 자리들 중에서 고른다 (`kanoodle.gd` 의 `_snap`).
+      예전 자리를 **먼저** 보므로 되던 것은 전부 그대로 되고, 튕기던 것만 들어간다
+      (검사에서 458번 중 50번이 살아났다). ⚠ 다만 **누른 기둥을 덮지 않는 자리는
+      절대 고르지 마라** — 어디쯤 놓을지는 여전히 아이가 정하는 것이고, 안 누른 데로
+      조각이 날아가면 봐주는 것이 아니라 남의 판을 두는 것이다.
+      그림자(`_ghost`)도 반드시 `_snap` 이 고른 그 자리를 그린다.
     - 힌트는 반드시 **계획의 첫 수**(`_plan_next`)만 가리켜라. `_plan[i]` 는 "다 놓고
       났을 때 있을 자리"라, 차례가 뒤인 조각을 가리키면 아이는 시킨 대로 떨어뜨렸는데
       더 아래로 가서 튕기는 것을 본다.
@@ -241,19 +251,27 @@ gh_api "$API/actions/workflows/ios.yml/dispatches" -X POST \
 26. **공룡 그림을 좌우로 뒤집어서 "방향"을 말하지 마라.** 50종 PNG 는 바라보는 방향이
     종마다 달라서, 뒤집기로 무언가를 알리면 종에 따라 아이에게 거짓말이 된다.
     (공룡 찾기는 그냥 모양이라 무해했고, 그래서 여태 안 드러났다. 참참참에서 드러났다.)
+    ⚠ 예외가 하나 있고, 예외인 **이유**가 규칙 자체다: 참참참의 **손**은 뒤집는다
+    (`Look.draw_hand` 의 `flip`). 거기는 손이 **둘**이라, 오른손 그림을 뒤집으면 그냥
+    왼손이 되고 그게 곧 아이 자신의 두 손이다 — 없는 말을 지어내는 것이 아니다.
+    가위바위보는 손이 **하나뿐**이라 뒤집으면 이유 없이 왼손·오른손이 오간다. 금지다.
+    **"뒤집어도 참인가"를 묻지, "뒤집으면 편한가"를 묻지 마라.**
 27. **판정이 걸린 그래픽은 코드로 그린다.** 방·가구·블록 조각은 전부 코드다 —
     (a) 판정이 그 도형에서 나오고(가림%·클릭·낙하), (b) 화면 없는 이 머신에서
     그리기 명령을 재현해 검증하기 때문이다. **새 게임의 놀이 화면은 이미지 0장에서 시작한다.**
-    그림은 공룡 50종 · 두리 네 장 · **가위바위보의 손 셋**뿐이다
+    그림은 공룡 50종 · 두리 네 장 · **손 다섯**(가위·바위·보 + 참참참의
+    가리키는 손 둘)뿐이다
     ([`docs/look-rules.md`](docs/look-rules.md)).
     ⚠ 손이 예외인 이유는 "예뻐서"가 아니라 **판정이 그림을 안 보기 때문**이다 —
-    누르는 것은 카드 네모고, 손의 자리와 크기는 여전히 `core/look.gd` 의 **도형이 정한다**
+    누르는 것은 카드 네모(참참참은 화면 아래 반쪽)고,
+    손의 자리와 크기는 여전히 `core/look.gd` 의 **도형이 정한다**
     (`HAND_WRIST` · `HAND_LIFT` 가 도형에서 역산한 값이다). 그림이 없으면 도형으로 돈다.
     **그 도형을 지우는 순간 예외가 아니라 위반이 된다.**
-    ⚠ 그리고 손 셋은 **한 벌**이다. 손목 밴드를 자로 삼아 같은 틀에 앉혀 두었다
-    (`tools/theme/gen_theme.py` 의 `fit_hand`). 한 장만 다시 뽑아 끼우면 카드 세 장이
+    ⚠ 그리고 손 다섯은 **한 벌**이다. 손목 밴드를 자로 삼아 같은 512x512 틀에 앉혀 두었다
+    (`tools/theme/gen_theme.py` 의 `fit_hand`). 한 장만 다시 뽑아 끼우면 두 게임의 손이
     서로 다른 사람 손이 되는데 **화면 없는 이 머신에서는 눈으로 안 잡힌다** —
-    `tests/rps_check.gd` 가 크기와 밴드 자리를 잰다.
+    `tests/rps_check.gd` 의 `_art_check` 가 다섯 장 전부의 크기와 밴드 자리를 잰다
+    (참참참 것까지 거기서 잰다 — 같은 것을 두 번 재지 않는다).
 28. **색을 짓지 마라.** `core/look.gd` 의 `Look` 에서 가져와라. 게임마다 제 색을 지어내면
     다섯 개가 다섯 앱처럼 보인다. 게임의 정체성 색만 `game_registry.gd` 의 `color` 에 둔다.
 29. **`config/name.ios` 와 번들 ID 는 절대 바꾸지 마라.** 표시 이름(`config/name`)만 바꾼다.
@@ -302,7 +320,7 @@ python3 tools/dino/render_preview.py                             # 위 JSON 을 
 python3 tools/screenshot.py map:0 battle:8                       # Xvfb 로 실제 촬영
 python3 tools/theme/gen_theme.py --list            # 두리 자산 목록
 python3 tools/theme/gen_theme.py --only duri --tries 6  # 주인공 후보 뽑아 보기
-python3 tools/theme/gen_theme.py --only hand_scissors,hand_rock,hand_paper --force  # 손 한 벌
+python3 tools/theme/gen_theme.py --only hand --force               # 손 다섯 (한 벌)
 python3 tools/theme/gen_theme.py --icons          # 두리 얼굴로 아이콘·부팅화면 다시
 python3 tools/check_font.py
 python3 tools/dino/gen_dinos.py --list                           # 공룡 50종
@@ -348,6 +366,7 @@ ROGAME_DEBUG=1 ~/.local/bin/godot --headless --path . --quit-after 200   # 이�
 | 블록 채우기 퍼즐 생성 | `games/kanoodle/nood_gen.gd` 의 `tile()` / `make()` / `pick_top()` |
 | 블록 채우기 낙하 규칙 | `games/kanoodle/nood_gen.gd` 의 `drop_dy()` — 게임·생성기·검사기가 같은 함수를 본다 |
 | **블록 채우기 자리 판정** | `games/kanoodle/nood_gen.gd` 의 `fits()` / `plan()` / `survey()` |
+| 블록 채우기 「대강 맞으면」 | `games/kanoodle/kanoodle.gd` 의 `_snap()` — 그림자도 이걸 그린다 |
 | 블록 채우기 놓을 차례 · 안내 | `games/kanoodle/kanoodle.gd` 의 `_refresh()` + `_plan` / `_plan_next` |
 | 블록 채우기 난이도 | `games/kanoodle/nood_gen.gd` 의 `axes()` |
 | **「섬 한 바퀴」 (게임 섞기)** | `shell/shell.gd` 의 `journey_*` + `pick_journey_game()` |
@@ -363,8 +382,8 @@ ROGAME_DEBUG=1 ~/.local/bin/godot --headless --path . --quit-after 200   # 이�
 | 화면 전환 · 뷰포트 | `shell/router.gd` + `Shell.enter_game()` |
 | **가위바위보 난이도·규칙** | `games/rps/scripts/rps_gen.gd` 의 `axes()` / `answer()` — **단일 진실 소스** |
 | 가위바위보 흐름·그리기 | `games/rps/scripts/rps_game.gd` |
-| 손 그리기 (가위·바위·보) | `core/look.gd` 의 `draw_hand()` — 허브 카드와 게임이 같은 함수를 본다 |
-| **손 그림 다시 뽑기** | `tools/theme/gen_theme.py` 의 `HAND` — 셋을 **같이** 뽑아라 (한 벌) |
+| 손 그리기 (다섯 손) | `core/look.gd` 의 `draw_hand()` — 허브·가위바위보·참참참이 같은 함수를 본다 |
+| **손 그림 다시 뽑기** | `tools/theme/gen_theme.py` 의 `HAND` — 다섯을 **같이** 뽑아라 (한 벌) |
 | **참참참 난이도·버릇** | `games/cham/scripts/cham_gen.gd` 의 `axes()` / `pattern()` — **단일 진실 소스** |
 | 참참참 흐름·그리기 | `games/cham/scripts/cham_game.gd` |
 | **손전등 찾기 난이도** | `games/torch/scripts/torch_gen.gd` 의 `axes()` — **단일 진실 소스** |

@@ -103,11 +103,13 @@ func _ready() -> void:
 	var reject_bad := await _reject_check()
 	# 어린 프로필: 판만 두드려도 놀이가 굴러가는가
 	var auto_bad := await _auto_check()
+	# "대강 맞으면 들어간다" 가 정말 그런가, 그리고 더 헐거워지지는 않았는가
+	var snap_bad := await _snap_check()
 
 	var ok := fail == 0 and bad_cover == 0 and bad_drop == 0 and rot_bad == 0 \
 			and play_bad == 0 and bury_bad == 0 and _ready_bad == 0 \
 			and contig_bad == 0 and equiv_bad == 0 and stuck_bad == 0 and auto_bad == 0 \
-			and reject_bad == 0 and NoodGen.stat_capped == 0
+			and reject_bad == 0 and snap_bad == 0 and NoodGen.stat_capped == 0
 	print("%s 판 %d개: 생성실패 %d건, 덮기이상 %d건, 낙하불가 %d건, 회전표이상 %d건, 플레이실패 %d건"
 			% ["  " if ok else "!!", total, fail, bad_cover, bad_drop, rot_bad, play_bad])
 	print("%s 묻힌구멍 판정이상 %d건, 트레이 거짓말 %d건, 기둥 끊긴 조각 %d개, 빠른길 어긋남 %d건" %
@@ -115,10 +117,10 @@ func _ready() -> void:
 					and equiv_bad == 0) else "!!",
 			 bury_bad, _ready_bad, contig_bad, equiv_bad])
 	# 자유도 — 옛 규칙에서는 조각마다 들어가는 자리가 **딱 하나**(해답 자리)였다.
-	print("%s 갇힘 탈출 실패 %d건, 자동집기 실패 %d건, 나쁜자리 통과 %d건, 탐색포기 %d건" %
+	print("%s 갇힘 탈출 실패 %d건, 자동집기 실패 %d건, 나쁜자리 통과 %d건, 탐색포기 %d건, 대강맞추기 이상 %d건" %
 			["  " if (stuck_bad == 0 and auto_bad == 0 and reject_bad == 0
-					and NoodGen.stat_capped == 0) else "!!",
-			 stuck_bad, auto_bad, reject_bad, NoodGen.stat_capped])
+					and snap_bad == 0 and NoodGen.stat_capped == 0) else "!!",
+			 stuck_bad, auto_bad, reject_bad, NoodGen.stat_capped, snap_bad])
 	print("   자유도: 첫 판에서 들어가는 자리 %d곳 (그중 계획과 다른 자리 %d곳)"
 			% [_free_slots, _free_extra])
 	print("   계획 다시 세우기: 평균 %.1fms · 판 %d개씩 (%d회)"
@@ -243,7 +245,7 @@ func _freedom(g: Node) -> Vector2i:
 	for i in shapes.size():
 		for sh: Array in (shapes[i] as Array):
 			for col in n:
-				var lz: Dictionary = g.call("_landing", sh, col)
+				var lz := _land_col(g, sh, col)
 				if lz.is_empty() or not NoodGen.fits(grid, n, shapes, i, lz["cells"], bag):
 					continue
 				slots += 1
@@ -302,7 +304,7 @@ func _play_free(g: Node, rng: RandomNumberGenerator) -> int:
 			var any := false
 			for sh: Array in (shapes[i] as Array):
 				for col in n:
-					var lz: Dictionary = g.call("_landing", sh, col)
+					var lz := _land_col(g, sh, col)
 					if lz.is_empty():
 						continue
 					if not NoodGen.fits(grid, n, shapes, i, lz["cells"], bag):
@@ -601,6 +603,15 @@ func _auto_check() -> int:
 	return bad
 
 
+## 이 모양의 **기준칸을 col 기둥에 맞춰** 떨어뜨리면 앉는 자리 — 물리만 본다.
+##
+## ★ 게임이 실제로 쓰는 것은 `_snap` 이다 (누른 기둥을 **덮는** 자리 중에서 고른다).
+##   여기서는 "예전 규칙이라면 어디에 앉았을까"를 알아야 해서 낮은 층을 직접 부른다.
+func _land_col(g: Node, sh: Array, col: int) -> Dictionary:
+	var a: Vector2i = g.call("_anchor_of", sh)
+	return g.call("_land_at", sh, col - a.x)
+
+
 func _has(cells: Array, v: Vector2i) -> bool:
 	for cc in cells:
 		if (cc as Vector2i) == v:
@@ -612,8 +623,13 @@ func _has(cells: Array, v: Vector2i) -> bool:
 ##
 ## ★ 이 문(`kanoodle.gd` 의 `_falling["ok"]`)을 통째로 지워도 나머지 검사는 전부
 ##   통과한다 — 플레이 검사기들이 하나같이 "되는 자리"만 골라 넣기 때문이다.
-##   그래서 여기서만 일부러 **안 되는 자리**에 떨어뜨려 보고, 판이 안 바뀌는지 본다.
+##   그래서 여기서만 일부러 **안 되는 데**에 떨어뜨려 보고, 판이 안 바뀌는지 본다.
 ##   이게 없으면 자유 배치의 유일한 안전장치가 아무도 안 보는 코드가 된다.
+##
+## ★ 묻는 것이 "나쁜 **자리**"에서 "나쁜 **기둥**"으로 바뀌었다. `_snap` 이 생긴 뒤로는
+##   물리적으로만 앉는 나쁜 자리를 눌러도 옆으로 밀어 살려 주므로, 그 조건으로는
+##   튕김을 영영 못 본다 (검사가 조용히 헛돌게 된다). 실제로 물어야 하는 것은
+##   **"이 기둥을 눌렀을 때 나쁜 자리가 들어가 버리는가"** 다.
 func _reject_check() -> int:
 	var bad := 0
 	var tried := 0
@@ -628,21 +644,21 @@ func _reject_check() -> int:
 		var grid: PackedInt32Array = g.get("_grid")
 		var shapes: Array = g.call("_shapes")
 		var bag: Dictionary = g.get("_bag")
-		# 물리적으로는 앉지만 판을 못 채우게 만드는 자리를 찾는다
+		# 아무리 옆으로 밀어도 판을 못 채우게 되는 **기둥**을 찾는다
 		var pick := -1
-		var cells: Array = []
+		var pick_sh: Array = []
+		var pick_col := -1
 		for i in shapes.size():
 			if not bool(g.call("_ready_now", i)):
 				continue                    # 못 드는 조각으로는 시험할 수 없다
 			for sh: Array in (shapes[i] as Array):
 				for col in n:
-					var lz: Dictionary = g.call("_landing", sh, col)
-					if lz.is_empty():
-						continue
-					if NoodGen.fits(grid, n, shapes, i, lz["cells"], bag):
+					var lz: Dictionary = g.call("_snap", i, sh, col)
+					if lz.is_empty() or bool(lz["ok"]):
 						continue
 					pick = i
-					cells = lz["cells"]
+					pick_sh = sh
+					pick_col = col
 					break
 				if pick >= 0:
 					break
@@ -651,12 +667,12 @@ func _reject_check() -> int:
 		if pick < 0:
 			g.queue_free()
 			await get_tree().process_frame
-			continue                        # 이 판에는 나쁜 자리가 없다 (드물다)
+			continue                        # 이 판에는 나쁜 기둥이 없다 (드물다)
 		tried += 1
 		var before_tray := (g.get("_tray") as Array).size()
 		var before_grid := (g.get("_grid") as PackedInt32Array).duplicate()
 		g.set("_misses", 0)
-		await _drop_at(g, pick, cells)
+		await _drop_into(g, pick, pick_sh, pick_col)
 		for f in 60:
 			if (g.get("_falling") as Dictionary).is_empty():
 				break
@@ -672,8 +688,108 @@ func _reject_check() -> int:
 			bad += 1
 		g.queue_free()
 		await get_tree().process_frame
-	print("   나쁜 자리를 %d판에서 실제로 떨어뜨려 봤습니다" % tried)
+	print("   나쁜 기둥을 %d판에서 실제로 두드려 봤습니다" % tried)
 	if tried == 0:
-		print("!! 나쁜 자리를 한 번도 못 찾았습니다 — 검사가 헛돌고 있습니다")
+		print("!! 나쁜 기둥을 한 번도 못 찾았습니다 — 검사가 헛돌고 있습니다")
+		bad += 1
+	return bad
+
+
+## 조각 i 를 sh 모양으로 만들어 **col 기둥**을 두드린다 (자리는 게임이 정한다).
+func _drop_into(g: Node, i: int, sh: Array, col: int) -> bool:
+	var slot: Rect2 = g.call("_tray_slot", i)
+	g.call("_on_tap", slot.position + slot.size * 0.5)
+	if (g.get("_held") as Dictionary).is_empty():
+		return false
+	var want := NoodPieces.key(NoodPieces.normalize(sh))
+	for r in 4:
+		var t2: Array = g.get("_tray")
+		if i >= t2.size():
+			return false
+		if NoodPieces.key(NoodPieces.normalize((t2[i] as Dictionary)["rot"])) == want:
+			break
+		g.call("_rotate_held")
+	var br: Rect2 = g.call("_board_rect")
+	var cell: float = g.call("_cell")
+	g.call("_on_tap", br.position + Vector2((float(col) + 0.5) * cell, cell * 0.5))
+	await get_tree().process_frame
+	return true
+
+
+# --------------------------------------------------------------------------- #
+# "대강 맞으면 들어간다" (kanoodle.gd 의 _snap)
+# --------------------------------------------------------------------------- #
+
+## ★ 예전에는 누른 칸에 조각의 **기준칸**(왼쪽 위)이 그대로 왔다. 그래서 아이는
+##   조각이 놓일 자리의 맨 왼쪽 칸을 정확히 눌러야 했고, 빈틈 한가운데를 누르면
+##   조각이 오른쪽으로 밀려 나가 튕겼다 — "보이는 자리에 넣었는데 안 되는" 것이다.
+##   지금은 누른 기둥을 **덮는** 자리 중에서 고른다.
+##
+## ★ 넷을 잰다. 앞의 셋은 "봐주다가 남의 판을 두지는 않는가", 넷째는 "봐주기가
+##   실제로 일어나기는 하는가" 다 — 넷째가 0 이면 이 기능이 죽은 것이다.
+##   1. 예전에 되던 자리는 **전부 그대로** 된다 (익힌 아이가 헷갈리면 안 된다)
+##   2. 고른 자리는 반드시 **누른 기둥을 덮는다** (안 누른 데로 날아가면 안 된다)
+##   3. ok 로 돌려준 자리는 정말 판을 끝까지 채울 수 있다 (NoodGen.fits)
+##   4. 예전에는 튕겼는데 이제 들어가는 자리가 실제로 있다
+func _snap_check() -> int:
+	var bad := 0
+	var rescued := 0
+	var checked := 0
+	for st in [3, 8, 14, 22, 30, 40]:
+		_reset_skill(st)
+		var g: Node = load("res://games/kanoodle/kanoodle.tscn").instantiate()
+		add_child(g)
+		g.set("dev_mode", true)
+		g.set("stage", st)
+		g.call("_build")
+		var n := int(g.get("_n"))
+		var grid: PackedInt32Array = g.get("_grid")
+		var shapes: Array = g.call("_shapes")
+		var bag: Dictionary = g.get("_bag")
+		for i in shapes.size():
+			for sh: Array in (shapes[i] as Array):
+				for col in n:
+					checked += 1
+					var was := _land_col(g, sh, col)
+					var was_ok := not was.is_empty() \
+							and NoodGen.fits(grid, n, shapes, i, was["cells"], bag)
+					var now: Dictionary = g.call("_snap", i, sh, col)
+					if was_ok:
+						# 1. 예전에 되던 자리는 그대로
+						if now.is_empty() or not bool(now["ok"]) \
+								or not _same(now["cells"], was["cells"]):
+							bad += 1
+							if bad <= 3:
+								print("!! %d탄: 예전에 되던 자리가 바뀌었다 (조각 %d, 기둥 %d)"
+										% [st, i, col])
+						continue
+					if now.is_empty():
+						continue
+					# 2. 반드시 누른 기둥을 덮는다
+					var covers := false
+					for cc in (now["cells"] as Array):
+						if (cc as Vector2i).x == col:
+							covers = true
+							break
+					if not covers:
+						bad += 1
+						if bad <= 3:
+							print("!! %d탄: 고른 자리가 누른 기둥 %d 을 안 덮는다 (조각 %d)"
+									% [st, col, i])
+					if not bool(now["ok"]):
+						continue
+					# 3. ok 라면 정말 끝까지 채울 수 있어야 한다
+					if not NoodGen.fits(grid, n, shapes, i, now["cells"], bag):
+						bad += 1
+						if bad <= 3:
+							print("!! %d탄: 못 채우는 자리를 ok 로 내줬다 (조각 %d, 기둥 %d)"
+									% [st, i, col])
+						continue
+					rescued += 1        # 4. 예전에는 튕겼는데 이제 들어간다
+		g.queue_free()
+		await get_tree().process_frame
+	print("   대강맞추기: %d번 물어봐서 예전이면 튕겼을 %d번을 살렸습니다" % [checked, rescued])
+	if rescued == 0:
+		print("!! 살린 자리가 하나도 없습니다 — 대강맞추기가 아무 일도 안 하고 있습니다")
 		bad += 1
 	return bad
