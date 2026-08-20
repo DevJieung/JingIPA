@@ -585,7 +585,9 @@ func _paint_ring() -> void:
 				s1 + d * 17.0, s1 + pp * 13.0, s1 - pp * 13.0]), Color(Look.ACCENT, 0.42 * a))
 	for h in pos:
 		draw_circle(pos[h], 44.0, Color(CARD_BG, 0.92 * a))
-		_hand_at(pos[h], 30.0, int(h), Vector2.UP, Color(SKIN, a), 0.0, 1.0)
+		# ★ 손은 `at` 위로 1.18r · 아래로 1.48r 을 차지한다 (손목이 더 길다).
+		#   그대로 두면 동그라미 아래로 소매가 삐져나오므로 그 차이의 절반만큼 올린다.
+		_hand_at(pos[h] - Vector2(0.0, 4.5), 30.0, int(h), Vector2.UP, Color(SKIN, a), 0.0, 1.0)
 
 
 ## 친구 공룡 — 손은 따로 그린다 (놀이 마당 쪽에서).
@@ -675,11 +677,13 @@ func _paint_cards() -> void:
 			bg = CARD_BG.lerp(Color(Look.GOLD), 0.55 * k)
 		_round_rect(rr, 30.0, bg)
 		_round_rect_outline(rr, 30.0, Color(INK_SOFT, 0.35), 4.0)
-		_hand_at(rr.position + Vector2(rr.size.x * 0.5, 104.0), 66.0, h, Vector2.UP,
-				SKIN, 0.0, 1.0)
+		# ★ 이름표가 손 **위**에 있다. 아래에 두면 손목의 소매가 글자를 덮는다 —
+		#   진한 데님 위의 검은 글씨는 대비가 3:1 밖에 안 나와서, 눈으로는 그냥
+		#   "이름이 없어진 것"으로 보인다. 손을 줄여서 피하는 것보다 이쪽이 낫다.
 		_text_centered(RpsGen.hand_name(h),
-				Vector2(rr.position.x + rr.size.x * 0.5, rr.position.y + rr.size.y - 34.0),
-				34, INK)
+				Vector2(rr.position.x + rr.size.x * 0.5, rr.position.y + 46.0), 34, INK)
+		_hand_at(rr.position + Vector2(rr.size.x * 0.5, 127.0), 62.0, h, Vector2.UP,
+				SKIN, 0.0, 1.0)
 
 
 func _paint_name() -> void:

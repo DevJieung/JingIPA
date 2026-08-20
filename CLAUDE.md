@@ -10,6 +10,7 @@
 - **블록 채우기** (`games/kanoodle/`) — 조각을 기둥에 떨어뜨려 가이드 모양대로 쌓는다
 - **참참참** (`games/cham/`) — 친구가 어느 쪽으로 뛸지 손으로 가리켜 잡는다
 - **가위바위보** (`games/rps/`) — 친구 손을 보고 이기는(비기는·지는) 손을 낸다
+  (손 셋은 공룡·두리와 같은 화풍의 그림이다 — 규칙 27 의 ⚠ 를 읽어라)
 
 ★ **세계관이 없다.** 예전에는 "집 안 / 집 밖"이라는 이야기로 묶었는데, 게임들의 결이
 너무 달라서 이야기가 오히려 이질감을 키웠다. 허브는 그냥 **게임 목록 + 아무거나(랜덤)** 다.
@@ -240,11 +241,19 @@ gh_api "$API/actions/workflows/ios.yml/dispatches" -X POST \
 26. **공룡 그림을 좌우로 뒤집어서 "방향"을 말하지 마라.** 50종 PNG 는 바라보는 방향이
     종마다 달라서, 뒤집기로 무언가를 알리면 종에 따라 아이에게 거짓말이 된다.
     (공룡 찾기는 그냥 모양이라 무해했고, 그래서 여태 안 드러났다. 참참참에서 드러났다.)
-27. **놀이에 쓰이는 그래픽은 코드로 그린다.** 이미지 파일은 공룡 50종 PNG 와
-    주인공 두리 네 장뿐이다. 방·가구·블록 조각·손은 전부 코드다 — (a) 판정이 그 도형에서
-    나오고(가림%·클릭·낙하), (b) 화면 없는 이 머신에서 그리기 명령을 재현해 검증하기
-    때문이다. **새 게임의 놀이 화면은 이미지 0장이 원칙이다.**
-    두리·아이콘·부팅 화면 같은 **장식만** 그림을 쓴다 ([`docs/look-rules.md`](docs/look-rules.md)).
+27. **판정이 걸린 그래픽은 코드로 그린다.** 방·가구·블록 조각은 전부 코드다 —
+    (a) 판정이 그 도형에서 나오고(가림%·클릭·낙하), (b) 화면 없는 이 머신에서
+    그리기 명령을 재현해 검증하기 때문이다. **새 게임의 놀이 화면은 이미지 0장에서 시작한다.**
+    그림은 공룡 50종 · 두리 네 장 · **가위바위보의 손 셋**뿐이다
+    ([`docs/look-rules.md`](docs/look-rules.md)).
+    ⚠ 손이 예외인 이유는 "예뻐서"가 아니라 **판정이 그림을 안 보기 때문**이다 —
+    누르는 것은 카드 네모고, 손의 자리와 크기는 여전히 `core/look.gd` 의 **도형이 정한다**
+    (`HAND_WRIST` · `HAND_LIFT` 가 도형에서 역산한 값이다). 그림이 없으면 도형으로 돈다.
+    **그 도형을 지우는 순간 예외가 아니라 위반이 된다.**
+    ⚠ 그리고 손 셋은 **한 벌**이다. 손목 밴드를 자로 삼아 같은 틀에 앉혀 두었다
+    (`tools/theme/gen_theme.py` 의 `fit_hand`). 한 장만 다시 뽑아 끼우면 카드 세 장이
+    서로 다른 사람 손이 되는데 **화면 없는 이 머신에서는 눈으로 안 잡힌다** —
+    `tests/rps_check.gd` 가 크기와 밴드 자리를 잰다.
 28. **색을 짓지 마라.** `core/look.gd` 의 `Look` 에서 가져와라. 게임마다 제 색을 지어내면
     다섯 개가 다섯 앱처럼 보인다. 게임의 정체성 색만 `game_registry.gd` 의 `color` 에 둔다.
 29. **`config/name.ios` 와 번들 ID 는 절대 바꾸지 마라.** 표시 이름(`config/name`)만 바꾼다.
@@ -293,6 +302,7 @@ python3 tools/dino/render_preview.py                             # 위 JSON 을 
 python3 tools/screenshot.py map:0 battle:8                       # Xvfb 로 실제 촬영
 python3 tools/theme/gen_theme.py --list            # 두리 자산 목록
 python3 tools/theme/gen_theme.py --only duri --tries 6  # 주인공 후보 뽑아 보기
+python3 tools/theme/gen_theme.py --only hand_scissors,hand_rock,hand_paper --force  # 손 한 벌
 python3 tools/theme/gen_theme.py --icons          # 두리 얼굴로 아이콘·부팅화면 다시
 python3 tools/check_font.py
 python3 tools/dino/gen_dinos.py --list                           # 공룡 50종
@@ -354,6 +364,7 @@ ROGAME_DEBUG=1 ~/.local/bin/godot --headless --path . --quit-after 200   # 이�
 | **가위바위보 난이도·규칙** | `games/rps/scripts/rps_gen.gd` 의 `axes()` / `answer()` — **단일 진실 소스** |
 | 가위바위보 흐름·그리기 | `games/rps/scripts/rps_game.gd` |
 | 손 그리기 (가위·바위·보) | `core/look.gd` 의 `draw_hand()` — 허브 카드와 게임이 같은 함수를 본다 |
+| **손 그림 다시 뽑기** | `tools/theme/gen_theme.py` 의 `HAND` — 셋을 **같이** 뽑아라 (한 벌) |
 | **참참참 난이도·버릇** | `games/cham/scripts/cham_gen.gd` 의 `axes()` / `pattern()` — **단일 진실 소스** |
 | 참참참 흐름·그리기 | `games/cham/scripts/cham_game.gd` |
 | **손전등 찾기 난이도** | `games/torch/scripts/torch_gen.gd` 의 `axes()` — **단일 진실 소스** |

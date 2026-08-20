@@ -56,6 +56,40 @@ def duri(pose: str, seed: int, note: str = "") -> dict:
 
 
 # --------------------------------------------------------------------------- #
+# 가위바위보의 손
+# --------------------------------------------------------------------------- #
+## ★ 손 세 장은 **한 벌**이다. 따로따로 잘라 내면 손목 굵기가 제각각이 돼서
+##   카드 세 장이 서로 다른 사람 손처럼 보인다 (아이에게는 그게 "다른 놀이"로 읽힌다).
+##   그래서 **파란 소매(손목 밴드)를 자로 삼아** 세 장을 같은 틀에 다시 앉힌다
+##   (fit_hand). 밴드는 자동으로 찾을 수 있는 유일하게 안정적인 기준점이다 —
+##   손 모양은 셋 다 다르지만 손목은 같은 손목이기 때문이다.
+##
+## ★ 소매를 데님 파랑으로 두는 것은 취향이 아니다. (a) 잘린 손목이 아니라
+##   "옷 입은 손"으로 보여야 이 나이대에 안 무섭고, (b) 두리가 입은 멜빵바지와
+##   같은 파랑이라 이 손이 누구 손인지 글자 없이 읽히고, (c) 크림 바탕에서
+##   따뜻한 살구색과 확실히 갈라져 실루엣이 산다.
+HAND = ("a single hand painted plastic model toy of a small child's right hand, "
+        "chubby soft rounded fingers, museum quality Schleich figure quality, "
+        "matte finish, warm peach skin color, the wrist ends in a soft rolled "
+        "denim blue sleeve cuff at the bottom of the frame, "
+        "clean studio product photograph, soft even lighting, sharp focus")
+
+HAND_CUT = (", the whole hand and the cuff inside the frame, centered, upright, "
+            "cut out on a pure flat white background, no base, no stand, no ground, "
+            "no shadow, no scenery, no arm, no person, no face, no text, no logo")
+
+## 손 그림의 틀 — **core/look.gd 의 HAND_CUFF_W · HAND_CUFF_V 와 같은 수다.**
+## 여기를 고치면 거기도 같이 고쳐라 (안 그러면 손이 화면에서 어긋난 자리에 뜬다).
+HAND_BOX = (512, 512)   # 세 장 모두 이 크기
+HAND_CUFF_W = 0.44      # 밴드 폭 ÷ 그림 가로
+HAND_CUFF_V = 0.77      # 밴드 한가운데 ÷ 그림 세로
+
+
+def hand(pose: str, seed: int) -> dict:
+    return dict(prompt=f"{HAND}, {pose}{HAND_CUT}", seed=seed, size=1024)
+
+
+# --------------------------------------------------------------------------- #
 # 자산 목록
 #   id     : core/art/<id>.png
 #   cut    : 흰 배경을 지워 투명 PNG 로 (배경 그림은 False)
@@ -75,6 +109,29 @@ ASSETS: list[dict] = [
     dict(id="duri_torch", ko="두리 (손전등)", cut=True, max_h=520,
          **duri("full body standing, holding up a small yellow flashlight in one hand, "
                 "facing the camera, curious face", 7238)),
+
+    # ── 가위바위보의 손 ─────────────────────────────────────────────────────
+    # ★ 두리와 달리 **시드가 손마다 다르다.** 두리는 시드를 바꾸면 얼굴이 달라져서
+    #   같은 아이로 안 보이지만, 손에는 얼굴이 없다 — 화풍·살빛·소매를 붙잡는 것은
+    #   시드가 아니라 위의 HAND 문장이고(후보 여덟 벌을 나란히 놓고 확인했다),
+    #   손목을 맞추는 것은 fit_hand 다. 그래서 시드는 **실루엣이 제일 또렷한 쪽**으로
+    #   손마다 따로 골랐다. 아이가 세 장을 한눈에 갈라 봐야 하는 것이 이 놀이의 전부다:
+    #     가위 4785 — V 가 제일 곧고 넓게 벌어졌다
+    #     바위 4237 — 제일 동그랗고 뭉친 주먹 (모서리가 없어야 "바위"로 읽힌다)
+    #     보   4237 — 다섯 손가락이 제일 넓게 펴진 부채 (엄지가 확실히 나와 있다)
+    dict(id="hand_scissors", ko="손 — 가위", cut=True, fit=True,
+         **hand("a peace sign held upright, exactly two fingers extended straight up "
+                "in a wide V shape, the index finger and the middle finger, the ring "
+                "finger and little finger and thumb curled down tight, "
+                "back of the hand facing the camera", 4785)),
+    dict(id="hand_rock", ko="손 — 바위", cut=True, fit=True,
+         **hand("a closed fist held upright, all fingers curled in tight, the curled "
+                "knuckles at the top, the thumb resting across the front, "
+                "nothing sticking out", 4237)),
+    dict(id="hand_paper", ko="손 — 보", cut=True, fit=True,
+         **hand("a flat open hand held upright, all five fingers straight and spread "
+                "wide apart pointing up, fingers fully extended, palm flat, "
+                "back of the hand facing the camera", 4237)),
 ]
 
 # ★ 얼굴 클로즈업은 따로 만들지 않는다. 화면을 꽉 채운 얼굴은 배경 지우기가 흰 얼굴을
@@ -96,12 +153,63 @@ def save(img, path: str, a: dict):
     if a.get("cut", False):
         from gen_dinos import cut_out
         img = cut_out(img)
+    if a.get("fit", False):
+        img = fit_hand(img)
     mh = a.get("max_h")
     if mh and img.size[1] > mh:
         w2 = max(1, int(img.size[0] * mh / img.size[1]))
         img = img.resize((w2, mh), Image.LANCZOS)
     img.save(path, optimize=True)
     return img
+
+
+# --------------------------------------------------------------------------- #
+# 손 — 세 장을 같은 틀에 앉히기
+# --------------------------------------------------------------------------- #
+
+def cuff_box(im):
+    """손목 밴드(데님 파랑)의 네모를 찾는다.
+
+    파랑만 보는 이유: 살빛·손 모양은 셋 다 다르지만 **손목은 같은 손목**이라,
+    자동으로 찾을 수 있는 기준점이 밴드뿐이다. 손 전체의 네모를 자로 쓰면
+    보(쫙 편 손)가 바위보다 넓어서 바위만 커다랗게 앉는다.
+    """
+    import numpy as np
+    a = np.array(im.convert("RGBA")).astype("int16")
+    r, b, al = a[:, :, 0], a[:, :, 2], a[:, :, 3]
+    m = (al > 100) & (b > r + 18) & (b > 70)
+    ys, xs = np.nonzero(m)
+    if len(ys) < im.size[0] * im.size[1] // 400:
+        return None
+    return (int(xs.min()), int(ys.min()), int(xs.max()), int(ys.max()))
+
+
+def fit_hand(im):
+    """밴드 폭·밴드 한가운데를 HAND_CUFF_* 에 맞춰 HAND_BOX 안에 다시 앉힌다."""
+    from PIL import Image
+    box = cuff_box(im)
+    if box is None:
+        print("   !! 손목 밴드를 못 찾았습니다 — 원본 그대로 둡니다")
+        return im
+    x0, y0, x1, y1 = box
+    bw, cx, cy = float(x1 - x0), (x0 + x1) * 0.5, (y0 + y1) * 0.5
+    W, H = HAND_BOX
+    k = (HAND_CUFF_W * W) / max(bw, 1.0)
+    im2 = im.resize((max(1, round(im.size[0] * k)), max(1, round(im.size[1] * k))),
+                    Image.LANCZOS)
+    out = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ox = round(W * 0.5 - cx * k)
+    oy = round(H * HAND_CUFF_V - cy * k)
+    out.paste(im2, (ox, oy), im2)
+    # ★ 넘치면 조용히 잘리지 않게 **말한다.** 잘린 손끝은 화면에서만 보이는데
+    #   이 머신에는 화면이 없다 — 여기서 안 잡으면 아무도 안 잡는다.
+    ab = im2.getbbox()
+    if ab:
+        l, t, rr, bb = ab[0] + ox, ab[1] + oy, ab[2] + ox, ab[3] + oy
+        if l < 0 or t < 0 or rr > W or bb > H:
+            print(f"   !! 틀({W}x{H})을 넘칩니다: ({l},{t})-({rr},{bb}) "
+                  f"— HAND_BOX 를 키우거나 HAND_CUFF_* 를 낮추세요")
+    return out
 
 
 # --------------------------------------------------------------------------- #

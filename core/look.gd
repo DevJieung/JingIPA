@@ -47,17 +47,64 @@ const HAND_SCISSORS := 0
 const HAND_ROCK := 1
 const HAND_PAPER := 2
 
+## --- 손 그림의 틀 -------------------------------------------------------- ##
+## ★ **tools/theme/gen_theme.py 의 HAND_CUFF_W · HAND_CUFF_V 와 같은 수다.**
+##   그 도구가 손목 밴드(파란 소매)를 자로 삼아 세 장을 같은 틀에 앉혀 주므로,
+##   여기서는 밴드 하나만 알면 세 손이 저절로 같은 손목·같은 자리에 선다.
+##   한쪽만 고치면 손이 화면에서 어긋난 자리에 뜬다 — 반드시 같이 고쳐라.
+const HAND_CUFF_W := 0.44        ## 밴드 폭 ÷ 그림 가로
+const HAND_CUFF_V := 0.77        ## 밴드 한가운데 ÷ 그림 세로
 
-## 손 하나를 **코드로** 그린다 (규칙 27 — 놀이에 쓰이는 그림은 이미지가 아니다).
+## 밴드 폭을 r 의 몇 배로 그리는가 / `at` 이 밴드에서 손가락 쪽으로 r 의 몇 배인가.
+## ★ 눈대중이 아니라 **아래 도형 손에서 역산한 값**이다. 이 둘이면 그림 손의
+##   손끝(1.40r)과 손목 끝(1.47r)이 도형 손의 1.42r · 1.47r 과 겹친다 —
+##   즉 그림이 도형과 **같은 네모**를 차지한다. 그래서 손을 그림으로 갈아 끼워도
+##   가위바위보·허브의 자리값을 하나도 다시 안 맞춰도 됐다.
+##   (밴드 자체는 도형 손목보다 굵다. 장난감 손이 원래 그렇고, 맞춰야 하는 것은
+##    손목 굵기가 아니라 손이 차지하는 자리다.)
+const HAND_WRIST := 1.40
+const HAND_LIFT := 1.05
+
+
+## 손 그림 한 장. 없으면 null — 그러면 draw_hand 가 도형으로 그린다.
+## (두리와 같은 규약이다: 자산 하나가 없다고 아이 화면이 통째로 안 뜨면 안 된다.)
+static func hand_tex(kind: int) -> Texture2D:
+	var id := "hand_rock"
+	match kind:
+		HAND_SCISSORS:
+			id = "hand_scissors"
+		HAND_PAPER:
+			id = "hand_paper"
+	if _cache.has(id):
+		return _cache[id]
+	var path := ART + id + ".png"
+	var tex: Texture2D = null
+	if ResourceLoader.exists(path):
+		tex = load(path) as Texture2D
+	_cache[id] = tex
+	return tex
+
+
+## 손 하나를 그린다.
 ##
 ## ★ 여기 한 곳에만 있는 이유: 허브 카드 그림과 가위바위보 화면이 **같은 손**이어야
 ##   아이가 "이 카드가 그 놀이"라는 것을 글자 없이 안다. 두 곳에 따로 그렸더니
 ##   허브의 바위가 그냥 동그라미가 됐다.
 ##
+## ★ 그림이 있으면 그림, 없으면 도형이다. **도형 쪽을 지우지 마라** —
+##   규칙 27 이 지키려는 것은 "이미지 금지"가 아니라 *놀이의 판정과 자리가 코드에
+##   남아 있을 것*이다. 손은 판정에 안 쓰이지만(누르는 것은 카드 네모다) 자리와
+##   크기는 여전히 도형이 정하고, 그림은 거기 맞춰 앉는다 (HAND_WRIST · HAND_LIFT).
+##
 ## dir 은 손가락이 뻗는 쪽 (내 손은 위, 상대 손은 아래).
+## col 은 도형일 때 살빛이고, 그림일 때는 **투명도만** 쓴다 (그림이 제 색을 갖고 있다).
 ## 회전·확대가 필요하면 부르는 쪽이 draw_set_transform 을 걸고 at 에 Vector2.ZERO 를 준다.
 static func draw_hand(ci: CanvasItem, at: Vector2, r: float, kind: int,
 		dir: Vector2, col: Color) -> void:
+	var tex := hand_tex(kind)
+	if tex != null:
+		_draw_hand_tex(ci, tex, at, r, dir, col.a)
+		return
 	var pp := Vector2(-dir.y, dir.x)
 	var dark := Color(col.darkened(0.08), col.a)
 	# 손목 (손가락 반대쪽으로 빠진다).
@@ -83,6 +130,38 @@ static func draw_hand(ci: CanvasItem, at: Vector2, r: float, kind: int,
 					r * 0.32, col)
 		_:
 			_fist(ci, at, r, dir, pp, col, dark, 4)
+
+
+## 손 그림 한 장을 dir 쪽으로 세워서 그린다.
+##
+## ★ draw_set_transform 을 쓰지 않는다 — 부르는 쪽이 이미 걸어 둔 변환을 지워 버린다
+##   (가위바위보의 _hand_at 이 회전·확대를 그렇게 건다). 그래서 네 귀퉁이를 직접 돌려
+##   텍스처 사각형을 폴리곤으로 그린다.
+## ★ **돌리는 것이지 뒤집는 것이 아니다.** 좌우로 뒤집으면 오른손이 왼손이 된다 —
+##   그림으로 없는 말을 하지 않는다는 규칙 26 과 같은 자리다. 상대 손이 180도 돌아
+##   있는 것은 실제로 마주 앉은 사람의 손이 그렇게 보이기 때문이라 거짓말이 아니다.
+static func _draw_hand_tex(ci: CanvasItem, tex: Texture2D, at: Vector2, r: float,
+		dir: Vector2, a: float) -> void:
+	var ts := Vector2(tex.get_width(), tex.get_height())
+	if ts.x <= 0.0 or ts.y <= 0.0 or r <= 0.0 or a <= 0.004:
+		return
+	var s := HAND_WRIST * r / (HAND_CUFF_W * ts.x)   ## 화면 길이 ÷ 그림 픽셀
+	# 그림의 아래쪽(+y)이 dir 의 반대를 본다. ex 는 거기서 90도 돌린 것 — 회전이라 안 뒤집힌다.
+	var ey := -dir.normalized()
+	var ex := ey.rotated(-PI * 0.5)
+	# `at` 에 해당하는 그림 속 자리 — 밴드 한가운데에서 손가락 쪽으로 HAND_LIFT * r 이다.
+	# ★ 그 길이를 그림 픽셀로 되돌리면 r 이 **약분된다**. 그래서 이 점은 크기와 무관한
+	#   그림 안의 고정점이고, 손을 키우거나 줄여도 기준이 안 흔들린다.
+	var lift := HAND_LIFT * HAND_CUFF_W * ts.x / HAND_WRIST
+	var anchor := Vector2(ts.x * 0.5, ts.y * HAND_CUFF_V - lift)
+	var pts := PackedVector2Array()
+	var corners: Array[Vector2] = [Vector2.ZERO, Vector2(ts.x, 0.0), ts, Vector2(0.0, ts.y)]
+	for c in corners:
+		var d: Vector2 = (c - anchor) * s
+		pts.append(at + ex * d.x + ey * d.y)
+	var tint := Color(1.0, 1.0, 1.0, a)
+	ci.draw_polygon(pts, PackedColorArray([tint, tint, tint, tint]),
+			PackedVector2Array([Vector2.ZERO, Vector2(1, 0), Vector2.ONE, Vector2(0, 1)]), tex)
 
 
 ## 주먹. n = 보이는 손가락 마디 수 (가위는 둘이 뻗어 있으므로 둘만 보인다)

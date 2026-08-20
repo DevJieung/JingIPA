@@ -91,11 +91,13 @@ func _ready() -> void:
 	var play_bad := await _play_stages()
 	var help_bad := await _help_check()
 	var limit_bad := await _limit_check()
+	var art_bad := _art_check()
 
 	var ok := rule_bad == 0 and bad_axes == 0 and bad_make == 0 and play_bad == 0 \
-			and help_bad == 0 and limit_bad == 0 and _free_miss > 0
-	print("%s 판 %d개: 규칙표이상 %d건, 축한계이탈 %d건, 판생성이상 %d건, 플레이실패 %d건, 안내이상 %d건, 상한탈출이상 %d건"
-			% ["  " if ok else "!!", made, rule_bad, bad_axes, bad_make, play_bad, help_bad, limit_bad])
+			and help_bad == 0 and limit_bad == 0 and art_bad == 0 and _free_miss > 0
+	print("%s 판 %d개: 규칙표이상 %d건, 축한계이탈 %d건, 판생성이상 %d건, 플레이실패 %d건, 안내이상 %d건, 상한탈출이상 %d건, 손그림이상 %d건"
+			% ["  " if ok else "!!", made, rule_bad, bad_axes, bad_make, play_bad, help_bad,
+				limit_bad, art_bad])
 	print("   모르는 아이가 통틀어 %d번 틀렸다 (0 이면 그 아이 흉내가 헛돈 것이다)" % _free_miss)
 	print("   판정: %s" % ("정상" if ok else "이상 — 위 !! 줄을 보세요"))
 	get_tree().quit(0 if ok else 1)
@@ -402,3 +404,91 @@ func _limit_check() -> int:
 		print("!! 상한에 닿았는데 집으로 안 갔다 — 축하 장면에서 얼어붙는다")
 	g.queue_free()
 	return bad
+
+
+# --------------------------------------------------------------------------- #
+# 손 그림 한 벌
+# --------------------------------------------------------------------------- #
+
+## 손 셋이 **한 벌인가**, 그리고 core/look.gd 가 말하는 자리에 손목이 있는가.
+##
+## ★ 손 셋은 따로 있는 그림이 아니라 한 벌이다 — tools/theme/gen_theme.py 의 fit_hand 가
+##   손목 밴드를 자로 삼아 세 장을 같은 틀에 앉힌다. 한 장만 다시 뽑아 끼우면 손목
+##   굵기와 높이가 어긋나서 카드 세 장이 서로 다른 사람 손처럼 보이는데,
+##   **화면이 없는 이 머신에서는 눈으로 절대 안 잡힌다.** 그래서 여기서 잰다.
+## ★ 그림이 아예 없으면 통과다. 없으면 도형 손으로 도는 것이 정상이기 때문이다
+##   (Look.draw_hand 의 되돌아갈 자리). 다만 **셋 중 일부만** 있으면 실패다 —
+##   카드 한 장만 그림이면 그게 제일 이상해 보인다.
+func _art_check() -> int:
+	var kinds := [Look.HAND_SCISSORS, Look.HAND_ROCK, Look.HAND_PAPER]
+	var names := ["가위", "바위", "보"]
+	var have := 0
+	for k in kinds:
+		if Look.hand_tex(int(k)) != null:
+			have += 1
+	if have == 0:
+		print("   손 그림 없음 — 도형 손으로 돈다 (그것도 정상이다)")
+		return 0
+	if have < kinds.size():
+		print("!! 손 그림이 %d/3 장뿐이다 — 카드 일부만 그림이면 제일 이상해 보인다" % have)
+		return 1
+	var bad := 0
+	var size0 := Vector2i.ZERO
+	for i in kinds.size():
+		var img: Image = Look.hand_tex(int(kinds[i])).get_image()
+		var sz := Vector2i(img.get_width(), img.get_height())
+		if i == 0:
+			size0 = sz
+		elif sz != size0:
+			bad += 1
+			print("!! %s 손 크기가 %s — 다른 손은 %s 다. 한 벌이 아니다" % [names[i], sz, size0])
+		var box := _cuff_box(img)
+		if box.size.x <= 0:
+			bad += 1
+			print("!! %s 손에서 손목 밴드(파랑)를 못 찾았다 — fit_hand 를 안 탄 그림이다" % names[i])
+			continue
+		var cw := float(box.size.x) / float(sz.x)
+		var cv := (float(box.position.y) + float(box.size.y) * 0.5) / float(sz.y)
+		var cx := (float(box.position.x) + float(box.size.x) * 0.5) / float(sz.x)
+		var why := ""
+		if absf(cw - Look.HAND_CUFF_W) > 0.03:
+			why += " 폭 %.3f(≠%.2f)" % [cw, Look.HAND_CUFF_W]
+		if absf(cv - Look.HAND_CUFF_V) > 0.03:
+			why += " 높이 %.3f(≠%.2f)" % [cv, Look.HAND_CUFF_V]
+		if absf(cx - 0.5) > 0.03:
+			why += " 가로한가운데 %.3f(≠0.50)" % cx
+		if why.is_empty():
+			print("   %s 손: %dx%d, 밴드 폭 %.3f · 높이 %.3f · 가운데 %.3f" % [names[i], sz.x, sz.y, cw, cv, cx])
+		else:
+			bad += 1
+			print("!! %s 손의 손목 밴드가 look.gd 의 자와 어긋난다:%s" % [names[i], why])
+	return bad
+
+
+## 손목 밴드(데님 파랑)의 네모. **tools/theme/gen_theme.py 의 cuff_box 와 같은 잣대**다
+## (파랑이 빨강보다 18/255 이상 진하고, 파랑이 70/255 이상, 불투명한 곳).
+## 두 칸씩 건너뛰며 본다 — 밴드는 그림의 5분의 1을 덮는 큰 덩어리라 이걸로 충분하다.
+func _cuff_box(img: Image) -> Rect2i:
+	var w := img.get_width()
+	var h := img.get_height()
+	var x0 := w
+	var y0 := h
+	var x1 := -1
+	var y1 := -1
+	var n := 0
+	var y := 0
+	while y < h:
+		var x := 0
+		while x < w:
+			var c := img.get_pixel(x, y)
+			if c.a > 0.392 and c.b > c.r + 0.070 and c.b > 0.275:
+				n += 1
+				x0 = mini(x0, x)
+				x1 = maxi(x1, x)
+				y0 = mini(y0, y)
+				y1 = maxi(y1, y)
+			x += 2
+		y += 2
+	if n < 200:
+		return Rect2i()
+	return Rect2i(x0, y0, x1 - x0, y1 - y0)

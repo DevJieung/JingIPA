@@ -237,11 +237,11 @@ func _paint_icon(id: String, c: Vector2, w: float) -> void:
 			# 별이 아래(=내 손) 쪽에 붙어 있는 것까지 게임 화면과 같은 말이다.
 			# ★ 아래로 너무 내리면 편 손의 손가락이 카드 밑줄(부제)을 물어뜯는다.
 			var k := minf(1.0, (w - 26.0) / 210.0)
-			Look.draw_hand(self, c + Vector2(-32.0 * k, -60.0 * k), 34.0 * k,
+			Look.draw_hand(self, c + Vector2(-30.0 * k, -52.0 * k), 40.0 * k,
 					Look.HAND_ROCK, Vector2.DOWN, Look.SKIN)
-			Look.draw_hand(self, c + Vector2(26.0 * k, 28.0 * k), 34.0 * k,
+			Look.draw_hand(self, c + Vector2(26.0 * k, 26.0 * k), 40.0 * k,
 					Look.HAND_PAPER, Vector2.UP, Look.SKIN)
-			_paint_star(c + Vector2(88.0 * k, 28.0 * k), 17.0 * k, Look.GOLD)
+			_paint_star(c + Vector2(92.0 * k, 20.0 * k), 17.0 * k, Look.GOLD)
 		"kanoodle":
 			# 격자 위에 조각 두 개
 			var g := 22.0
