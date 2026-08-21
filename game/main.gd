@@ -6,24 +6,37 @@ extends Node2D
 ## 화면들은 .tscn 없이 코드로 만든다. 화면 하나가 파일 하나(.gd)라 옮기고 지우기 쉽고,
 ## 헤드리스 검사기가 씬 파일 없이 화면을 그대로 세워 볼 수 있다.
 
-const SCREEN := Rect2(0, 0, 1280, 800)
-
 var screen: Node2D = null
 ## 화면 사이 페이드. 0 이면 안 보이고 1 이면 새까맣다.
 var _fade: float = 0.0
 var _fade_dir: float = 0.0
 var _next: Callable = Callable()
+var _fade_rect: ColorRect = null
 
 
 func _ready() -> void:
 	RenderingServer.set_default_clear_color(Look.BG)
+	# ★ 페이드를 이 노드의 _draw() 로 그리면 **안 보인다.**
+	#   Godot 의 그리기 순서는 "부모 먼저, 자식이 그 위"라, 자식으로 붙는 화면들이
+	#   부모가 그린 검은 막을 덮어 버린다. 그래서 화면 전환이 그냥 0.28초씩 두 번
+	#   멈췄다가 뚝 끊기는 것처럼 보였다. CanvasLayer 로 확실히 맨 위에 올린다.
+	var cl := CanvasLayer.new()
+	cl.layer = 100
+	add_child(cl)
+	_fade_rect = ColorRect.new()
+	_fade_rect.color = Color(0, 0, 0, 0)
+	_fade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# 입력은 통과시킨다 — 전환 중 두 번 눌리는 것은 각 화면이 스스로 막는다.
+	_fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cl.add_child(_fade_rect)
 	show_title()
 
 
 func _process(dt: float) -> void:
 	if _fade_dir != 0.0:
 		_fade = clampf(_fade + _fade_dir * dt * 3.6, 0.0, 1.0)
-		queue_redraw()
+		if _fade_rect != null:
+			_fade_rect.color = Color(0, 0, 0, _fade)
 		if _fade_dir > 0.0 and _fade >= 1.0:
 			# ★ 화면을 갈아 끼우는 순간 잠금을 푼다. 트윈이 끝나기를 기다리다가
 			#   그 트윈이 finished 를 한 번이라도 안 내면 화면이 영영 안 바뀐다.
@@ -33,11 +46,6 @@ func _process(dt: float) -> void:
 			_fade_dir = -1.0
 		elif _fade_dir < 0.0 and _fade <= 0.0:
 			_fade_dir = 0.0
-
-
-func _draw() -> void:
-	if _fade > 0.0:
-		draw_rect(SCREEN, Color(0, 0, 0, _fade))
 
 
 ## 페이드가 덮은 순간에 화면을 바꾼다.
@@ -54,7 +62,6 @@ func _swap(s: Node2D) -> void:
 	screen = s
 	s.set("main", self)
 	add_child(s)
-	move_child(s, 0)   # 페이드(자기 _draw)가 항상 맨 위에 오게
 
 
 # --------------------------------------------------------------------------- #

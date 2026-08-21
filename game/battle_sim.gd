@@ -53,6 +53,8 @@ func setup(run_state, wave_no: int, seed_value: int = 0) -> void:
 	bullets.clear()
 	heroes.clear()
 	events.clear()
+	# ★ 안 비우면 같은 인스턴스로 setup 을 두 번 부를 때 몬스터가 두 배로 나온다.
+	_queue.clear()
 	kills = 0
 	gold = 0
 	done = false
@@ -78,9 +80,9 @@ func setup(run_state, wave_no: int, seed_value: int = 0) -> void:
 
 	_build_queue()
 	# ★ 몬스터가 늦게 나오면 잡을 시간이 없어 목숨이 그냥 깎인다. 제한 시간의 앞쪽
-	#   28% 안에 전부 나오게 한다. (나오는 데 8초 + 안으로 조여드는 데 8초 = 16초,
-	#   그래야 마지막에 나온 놈도 10초 넘게 얻어맞는다.)
-	_spawn_gap = (total_time * 0.28) / float(maxi(1, _queue.size()))
+	#   24% 안에 전부 나오게 한다. (나오는 데 7초 + 안으로 조여드는 데 8초 = 15초,
+	#   그래야 마지막에 나온 놈도 12초 넘게 얻어맞는다.)
+	_spawn_gap = (total_time * 0.24) / float(maxi(1, _queue.size()))
 	_spawn_t = 0.0
 
 

@@ -119,6 +119,13 @@ func _step_draw(w: int) -> void:
 		_bad("%d탄: 결정 버튼을 못 눌렀다" % Run.wave)
 	if Run.heroes.size() != w + 1:
 		_bad("%d탄: 영웅이 %d명이다 (%d명이어야 한다)" % [Run.wave, Run.heroes.size(), w + 1])
+	# ★ 확정한 뒤 연출이 도는 동안 화면은 아직 트리에 있다. 여기서 「결정!」을 또 누르면
+	#   영웅이 공짜로 하나 더 생기는 버그가 있었다. 눌러 보고 안 늘어나는지 확인한다.
+	var again: Ui = main.screen.ui
+	_tap(again, "go")
+	_tap(again, "re0")
+	if Run.heroes.size() != w + 1:
+		_bad("%d탄: 연출 중에 또 눌렀더니 영웅이 %d명이 됐다" % [Run.wave, Run.heroes.size()])
 	# 연출이 끝나고 전투로
 	await _wait_for("battle_screen", 600)
 

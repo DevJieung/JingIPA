@@ -191,6 +191,11 @@ static func draw_card_back(ci: CanvasItem, pos: Vector2, sc: float = 1.0) -> voi
 	var rect := Rect2(pos, Vector2(w, h))
 	fill_round(ci, Rect2(pos + Vector2(0, 5.0 * sc), rect.size), CARD_R * sc, Color(0, 0, 0, 0.45))
 	fill_round(ci, rect.grow(2.0 * sc), (CARD_R + 2.0) * sc, CARD_EDGE)
+	# 그려 둔 뒷면 그림이 있으면 그걸 쓰고, 없으면 아래 도형으로 대신 그린다.
+	var t := Art.tex(Roster.ART.get("card_back", ""))
+	if t != null:
+		ci.draw_texture_rect(t, rect, false)
+		return
 	fill_round(ci, rect, CARD_R * sc, CARD_BACK)
 	fill_round(ci, rect.grow(-8.0 * sc), CARD_R * sc * 0.6, CARD_BACK2)
 	# 금색 마름모 격자

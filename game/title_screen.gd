@@ -8,6 +8,8 @@ var ui := Ui.new()
 var t: float = 0.0
 ## 부채꼴로 펼쳐진 카드 다섯 장 — 이 게임이 무슨 게임인지 한눈에 보이게.
 var fan: Array[int] = []
+## 시작을 두 번 눌러 판이 두 번 시작되지 않게.
+var _started: bool = false
 
 
 func _ready() -> void:
@@ -28,7 +30,8 @@ func _process(dt: float) -> void:
 func _input(e: InputEvent) -> void:
 	if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT:
 		var id := ui.hit(e.position)
-		if id == "start" and main != null:
+		if id == "start" and main != null and not _started:
+			_started = true
 			main.start_run()
 
 
@@ -37,7 +40,8 @@ func _draw() -> void:
 	var H := 800.0
 	ui.begin()
 
-	if not Art.draw_at(self, Roster.ART.get("title_art", ""), W * 0.5, H * 0.86, 1.0,
+	# ★ draw_at 은 원래 크기 그대로 놓기 때문에 위아래에 검은 띠가 남았다. 꽉 채운다.
+	if not Art.draw_fill(self, Roster.ART.get("title_art", ""), Rect2(0, 0, W, H),
 			Color(0.72, 0.72, 0.8)):
 		draw_rect(Rect2(0, 0, W, H), Look.BG)
 	draw_rect(Rect2(0, 0, W, H), Color(Look.BG_DEEP.r, Look.BG_DEEP.g, Look.BG_DEEP.b, 0.55))
@@ -64,6 +68,7 @@ func _draw() -> void:
 	var rec := "최고 %d탄" % Save.best_wave if Save.best_wave > 0 else "첫 판"
 	if Save.best_hand >= 0:
 		rec += "   ·   최고 족보 %s" % Poker.HAND_KO[Save.best_hand]
+	rec += "   ·   만난 영웅 %d / %d" % [Save.seen_units.size(), Roster.UNITS.size()]
 	Look.text_center(self, Vector2(cx, 700.0), rec, 24, Look.INK_DIM)
 
 	ui.button(self, Rect2(cx - 150.0, 588.0, 300.0, 82.0), "시작", "start", true, Look.GOLD, 38)

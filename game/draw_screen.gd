@@ -26,6 +26,14 @@ var rt: float = 0.0              ## 확정 뒤 흐른 시간
 var result: Dictionary = {}
 var showy: bool = false
 var _fired: Dictionary = {}      ## 연출 중 한 번만 터뜨릴 것들
+## 카드가 뒤집히는 중이면 남은 시간. 리롤을 누른 순간 채워진다.
+var _flip: Array[float] = [0.0, 0.0, 0.0, 0.0, 0.0]
+const FLIP_SEC := 0.30
+## ★ 전투로 넘어가는 중인가. 페이드가 도는 0.28초 동안에도 이 화면은 트리에 남아
+##   _input 을 받는다. 예전에는 state 를 PICK 으로 되돌려 막았는데, 그러면 뽑기 화면이
+##   다시 그려져서 「결정!」을 한 번 더 누를 수 있었고 **영웅이 공짜로 하나 더 생겼다.**
+var _leaving: bool = false
+
 var _rng := RandomNumberGenerator.new()
 
 
@@ -54,16 +62,21 @@ func reveal_rect(i: int) -> Rect2:
 func _process(dt: float) -> void:
 	t += dt
 	fx.update(dt)
+	for i in range(_flip.size()):
+		if _flip[i] > 0.0:
+			_flip[i] = max(0.0, _flip[i] - dt)
 	if state == REVEAL:
 		rt += dt
 		_reveal_beats()
 		var wait: float = 3.8 if showy else 2.5
-		if rt > wait:
+		if rt > wait and not _leaving:
 			_leave()
 	queue_redraw()
 
 
 func _input(e: InputEvent) -> void:
+	if _leaving:
+		return
 	if not (e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT):
 		return
 	if state == REVEAL:
@@ -81,6 +94,7 @@ func _input(e: InputEvent) -> void:
 		if Run.reroll(i):
 			var r := card_rect(i)
 			fx.burst(r.position + r.size * 0.5, Look.GOLD, 14, 240.0)
+			_flip[i] = FLIP_SEC
 
 
 func _confirm() -> void:
@@ -92,9 +106,10 @@ func _confirm() -> void:
 
 
 func _leave() -> void:
-	if main != null and state == REVEAL:
-		state = PICK   # 두 번 넘어가지 않게
-		main.go(main.go_battle)
+	if main == null or _leaving or state != REVEAL:
+		return
+	_leaving = true
+	main.go(main.go_battle)
 
 
 # --------------------------------------------------------------------------- #
@@ -201,9 +216,23 @@ func _draw_pick() -> void:
 	for i in range(Run.cards.size()):
 		var r := card_rect(i)
 		var bob := sin(t * 2.2 + float(i) * 0.9) * 3.0
-		Look.draw_card(self, r.position + Vector2(0, bob), Run.cards[i], CARD_SC,
-				keys.has(Run.cards[i]))
-		ui.zone(Rect2(r.position + Vector2(0, bob), r.size), "re%d" % i, Run.can_reroll(i))
+		var at := r.position + Vector2(0, bob)
+		if _flip[i] > 0.0:
+			# 다시 뽑은 카드는 한 번 뒤집힌다. 앞 절반은 뒷면, 뒤 절반은 새 카드.
+			# 가로만 눌러서 뒤집히는 것처럼 보이게 한다.
+			var fk: float = _flip[i] / FLIP_SEC          # 1 → 0
+			var squash: float = abs(fk * 2.0 - 1.0)      # 1 → 0 → 1
+			var w := Look.CARD_W * CARD_SC
+			draw_set_transform(at + Vector2(w * 0.5, 0.0), 0.0,
+					Vector2(max(0.06, squash), 1.0))
+			if fk > 0.5:
+				Look.draw_card_back(self, Vector2(-w * 0.5, 0.0), CARD_SC)
+			else:
+				Look.draw_card(self, Vector2(-w * 0.5, 0.0), Run.cards[i], CARD_SC)
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+		else:
+			Look.draw_card(self, at, Run.cards[i], CARD_SC, keys.has(Run.cards[i]))
+		ui.zone(Rect2(at, r.size), "re%d" % i, Run.can_reroll(i))
 
 		# 리롤 버튼 — 값이 얼마인지 **카드 밑에 항상** 보이게 한다.
 		var cost := Run.reroll_cost_of(i)

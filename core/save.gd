@@ -15,7 +15,6 @@ var total_kills: int = 0
 var best_hand: int = -1         ## 여태 만든 가장 높은 족보 (Poker.Hand)
 var seen_units: Dictionary = {} ## 도감: 한 번이라도 나온 캐릭터 id -> true
 var seen_hands: Dictionary = {} ## 족보별 만든 횟수 (int -> int)
-var sound: bool = true
 
 var _readonly: bool = false
 
@@ -36,7 +35,6 @@ func load_file() -> void:
 	best_hand = cf.get_value("run", "best_hand", -1)
 	seen_units = cf.get_value("book", "units", {})
 	seen_hands = cf.get_value("book", "hands", {})
-	sound = cf.get_value("opt", "sound", true)
 
 
 func save_file() -> void:
@@ -50,7 +48,6 @@ func save_file() -> void:
 	cf.set_value("run", "best_hand", best_hand)
 	cf.set_value("book", "units", seen_units)
 	cf.set_value("book", "hands", seen_hands)
-	cf.set_value("opt", "sound", sound)
 	cf.save(PATH)
 
 

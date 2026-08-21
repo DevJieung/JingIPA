@@ -143,6 +143,11 @@ static func boss_for_wave(w: int) -> Dictionary:
 
 ## w 탄에 나올 몬스터 종류를 뽑는다(보스 제외). 같은 탄 안에서도 두어 종이 섞여야
 ## 화면이 심심하지 않다.
+##
+## ★ 1~3탄에는 **느린 놈(육중·주술)을 넣지 않는다.** 육중형은 안쪽으로 조여드는 속도가
+##   0.75배라, 늦게 나오면 첫 영웅의 사거리 안에 들어오지도 못한 채 시간이 끝난다.
+##   그러면 아무것도 못 해 보고 목숨이 깎인다 — 게임을 켜자마자 벌을 받는 셈이다.
+##   (자동 플레이 12판 중 한 판이 실제로 1탄에서 세 마리를 놓쳤다)
 static func wave_kinds(w: int, rng: RandomNumberGenerator) -> Array:
 	var mix := _mix_for(w)
 	var pool: Array = []
@@ -151,6 +156,8 @@ static func wave_kinds(w: int, rng: RandomNumberGenerator) -> Array:
 		var n: int = maxi(1, int(round(float(mix[stage]) * 10.0)))
 		for i in range(n):
 			for m in arr:
+				if w <= 3 and (m["kind"] == "tank" or m["kind"] == "caster"):
+					continue
 				pool.append(m)
 	if pool.is_empty():
 		pool = MONSTERS.duplicate()

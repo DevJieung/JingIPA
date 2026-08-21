@@ -39,6 +39,17 @@ static func draw_at(ci: CanvasItem, path: String, cx: float, by: float,
 	return true
 
 
+## 배경 그림을 그 네모에 꽉 채워 그린다. 비율이 조금 달라도 늘려서 채운다 —
+## 배경은 가장자리에 검은 띠가 생기는 쪽이 훨씬 나쁘다.
+static func draw_fill(ci: CanvasItem, path: String, rect: Rect2,
+		mod: Color = Color.WHITE) -> bool:
+	var t := tex(path)
+	if t == null:
+		return false
+	ci.draw_texture_rect(t, rect, false, mod)
+	return true
+
+
 ## 캐릭터/몬스터 한 마리. 그림이 아직 없으면 **색 도형**으로 대신 그린다.
 ## 이 대체 그림 덕에 그림을 한 장도 안 만든 상태에서도 전투를 끝까지 돌려 볼 수 있다.
 static func draw_actor(ci: CanvasItem, path: String, col: Color, h: float,

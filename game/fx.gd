@@ -82,6 +82,14 @@ func shards(rect: Rect2, col: Color, n: int = 18) -> void:
 			"spin": _rng.randf_range(-9.0, 9.0), "g": 520.0})
 
 
+## 그림 한 장을 잠깐 띄운다(폭발 스프라이트 같은 것). 커지면서 사라진다.
+func sprite(pos: Vector2, path: String, sc: float = 1.0, life: float = 0.45) -> void:
+	if Art.tex(path) == null:
+		return
+	items.append({"t": "spr", "p": pos, "path": path, "sc": sc, "life": life, "max": life,
+		"c": Color.WHITE})
+
+
 func do_shake(power: float) -> void:
 	shake = max(shake, power)
 	shake_seed = _rng.randf() * 100.0
@@ -168,6 +176,14 @@ func _paint(ci: CanvasItem, back: bool) -> void:
 			"text":
 				Look.text_center(ci, it["p"], String(it["s"]), int(it["sz"]),
 						Color(col.r, col.g, col.b, k))
+			"spr":
+				var tx := Art.tex(String(it["path"]))
+				if tx != null:
+					var gs: float = float(it["sc"]) * (1.35 - k * 0.35)
+					var tw: float = float(tx.get_width()) * gs
+					var th: float = float(tx.get_height()) * gs
+					ci.draw_texture_rect(tx, Rect2(Vector2(it["p"]) - Vector2(tw, th) * 0.5,
+							Vector2(tw, th)), false, Color(1, 1, 1, k))
 			"beam":
 				ci.draw_line(it["a"], it["b"], Color(col.r, col.g, col.b, k),
 						float(it["w"]) * k, true)

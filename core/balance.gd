@@ -93,7 +93,7 @@ const BULLET := {
 const MKIND := {
 	"swarm":  {"hp": 0.75, "spd": 1.00, "gold": 1.0, "ko": "떼거리"},
 	"fast":   {"hp": 0.60, "spd": 1.75, "gold": 1.1, "ko": "쾌속"},
-	"tank":   {"hp": 2.20, "spd": 0.62, "gold": 1.4, "ko": "육중"},
+	"tank":   {"hp": 2.40, "spd": 0.75, "gold": 1.4, "ko": "육중"},
 	"caster": {"hp": 1.00, "spd": 0.85, "gold": 1.2, "ko": "주술"},
 	"boss":   {"hp": 14.0, "spd": 0.50, "gold": 12.0, "ko": "보스"},
 }

@@ -160,10 +160,20 @@ def cut_white(img, thresh: int = 26, feather: float = 0.6):
         a = np.clip((a - 110.0) * 3.2 + 128.0, 0, 255)
         alpha = Image.fromarray(a.astype("uint8"), mode="L")
 
+    kept = float((~bg).sum()) / float(w * h)
+
+    # ★ 물이 그림 안까지 새어 들어가 캐릭터를 통째로 지워 버리는 일이 있다
+    #   (밝은 회색 옷을 입은 거인 하나가 실제로 빈 그림이 됐다).
+    #   그럴 때는 물 붓기를 포기하고 **거의 흰 픽셀만** 지운다. 배경이 조금 남을 수는
+    #   있지만, 아무것도 없는 그림보다는 백 배 낫다.
+    if kept < 0.05:
+        near_white = (sat < 18) & (val > 234)
+        alpha = Image.fromarray(((~near_white) * 255).astype("uint8"), mode="L")
+        kept = float((~near_white).sum()) / float(w * h)
+
     out = img.convert("RGBA")
     out.putalpha(alpha)
     bbox = out.getbbox()
-    kept = float((~bg).sum()) / float(w * h)
     if bbox:
         out = out.crop(bbox)
     return out, kept
@@ -188,6 +198,22 @@ def pixelize(img, out_h: int, colors: int, out_w: int = 0):
     return small.convert("RGB").quantize(colors=colors, method=Image.MEDIANCUT).convert("RGB")
 
 
+def circle_mask(img):
+    """네모난 그림을 동그랗게 오려낸다.
+
+    투기장 바닥은 원인데 PNG 는 네모라, 그대로 깔면 네 귀퉁이가 원 밖으로 튀어나온다.
+    가장자리를 한 픽셀씩 부드럽게 깎아 톱니가 덜 보이게 한다.
+    """
+    from PIL import Image, ImageDraw
+    w, h = img.size
+    m = Image.new("L", (w * 4, h * 4), 0)
+    ImageDraw.Draw(m).ellipse((0, 0, w * 4 - 1, h * 4 - 1), fill=255)
+    m = m.resize((w, h), Image.BOX)
+    out = img.convert("RGBA")
+    out.putalpha(m)
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -195,10 +221,15 @@ def main() -> int:
     ap.add_argument("--kind", default="", help="unit | monster | ui")
     ap.add_argument("--list", action="store_true")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--try", dest="tries", type=int, default=0, metavar="N",
+                    help="시드를 N 만큼 밀어 다른 그림을 뽑는다 (--force 와 같이 쓴다)")
     args = ap.parse_args()
 
     r = load_roster()
     js = jobs(r)
+    if args.tries:
+        for j in js:
+            j["seed"] = (j["seed"] + args.tries * 104729) % 2000000
     if args.kind:
         js = [j for j in js if j["kind"] == args.kind]
     pats = [p.strip() for p in args.only.split(",") if p.strip()]
@@ -240,9 +271,12 @@ def main() -> int:
             # 넘어가지 않는다. 화면에 흰 네모가 붙어 나오는 것을 눈으로 찾는 건 지옥이다.
             if kept > 0.85:
                 warn.append(f"{j['id']}: 배경이 거의 안 지워졌다 ({kept:.0%} 남음)")
-            elif kept < 0.04:
-                warn.append(f"{j['id']}: 그림이 거의 다 지워졌다 ({kept:.0%} 남음)")
+            elif kept < 0.05:
+                warn.append(f"{j['id']}: 그림이 거의 다 지워졌다 ({kept:.0%} 남음)"
+                            " — python3 tools/gen_art.py --only %s --force --try 1" % j['id'])
         px = pixelize(img, j["out_h"], j["colors"], j.get("out_w", 0))
+        if j["id"] == "arena_floor":
+            px = circle_mask(px)
         px.save(j["path"], optimize=True)
         print(f"[art] ({i}/{len(todo)}) {j['id']:<16} {px.size[0]}x{px.size[1]} "
               f"{os.path.getsize(j['path']) / 1024:.0f}KB  {time.time() - t1:.0f}초", flush=True)

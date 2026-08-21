@@ -61,7 +61,7 @@ func _bought(id: String, at: Vector2) -> void:
 
 func _draw() -> void:
 	ui.begin()
-	if not Art.draw_at(self, Roster.ART.get("shop_bg", ""), 640.0, 800.0, 1.0,
+	if not Art.draw_fill(self, Roster.ART.get("shop_bg", ""), Rect2(0, 0, 1280, 800),
 			Color(0.42, 0.40, 0.5)):
 		draw_rect(Rect2(0, 0, 1280, 800), Look.BG)
 	draw_rect(Rect2(0, 0, 1280, 800), Color(Look.BG_DEEP.r, Look.BG_DEEP.g, Look.BG_DEEP.b, 0.62))
@@ -92,8 +92,9 @@ func _draw() -> void:
 		Look.text_left(self, Vector2(790, 600), "가진 패시브", 22, Look.INK_DIM)
 		Look.text_left(self, Vector2(790, 634), ", ".join(names), 20, Look.GOLD)
 
-	ui.button(self, Rect2(790, 700, 450, 74), "%d탄으로" % (Run.wave + 1), "next",
-			true, Look.GOLD, 32)
+	var last: bool = Run.wave >= Balance.LAST_WAVE
+	ui.button(self, Rect2(790, 700, 450, 74),
+			"결과 보기" if last else "%d탄으로" % (Run.wave + 1), "next", true, Look.GOLD, 32)
 	fx.draw(self)
 	fx.draw_flash(self, Rect2(0, 0, 1280, 800))
 
@@ -110,7 +111,9 @@ func _draw_topbar() -> void:
 	if not Art.draw_at(self, Roster.ART.get("coin", ""), gx, 47.0):
 		draw_circle(Vector2(gx, 34), 12.0, Look.GOLD)
 	Look.text_left(self, Vector2(gx + 22, 34), "%d G" % Run.gold, 30, Look.GOLD)
-	Look.text_right(self, Vector2(1252, 34), "다음은 %d탄" % (Run.wave + 1), 24, Look.INK_DIM)
+	var nxt := "마지막 탄까지 끝났다" if Run.wave >= Balance.LAST_WAVE \
+			else "다음은 %d탄" % (Run.wave + 1)
+	Look.text_right(self, Vector2(1252, 34), nxt, 24, Look.INK_DIM)
 
 
 func _draw_upgrade(u: Dictionary, r: Rect2) -> void:

@@ -59,7 +59,10 @@ fi
 
 step "0-1. 무늬를 글자로 그리지 않는가"
 # 번들 폰트(DinoKR)에 ♠ ♦ ♣ 가 없다. 글자로 그리면 카드가 통째로 두부(□)가 된다.
-if grep -rn $'♠\|♦\|♣' --include='*.gd' core/ game/ 2>/dev/null; then
+# ★ 주석에는 "이 글자를 쓰지 마라"고 적어 두므로, 주석 줄은 빼고 본다.
+#   안 빼면 그 설명 자체가 걸려서 늘 실패한다(실제로 그랬다).
+if grep -rn --include='*.gd' -E '♠|♦|♣' core/ game/ 2>/dev/null \
+		| grep -vE ':[0-9]+:[[:space:]]*#'; then
 	echo "!! 무늬를 글자로 씁니다. Look.draw_suit() 을 쓰세요."; fail=1
 else
 	echo "   ok: 무늬는 전부 도형으로 그린다"

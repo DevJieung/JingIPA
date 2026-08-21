@@ -16,7 +16,11 @@ var sim := BattleSim.new()
 var speed: float = 1.0
 var t: float = 0.0
 var end_t: float = 0.0
+## 전투가 끝났는가(결과창을 그린다).
 var ended: bool = false
+## ★ 나가는 중인가. ended 하나로 둘을 겸하게 했더니, 탭해서 넘기는 순간 ended 가
+##   false 가 되어 **결과 상자가 사라지고 빈 투기장이 0.28초 노출됐다.**
+var _leaving: bool = false
 var _settled: bool = false
 var _lost: int = 0
 var _bonus: int = 0
@@ -54,6 +58,8 @@ func _process(dt: float) -> void:
 func _input(e: InputEvent) -> void:
 	if not (e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT):
 		return
+	if _leaving:
+		return
 	if ended and end_t > 0.6:
 		_leave()
 		return
@@ -63,13 +69,16 @@ func _input(e: InputEvent) -> void:
 
 
 func _leave() -> void:
-	if main == null or not ended:
+	if main == null or not ended or _leaving:
 		return
-	ended = false
-	if Run.running:
-		main.go(main.go_shop)
-	else:
+	_leaving = true
+	if not Run.running:
 		main.go(main.go_over)
+	elif Run.wave >= Balance.LAST_WAVE:
+		# ★ 마지막 탄을 넘겼으면 상점을 건너뛴다. 뒤에 살 이유가 있는 탄이 없다.
+		main.go(main.go_draw)
+	else:
+		main.go(main.go_shop)
 
 
 ## 시간이 끝났을 때의 정산. **한 번만** 한다.
@@ -108,6 +117,7 @@ func _drain() -> void:
 				if big:
 					fx.do_shake(9.0)
 					fx.do_flash(Color(1, 0.9, 0.5, 0.4), 0.3)
+					fx.sprite(p, Roster.ART.get("boom", ""), 1.6, 0.55)
 				fx.float_text(p + Vector2(0, -22), "+%d" % int(e.get("gold", 0)), Look.GOLD, 20)
 			"life":
 				fx.float_text(p + Vector2(0, -46), "목숨 +1", Look.RED, 24, 1.1)
@@ -141,7 +151,7 @@ func _draw() -> void:
 
 
 func _draw_bg() -> void:
-	if not Art.draw_at(self, Roster.ART.get("arena_bg", ""), 640.0, 800.0, 1.0,
+	if not Art.draw_fill(self, Roster.ART.get("arena_bg", ""), Rect2(0, 0, 1280, 800),
 			Color(0.55, 0.55, 0.66)):
 		draw_rect(Rect2(0, 0, 1280, 800), Look.BG)
 
