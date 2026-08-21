@@ -1,0 +1,584 @@
+{
+ "tiers": [
+  {
+   "tier": "high",
+   "ko": "하이카드",
+   "n": 4,
+   "units": [
+    {
+     "id": "broom_maid",
+     "ko": "빗자루꾼",
+     "profile": "rapid",
+     "bullet": "shot",
+     "desc": "빗자루로 먼지를 쏜다",
+     "prompt": "A lanky teenage girl in a leaf green apron dress, gripping a giant straw broom taller than her, with messy orange pigtails",
+     "color": "#7CE04F"
+    },
+    {
+     "id": "potlid_guard",
+     "ko": "냄비지기",
+     "profile": "guard",
+     "bullet": "shot",
+     "desc": "냄비뚜껑 뒤에서 버틴다",
+     "prompt": "A short stocky bald villager in a burnt orange vest, holding an enormous round iron pot lid as a shield and a small ladle",
+     "color": "#FF8C42"
+    },
+    {
+     "id": "bubble_boy",
+     "ko": "비누꼬마",
+     "profile": "rapid",
+     "bullet": "slow",
+     "desc": "비눗물로 미끄러뜨린다",
+     "prompt": "A tiny round-bellied boy in cyan overalls, hugging an oversized wooden washtub overflowing with white soap foam, one big bubble stuck on his nose",
+     "color": "#45D2F2"
+    },
+    {
+     "id": "taffy_gran",
+     "ko": "엿할멈",
+     "profile": "balance",
+     "bullet": "slow",
+     "desc": "끈적한 엿으로 묶는다",
+     "prompt": "A tiny hunched old woman in a plum purple shawl, carrying a huge round clay pot on her back, waving a dripping wooden ladle",
+     "color": "#C77DFF"
+    }
+   ]
+  },
+  {
+   "tier": "pair",
+   "ko": "원페어",
+   "n": 4,
+   "units": [
+    {
+     "id": "oak_squire",
+     "ko": "떡갈종자",
+     "profile": "guard",
+     "bullet": "shot",
+     "desc": "방패로 막으며 쏘는 종자",
+     "prompt": "A short stocky teenage squire in dented brass-trimmed leather armor, hugging an enormous round oak shield, a stubby iron shortsword at his hip",
+     "color": "#D9A441"
+    },
+    {
+     "id": "briar_hunter",
+     "ko": "덤불사냥꾼",
+     "profile": "rapid",
+     "bullet": "pierce",
+     "desc": "쇠뇌로 빠르게 연사한다",
+     "prompt": "A lanky young hunter in a brown leather jerkin and dark green head wrap, firing a small compact hand crossbow held out in one hand, a fat bundle of short bolts strapped across the chest",
+     "color": "#3FA65C"
+    },
+    {
+     "id": "frost_novice",
+     "ko": "서리도제",
+     "profile": "balance",
+     "bullet": "slow",
+     "desc": "얼려서 몬스터를 느리게",
+     "prompt": "A small apprentice mage draped in a pale ice-blue robe, wearing a huge floppy pointed hat, holding a crooked staff topped with a glowing frost crystal",
+     "color": "#74DFFF"
+    },
+    {
+     "id": "ember_smith",
+     "ko": "불씨대장",
+     "profile": "heavy",
+     "bullet": "shot",
+     "desc": "큰 망치로 한 방에 부순다",
+     "prompt": "A broad-shouldered smith apprentice in a scorched black apron and orange headband, hoisting a massive glowing-hot forge hammer over one bare muscular shoulder",
+     "color": "#FF7A33"
+    }
+   ]
+  },
+  {
+   "tier": "twopair",
+   "ko": "투페어",
+   "n": 4,
+   "units": [
+    {
+     "id": "steel_lancer",
+     "ko": "강철창병",
+     "profile": "heavy",
+     "bullet": "pierce",
+     "desc": "긴 창으로 꿰뚫는다",
+     "prompt": "A stocky line soldier in plain riveted iron plate with a faded crimson waist sash, both hands braced low on a long thick wooden spear with a broad iron head, simple open-faced pot helmet",
+     "color": "#9AD7FF"
+    },
+    {
+     "id": "bolt_ranger",
+     "ko": "석궁사수",
+     "profile": "sniper",
+     "bullet": "shot",
+     "desc": "멀리서 화살을 쏜다",
+     "prompt": "A hooded ranger in a dark forest-green cloak, one knee down in a low aiming stance, holding a wide horizontal wooden crossbow, brown leather quiver of bolts across the chest",
+     "color": "#5FE08C"
+    },
+    {
+     "id": "ward_shaman",
+     "ko": "부적술사",
+     "profile": "rapid",
+     "bullet": "slow",
+     "desc": "부적으로 발을 묶는다",
+     "prompt": "A slender shaman in a long flowing indigo robe with very wide hanging sleeves, fanning out glowing pale white paper talismans in one hand, tall pointed straw hat, bare feet",
+     "color": "#B98CFF"
+    },
+    {
+     "id": "ember_shield",
+     "ko": "횃불방패병",
+     "profile": "guard",
+     "bullet": "burn",
+     "desc": "불을 뿜는 방패병",
+     "prompt": "A short stocky militia guard in dull brown leather armor, crouching behind a tall plain wooden plank shield, holding a fat burning pitch torch high in the other hand",
+     "color": "#C25A24"
+    }
+   ]
+  },
+  {
+   "tier": "trips",
+   "ko": "트리플",
+   "n": 4,
+   "units": [
+    {
+     "id": "steel_arbalest",
+     "ko": "강철석궁수",
+     "profile": "sniper",
+     "bullet": "pierce",
+     "desc": "먼 적을 꿰뚫는 저격수",
+     "prompt": "a lean marksman in a slate grey padded coat with a dark red shoulder sash, standing straight and sighting down a heavy steel arbalest braced on one shoulder, a thick square bolt case fixed on top of the weapon",
+     "color": "#AEBFCF"
+    },
+    {
+     "id": "mace_warden",
+     "ko": "망치 기사",
+     "profile": "heavy",
+     "bullet": "splash",
+     "desc": "망치로 땅을 내려찍는다",
+     "prompt": "a stocky broad shouldered knight in dented dark steel plate armor, plain horned iron helm, swinging a massive two handed warhammer with a blocky glowing amber head",
+     "color": "#FFC53D"
+    },
+    {
+     "id": "ember_adept",
+     "ko": "불꽃 술사",
+     "profile": "rapid",
+     "bullet": "burn",
+     "desc": "불을 붙여 계속 태운다",
+     "prompt": "a slender sorcerer in a flowing scarlet robe with a tall pointed collar and deep hood, cradling a burning orange fireball in one palm",
+     "color": "#FF5A2D"
+    },
+    {
+     "id": "frost_monk",
+     "ko": "얼음 수도승",
+     "profile": "guard",
+     "bullet": "slow",
+     "desc": "적을 얼려 느리게 한다",
+     "prompt": "a muscular bare armed monk with shaved head in a short pale blue sash robe, wide stance, huge frost crusted ice gauntlets glowing cyan",
+     "color": "#46E0FF"
+    }
+   ]
+  },
+  {
+   "tier": "straight",
+   "ko": "스트레이트",
+   "n": 4,
+   "units": [
+    {
+     "id": "pike_captain",
+     "ko": "장창기사",
+     "profile": "sniper",
+     "bullet": "pierce",
+     "desc": "긴 창으로 멀리서 꿰뚫는다",
+     "prompt": "A tall lean royal guard captain in slim white and steel armor, long flowing sky-blue cape, gripping an extremely long silver pike, helmet topped with a tall blue feather plume.",
+     "color": "#5EC8F5"
+    },
+    {
+     "id": "onyx_breaker",
+     "ko": "검은망치",
+     "profile": "heavy",
+     "bullet": "splash",
+     "desc": "큰 망치로 내리쳐 터뜨린다",
+     "prompt": "A towering broad-shouldered knight in matte black obsidian plate, tattered violet cape, both hands hoisting a colossal square-headed war maul carved with glowing purple runes.",
+     "color": "#B06CF5"
+    },
+    {
+     "id": "spark_adept",
+     "ko": "뇌전술사",
+     "profile": "rapid",
+     "bullet": "chain",
+     "desc": "번개가 적들에게 튄다",
+     "prompt": "A tall storm mage in a long indigo robe with a high jagged collar and a heavy studded shoulder guard, both arms raised, a big crackling yellow lightning orb blazing above the open palms",
+     "color": "#FFD84D"
+    },
+    {
+     "id": "ember_warden",
+     "ko": "불방패",
+     "profile": "guard",
+     "bullet": "burn",
+     "desc": "불타는 방패로 앞을 막는다",
+     "prompt": "A stocky armored warden crouched behind a huge round tower shield shaped like a burning brazier, orange flames licking its rim, dull bronze armor and short red cloak.",
+     "color": "#FFA33D"
+    }
+   ]
+  },
+  {
+   "tier": "flush",
+   "ko": "플러시",
+   "n": 4,
+   "units": [
+    {
+     "id": "ember_titan",
+     "ko": "잿불거인",
+     "profile": "heavy",
+     "bullet": "burn",
+     "desc": "불덩이로 태워버리는 거인",
+     "prompt": "A hulking bare-chested giant of dull grey charred stone with glowing red-hot cracks, huge blocky fists hanging low, thick stumpy legs, a low smoldering crown of small embers on its brow",
+     "color": "#FF5A2B"
+    },
+    {
+     "id": "tide_caller",
+     "ko": "파도술사",
+     "profile": "balance",
+     "bullet": "splash",
+     "desc": "물벼락을 터뜨리는 술사",
+     "prompt": "A slim robed figure in a deep blue robe and wide round straw hat, cradling a huge curling crescent wave of turquoise water",
+     "color": "#2E9BFF"
+    },
+    {
+     "id": "gale_dancer",
+     "ko": "바람춤꾼",
+     "profile": "rapid",
+     "bullet": "aura",
+     "desc": "회오리를 두르고 도는 춤꾼",
+     "prompt": "A small barefoot dancer in a short mint green tunic, spinning inside a thick spiral of pale white wind, two crescent fans in hand",
+     "color": "#6BF0C8"
+    },
+    {
+     "id": "bolt_lancer",
+     "ko": "번개창잡이",
+     "profile": "sniper",
+     "bullet": "chain",
+     "desc": "번개를 멀리 튕겨 보내는 창잡이",
+     "prompt": "A tall lean warrior in slim dark violet armor with spiked upswept yellow hair, gripping an extremely long forked spear crackling with yellow lightning",
+     "color": "#FFD62E"
+    }
+   ]
+  },
+  {
+   "tier": "fullhouse",
+   "ko": "풀하우스",
+   "n": 4,
+   "units": [
+    {
+     "id": "drake_knight",
+     "ko": "용기사",
+     "profile": "heavy",
+     "bullet": "burn",
+     "desc": "불꽃 대검으로 내리찍는다",
+     "prompt": "A towering broad-shouldered knight in crimson dragon-scale plate armor with a jagged horned helm, hoisting an enormous greatsword wreathed in orange flames",
+     "color": "#FF5A1F"
+    },
+    {
+     "id": "halo_saint",
+     "ko": "성녀",
+     "profile": "balance",
+     "bullet": "aura",
+     "desc": "주위에 황금 빛 장판을 깐다",
+     "prompt": "A slender woman in flowing white and gold layered robes, a massive glowing golden halo ring standing behind her back, gripping a tall crystal scepter",
+     "color": "#FFD966"
+    },
+    {
+     "id": "arc_duelist",
+     "ko": "마검사",
+     "profile": "rapid",
+     "bullet": "chain",
+     "desc": "번개가 적들 사이로 튄다",
+     "prompt": "A lean swordsman in a tattered indigo coat with wild silver hair, wielding two slim violet blades crackling with forked lightning arcs",
+     "color": "#A855F7"
+    },
+    {
+     "id": "ninetail_fox",
+     "ko": "구미호",
+     "profile": "sniper",
+     "bullet": "beam",
+     "desc": "먼 데서 여우불 광선을 쏜다",
+     "prompt": "A tall white fox spirit standing upright in a pale blue kimono, nine huge fanned glowing tails spread wide, clutching a bright cyan orb",
+     "color": "#3BE8FF"
+    }
+   ]
+  },
+  {
+   "tier": "quads",
+   "ko": "포카드",
+   "n": 3,
+   "units": [
+    {
+     "id": "storm_seraph",
+     "ko": "번개천사",
+     "profile": "balance",
+     "bullet": "chain",
+     "desc": "사슬번개로 여럿 감전",
+     "prompt": "a towering six-winged angel in white and cobalt robes, four arms each gripping a crackling forked lightning spear, thick glowing ring hovering over its head",
+     "color": "#7DF9FF"
+    },
+    {
+     "id": "solar_archon",
+     "ko": "태양궁수",
+     "profile": "sniper",
+     "bullet": "beam",
+     "desc": "빛줄기로 멀리 저격",
+     "prompt": "a tall slender golden-skinned deity with one enormous white feathered wing, drawing a giant crescent bow of pure light, spiked gold crown of sun rays",
+     "color": "#FFC933"
+    },
+    {
+     "id": "magma_titan",
+     "ko": "불꽃거인",
+     "profile": "heavy",
+     "bullet": "splash",
+     "desc": "내려쳐서 땅을 폭발",
+     "prompt": "a colossal broad-shouldered giant of cracked black obsidian with glowing orange magma veins, two burning wings, swinging an immense molten stone maul overhead",
+     "color": "#FF3B0D"
+    }
+   ]
+  },
+  {
+   "tier": "sf",
+   "ko": "스트레이트플러시",
+   "n": 3,
+   "units": [
+    {
+     "id": "astral_lance",
+     "ko": "별빛창",
+     "profile": "sniper",
+     "bullet": "beam",
+     "desc": "별빛 창으로 멀리 뚫는다",
+     "prompt": "a tall slender figure in white robes with a deep navy star-speckled cloak, four glowing rings orbiting its head, gripping one immense golden spear",
+     "color": "#6FE3FF"
+    },
+    {
+     "id": "abyss_binder",
+     "ko": "어둠사슬",
+     "profile": "heavy",
+     "bullet": "chain",
+     "desc": "사슬을 던져 줄줄이 묶는다",
+     "prompt": "a massive hulking giant of black void stone with one huge lopsided shoulder, faceless except a single violet eye, dragging thick purple-glowing iron chains from both fists",
+     "color": "#A45CFF"
+    },
+    {
+     "id": "time_keeper",
+     "ko": "시간지기",
+     "profile": "balance",
+     "bullet": "aura",
+     "desc": "둘레에 시간 고리를 편다",
+     "prompt": "a legless hovering figure in a long amber robe, its lower body dissolving into a cone of falling sand, a giant cracked hourglass fused into its chest, eyes blindfolded",
+     "color": "#FFC24A"
+    }
+   ]
+  },
+  {
+   "tier": "royal",
+   "ko": "로열플러시",
+   "n": 2,
+   "units": [
+    {
+     "id": "spade_monarch",
+     "ko": "스페이드왕",
+     "profile": "heavy",
+     "bullet": "aura",
+     "desc": "빛 폭풍으로 주변을 쓸어버린다",
+     "prompt": "A towering broad-shouldered king in radiant golden plate armor, gripping a huge spade-shaped greatsword, heavy black cape, enormous jagged crown, white light glowing from every armor seam",
+     "color": "#FFC630"
+    },
+    {
+     "id": "prism_empress",
+     "ko": "다이아 여왕",
+     "profile": "sniper",
+     "bullet": "beam",
+     "desc": "먼 곳까지 빛줄기로 저격",
+     "prompt": "A tall slender queen in white pearl armor and a long flowing rose-pink gown, holding a very long slim scepter tipped with one giant cut diamond, thin winged tiara",
+     "color": "#FF4FA3"
+    }
+   ]
+  }
+ ],
+ "monsters": [
+  {
+   "id": "slime_blob",
+   "ko": "초록슬라임",
+   "kind": "swarm",
+   "stage": "early",
+   "desc": "느릿느릿 굴러오는 잡몹",
+   "prompt": "a tiny round glossy lime green slime blob with two huge black dot eyes, a wobbly jelly body, and one thick white shine spot",
+   "color": "#57E04A"
+  },
+  {
+   "id": "cave_bat",
+   "ko": "동굴박쥐",
+   "kind": "fast",
+   "stage": "early",
+   "desc": "파닥이며 빠르게 달려든다",
+   "prompt": "a small fuzzy purple bat with oversized pale lilac wings, giant round yellow eyes, two big white fangs, and tiny stubby legs",
+   "color": "#9B7BE8"
+  },
+  {
+   "id": "spore_cap",
+   "ko": "포자버섯",
+   "kind": "caster",
+   "stage": "early",
+   "desc": "멀리서 포자를 뿜는다",
+   "prompt": "a stubby walking mushroom monster with a huge round crimson cap covered in three fat white spots, tiny black eyes, and a puffy cream stalk body",
+   "color": "#FF5C7A"
+  },
+  {
+   "id": "shell_bug",
+   "ko": "딱정벌레",
+   "kind": "tank",
+   "stage": "early",
+   "desc": "껍질이 단단해 안 죽는다",
+   "prompt": "a chunky armored beetle with a glossy turquoise dome shell, six short black legs, one thick curved horn, and small angry orange eyes",
+   "color": "#35B9C4"
+  },
+  {
+   "id": "goblin",
+   "ko": "고블린",
+   "kind": "swarm",
+   "stage": "mid",
+   "desc": "단검 들고 떼로 몰려온다",
+   "prompt": "a scrawny yellow-green goblin with huge pointed ears, a red headband, a ragged brown loincloth, and a crooked rusty dagger raised in one hand",
+   "color": "#B9D93C"
+  },
+  {
+   "id": "bone_soldier",
+   "ko": "해골병사",
+   "kind": "tank",
+   "stage": "mid",
+   "desc": "녹슨 칼을 든 뼈다귀",
+   "prompt": "a bare bone-white skeleton warrior with a cracked skull, glowing red eye sockets, a dented dark iron chestplate, and a short notched sword",
+   "color": "#EDE6CE"
+  },
+  {
+   "id": "dire_wolf",
+   "ko": "사나운늑대",
+   "kind": "fast",
+   "stage": "mid",
+   "desc": "엄청 빠르게 파고든다",
+   "prompt": "a lean charcoal grey wolf with a bristling silver blue mane, glowing pale blue eyes, bared white fangs, and long sharp claws",
+   "color": "#7FA8E8"
+  },
+  {
+   "id": "kobold_bow",
+   "ko": "코볼트궁수",
+   "kind": "caster",
+   "stage": "mid",
+   "desc": "멀리서 불화살을 쏜다",
+   "prompt": "a small orange lizard kobold in a brown leather vest, drawing a curved wooden bow with a burning arrow, thick tail curled behind",
+   "color": "#F2A03D"
+  },
+  {
+   "id": "orc_brute",
+   "ko": "오크전사",
+   "kind": "tank",
+   "stage": "late",
+   "desc": "도끼를 휘두르는 덩치",
+   "prompt": "a huge muscular dark green orc in brick red spiked shoulder armor, a tusked jaw, gripping a massive double-headed iron axe",
+   "color": "#C0452F"
+  },
+  {
+   "id": "stone_golem",
+   "ko": "돌골렘",
+   "kind": "tank",
+   "stage": "late",
+   "desc": "느리지만 아주 튼튼하다",
+   "prompt": "a bulky boulder golem built from sandy tan rock slabs, blocky oversized fists, no neck, and a single glowing amber eye",
+   "color": "#C89B5A"
+  },
+  {
+   "id": "hex_witch",
+   "ko": "마녀",
+   "kind": "caster",
+   "stage": "late",
+   "desc": "저주 구슬을 날린다",
+   "prompt": "a hunched old witch in a tall pointed violet hat and flowing purple robe, holding a gnarled staff crowned with a glowing magenta orb",
+   "color": "#C64BE8"
+  },
+  {
+   "id": "wraith",
+   "ko": "망령",
+   "kind": "fast",
+   "stage": "late",
+   "desc": "스르륵 빠르게 스쳐간다",
+   "prompt": "a tattered floating wraith with no legs, a hollow black hood, glowing mint green eyes, and long ragged spectral sleeves ending in bony claws",
+   "color": "#5FEFC6"
+  },
+  {
+   "id": "flame_dragon",
+   "ko": "화염용",
+   "kind": "boss",
+   "stage": "boss",
+   "desc": "불을 뿜는 거대한 용",
+   "prompt": "a colossal crimson dragon with vast leathery wings spread wide, a spiked orange crest, thick armored belly scales, and molten fire glowing in its open jaws",
+   "color": "#FF5A16"
+  },
+  {
+   "id": "demon_king",
+   "ko": "트럼프마왕",
+   "kind": "boss",
+   "stage": "boss",
+   "desc": "카드 세계의 최종보스",
+   "prompt": "a towering horned demon king in black armor with a crimson cape, glowing red spade and heart card symbols carved across his chestplate, holding a jagged black sword",
+   "color": "#FF2D55"
+  }
+ ],
+ "arts": [
+  {
+   "id": "arena_floor",
+   "ko": "투기장 바닥",
+   "cut": false,
+   "prompt": "a circular stone arena floor seen straight down from directly overhead, pale sandy flagstones bright at the center fading into dark cracked grey slabs at the rim, seamless repeating blocks, filling the whole frame",
+   "color": "#D9B87A"
+  },
+  {
+   "id": "arena_bg",
+   "ko": "투기장 배경",
+   "cut": false,
+   "prompt": "a dark stone colosseum ringing the horizon under a deep midnight blue sky, dim orange torch flames and flat black crowd silhouettes in the stands, muted shadowy tones, filling the whole frame",
+   "color": "#3E56A0"
+  },
+  {
+   "id": "card_back",
+   "ko": "카드 뒷면",
+   "cut": false,
+   "prompt": "the back of a playing card, a deep crimson red field inside a thick flat gold border, one big bold gold diamond shape filling the middle, chunky simple shapes with no fine detail, nearly square, filling the whole frame",
+   "color": "#C8102E"
+  },
+  {
+   "id": "title_art",
+   "ko": "타이틀 그림",
+   "cut": false,
+   "prompt": "five playing cards fanned wide across the foreground, a lone armored hero silhouetted above them raising a glowing sword, a swarm of small monster shapes swirling behind, dramatic backlight, filling the whole frame",
+   "color": "#F2C14E"
+  },
+  {
+   "id": "coin",
+   "ko": "금화",
+   "cut": true,
+   "prompt": "a single thick round gold coin facing the viewer, polished bright yellow metal with a raised rim, a bold black spade symbol stamped in the middle and one sharp white shine glint",
+   "color": "#FFD24A"
+  },
+  {
+   "id": "heart",
+   "ko": "목숨 하트",
+   "cut": true,
+   "prompt": "a single plump glossy red heart, chubby rounded lobes with a thick dark crimson outline and one big white highlight spot on the upper left curve",
+   "color": "#FF4D5E"
+  },
+  {
+   "id": "shop_bg",
+   "ko": "상점 천막",
+   "cut": false,
+   "prompt": "the dim inside of a merchant tent, heavy purple drapes, a wooden shelf counter of glowing potion bottles and magic trinkets, warm candle flames casting soft shadows, filling the whole frame",
+   "color": "#B07CE8"
+  },
+  {
+   "id": "boom",
+   "ko": "폭발",
+   "cut": true,
+   "prompt": "a single starburst explosion, blazing white hot core ringed by thick jagged yellow and orange spikes shooting outward in all directions, bold chunky shape, nothing else around it",
+   "color": "#FFE14D"
+  }
+ ]
+}

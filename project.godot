@@ -1,0 +1,72 @@
+; 포커 디펜스 — Godot 4.7.1
+;
+; 손으로 작성한 파일이다. 각 줄의 주석은 "지우면 조용히 깨지는" 이유를 적어 둔 것이다.
+
+config_version=5
+
+[application]
+
+config/name="포커 디펜스"
+; 애플은 App ID 이름에 영문·숫자만 받는다. 한글 이름이면 무료 서명(AltStore/Sideloadly)이
+; App ID 를 못 만들어 설치가 막힌다. ★삭제 금지
+config/name.ios="PokerDefense"
+config/description="트럼프 다섯 장으로 영웅을 뽑아 몬스터를 막는 디펜스"
+config/version="1.0.0"
+; ★앱 표시 이름과 저장 폴더 이름을 분리한다. use_custom_user_dir 이 true 여야
+;   custom_user_dir_name 이 실제로 쓰인다 — 이름만 넣으면 조용히 무시된다.
+config/use_custom_user_dir=true
+config/custom_user_dir_name="pokerdefense"
+run/main_scene="res://game/boot.tscn"
+; ★"4.7" — 4.7 API(Tween.has_tweeners 등)를 쓴다.
+config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://icon.svg"
+run/max_fps=60
+
+[autoload]
+
+; ★순서가 곧 의존 순서다. Save 가 파일을 소유하므로 먼저, Run 이 Save 를 읽으므로 나중.
+Save="*res://core/save.gd"
+Run="*res://core/run.gd"
+
+[display]
+
+; 기준은 가로 태블릿 1280x800.
+window/size/viewport_width=1280
+window/size/viewport_height=800
+window/size/window_width_override=1000
+window/size/window_height_override=625
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+; Godot 4 에서는 문자열이 아니라 정수다. 4 = 센서 가로.
+window/handheld/orientation=4
+
+[gui]
+
+; DinoKR = Noto Sans CJK KR Bold, 한글 11,172/11,172 (100%).
+; ⚠ .import 의 allow_system_fallback 이 true 면 실기기에서 OS 폰트가 빠진 글자를 메워 줘서
+;   눈으로는 절대 안 잡힌다. tools/check_font.py 를 반드시 돌릴 것.
+theme/custom_font="res://core/fonts/DinoKR.ttf"
+
+[input_devices]
+
+pointing/emulate_mouse_from_touch=true
+
+[physics]
+
+; _physics_process 를 쓰지 않는다(전투도 _process 로 돈다). 배터리에 좋다.
+common/physics_ticks_per_second=30
+
+[rendering]
+
+; iOS A12 미만 기기 호환. mobile/forward_plus 로 바꾸면 Godot 이
+; iphone-ipad-minimum-performance-a12 를 강제 주입해 옛 기기가 잘려 나간다.
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+; ★없으면 x86_64 러너(GitHub Actions)에서 오류 메시지도 없이 익스포트가 거부된다. 삭제 금지.
+textures/vram_compression/import_etc2_astc=true
+; ★도트 그림이다. 0 = Nearest. 이걸 1(Linear)로 두면 96px 스프라이트를 키울 때
+;   전부 뭉개져서 픽셀아트가 아니라 흐린 그림이 된다. ★삭제 금지
+textures/canvas_textures/default_texture_filter=0
+; 도형(카드·게이지·이펙트)은 코드로 그린다. gl_compatibility 에도 2D MSAA 는 있다.
+anti_aliasing/quality/msaa_2d=2
+environment/defaults/default_clear_color=Color(0.055, 0.043, 0.086, 1)

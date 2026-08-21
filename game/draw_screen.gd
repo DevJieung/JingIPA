@@ -1,0 +1,294 @@
+extends Node2D
+class_name DrawScreen
+
+## 카드 다섯 장을 받고, 맘에 안 드는 것을 다시 뽑고, 족보를 확정하는 화면.
+##
+## 규칙(사용자가 정한 것):
+##  - 각 탄 시작 전에 트럼프 카드 5장을 받는다.
+##  - 맘에 안 드는 카드는 **한 번** 리롤할 수 있다.
+##  - 이미 리롤한 카드는 **추가 골드를 내지 않으면 더 리롤하지 못한다.** 값은 두 배씩 오른다.
+##  - 확정하면 족보 등급에 맞는 캐릭터가 그 등급 안에서 **무작위로** 나온다.
+##  - 풀하우스 이상이면 연출이 화려해진다.
+
+enum { PICK, REVEAL }
+
+const CARD_SC := 1.30
+const PICK_Y := 214.0
+const ROW_GAP := 26.0
+
+var main = null
+var ui := Ui.new()
+var fx := Fx.new()
+
+var state: int = PICK
+var t: float = 0.0
+var rt: float = 0.0              ## 확정 뒤 흐른 시간
+var result: Dictionary = {}
+var showy: bool = false
+var _fired: Dictionary = {}      ## 연출 중 한 번만 터뜨릴 것들
+var _rng := RandomNumberGenerator.new()
+
+
+func _ready() -> void:
+	_rng.randomize()
+	set_process(true)
+
+
+func card_rect(i: int) -> Rect2:
+	var w := Look.CARD_W * CARD_SC
+	var h := Look.CARD_H * CARD_SC
+	var total := w * 5.0 + ROW_GAP * 4.0
+	var x0 := (1280.0 - total) * 0.5
+	return Rect2(x0 + float(i) * (w + ROW_GAP), PICK_Y, w, h)
+
+
+## 연출 중 카드가 가는 자리(가운데 위로 모인다).
+func reveal_rect(i: int) -> Rect2:
+	var w := Look.CARD_W
+	var h := Look.CARD_H
+	var total := w * 5.0 + 12.0 * 4.0
+	var x0 := (1280.0 - total) * 0.5
+	return Rect2(x0 + float(i) * (w + 12.0), 112.0, w, h)
+
+
+func _process(dt: float) -> void:
+	t += dt
+	fx.update(dt)
+	if state == REVEAL:
+		rt += dt
+		_reveal_beats()
+		var wait: float = 3.8 if showy else 2.5
+		if rt > wait:
+			_leave()
+	queue_redraw()
+
+
+func _input(e: InputEvent) -> void:
+	if not (e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT):
+		return
+	if state == REVEAL:
+		# 연출은 언제든 넘길 수 있어야 한다. 40탄을 도는 게임에서 못 넘기는 연출은 고문이다.
+		if rt > 0.7:
+			_leave()
+		return
+	var id := ui.hit(e.position)
+	if id == "":
+		return
+	if id == "go":
+		_confirm()
+	elif id.begins_with("re"):
+		var i := int(id.substr(2))
+		if Run.reroll(i):
+			var r := card_rect(i)
+			fx.burst(r.position + r.size * 0.5, Look.GOLD, 14, 240.0)
+
+
+func _confirm() -> void:
+	result = Run.confirm_hand()
+	showy = bool(result["showy"])
+	state = REVEAL
+	rt = 0.0
+	_fired.clear()
+
+
+func _leave() -> void:
+	if main != null and state == REVEAL:
+		state = PICK   # 두 번 넘어가지 않게
+		main.go(main.go_battle)
+
+
+# --------------------------------------------------------------------------- #
+# 확정 연출 — 풀하우스 이상이면 여기가 화려해진다
+# --------------------------------------------------------------------------- #
+func _once(key: String, at: float) -> bool:
+	if rt >= at and not _fired.has(key):
+		_fired[key] = true
+		return true
+	return false
+
+
+func _reveal_beats() -> void:
+	var tier: int = int(result.get("hand", 0))
+	var col := Look.tier_color(tier)
+	var mid := Vector2(640.0, 386.0)
+
+	if _once("name", 0.55):
+		if showy:
+			# ★ 화려함의 정체: 섬광 + 빛살 + 고리 + 카드가 깨져 흩어짐 + 화면 흔들림.
+			#   등급이 높을수록 전부 세진다.
+			var pow_lv: float = float(tier - Poker.SHOWY)      # 0(풀하우스) ~ 3(로열)
+			fx.do_flash(Color(1, 1, 1, 0.85), 0.42 + pow_lv * 0.06)
+			fx.do_shake(11.0 + pow_lv * 4.0)
+			fx.rays(mid, col, 16 + int(pow_lv) * 6, 700.0, 1.3 + pow_lv * 0.25)
+			for k in range(3 + int(pow_lv)):
+				fx.ring(mid, col, 40.0, 420.0 + float(k) * 130.0, 0.75 + float(k) * 0.12, 9.0)
+			for i in range(5):
+				fx.shards(reveal_rect(i), Look.CARD_BG, 14)
+			fx.burst(mid, Look.GOLD, 90 + int(pow_lv) * 40, 520.0, 1.2, 5.0, 320.0)
+			fx.burst(mid, col, 60 + int(pow_lv) * 30, 380.0, 1.0, 4.0, 180.0)
+		else:
+			fx.ring(mid, col, 30.0, 260.0, 0.5, 5.0)
+			fx.burst(mid, col, 24, 260.0)
+
+	if showy and _once("name2", 0.95):
+		fx.rays(mid, Look.GOLD, 12, 560.0, 1.1)
+
+	# 로열은 한 번 더. 게임 전체에서 가장 드문 순간이라 아낌없이 준다.
+	if tier >= Poker.Hand.STRAIGHT_FLUSH and _once("crown", 1.05):
+		fx.do_flash(col, 0.5)
+		fx.do_shake(18.0)
+		for k in range(6):
+			fx.ring(mid, Color.WHITE if k % 2 == 0 else col, 20.0, 300.0 + float(k) * 110.0,
+					0.9, 7.0)
+
+	if _once("hero", 1.25):
+		var by := 636.0
+		fx.ring(Vector2(640.0, by - 10.0), col, 20.0, 190.0, 0.6, 6.0)
+		fx.burst(Vector2(640.0, by - 40.0), col, 30, 300.0, 0.7, 4.0)
+		if showy:
+			fx.do_shake(6.0)
+
+
+# --------------------------------------------------------------------------- #
+# 그리기
+# --------------------------------------------------------------------------- #
+func _draw() -> void:
+	ui.begin()
+	var sh := fx.shake_offset()
+	draw_set_transform(sh, 0.0, Vector2.ONE)
+	_draw_bg()
+	fx.draw_back(self)      # 빛살·고리는 글자 **뒤에** 깔린다
+	if state == PICK:
+		_draw_pick()
+	else:
+		_draw_reveal()
+	fx.draw(self)
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	fx.draw_flash(self, Rect2(0, 0, 1280, 800))
+
+
+func _draw_bg() -> void:
+	draw_rect(Rect2(-40, -40, 1360, 880), Look.BG)
+	# 카드 테이블. 초록 천 위에 카드가 놓인 것처럼 보이면 포커 판이라는 게 바로 읽힌다.
+	Look.fill_round(self, Rect2(70, 92, 1140, 600), 46.0, Look.FELT_EDGE)
+	Look.fill_round(self, Rect2(82, 104, 1116, 576), 40.0, Look.FELT)
+	_draw_topbar()
+
+
+func _draw_topbar() -> void:
+	draw_rect(Rect2(0, 0, 1280, 68), Look.PANEL)
+	draw_rect(Rect2(0, 66, 1280, 2), Look.PANEL_EDGE)
+	Look.text_left(self, Vector2(28, 34), "%d탄" % Run.wave, 34, Look.INK)
+	var hx := 220.0
+	if not Art.draw_at(self, Roster.ART.get("heart", ""), hx, 46.0):
+		draw_circle(Vector2(hx, 34), 12.0, Look.RED)
+	Look.text_left(self, Vector2(hx + 22, 34), "%d / %d" % [Run.lives, Run.max_lives()], 28, Look.INK)
+	var gx := 420.0
+	if not Art.draw_at(self, Roster.ART.get("coin", ""), gx, 47.0):
+		draw_circle(Vector2(gx, 34), 12.0, Look.GOLD)
+	Look.text_left(self, Vector2(gx + 22, 34), "%d G" % Run.gold, 28, Look.GOLD)
+	Look.text_right(self, Vector2(1252, 34), "영웅 %d명" % Run.heroes.size(), 26, Look.INK_DIM)
+
+
+func _draw_pick() -> void:
+	Look.text_center(self, Vector2(640, 150),
+			"카드 다섯 장 — 맘에 안 드는 것을 다시 뽑아라", 30, Look.INK)
+
+	# ★ 지금 족보를 이루고 있는 카드에 금테를 둘러 준다.
+	#   무엇을 남기고 무엇을 바꿔야 하는지가 한눈에 보여야, 리롤이 도박이 아니라 선택이 된다.
+	var now := Poker.evaluate(Run.cards)
+	var keys := Poker.key_cards(Run.cards, now)
+	for i in range(Run.cards.size()):
+		var r := card_rect(i)
+		var bob := sin(t * 2.2 + float(i) * 0.9) * 3.0
+		Look.draw_card(self, r.position + Vector2(0, bob), Run.cards[i], CARD_SC,
+				keys.has(Run.cards[i]))
+		ui.zone(Rect2(r.position + Vector2(0, bob), r.size), "re%d" % i, Run.can_reroll(i))
+
+		# 리롤 버튼 — 값이 얼마인지 **카드 밑에 항상** 보이게 한다.
+		var cost := Run.reroll_cost_of(i)
+		var left := Run.free_rerolls() - Run.rerolled[i]
+		var label := ""
+		var col := Look.GREEN
+		if left > 0:
+			label = "다시 (공짜 %d)" % left
+		else:
+			label = "다시 %dG" % cost
+			col = Look.GOLD if Run.gold >= cost else Look.RED
+		var br := Rect2(r.position.x, r.position.y + r.size.y + 16.0, r.size.x, 52.0)
+		ui.button(self, br, label, "re%d" % i, Run.can_reroll(i), col, 22)
+		if Run.rerolled[i] > 0:
+			Look.text_center(self, Vector2(r.position.x + r.size.x * 0.5,
+					br.position.y + 74.0), "%d번 바꿈" % Run.rerolled[i], 18, Look.INK_DIM)
+
+	# 지금 족보
+	var h := now
+	var hc := Look.tier_color(h)
+	var name_: String = Poker.HAND_KO.get(h, "?")
+	Look.text_center(self, Vector2(640, 620), "지금은  %s" % name_, 44, hc)
+	if h >= Poker.SHOWY:
+		Look.text_center(self, Vector2(640, 664), "★ 대단하다 ★", 24, Look.GOLD)
+	elif Run.has("joker"):
+		Look.text_center(self, Vector2(640, 664), "조커가 한 장을 바꿔 줄 것이다", 22, Look.INK_DIM)
+
+	ui.button(self, Rect2(490, 700, 300, 76), "결정!", "go", true, Look.GOLD, 34)
+
+
+func _draw_reveal() -> void:
+	var tier: int = int(result.get("hand", 0))
+	var col := Look.tier_color(tier)
+	var cards: Array = result.get("cards", [])
+	var key: Array = result.get("key", [])
+
+	# 1) 카드가 가운데 위로 모인다
+	var k := clampf(rt / 0.5, 0.0, 1.0)
+	var ease_k := 1.0 - pow(1.0 - k, 3.0)
+	for i in range(cards.size()):
+		var a := card_rect(i)
+		var b := reveal_rect(i)
+		var pos := a.position.lerp(b.position, ease_k)
+		var sc := lerpf(CARD_SC, 1.0, ease_k)
+		var is_key: bool = key.has(cards[i])
+		# 화려한 등급에서는 카드가 깨져 사라진다 (조각은 fx 가 그린다)
+		if showy and rt > 0.58:
+			continue
+		Look.draw_card(self, pos, int(cards[i]), sc, is_key and rt > 0.35,
+				(not is_key) and rt > 0.35)
+
+	if rt < 0.55:
+		return
+
+	# 2) 족보 이름 — 화려한 연출 위에서도 읽히게 어두운 판을 깔고 테두리를 두른다
+	var pop := clampf((rt - 0.55) / 0.30, 0.0, 1.0)
+	var size := int(lerpf(150.0, 92.0, pop)) if showy else int(lerpf(96.0, 64.0, pop))
+	var nm: String = Poker.HAND_KO[tier]
+	if showy:
+		var tw := Look.text_width(nm, size)
+		Look.fill_round(self, Rect2(640.0 - tw * 0.5 - 40.0, 386.0 - float(size) * 0.62,
+				tw + 80.0, float(size) * 1.24), float(size) * 0.5, Color(0, 0, 0, 0.55))
+	Look.text_center_out(self, Vector2(640, 386), nm, size, col, Look.BG_DEEP, 4.0)
+	if bool(result.get("bumped", false)):
+		Look.text_center(self, Vector2(640, 452), "도박꾼의 눈 — 한 단계 올랐다!", 26, Look.GOLD)
+	elif int(result.get("joker", -1)) >= 0:
+		Look.text_center(self, Vector2(640, 452), "조커가 %s 로 바꿨다"
+				% Poker.card_text(int(cards[int(result["joker"])])), 26, Look.GOLD)
+
+	if rt < 1.25:
+		return
+
+	# 3) 영웅 등장
+	var u: Dictionary = result.get("unit", {})
+	var hk := clampf((rt - 1.25) / 0.32, 0.0, 1.0)
+	var over := 1.0 + sin(hk * PI) * 0.22          # 뿅 하고 커졌다 제자리로
+	# ★ 690 에 두면 그 아래의 설명 두 줄이 800 을 넘어가 잘린다. 실제로 잘렸다.
+	var by := 636.0
+	Art.draw_actor(self, String(u.get("art", "")), Color(String(u.get("color", "#ffffff"))),
+			float(u.get("h", 100)), 640.0, by, over, Color(1, 1, 1, hk))
+	Look.text_center_out(self, Vector2(640, by + 34.0), String(u.get("ko", "")), 40, col)
+	Look.text_center_out(self, Vector2(640, by + 74.0), String(u.get("desc", "")), 24,
+			Look.INK_DIM, Look.BG_DEEP, 2.0)
+	# ★ 이 줄을 화면 맨 위(y=108)에 뒀더니 카드 다섯 장에 가려 안 보였다. 영웅 밑으로.
+	var prof: Dictionary = Balance.PROFILE[String(u.get("profile", "balance"))]
+	var bul: Dictionary = Balance.BULLET[String(u.get("bullet", "shot"))]
+	Look.text_center(self, Vector2(640, by + 108.0),
+			"%s · %s" % [prof["ko"], bul["ko"]], 24, Look.GOLD)
