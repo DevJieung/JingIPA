@@ -34,6 +34,10 @@ const FLIP_SEC := 0.30
 ##   다시 그려져서 「결정!」을 한 번 더 누를 수 있었고 **영웅이 공짜로 하나 더 생겼다.**
 var _leaving: bool = false
 
+## 이번 프레임의 흔들림 오프셋. battle_screen 의 _sh 와 같은 이유다 —
+## draw_set_transform 을 되돌릴 때 Vector2.ZERO 로 되돌리면 흔들림이 날아간다.
+var _sh: Vector2 = Vector2.ZERO
+
 var _rng := RandomNumberGenerator.new()
 
 
@@ -169,8 +173,8 @@ func _reveal_beats() -> void:
 # --------------------------------------------------------------------------- #
 func _draw() -> void:
 	ui.begin()
-	var sh := fx.shake_offset()
-	draw_set_transform(sh, 0.0, Vector2.ONE)
+	_sh = fx.shake_offset()
+	draw_set_transform(_sh, 0.0, Vector2.ONE)
 	_draw_bg()
 	# ★ 화려한 등급에서는 초록 천을 한 번 어둡게 덮고 빛살을 깐다.
 	#   안 덮으면 빛살(반투명)이 초록에 물들어 풀하우스의 분홍도, 로열의 금빛도
@@ -229,13 +233,13 @@ func _draw_pick() -> void:
 			var fk: float = _flip[i] / FLIP_SEC          # 1 → 0
 			var squash: float = abs(fk * 2.0 - 1.0)      # 1 → 0 → 1
 			var w := Look.CARD_W * CARD_SC
-			draw_set_transform(at + Vector2(w * 0.5, 0.0), 0.0,
+			draw_set_transform(at + Vector2(w * 0.5, 0.0) + _sh, 0.0,
 					Vector2(max(0.06, squash), 1.0))
 			if fk > 0.5:
 				Look.draw_card_back(self, Vector2(-w * 0.5, 0.0), CARD_SC)
 			else:
 				Look.draw_card(self, Vector2(-w * 0.5, 0.0), Run.cards[i], CARD_SC)
-			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			draw_set_transform(_sh, 0.0, Vector2.ONE)
 		else:
 			Look.draw_card(self, at, Run.cards[i], CARD_SC, keys.has(Run.cards[i]))
 		ui.zone(Rect2(at, r.size), "re%d" % i, Run.can_reroll(i))

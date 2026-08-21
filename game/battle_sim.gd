@@ -236,17 +236,34 @@ func _heroes_fire(dt: float) -> void:
 
 		if kind == "aura":
 			# 장판은 쿨다운이 없다. 사거리 안 모두에게 초당 꾸준히 준다.
-			var dps: float = float(he["atk"]) * float(he["rate"]) * am
+			# ★ 장판은 "한 대"가 없어서 치명타를 굴릴 자리가 없다. 그런데 Run.total_dps()
+			#   는 모든 영웅에 치명타 기대값을 곱해 세므로, 안 넣으면 상점 표시와 실제
+			#   피해가 어긋나고 자동 플레이 정책도 장판 영웅을 과대평가한다.
+			#   그래서 **기대값을 그대로 곱해** 둔다 — 계산과 현실이 같아진다.
+			var cmul: float = 1.0 + float(he["crit"]) * (float(he["critx"]) - 1.0)
+			var dps: float = float(he["atk"]) * float(he["rate"]) * cmul * am
+			var tick: bool = false
+			he["acc"] = float(he["acc"]) + dt
+			if float(he["acc"]) > 0.25:
+				he["acc"] = 0.0
+				tick = true
 			var any := false
+			var first := -1
 			for mi in range(_mp.size()):
 				if pos.distance_squared_to(_mp[mi]) <= rng2:
 					_hurt(mi, dps * dt * rm, false, hi)
 					any = true
-			if any:
-				he["acc"] = float(he["acc"]) + dt
-				if float(he["acc"]) > 0.25:
-					he["acc"] = 0.0
-					events.append({"t": "aura", "p": pos, "r": rng_px, "src": hi})
+					if first < 0:
+						first = mi
+					# ★ 패시브는 "모든 공격"에 붙는다고 적어 놨는데 장판만 빠져 있었다.
+					#   매 프레임 붙이면 60번씩 굴리게 되므로 0.25초마다 한 번만 붙인다.
+					if tick:
+						_field_extras(mi, dps * 0.25)
+			if any and tick:
+				events.append({"t": "aura", "p": pos, "r": rng_px, "src": hi})
+				# 연쇄 낙뢰만은 대상마다 굴리면 초당 수십 번이 된다. 한 번만 굴린다.
+				if first >= 0 and run.has("bolt") and _rng.randf() < Balance.PASSIVE_BOLT_P:
+					_chain(first, dps * 0.25 * 0.5, 2, 0.7, 150.0, [first], Look.BLUE, hi)
 			continue
 
 		he["cool"] = float(he["cool"]) - dt * rm
@@ -355,12 +372,17 @@ func _impact(b: Dictionary, mi: int) -> void:
 
 ## 패시브가 붙여 주는 추가 효과. 공격 방식과 상관없이 **모든 명중**에 붙는다.
 func _on_hit_extras(mi: int, dmg: float, src: int) -> void:
+	_field_extras(mi, dmg)
+	if run.has("bolt") and _rng.randf() < Balance.PASSIVE_BOLT_P:
+		_chain(mi, dmg * 0.5, 2, 0.7, 150.0, [mi], Look.BLUE, src)
+
+
+## 화상·서리처럼 **대상에게 남는** 효과만. 장판은 이쪽만 쓴다(연쇄는 따로 굴린다).
+func _field_extras(mi: int, dmg: float) -> void:
 	if run.has("flame"):
 		_burn(mi, dmg * Balance.PASSIVE_FLAME_BURN, Balance.PASSIVE_FLAME_SEC)
 	if run.has("frost"):
 		_slow(mi, Balance.PASSIVE_FROST_SLOW, Balance.PASSIVE_FROST_SEC)
-	if run.has("bolt") and _rng.randf() < Balance.PASSIVE_BOLT_P:
-		_chain(mi, dmg * 0.5, 2, 0.7, 150.0, [mi], Look.BLUE, src)
 
 
 func _chain(from_i: int, dmg: float, jumps: int, decay: float, hop: float,
@@ -385,12 +407,16 @@ func _chain(from_i: int, dmg: float, jumps: int, decay: float, hop: float,
 	_chain(best, dmg * decay, jumps - 1, decay, hop, seen, col, src)
 
 
+## 겹치지 않고 **센 쪽으로 덮어쓴다.** 곱해 버리면 둔화 둘만 겹쳐도 몬스터가 멈춘다.
+##
+## ★ 다만 **이미 풀린 뒤에는 세기를 물려주지 않는다.** 예전에는 늘 max 라서, 센 둔화가
+##   끝난 뒤에 약한 둔화를 걸어도 옛 세기가 그대로 살아났다. 화상 쪽이 특히 나빴다 —
+##   보스에게 한 번 박힌 강한 화상이 라운드 내내 약한 화상의 탈을 쓰고 계속 탔다.
 func _slow(mi: int, amount: float, sec: float) -> void:
 	if mi >= monsters.size():
 		return
 	var mo: Dictionary = monsters[mi]
-	# 겹치지 않고 **센 쪽으로 덮어쓴다.** 곱해 버리면 둔화 둘만 겹쳐도 몬스터가 멈춘다.
-	mo["slow"] = max(float(mo["slow"]), amount)
+	mo["slow"] = amount if float(mo["slow_t"]) <= 0.0 else max(float(mo["slow"]), amount)
 	mo["slow_t"] = max(float(mo["slow_t"]), sec)
 
 
@@ -398,7 +424,7 @@ func _burn(mi: int, dps: float, sec: float) -> void:
 	if mi >= monsters.size():
 		return
 	var mo: Dictionary = monsters[mi]
-	mo["burn"] = max(float(mo["burn"]), dps)
+	mo["burn"] = dps if float(mo["burn_t"]) <= 0.0 else max(float(mo["burn"]), dps)
 	mo["burn_t"] = max(float(mo["burn_t"]), sec)
 
 

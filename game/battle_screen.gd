@@ -24,6 +24,10 @@ var _leaving: bool = false
 var _settled: bool = false
 var _lost: int = 0
 var _bonus: int = 0
+## ★ 이번 프레임의 흔들림 오프셋. draw_set_transform 은 **덮어쓰기**라서,
+##   그림자를 그리려고 잠깐 바꿨다가 Vector2.ZERO 로 되돌리면 흔들림이 사라진다.
+##   되돌릴 때는 반드시 이 값으로 되돌린다. (예전에는 첫 배우 이후로 화면이 안 흔들렸다)
+var _sh: Vector2 = Vector2.ZERO
 
 
 func _ready() -> void:
@@ -134,9 +138,9 @@ func _drain() -> void:
 # --------------------------------------------------------------------------- #
 func _draw() -> void:
 	ui.begin()
-	var sh := fx.shake_offset()
+	_sh = fx.shake_offset()
 	_draw_bg()
-	draw_set_transform(sh, 0.0, Vector2.ONE)
+	draw_set_transform(_sh, 0.0, Vector2.ONE)
 	_draw_arena()
 	fx.draw_back(self)
 	_draw_actors()
@@ -195,9 +199,9 @@ func _draw_hero(he: Dictionary, sc: float) -> void:
 	var pos: Vector2 = he["pos"]
 	var col := Color(String(u.get("color", "#ffffff")))
 	# 발밑 그림자 — 이게 없으면 캐릭터가 바닥에 안 붙고 떠 보인다.
-	draw_set_transform(pos, 0.0, Vector2(1.0, 0.34))
+	draw_set_transform(pos + _sh, 0.0, Vector2(1.0, 0.34))
 	draw_circle(Vector2.ZERO, 22.0 * sc, Color(0, 0, 0, 0.35))
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	draw_set_transform(_sh, 0.0, Vector2.ONE)
 	var bob := sin(t * 3.0 + pos.x * 0.05) * 2.0
 	Art.draw_actor(self, String(u.get("art", "")), col, float(u.get("h", 100)),
 			pos.x, pos.y + bob, sc)
@@ -211,11 +215,14 @@ func _draw_monster(mo: Dictionary) -> void:
 	var mod := Color.WHITE.lerp(Color(2.2, 1.6, 1.6), flash)
 	if float(mo["slow_t"]) > 0.0:
 		mod = mod * Color(0.72, 0.86, 1.25)
-	draw_set_transform(p, 0.0, Vector2(1.0, 0.32))
+	# ★ 그림자는 **발밑**에 와야 한다. 스프라이트는 p.y + 0.30h 를 바닥선으로 그리는데
+	#   그림자만 p.y 에 두면 발보다 0.30h 위에 깔려 스프라이트 뒤에 통째로 가려진다.
+	var foot: float = p.y + float(mo["h"]) * 0.30
+	draw_set_transform(Vector2(p.x, foot) + _sh, 0.0, Vector2(1.0, 0.32))
 	draw_circle(Vector2.ZERO, float(mo["h"]) * 0.26, Color(0, 0, 0, 0.34))
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	draw_set_transform(_sh, 0.0, Vector2.ONE)
 	Art.draw_actor(self, String(m.get("art", "")), col, float(mo["h"]),
-			p.x, p.y + float(mo["h"]) * 0.30, 1.0, mod)
+			p.x, foot, 1.0, mod)
 	if float(mo["burn_t"]) > 0.0:
 		draw_circle(p + Vector2(0, -float(mo["h"]) * 0.2), 5.0,
 				Color(1.0, 0.5, 0.1, 0.7 + 0.3 * sin(t * 22.0)))

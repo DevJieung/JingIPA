@@ -5,7 +5,7 @@ func _ready() -> void:
 	var made := 0
 	var used := {}
 	Run.start_run(4321)
-	while Run.running and Run.wave < 30:
+	while Run.running and Run.wave < 18:
 		Run.begin_draw()
 		PlayPolicy.do_rerolls(Run)
 		Run.confirm_hand()
