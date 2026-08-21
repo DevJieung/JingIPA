@@ -157,7 +157,7 @@ func _reveal_beats() -> void:
 					0.9, 7.0)
 
 	if _once("hero", 1.25):
-		var by := 636.0
+		var by := 660.0
 		fx.ring(Vector2(640.0, by - 10.0), col, 20.0, 190.0, 0.6, 6.0)
 		fx.burst(Vector2(640.0, by - 40.0), col, 30, 300.0, 0.7, 4.0)
 		if showy:
@@ -172,6 +172,12 @@ func _draw() -> void:
 	var sh := fx.shake_offset()
 	draw_set_transform(sh, 0.0, Vector2.ONE)
 	_draw_bg()
+	# ★ 화려한 등급에서는 초록 천을 한 번 어둡게 덮고 빛살을 깐다.
+	#   안 덮으면 빛살(반투명)이 초록에 물들어 풀하우스의 분홍도, 로열의 금빛도
+	#   전부 올리브색으로 보인다. 등급 색이 안 읽히면 화려할 이유가 없다.
+	if state == REVEAL and showy:
+		var dim: float = clampf((rt - 0.45) / 0.25, 0.0, 1.0) * 0.62
+		draw_rect(Rect2(-40, -40, 1360, 880), Color(0, 0, 0, dim))
 	fx.draw_back(self)      # 빛살·고리는 글자 **뒤에** 깔린다
 	if state == PICK:
 		_draw_pick()
@@ -310,9 +316,10 @@ func _draw_reveal() -> void:
 	var hk := clampf((rt - 1.25) / 0.32, 0.0, 1.0)
 	var over := 1.0 + sin(hk * PI) * 0.22          # 뿅 하고 커졌다 제자리로
 	# ★ 690 에 두면 그 아래의 설명 두 줄이 800 을 넘어가 잘린다. 실제로 잘렸다.
-	var by := 636.0
+	var by := 660.0
+	# 이 순간의 주인공이다. 1.0 배로 그리면 96~141px 라 화면에서 너무 작다.
 	Art.draw_actor(self, String(u.get("art", "")), Color(String(u.get("color", "#ffffff"))),
-			float(u.get("h", 100)), 640.0, by, over, Color(1, 1, 1, hk))
+			float(u.get("h", 100)), 640.0, by, over * 1.3, Color(1, 1, 1, hk))
 	Look.text_center_out(self, Vector2(640, by + 34.0), String(u.get("ko", "")), 40, col)
 	Look.text_center_out(self, Vector2(640, by + 74.0), String(u.get("desc", "")), 24,
 			Look.INK_DIM, Look.BG_DEEP, 2.0)
