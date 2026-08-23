@@ -60,6 +60,15 @@ func record_run(wave: int, kills: int, cleared: bool) -> void:
 	save_file()
 
 
+## 도감에 실제로 셀 수 있는 캐릭터 수. 표에서 사라진 id 는 빼고 센다.
+func seen_count() -> int:
+	var n := 0
+	for u in Roster.UNITS:
+		if seen_units.has(String(u["id"])):
+			n += 1
+	return n
+
+
 func record_hand(hand: int, unit_id: String) -> void:
 	if hand > best_hand:
 		best_hand = hand

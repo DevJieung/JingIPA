@@ -48,14 +48,14 @@ func _ready() -> void:
 	print("도달 탄: 중간값 %d · 최소 %d · 최고 %d · 클리어 %d판"
 			% [mid, reached[0], reached[-1], cleared])
 
-	print("\n탄별 (판수 / 잃은 목숨 평균 / 판 끝 골드 평균)")
+	print("\n탄별 (판수 / 깨진 크리스탈 평균 / 판 끝 골드 평균)")
 	var ws: Array = seen_at.keys()
 	ws.sort()
 	for w in ws:
 		if int(w) % 2 == 1 and int(w) > 6:
 			continue
 		var n := int(seen_at[w])
-		print("  %2d탄  %2d판   목숨 -%.2f   골드 %5.0f"
+		print("  %2d탄  %2d판   크리스탈 -%.2f   골드 %5.0f"
 				% [int(w), n, float(lost_at[w]) / float(n), float(gold_at[w]) / float(n)])
 
 	print("\n나온 족보")
@@ -80,6 +80,8 @@ func _one_run(seed_value: int, verbose: bool) -> Dictionary:
 		PlayPolicy.do_rerolls(Run)
 		var res := Run.confirm_hand()
 		hands[int(res["hand"])] = int(hands.get(int(res["hand"]), 0)) + 1
+		# 새 영웅이 왔다 — 안뜰 여섯 자리를 다시 짠다(사람이라면 교체 창에서 하는 일).
+		PlayPolicy.arrange(Run)
 
 		var sim := BattleSim.new()
 		sim.setup(Run, Run.wave, seed_value + Run.wave)
@@ -87,16 +89,19 @@ func _one_run(seed_value: int, verbose: bool) -> Dictionary:
 		while not sim.done and guard < 40000:
 			sim.step(DT)
 			sim.events.clear()
+			# 0.5초마다 한 번 "사람이라면 여기서 아이템을 쓸까"를 본다.
+			if guard % 15 == 0:
+				PlayPolicy.use_items(Run, sim)
 			guard += 1
-		Run.kills += sim.kills
-		Run.add_gold(Balance.clear_bonus(Run.wave, sim.wiped, sim.time_left))
+		# 처치 수는 BattleSim 이 잡을 때마다 Run.kills 에 올린다(여기서 또 더하면 두 배).
+		Run.add_gold(Balance.clear_bonus(Run.wave, sim.wiped))
 		lost[Run.wave] = sim.leaked
-		if sim.leaked > 0:
-			Run.add_lives(-sim.leaked)
+		# ★ 목숨은 몬스터가 크리스탈에 닿는 순간 BattleSim 이 이미 깎았다. 여기서 또 깎지 마라.
 		if verbose:
-			print("  %2d탄 %-12s 영웅%2d  남은%2d  목숨%3d  골드%6d  DPS%8.0f"
+			print("  %2d탄 %-12s 안뜰%d 대기%2d  뚫림%2d  크리스탈%3d  골드%6d  DPS%8.0f  무기%d"
 					% [Run.wave, Poker.HAND_KO[int(res["hand"])], Run.heroes.size(),
-					   sim.leaked, Run.lives, Run.gold, Run.total_dps()])
+					   Run.bench.size(), sim.leaked, Run.lives, Run.gold,
+					   Run.total_dps(), Run.weapons.size()])
 		if not Run.running:
 			break
 		PlayPolicy.shop(Run)

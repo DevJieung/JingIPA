@@ -6,8 +6,8 @@
 테스트로 안 잡힌다 — 눈으로 봐야 한다.**
 
     python3 tools/screenshot.py                       # 기본 한 벌
-    python3 tools/screenshot.py title draw:5 reveal:9
-    python3 tools/screenshot.py battle:12 shop:8 over
+    python3 tools/screenshot.py title draw:5 reveal:9 swap:14 shoph:14
+    python3 tools/screenshot.py battle:12 frost:12 shop:8 over
     python3 tools/screenshot.py --portrait battle:12  # 세로 화면으로
     python3 tools/screenshot.py --setup               # Xvfb 만 준비
 
@@ -31,7 +31,8 @@ XVFB_PACKAGES = ["xvfb", "x11-common", "xauth", "libxfont2", "libfontenc1", "xse
 DISPLAY_NUM = 93
 
 DEFAULT = ["title", "draw:6", "reveal:1", "reveal:6", "reveal:9",
-           "battle:3", "battle:14", "shop:9", "over"]
+           "battle:1", "battle:14", "frost:12", "battle:25",
+           "swap:14", "shop:9", "shoph:14", "over"]
 
 
 def ensure_xvfb() -> Path:

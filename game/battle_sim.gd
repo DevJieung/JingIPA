@@ -6,13 +6,16 @@ class_name BattleSim
 ## 왜 화면과 갈라놓았나: 이 머신에는 화면이 없어서 "40탄이 깨지는가"를 눈으로 확인할 수가
 ## 없다. 시뮬레이터가 따로 있으면 헤드리스로 수백 판을 돌려 클리어율을 숫자로 뽑을 수 있다
 ## (tests/balance_check.gd). 화면은 이 안의 배열을 그리기만 한다.
+##
+## 규칙(사용자가 정한 것):
+##  - 몬스터는 **벽으로 나뉜 길**을 따라 걸어 들어온다. 길은 Balance.path_at() 하나가 정한다.
+##  - 길 끝에는 **크리스탈**이 있다. 한 마리가 닿을 때마다 크리스탈이 하나 깨진다(목숨 -1).
+##  - **제한 시간은 없다.** 그 탄의 몬스터가 전부 죽거나 닿으면 끝난다.
 
 ## 화면이 이펙트를 붙일 수 있게 남기는 사건들. 화면이 매 프레임 비운다.
 var events: Array = []
 
 var wave: int = 1
-var time_left: float = 30.0
-var total_time: float = 30.0
 var monsters: Array = []
 var bullets: Array = []
 var heroes: Array = []
@@ -20,10 +23,13 @@ var heroes: Array = []
 var kills: int = 0
 var gold: int = 0            ## 이번 판에 번 골드
 var done: bool = false
-var wiped: bool = false      ## 시간 안에 전멸시켰는가
-var leaked: int = 0          ## 시간이 끝났을 때 남아 있던 마릿수
+var wiped: bool = false      ## 크리스탈을 하나도 안 깨뜨렸는가
+var leaked: int = 0          ## 깨진 크리스탈 수 (보스 하나가 다섯을 부순다)
+var leak_n: int = 0          ## 크리스탈에 닿아 버린 마릿수
 
-var curse_t: float = 0.0
+var curse_t: float = 0.0     ## 주술사의 저주가 남은 시간
+var freeze_t: float = 0.0    ## 「시간 정지」가 남은 시간
+var rally_t: float = 0.0     ## 「진군 나팔」이 남은 시간
 var elapsed: float = 0.0
 
 ## ★ 몬스터 좌표를 한 걸음에 한 번만 계산해 캐시한다.
@@ -36,6 +42,7 @@ var _rng := RandomNumberGenerator.new()
 var _queue: Array = []       ## 아직 안 나온 몬스터
 var _spawn_gap: float = 0.4
 var _spawn_t: float = 0.0
+var _path_len: float = 1.0
 ## Run 오토로드 대신 아무 상태 덩어리나 받을 수 있게 해 둔다(검사기가 가짜 Run 을 넣는다).
 var run = null
 
@@ -47,8 +54,6 @@ func setup(run_state, wave_no: int, seed_value: int = 0) -> void:
 		_rng.seed = seed_value
 	else:
 		_rng.randomize()
-	total_time = run.round_seconds()
-	time_left = total_time
 	monsters.clear()
 	bullets.clear()
 	heroes.clear()
@@ -60,8 +65,12 @@ func setup(run_state, wave_no: int, seed_value: int = 0) -> void:
 	done = false
 	wiped = false
 	leaked = 0
+	leak_n = 0
 	curse_t = 0.0
+	freeze_t = 0.0
+	rally_t = 0.0
 	elapsed = 0.0
+	_path_len = Balance.path_len()
 
 	var n: int = run.heroes.size()
 	for i in range(n):
@@ -79,10 +88,9 @@ func setup(run_state, wave_no: int, seed_value: int = 0) -> void:
 		})
 
 	_build_queue()
-	# ★ 몬스터가 늦게 나오면 잡을 시간이 없어 목숨이 그냥 깎인다. 제한 시간의 앞쪽
-	#   24% 안에 전부 나오게 한다. (나오는 데 7초 + 안으로 조여드는 데 8초 = 15초,
-	#   그래야 마지막에 나온 놈도 12초 넘게 얻어맞는다.)
-	_spawn_gap = (total_time * 0.24) / float(maxi(1, _queue.size()))
+	# ★ 몬스터가 찔끔찔끔 나오면 한 번에 두어 마리씩만 상대하게 되어 광역·장판이
+	#   통째로 무의미해진다. 정해진 시간 안에 전부 내보낸다.
+	_spawn_gap = Balance.SPAWN_WINDOW / float(maxi(1, _queue.size()))
 	_spawn_t = 0.0
 
 
@@ -107,25 +115,31 @@ func _spawn(m: Dictionary) -> void:
 	var kind := String(m["kind"])
 	var k: Dictionary = Balance.MKIND[kind]
 	var hp: float = Balance.wave_hp(wave) * float(k["hp"])
+	# 보스는 길 한가운데로 걷는다 — 덩치가 커서 옆으로 밀면 벽을 뚫고 나간다.
+	var jit: float = 0.0 if kind == "boss" else _rng.randf_range(-1.0, 1.0) * Balance.LANE_JITTER
 	monsters.append({
 		"m": m, "kind": kind, "hp": hp, "max": hp,
-		"r": Balance.SPAWN_R, "ang": _rng.randf() * TAU,
-		"dir": 1.0 if _rng.randf() < 0.5 else -1.0,
+		"s": 0.0, "off": jit,
 		"spd": float(k["spd"]),
 		"slow": 0.0, "slow_t": 0.0, "burn": 0.0, "burn_t": 0.0,
 		"flash": 0.0, "cast_t": Balance.CURSE_EVERY * _rng.randf_range(0.5, 1.0),
 		"h": float(m["h"]),
 		"gold": Balance.kill_gold(wave, kind),
+		"crush": int(k.get("crush", 1)),
 	})
 	events.append({"t": "spawn", "p": mpos(monsters[-1])})
 
 
 static func mpos(mo: Dictionary) -> Vector2:
-	var a: float = float(mo["ang"])
-	return Balance.ARENA_CENTER + Vector2(cos(a), sin(a)) * float(mo["r"])
+	return Balance.path_at(float(mo["s"]), float(mo["off"]))
 
 
-## 아직 살아 있거나 아직 안 나온 마릿수 = 지금 시간이 끝나면 깎일 목숨.
+## 길을 얼마나 왔는가 (0~1). 화면이 "다 와 간다"를 보여 줄 때 쓴다.
+func progress(mo: Dictionary) -> float:
+	return clampf(float(mo["s"]) / max(1.0, _path_len), 0.0, 1.0)
+
+
+## 아직 살아 있거나 아직 안 나온 마릿수.
 func remaining() -> int:
 	return monsters.size() + _queue.size()
 
@@ -135,15 +149,58 @@ static func hit_radius(mo: Dictionary) -> float:
 
 
 # --------------------------------------------------------------------------- #
+# 아이템 — 화면(또는 자동 플레이 정책)이 불러 준다
+# --------------------------------------------------------------------------- #
+## 지금 쓰면 실제로 무슨 일이 일어나는가.
+## ★ 크리스탈이 꽉 찼는데 「크리스탈 수리」를 쓰면 140G 짜리가 아무 일도 없이 사라진다.
+##   화면은 이 값으로 버튼을 꺼 두고, 눌려도 여기서 한 번 더 막는다.
+func can_use_item(id: String) -> bool:
+	if done or run.item_count(id) <= 0:
+		return false
+	if id == "repair":
+		return run.lives < run.max_lives()
+	return true
+
+
+## 아이템 하나를 쓴다. 개수는 Run 이 줄이고(spend_item), 효과는 여기서 낸다.
+func use_item(id: String) -> bool:
+	if done or not can_use_item(id):
+		return false
+	if not run.spend_item(id):
+		return false
+	match id:
+		"bomb":
+			var dmg: float = Balance.bomb_damage(wave)
+			# ★ 뒤에서부터 도는 이유는 없다 — _hurt 는 배열을 안 건드리고 hp 만 깎는다.
+			#   실제로 치우는 것은 이번 걸음 끝의 _reap 이다.
+			for i in range(monsters.size()):
+				_hurt(i, dmg, false, -1)
+			events.append({"t": "bomb", "p": Balance.ARENA_CENTER})
+		"freeze":
+			freeze_t = Balance.ITEM_FREEZE_SEC
+			events.append({"t": "freeze", "p": Balance.ARENA_CENTER})
+		"rally":
+			rally_t = Balance.ITEM_RALLY_SEC
+			events.append({"t": "rally", "p": Balance.ARENA_CENTER})
+		"repair":
+			run.add_lives(Balance.ITEM_REPAIR)
+			events.append({"t": "repair", "p": Balance.ARENA_CENTER})
+	return true
+
+
+# --------------------------------------------------------------------------- #
 # 한 걸음
 # --------------------------------------------------------------------------- #
 func step(dt: float) -> void:
 	if done:
 		return
 	elapsed += dt
-	time_left = max(0.0, time_left - dt)
 	if curse_t > 0.0:
 		curse_t = max(0.0, curse_t - dt)
+	if freeze_t > 0.0:
+		freeze_t = max(0.0, freeze_t - dt)
+	if rally_t > 0.0:
+		rally_t = max(0.0, rally_t - dt)
 
 	# 1) 나오기
 	if not _queue.is_empty():
@@ -160,26 +217,24 @@ func step(dt: float) -> void:
 
 	if monsters.is_empty() and _queue.is_empty():
 		done = true
-		wiped = true
-		leaked = 0
-	elif time_left <= 0.0:
+		wiped = leak_n == 0
+	elif not run.running:
+		# 크리스탈이 다 깨졌다. 더 굴려 봐야 의미가 없다.
 		done = true
 		wiped = false
-		leaked = monsters.size() + _queue.size()
 
 
 func _move_monsters(dt: float) -> void:
-	var inward: float = (Balance.SPAWN_R - Balance.INNER_R) / Balance.CLOSE_IN_SEC
+	if freeze_t > 0.0:
+		return          # 「시간 정지」 — 걷지도, 타지도, 저주하지도 않는다
+	var mire: float = Balance.mire_mult(run.lv("mire"))
 	for mo in monsters:
 		var slow_mul := 1.0
 		if float(mo["slow_t"]) > 0.0:
 			mo["slow_t"] = float(mo["slow_t"]) - dt
 			slow_mul = 1.0 - float(mo["slow"])
-		var sp: float = float(mo["spd"]) * slow_mul
-		mo["r"] = max(Balance.INNER_R, float(mo["r"]) - inward * sp * dt)
-		var ang_spd: float = min(Balance.MAX_ANGULAR,
-				Balance.TANGENT_SPEED * sp / max(20.0, float(mo["r"])))
-		mo["ang"] = float(mo["ang"]) + float(mo["dir"]) * ang_spd * dt
+		var sp: float = Balance.PATH_SPEED * float(mo["spd"]) * slow_mul * mire
+		mo["s"] = min(_path_len, float(mo["s"]) + sp * dt)
 		if float(mo["flash"]) > 0.0:
 			mo["flash"] = max(0.0, float(mo["flash"]) - dt * 5.0)
 		# 화상
@@ -202,10 +257,7 @@ func _cache_positions() -> void:
 	_mr.resize(n)
 	for i in range(n):
 		var mo: Dictionary = monsters[i]
-		var a: float = mo["ang"]
-		var r: float = mo["r"]
-		_mp[i] = Vector2(Balance.ARENA_CENTER.x + cos(a) * r,
-				Balance.ARENA_CENTER.y + sin(a) * r)
+		_mp[i] = Balance.path_at(float(mo["s"]), float(mo["off"]))
 		_mr[i] = float(mo["h"]) * 0.32 + 6.0
 
 
@@ -213,8 +265,10 @@ func _rate_mult() -> float:
 	var m := 1.0
 	if curse_t > 0.0:
 		m *= 1.0 - Balance.CURSE_RATE
-	if run.has("rage") and time_left <= Balance.PASSIVE_RAGE_LEFT:
+	if run.has("rage") and elapsed >= Balance.PASSIVE_RAGE_AFTER:
 		m *= 1.0 + Balance.PASSIVE_RAGE
+	if rally_t > 0.0:
+		m *= 1.0 + Balance.ITEM_RALLY_RATE
 	return m
 
 
@@ -260,7 +314,8 @@ func _heroes_fire(dt: float) -> void:
 					if tick:
 						_field_extras(mi, dps * 0.25)
 			if any and tick:
-				events.append({"t": "aura", "p": pos, "r": rng_px, "src": hi})
+				events.append({"t": "aura", "p": pos, "r": rng_px, "src": hi,
+					"c": he["col"]})
 				# 연쇄 낙뢰만은 대상마다 굴리면 초당 수십 번이 된다. 한 번만 굴린다.
 				if first >= 0 and run.has("bolt") and _rng.randf() < Balance.PASSIVE_BOLT_P:
 					_chain(first, dps * 0.25 * 0.5, 2, 0.7, 150.0, [first], Look.BLUE, hi)
@@ -269,7 +324,7 @@ func _heroes_fire(dt: float) -> void:
 		he["cool"] = float(he["cool"]) - dt * rm
 		if float(he["cool"]) > 0.0:
 			continue
-		var tgt := _nearest(pos, rng2)
+		var tgt := _front_target(pos, rng2)
 		if tgt < 0:
 			he["cool"] = 0.0
 			continue
@@ -285,9 +340,10 @@ func _shoot(hi: int, tgt: int, dmg: float, kind: String, crit: bool) -> void:
 	var pos: Vector2 = he["pos"]
 	var col: Color = he["col"]
 	var spec: Dictionary = Balance.BULLET[kind]
+	events.append({"t": "fire", "p": pos, "d": (_mp[tgt] - pos).normalized(), "c": col})
 
 	if kind == "beam":
-		events.append({"t": "beam", "a": pos, "b": _mp[tgt], "c": col})
+		events.append({"t": "beam", "a": pos, "b": _mp[tgt], "c": col, "big": true})
 		_hurt(tgt, dmg, crit, hi)
 		_on_hit_extras(tgt, dmg, hi)
 		return
@@ -298,7 +354,7 @@ func _shoot(hi: int, tgt: int, dmg: float, kind: String, crit: bool) -> void:
 	bullets.append({
 		"p": pos, "v": (_mp[tgt] - pos).normalized() * float(spec["speed"]),
 		"tgt": tgt, "dmg": dmg, "kind": kind, "spd": float(spec["speed"]),
-		"life": 2.2, "pierce": pierce, "hit": [], "c": col, "crit": crit, "src": hi,
+		"life": 2.6, "pierce": pierce, "hit": [], "c": col, "crit": crit, "src": hi,
 	})
 
 
@@ -315,6 +371,9 @@ func _move_bullets(dt: float) -> void:
 		if ti >= 0 and ti < _mp.size():
 			var want: Vector2 = (_mp[ti] - p).normalized() * float(b["spd"])
 			v = v.lerp(want, clampf(dt * 9.0, 0.0, 1.0))
+		# ★ 지나온 자리를 남긴다 — 화면이 꼬리를 그린다. 탄이 점 하나였을 때는
+		#   무엇이 날아가는지가 안 보였다.
+		b["prev"] = p
 		p += v * dt
 		b["p"] = p
 		b["v"] = v
@@ -347,19 +406,17 @@ func _impact(b: Dictionary, mi: int) -> void:
 	var dmg: float = float(b["dmg"])
 	var spec: Dictionary = Balance.BULLET[kind]
 	var src: int = int(b["src"])
+	var rad_mul: float = run.wpn_mult("radius")
 	_hurt(mi, dmg, bool(b["crit"]), src)
-	events.append({"t": "hit", "p": b["p"], "c": b["c"], "kind": kind})
+	events.append({"t": "hit", "p": b["p"], "c": b["c"], "kind": kind,
+		"crit": bool(b["crit"])})
 
 	match kind:
 		"splash":
 			var at: Vector2 = _mp[mi] if mi < _mp.size() else Vector2(b["p"])
-			var rad2: float = float(spec["radius"]) * float(spec["radius"])
-			for j in range(_mp.size()):
-				if j == mi:
-					continue
-				if at.distance_squared_to(_mp[j]) <= rad2:
-					_hurt(j, dmg * float(spec["falloff"]), false, src)
-			events.append({"t": "splash", "p": at, "r": float(spec["radius"]), "c": b["c"]})
+			var rad: float = float(spec["radius"]) * rad_mul
+			_splash(mi, at, rad, dmg * float(spec["falloff"]), src)
+			events.append({"t": "splash", "p": at, "r": rad, "c": b["c"]})
 		"chain":
 			_chain(mi, dmg * float(spec["decay"]), int(spec["jumps"]) - 1,
 					float(spec["decay"]), float(spec["hop"]), [mi], b["c"], src)
@@ -367,7 +424,25 @@ func _impact(b: Dictionary, mi: int) -> void:
 			_slow(mi, float(spec["slow"]), float(spec["slow_sec"]))
 		"burn":
 			_burn(mi, dmg * float(spec["burn"]), float(spec["burn_sec"]))
+
+	# 무기 「분열 탄두」 — 방식과 상관없이 모든 탄이 작게 터진다.
+	var split: float = run.wpn_best("split")
+	if split > 0.0 and kind != "splash":
+		var sat: Vector2 = _mp[mi] if mi < _mp.size() else Vector2(b["p"])
+		var srad: float = split * rad_mul
+		_splash(mi, sat, srad, dmg * 0.35, src)
+		events.append({"t": "splash", "p": sat, "r": srad, "c": b["c"]})
 	_on_hit_extras(mi, dmg, src)
+
+
+## 한 점 둘레를 함께 때린다. 광역탄과 분열 탄두가 같은 함수를 쓴다.
+func _splash(skip: int, at: Vector2, radius: float, dmg: float, src: int) -> void:
+	var r2: float = radius * radius
+	for j in range(_mp.size()):
+		if j == skip:
+			continue
+		if at.distance_squared_to(_mp[j]) <= r2:
+			_hurt(j, dmg, false, src)
 
 
 ## 패시브가 붙여 주는 추가 효과. 공격 방식과 상관없이 **모든 명중**에 붙는다.
@@ -383,6 +458,10 @@ func _field_extras(mi: int, dmg: float) -> void:
 		_burn(mi, dmg * Balance.PASSIVE_FLAME_BURN, Balance.PASSIVE_FLAME_SEC)
 	if run.has("frost"):
 		_slow(mi, Balance.PASSIVE_FROST_SLOW, Balance.PASSIVE_FROST_SEC)
+	# 무기 「서리 심」
+	var ws: float = run.wpn_best("slow")
+	if ws > 0.0:
+		_slow(mi, ws, run.wpn_best("slow_sec"))
 
 
 func _chain(from_i: int, dmg: float, jumps: int, decay: float, hop: float,
@@ -401,7 +480,7 @@ func _chain(from_i: int, dmg: float, jumps: int, decay: float, hop: float,
 			best = j
 	if best < 0:
 		return
-	events.append({"t": "beam", "a": at, "b": _mp[best], "c": col})
+	events.append({"t": "bolt", "a": at, "b": _mp[best], "c": col})
 	_hurt(best, dmg, false, src)
 	seen.append(best)
 	_chain(best, dmg * decay, jumps - 1, decay, hop, seen, col, src)
@@ -416,8 +495,16 @@ func _slow(mi: int, amount: float, sec: float) -> void:
 	if mi >= monsters.size():
 		return
 	var mo: Dictionary = monsters[mi]
-	mo["slow"] = amount if float(mo["slow_t"]) <= 0.0 else max(float(mo["slow"]), amount)
+	# ★ **처음 얼어붙는 순간에만** 알린다. 둔화는 명중마다 다시 걸린다 —
+	#   서리 부적·「서리 심」은 모든 명중에, 장판은 0.25초마다 붙이므로 매번 알리면
+	#   초당 수백 개가 쌓여 이펙트가 화면을 덮는다. 이미 얼어 있는 동안에는 몸에 얼음이
+	#   남아 있으니 다시 터뜨릴 까닭도 없다.
+	var fresh: bool = float(mo["slow_t"]) <= 0.0
+	mo["slow"] = amount if fresh else max(float(mo["slow"]), amount)
 	mo["slow_t"] = max(float(mo["slow_t"]), sec)
+	if fresh:
+		events.append({"t": "frost", "p": _mp[mi] if mi < _mp.size() else mpos(mo),
+			"h": float(mo["h"])})
 
 
 func _burn(mi: int, dps: float, sec: float) -> void:
@@ -439,34 +526,51 @@ func _hurt(mi: int, dmg: float, crit: bool, _src: int) -> void:
 			"n": int(dmg)})
 
 
-## 사거리(제곱) 안에서 가장 가까운 몬스터. 제곱끼리 비교해 sqrt 를 안 쓴다.
-func _nearest(from: Vector2, rng2: float) -> int:
+## 사거리(제곱) 안에서 **가장 앞선**(크리스탈에 가장 가까운) 몬스터.
+##
+## ★ 예전에는 가장 가까운 놈을 쐈다. 길이 생긴 뒤로는 그게 나쁜 선택이다 —
+##   코앞에서 갓 들어온 놈을 때리는 동안 다 온 놈이 크리스탈을 깬다.
+##   디펜스 게임에서 먼저 막아야 하는 것은 늘 **제일 앞선 놈**이다.
+func _front_target(from: Vector2, rng2: float) -> int:
 	var best := -1
-	var bd := rng2
+	var best_s := -1.0
 	for i in range(_mp.size()):
-		var d := from.distance_squared_to(_mp[i])
-		if d < bd:
-			bd = d
+		if from.distance_squared_to(_mp[i]) > rng2:
+			continue
+		var s: float = float(monsters[i]["s"])
+		if s > best_s:
+			best_s = s
 			best = i
 	return best
 
 
-## 죽은 것을 치운다. ★ 인덱스가 앞으로 당겨지므로 탄이 들고 있는 목표 번호도 같이 고쳐야 한다.
+## 죽은 것과 **크리스탈까지 간 것**을 치운다.
+## ★ 인덱스가 앞으로 당겨지므로 탄이 들고 있는 목표 번호도 같이 고쳐야 한다.
 ##   이걸 빼먹으면 탄이 엉뚱한 몬스터를 쫓아가고, 마지막 한 마리가 안 잡히는 버그가 된다.
 func _reap() -> void:
 	var dead: Array[int] = []
+	var arrived: Array[int] = []
 	for i in range(monsters.size()):
+		# 다 왔더라도 그 순간 죽었으면 죽은 쪽이 먼저다 — 마지막 한 대로 막아 낸 것이다.
 		if float(monsters[i]["hp"]) <= 0.0:
 			dead.append(i)
-	if dead.is_empty():
+		elif float(monsters[i]["s"]) >= _path_len:
+			arrived.append(i)
+	if dead.is_empty() and arrived.is_empty():
 		return
+
 	for i in dead:
 		var mo: Dictionary = monsters[i]
 		var dp: Vector2 = _mp[i] if i < _mp.size() else mpos(mo)
 		var midas: float = (1.0 + Balance.PASSIVE_MIDAS) if run.has("midas") else 1.0
-		var g: int = int(round(float(mo["gold"]) * Balance.gold_mult(run.lv("gold")) * midas))
+		var g: int = int(round(float(mo["gold"]) * Balance.gold_mult(run.lv("gold"))
+				* midas * run.wpn_mult("gold")))
 		gold += g
 		kills += 1
+		# ★ 여기서 바로 올린다. 화면이 전투가 끝난 뒤에 한꺼번에 더하게 두면,
+		#   크리스탈이 0 이 되어 판이 **전투 도중** 끝날 때 그 판의 처치 수가
+		#   저장 기록에 영영 안 들어간다(end_run 이 그 전에 불린다).
+		run.kills += 1
 		run.add_gold(g)
 		events.append({"t": "die", "p": dp, "c": Color(String(mo["m"]["color"])),
 			"h": float(mo["h"]), "gold": g})
@@ -474,12 +578,29 @@ func _reap() -> void:
 			run.add_lives(1)
 			events.append({"t": "life", "p": dp})
 
+	for i in arrived:
+		var mo2: Dictionary = monsters[i]
+		var ap: Vector2 = _mp[i] if i < _mp.size() else mpos(mo2)
+		# ★ **남아 있는 크리스탈까지만** 깨진 것으로 센다. 예전에는 최소 1 로 잘랐는데,
+		#   같은 걸음에 앞엣놈이 이미 0 으로 만들어 놓으면 없는 크리스탈이 깨진 것으로
+		#   집계되어 결과창이 "크리스탈이 6개인데 9개가 깨졌다"고 적었다.
+		var crush: int = mini(int(mo2["crush"]), maxi(0, run.lives))
+		leak_n += 1
+		if crush > 0:
+			leaked += crush
+			# ★ 목숨이 깎이는 곳은 **여기 한 군데뿐**이다. 화면에서 또 깎으면 두 배가 된다.
+			var idx: int = maxi(0, run.lives - 1)
+			run.add_lives(-crush)
+			events.append({"t": "leak", "p": ap, "i": idx, "n": crush,
+				"c": Color(String(mo2["m"]["color"])), "h": float(mo2["h"])})
+
 	var alive: Array = []
 	var remap := {}
 	for i in range(monsters.size()):
-		if float(monsters[i]["hp"]) > 0.0:
+		var mo3: Dictionary = monsters[i]
+		if float(mo3["hp"]) > 0.0 and float(mo3["s"]) < _path_len:
 			remap[i] = alive.size()
-			alive.append(monsters[i])
+			alive.append(mo3)
 	monsters = alive
 	for b in bullets:
 		b["tgt"] = int(remap.get(int(b["tgt"]), -1))

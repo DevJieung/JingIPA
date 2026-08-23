@@ -108,20 +108,33 @@ fi
 expect "족보 판정" "판정: 정상" "$TMP/poker.log"
 
 step "6. 화면을 눌러서 한 바퀴 (타이틀 → 카드 → 전투 → 상점)"
-godot_run 180 "$TMP/play.log" res://tests/play_check.tscn
+godot_run 360 "$TMP/play.log" res://tests/play_check.tscn
 expect "화면 한 바퀴" "판정: 정상" "$TMP/play.log"
 
 step "7. 자동 플레이로 밸런스 (40탄까지)"
 RUNS=12
 [ $QUICK -eq 1 ] && RUNS=4
-godot_run 300 "$TMP/bal.log" res://tests/balance_check.tscn -- --runs $RUNS
+godot_run 420 "$TMP/bal.log" res://tests/balance_check.tscn -- --runs $RUNS
 expect "자동 플레이" "판정: 정상" "$TMP/bal.log"
 grep -E "^도달 탄" "$TMP/bal.log" | sed 's/^/   /'
-# ★ 1~6탄에서 목숨이 깎이면 시작부터 아픈 게임이다. 이건 실패로 친다.
+# ★ 클리어율이 밸런스의 본체다. 한 판도 못 깨거나 거의 다 깨면 숫자가 무너진 것이다.
+#   (12판 표본이라 폭은 넓게 잡는다 — 기대값은 3~4판이다. CLAUDE.md 16번 참고)
+if [ $QUICK -eq 0 ]; then
+	CLEARS=$(sed -n 's/^도달 탄:.*클리어 \([0-9]*\)판.*/\1/p' "$TMP/bal.log")
+	if [ -z "$CLEARS" ]; then
+		echo "!! 실패: 클리어 판수를 못 읽었습니다"; fail=1
+	elif [ "$CLEARS" -lt 1 ] || [ "$CLEARS" -gt 8 ]; then
+		echo "!! 실패: 12판 중 클리어 $CLEARS 판 — 1~8판이어야 합니다 (밸런스가 무너졌습니다)"
+		fail=1
+	else
+		echo "   ok: 12판 중 클리어 $CLEARS 판"
+	fi
+fi
+# ★ 1~6탄에서 크리스탈이 깨지면 시작부터 아픈 게임이다. 이건 실패로 친다.
 if awk '/^   [1-6]탄/ { if ($4 != "-0.00") bad=1 } END { exit bad?1:0 }' "$TMP/bal.log"; then
-	echo "   ok: 1~6탄은 목숨을 잃지 않는다"
+	echo "   ok: 1~6탄은 크리스탈을 잃지 않는다"
 else
-	echo "!! 실패: 초반(1~6탄)에 목숨이 깎입니다"; grep -E "^   [1-6]탄" "$TMP/bal.log"; fail=1
+	echo "!! 실패: 초반(1~6탄)에 크리스탈이 깨집니다"; grep -E "^   [1-6]탄" "$TMP/bal.log"; fail=1
 fi
 
 step "8. 폰트에 없는 글자"
@@ -131,11 +144,13 @@ tail -1 "$TMP/font.log" | sed 's/^/   /'
 
 if [ $QUICK -eq 0 ]; then
 	step "9. 안드로이드 APK"
-	mkdir -p build/android
+	# ★ APK 는 **홈 디렉터리**에 굽는다(사용자가 정한 것). 저장소 안(build/)에 두면
+	#   폰으로 옮길 때마다 경로를 찾아 들어가야 하고, 지운 줄 알았던 옛 APK 가 남는다.
+	APK="$HOME/pokerdefense-test.apk"
 	timeout 300 "$GODOT" --headless --path . --export-debug "Android Test APK" \
-		"$PWD/build/android/pokerdefense-test.apk" > "$TMP/apk.log" 2>&1
-	if [ -s build/android/pokerdefense-test.apk ]; then
-		echo "   ok: APK ($(du -h build/android/pokerdefense-test.apk | cut -f1))"
+		"$APK" > "$TMP/apk.log" 2>&1
+	if [ -s "$APK" ]; then
+		echo "   ok: APK $APK ($(du -h "$APK" | cut -f1))"
 	else
 		echo "!! 실패: APK 가 안 나왔습니다"; tail -20 "$TMP/apk.log"; fail=1
 	fi

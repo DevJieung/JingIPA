@@ -50,6 +50,24 @@ static func draw_fill(ci: CanvasItem, path: String, rect: Rect2,
 	return true
 
 
+## 캐릭터 한 명. **영웅을 그리는 곳은 전부 이 함수를 쓴다.**
+##
+## ★ 왜 따로 두는가: 그림은 등급마다 같은 높이로 저장되는데, 그 높이는 지팡이·꼬리·
+##   회오리까지 포함한 테두리 상자의 높이다. 그래서 소품이 큰 캐릭터는 사람 몸이
+##   그만큼 작게 나온다 — 같은 등급인데 누구는 크고 누구는 작아 보였다.
+##   보정값(roster 의 sc)을 곱하는 자리를 한 곳으로 묶어야 화면 세 곳(전투·확정 연출·
+##   영웅 편성)이 같은 크기로 그린다. 손으로 세 번 곱하면 반드시 한 곳을 빠뜨린다.
+static func draw_unit(ci: CanvasItem, u: Dictionary, cx: float, by: float,
+		sc: float = 1.0, mod: Color = Color.WHITE) -> void:
+	draw_actor(ci, String(u.get("art", "")), Color(String(u.get("color", "#ffffff"))),
+			float(u.get("h", 100)), cx, by, sc * float(u.get("sc", 1.0)), mod)
+
+
+## 그 캐릭터를 그렸을 때의 실제 높이(px). 그림자·이름표 자리를 잡는 데 쓴다.
+static func unit_h(u: Dictionary, sc: float = 1.0) -> float:
+	return float(u.get("h", 100)) * float(u.get("sc", 1.0)) * sc
+
+
 ## 캐릭터/몬스터 한 마리. 그림이 아직 없으면 **색 도형**으로 대신 그린다.
 ## 이 대체 그림 덕에 그림을 한 장도 안 만든 상태에서도 전투를 끝까지 돌려 볼 수 있다.
 static func draw_actor(ci: CanvasItem, path: String, col: Color, h: float,

@@ -43,7 +43,7 @@ func _draw() -> void:
 			"40탄을 모두 막아 냈다" if won else "%d탄에서 무너졌다" % Run.wave, 32, Look.INK)
 
 	var lines := [
-		"영웅 %d명" % Run.heroes.size(),
+		"영웅 %d명 (겹친 것까지 %d)" % [Run.heroes.size() + Run.bench.size(), Run.hero_total()],
 		"잡은 몬스터 %d마리" % Run.kills,
 		"가장 좋았던 족보 %s" % (Poker.HAND_KO[Save.best_hand] if Save.best_hand >= 0 else "-"),
 		"최고 기록 %d탄" % Save.best_wave,

@@ -20,10 +20,14 @@ import gen_art  # noqa: E402  — unit_h / MON_H 를 여기서만 정의한다
 OUT = os.path.join(ROOT, "core", "roster.gd")
 
 # 몬스터가 나오는 탄 구간. (여기부터, 여기까지, {단계: 비중})
+# ★ 구간을 확 갈아 끼우면 그 탄에서 갑자기 육중형이 쏟아져 판이 통째로 무너진다.
+#   예전에 21탄에서 mid 0.25/late 0.75 로 한 번에 넘어갔더니, 자동 플레이 24판 중
+#   절반이 21~27탄에서 죽었다. 네 칸으로 나눠 천천히 섞는다.
 STAGE_MIX = [
 	(1, 8, {"early": 1.0}),
-	(9, 20, {"early": 0.30, "mid": 0.70}),
-	(21, 34, {"mid": 0.25, "late": 0.75}),
+	(9, 18, {"early": 0.35, "mid": 0.65}),
+	(19, 26, {"mid": 0.65, "late": 0.35}),
+	(27, 34, {"mid": 0.25, "late": 0.75}),
 	(35, 99, {"late": 1.0}),
 ]
 
@@ -51,14 +55,20 @@ def main() -> int:
 	w("")
 
 	w("## 캐릭터 %d명. tier 는 Poker.Hand 값이다." % sum(len(t["units"]) for t in r["tiers"]))
+	w("##")
+	w("## sc 는 **그림 크기 보정**이다. gen_art.py 는 그림을 등급마다 같은 높이로 저장하는데,")
+	w("## 그 높이는 지팡이·꼬리·회오리까지 포함한 **테두리 상자**의 높이다. 그래서 소품이 큰")
+	w("## 캐릭터는 사람 몸이 그만큼 작게 나온다 — 같은 등급인데 누구는 크고 누구는 작아 보인다.")
+	w("## sc 가 그 몫을 되돌린다(1.0 이 보정 없음). 값은 tools/roster.json 에 손으로 적는다.")
 	w("const UNITS := [")
 	for ti, t in enumerate(r["tiers"]):
 		w("\t# --- %s ---" % t["ko"])
 		for u in t["units"]:
 			w('\t{"id": "%s", "ko": "%s", "tier": %d, "profile": "%s", "bullet": "%s", '
-			  '"desc": "%s", "color": "%s", "h": %d, "art": "res://art/units/%s.png"},'
+			  '"desc": "%s", "color": "%s", "h": %d, "sc": %.2f, '
+			  '"art": "res://art/units/%s.png"},'
 			  % (u["id"], esc(u["ko"]), ti, u["profile"], u["bullet"], esc(u["desc"]),
-				 u["color"], gen_art.unit_h(ti), u["id"]))
+				 u["color"], gen_art.unit_h(ti), float(u.get("sc", 1.0)), u["id"]))
 	w("]")
 	w("")
 
@@ -134,10 +144,9 @@ static func boss_for_wave(w: int) -> Dictionary:
 ## w 탄에 나올 몬스터 종류를 뽑는다(보스 제외). 같은 탄 안에서도 두어 종이 섞여야
 ## 화면이 심심하지 않다.
 ##
-## ★ 1~3탄에는 **느린 놈(육중·주술)을 넣지 않는다.** 육중형은 안쪽으로 조여드는 속도가
-##   0.75배라, 늦게 나오면 첫 영웅의 사거리 안에 들어오지도 못한 채 시간이 끝난다.
-##   그러면 아무것도 못 해 보고 목숨이 깎인다 — 게임을 켜자마자 벌을 받는 셈이다.
-##   (자동 플레이 12판 중 한 판이 실제로 1탄에서 세 마리를 놓쳤다)
+## ★ 1~3탄에는 **느린 놈(육중·주술)을 넣지 않는다.** 육중형은 길을 걷는 속도가 0.8배라
+##   영웅 한둘로는 잡을 화력이 안 나오고, 첫 탄부터 크리스탈이 깨진다 —
+##   게임을 켜자마자 벌을 받는 셈이다. 앞 세 탄은 무조건 막을 수 있어야 한다.
 static func wave_kinds(w: int, rng: RandomNumberGenerator) -> Array:
 	var mix := _mix_for(w)
 	var pool: Array = []

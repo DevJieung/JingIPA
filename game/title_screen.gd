@@ -68,7 +68,9 @@ func _draw() -> void:
 	var rec := "최고 %d탄" % Save.best_wave if Save.best_wave > 0 else "첫 판"
 	if Save.best_hand >= 0:
 		rec += "   ·   최고 족보 %s" % Poker.HAND_KO[Save.best_hand]
-	rec += "   ·   만난 영웅 %d / %d" % [Save.seen_units.size(), Roster.UNITS.size()]
+	# ★ 지금 표에 있는 캐릭터만 센다. 캐릭터를 지우면(수호 다섯을 뺐다) 옛 저장에는
+	#   없어진 id 가 남아 있어서 "만난 영웅 34 / 31" 처럼 분자가 분모를 넘는다.
+	rec += "   ·   만난 영웅 %d / %d" % [Save.seen_count(), Roster.UNITS.size()]
 	Look.text_center(self, Vector2(cx, 700.0), rec, 24, Look.INK_DIM)
 
 	ui.button(self, Rect2(cx - 150.0, 588.0, 300.0, 82.0), "시작", "start", true, Look.GOLD, 38)

@@ -58,6 +58,35 @@ static func discard_plan(cards: Array) -> Array:
 	return out
 
 
+## 영웅 하나가 안뜰에서 내는 초당 피해(단일 대상). 자리 다툼을 이 값으로 매긴다.
+##
+## ★ 광역·연쇄·장판이 여럿을 동시에 때리는 몫은 여기 안 들어간다(Run.total_dps 와 같은
+##   한계다). 그래서 장판 영웅을 살짝 얕본다 — 정책은 **평범한 사람**이면 된다.
+static func hero_power(run, h: Dictionary) -> float:
+	var st: Dictionary = run.hero_stats(h)
+	var cmul: float = 1.0 + float(st["crit"]) * (float(st["critx"]) - 1.0)
+	return float(st["atk"]) * float(st["rate"]) * cmul
+
+
+## 안뜰 여섯 자리를 정리한다. 센 놈 여섯을 세우고 나머지는 인벤토리로 내린다.
+##
+## ★ 이 함수가 곧 "기준 실력"이다. 여기를 세게 만들면 게임이 쉬워 보이고 약하게 만들면
+##   어려워 보인다. 그래서 판단은 하나뿐이다 — **초당 피해가 큰 순서로 여섯.**
+##   (겹친 수가 공격력에 이미 곱해져 있으므로 "1겹 로열" 과 "8겹 원페어" 가 같은 저울에 선다)
+static func arrange(run) -> void:
+	var all: Array = []
+	for h in run.heroes:
+		all.append(h)
+	for h in run.bench:
+		all.append(h)
+	all.sort_custom(func(a, b): return hero_power(run, a) > hero_power(run, b))
+	var keep: int = mini(Balance.HERO_SLOTS, all.size())
+	# ★ 배열을 통째로 갈아 끼운다. 한 칸씩 맞바꾸면 자리 번호가 밀려서 같은 영웅이
+	#   두 배열에 다 들어가거나 조용히 사라진다(실제로 흔한 실수다).
+	run.heroes = all.slice(0, keep)
+	run.bench = all.slice(keep, all.size())
+
+
 ## 카드를 다시 뽑는다. 공짜는 다 쓰고, 골드가 넉넉할 때만 돈을 낸다.
 static func do_rerolls(run) -> void:
 	for _pass in range(3):
@@ -76,8 +105,69 @@ static func do_rerolls(run) -> void:
 			break
 
 
+## 무기 하나가 "골드 하나당" 얼마나 이득인가.
+## ★ 사거리·둔화·광역처럼 total_dps() 에 안 잡히는 것은 어림값을 더해 준다.
+##   안 그러면 정책이 장궁을 영영 안 사고, 그 결과 밸런스가 실제보다 어렵게 나온다.
+static func weapon_value(run, w: Dictionary) -> float:
+	var id := String(w["id"])
+	var before: float = max(1.0, run.total_dps())
+	run.weapons.append(id)
+	var after: float = run.total_dps()
+	run.weapons.erase(id)
+	var gain: float = (after - before) / before
+	if w.has("rng"):
+		gain += (float(w["rng"]) - 1.0) * 0.8
+	if w.has("split"):
+		gain += 0.30
+	if w.has("slow"):
+		gain += 0.18
+	if w.has("gold"):
+		gain += 0.15
+	if w.has("radius"):
+		gain += 0.10
+	return gain / float(w["cost"])
+
+
+## 아이템은 "여유가 있을 때" 조금만 쟁여 둔다.
+## ★ 능력치 사는 줄에 같이 세우면 골드를 다 태워서 하나도 못 산다. 먼저 사고 시작한다.
+static func stock_items(run) -> void:
+	while run.lives <= 8 and run.item_count("repair") < 2 and run.gold > 420:
+		if not run.buy_item("repair"):
+			break
+	while run.wave >= 8 and run.item_count("bomb") < 2 and run.gold > 600:
+		if not run.buy_item("bomb"):
+			break
+	while run.wave >= 12 and run.item_count("freeze") < 1 and run.gold > 700:
+		if not run.buy_item("freeze"):
+			break
+
+
+## 전투 중에 아이템을 쓴다. 화면이 없어도 같은 판단을 하도록 여기 둔다
+## (전투 화면은 사람이 누르고, 검사기는 이 함수가 누른다).
+static func use_items(run, sim) -> void:
+	if sim.done or sim.monsters.is_empty():
+		return
+	if run.item_count("repair") > 0 and run.lives <= 3:
+		sim.use_item("repair")
+		return
+	var lead := 0.0
+	for mo in sim.monsters:
+		lead = max(lead, sim.progress(mo))
+	if lead < 0.82:
+		return
+	var cnt: int = sim.monsters.size()
+	if cnt >= 4 and run.item_count("bomb") > 0:
+		sim.use_item("bomb")
+	elif cnt >= 3 and run.item_count("freeze") > 0:
+		sim.use_item("freeze")
+	elif run.item_count("rally") > 0:
+		sim.use_item("rally")
+
+
 ## 상점. "골드 하나당 얼마나 세지는가"로 줄을 세워 살 수 있을 때까지 산다.
 static func shop(run) -> void:
+	arrange(run)          # 「중간 정비」 — 사기 전에 안뜰부터 정리한다
+	stock_items(run)
 	var guard := 0
 	while guard < 120:
 		guard += 1
@@ -113,11 +203,27 @@ static func shop(run) -> void:
 						v = 0.040 / float(cost)
 				"reroll":
 					v = (0.120 if l < 2 else 0.040) / float(cost)
-				"time":
-					v = 0.100 / float(cost)
+				"mire":
+					# 몬스터가 6% 느려지면 그만큼 더 오래 때린다 — 대략 그만큼의 이득.
+					v = 0.050 / float(cost)
 			if v > best_v:
 				best_v = v
 				best = id
+		# 무기도 같은 저울에 올린다. 칸이 비어 있을 때만.
+		var wbest := ""
+		var wbest_v := 0.0
+		if not run.weapon_full():
+			for w in Balance.WEAPONS:
+				var wid := String(w["id"])
+				if run.has_weapon(wid) or int(w["cost"]) > run.gold:
+					continue
+				var wv: float = weapon_value(run, w)
+				if wv > wbest_v:
+					wbest_v = wv
+					wbest = wid
+		if wbest != "" and wbest_v > best_v:
+			if run.buy_weapon(wbest):
+				continue
 		# 패시브도 같은 저울에 올린다. 값이 커서 여유가 있을 때만 산다.
 		var pbest := ""
 		var pbest_v := 0.0

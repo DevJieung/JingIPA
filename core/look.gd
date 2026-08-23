@@ -23,6 +23,24 @@ const BLUE      := Color("#4aa3ff")
 const GREEN     := Color("#5ad07a")
 const PURPLE    := Color("#a56cf0")
 
+## 투기장 — 벽·길·크리스탈
+const WALL       := Color("#413a5c")   ## 돌벽 몸통
+const WALL_TOP   := Color("#6a6090")   ## 벽 윗면(빛 받는 쪽)
+const WALL_DARK  := Color("#241f36")   ## 벽 그림자
+const LANE       := Color("#1c1730")   ## 몬스터가 걷는 길
+const LANE_EDGE  := Color("#2b2445")   ## 길에 그은 줄
+const YARD       := Color("#123527")   ## 영웅이 선 안뜰(초록 천)
+const GATE       := Color("#f6c445")   ## 문
+const CRYSTAL      := Color("#5fe6ff")
+const CRYSTAL_DEEP := Color("#1f7fa8")
+const CRYSTAL_DEAD := Color("#3a3450")
+
+## 얼음 — 둔화에 걸린 몬스터에 낀 성에와 얼음 조각.
+## ★ 크리스탈(#5fe6ff)보다 **희게** 잡았다. 같은 하늘색으로 두면 몬스터 몸에 붙은 얼음이
+##   제단의 크리스탈처럼 보여서, 목숨이 굴러다니는 줄 알게 된다.
+const ICE      := Color("#d6f4ff")
+const ICE_DEEP := Color("#59bfe6")
+
 const CARD_BG   := Color("#f7f3e8")
 const CARD_EDGE := Color("#2a2233")
 const CARD_RED  := Color("#c62a44")
@@ -52,6 +70,16 @@ static func tier_color(t: int) -> Color:
 	return TIER_COLOR[clampi(t, 0, TIER_COLOR.size() - 1)]
 
 
+## 체력 막대의 색. 넉넉하면 초록, 반쯤이면 금색, 얼마 안 남으면 빨강.
+##
+## ★ 세 토막으로 딱 끊지 않고 이어서 섞는다. 끊어 두면 34%와 36%가 전혀 다른 색이라
+##   "얼마나 남았나"가 아니라 "어느 칸에 들어갔나"로 읽힌다 — 막대를 두는 뜻이 없어진다.
+static func hp_color(k: float) -> Color:
+	if k > 0.5:
+		return GOLD.lerp(GREEN, clampf((k - 0.5) * 2.0, 0.0, 1.0))
+	return RED.lerp(GOLD, clampf(k * 2.0, 0.0, 1.0))
+
+
 ## 모서리가 둥근 사각형을 채운다. Godot 에는 이 기본 함수가 없다.
 static func fill_round(ci: CanvasItem, rect: Rect2, r: float, col: Color) -> void:
 	r = min(r, min(rect.size.x, rect.size.y) * 0.5)
@@ -71,6 +99,40 @@ static func fill_round(ci: CanvasItem, rect: Rect2, r: float, col: Color) -> voi
 ## 테두리만 그린다(안을 비우지 않고). 겹쳐 그리는 순서로 해결한다.
 static func outline_round(ci: CanvasItem, rect: Rect2, r: float, col: Color, w: float) -> void:
 	fill_round(ci, rect.grow(w), r + w, col)
+
+
+## 크리스탈 하나. alive 가 거짓이면 깨진 자리를 어둡게 남긴다.
+##
+## ★ 그림 파일로 안 만든 이유: 크리스탈은 마흔 개가 화면 한가운데에 촘촘히 놓인다.
+##   도트 그림이면 12px 로 줄어들어 무슨 모양인지 안 보인다. 도형이 훨씬 또렷하다.
+static func draw_crystal(ci: CanvasItem, c: Vector2, r: float, alive: bool,
+		glow: float = 0.0) -> void:
+	if not alive:
+		# 깨진 자리 — 밑동만 남는다.
+		# ★ glow 는 **여기서도** 써야 한다. "방금 깨진 칸이 번쩍인다"는 표시가
+		#   이 가지에만 오는데(깨졌으니 alive 가 거짓이다), 예전에는 위에서 바로
+		#   돌아가 버려서 그 연출이 조용히 사라졌다.
+		if glow > 0.001:
+			ci.draw_circle(c, r * (1.0 + glow * 1.6),
+					Color(1.0, 1.0, 1.0, clampf(glow, 0.0, 1.0) * 0.55))
+		ci.draw_colored_polygon(PackedVector2Array([
+			c + Vector2(-r * 0.5, r * 0.7), c + Vector2(r * 0.5, r * 0.7),
+			c + Vector2(r * 0.28, r * 0.1), c + Vector2(-r * 0.34, r * 0.2)]),
+			CRYSTAL_DEAD)
+		return
+	if glow > 0.001:
+		ci.draw_circle(c, r * (1.8 + glow), Color(CRYSTAL.r, CRYSTAL.g, CRYSTAL.b, 0.18 * glow))
+	var body := PackedVector2Array([
+		c + Vector2(0, -r * 1.5), c + Vector2(r * 0.78, -r * 0.2),
+		c + Vector2(r * 0.42, r * 1.0), c + Vector2(-r * 0.42, r * 1.0),
+		c + Vector2(-r * 0.78, -r * 0.2)])
+	ci.draw_colored_polygon(body, CRYSTAL_DEEP)
+	# 왼쪽 면만 밝게 — 이 한 조각이 있어야 평평한 오각형이 아니라 보석으로 보인다.
+	ci.draw_colored_polygon(PackedVector2Array([
+		c + Vector2(0, -r * 1.5), c + Vector2(0, r * 1.0),
+		c + Vector2(-r * 0.42, r * 1.0), c + Vector2(-r * 0.78, -r * 0.2)]), CRYSTAL)
+	ci.draw_line(c + Vector2(0, -r * 1.5), c + Vector2(0, r * 1.0),
+			Color(1, 1, 1, 0.55), max(1.0, r * 0.16), true)
 
 
 static func font() -> Font:

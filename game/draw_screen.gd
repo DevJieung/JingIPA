@@ -10,7 +10,7 @@ class_name DrawScreen
 ##  - 확정하면 족보 등급에 맞는 캐릭터가 그 등급 안에서 **무작위로** 나온다.
 ##  - 풀하우스 이상이면 연출이 화려해진다.
 
-enum { PICK, REVEAL }
+enum { PICK, REVEAL, SWAP }
 
 const CARD_SC := 1.30
 const PICK_Y := 214.0
@@ -19,6 +19,8 @@ const ROW_GAP := 26.0
 var main = null
 var ui := Ui.new()
 var fx := Fx.new()
+## 안뜰이 꽉 찬 채로 새 영웅이 왔을 때 뜨는 편성 판. 상점의 「영웅」 탭과 같은 것이다.
+var hv := HeroView.new()
 
 var state: int = PICK
 var t: float = 0.0
@@ -66,6 +68,7 @@ func reveal_rect(i: int) -> Rect2:
 func _process(dt: float) -> void:
 	t += dt
 	fx.update(dt)
+	hv.update(dt)
 	for i in range(_flip.size()):
 		if _flip[i] > 0.0:
 			_flip[i] = max(0.0, _flip[i] - dt)
@@ -74,7 +77,7 @@ func _process(dt: float) -> void:
 		_reveal_beats()
 		var wait: float = 3.8 if showy else 2.5
 		if rt > wait and not _leaving:
-			_leave()
+			_after_reveal()
 	queue_redraw()
 
 
@@ -86,10 +89,18 @@ func _input(e: InputEvent) -> void:
 	if state == REVEAL:
 		# 연출은 언제든 넘길 수 있어야 한다. 40탄을 도는 게임에서 못 넘기는 연출은 고문이다.
 		if rt > 0.7:
-			_leave()
+			_after_reveal()
 		return
 	var id := ui.hit(e.position)
 	if id == "":
+		return
+	if state == SWAP:
+		# ★ 편성 판은 **넘길 수 없다.** 자리를 안 바꾸겠다면 「이대로 전투로」를 누른다 —
+		#   아무 데나 눌러서 넘어가게 두면 새로 온 영웅이 조용히 대기석에 남는다.
+		if id == "tobattle":
+			_leave()
+		else:
+			hv.tap(id)
 		return
 	if id == "go":
 		_confirm()
@@ -109,8 +120,21 @@ func _confirm() -> void:
 	_fired.clear()
 
 
+## 연출이 끝났다. 새 영웅이 **자리가 없어 대기석으로 갔으면** 편성 판을 띄운다.
+## 겹쳤거나 그냥 안뜰에 섰으면 곧장 전투로 간다 — 고를 것이 없는데 판을 띄우면 성가시다.
+func _after_reveal() -> void:
+	if state != REVEAL or _leaving:
+		return
+	if String(result.get("where", "field")) == "bench" and not bool(result.get("stacked", false)):
+		state = SWAP
+		hv.sel = -1
+		hv.new_id = String(result.get("unit", {}).get("id", ""))
+		return
+	_leave()
+
+
 func _leave() -> void:
-	if main == null or _leaving or state != REVEAL:
+	if main == null or _leaving or state == PICK:
 		return
 	_leaving = true
 	main.go(main.go_battle)
@@ -183,10 +207,13 @@ func _draw() -> void:
 		var dim: float = clampf((rt - 0.45) / 0.25, 0.0, 1.0) * 0.62
 		draw_rect(Rect2(-40, -40, 1360, 880), Color(0, 0, 0, dim))
 	fx.draw_back(self)      # 빛살·고리는 글자 **뒤에** 깔린다
-	if state == PICK:
-		_draw_pick()
-	else:
-		_draw_reveal()
+	match state:
+		PICK:
+			_draw_pick()
+		SWAP:
+			_draw_swap()
+		_:
+			_draw_reveal()
 	fx.draw(self)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	fx.draw_flash(self, Rect2(0, 0, 1280, 800))
@@ -204,15 +231,15 @@ func _draw_topbar() -> void:
 	draw_rect(Rect2(0, 0, 1280, 68), Look.PANEL)
 	draw_rect(Rect2(0, 66, 1280, 2), Look.PANEL_EDGE)
 	Look.text_left(self, Vector2(28, 34), "%d탄" % Run.wave, 34, Look.INK)
-	var hx := 220.0
-	if not Art.draw_at(self, Roster.ART.get("heart", ""), hx, 46.0):
-		draw_circle(Vector2(hx, 34), 12.0, Look.RED)
-	Look.text_left(self, Vector2(hx + 22, 34), "%d / %d" % [Run.lives, Run.max_lives()], 28, Look.INK)
+	# 목숨은 곧 크리스탈이다. 화면마다 다른 그림을 쓰면 같은 값인 줄 모른다.
+	Look.draw_crystal(self, Vector2(224, 34), 11.0, true)
+	Look.text_left(self, Vector2(244, 34), "%d / %d" % [Run.lives, Run.max_lives()], 28, Look.INK)
 	var gx := 420.0
 	if not Art.draw_at(self, Roster.ART.get("coin", ""), gx, 47.0):
 		draw_circle(Vector2(gx, 34), 12.0, Look.GOLD)
 	Look.text_left(self, Vector2(gx + 22, 34), "%d G" % Run.gold, 28, Look.GOLD)
-	Look.text_right(self, Vector2(1252, 34), "영웅 %d명" % Run.heroes.size(), 26, Look.INK_DIM)
+	Look.text_right(self, Vector2(1252, 34), "안뜰 %d / %d  ·  대기 %d명"
+			% [Run.heroes.size(), Balance.HERO_SLOTS, Run.bench.size()], 24, Look.INK_DIM)
 
 
 func _draw_pick() -> void:
@@ -320,15 +347,41 @@ func _draw_reveal() -> void:
 	var hk := clampf((rt - 1.25) / 0.32, 0.0, 1.0)
 	var over := 1.0 + sin(hk * PI) * 0.22          # 뿅 하고 커졌다 제자리로
 	# ★ 690 에 두면 그 아래의 설명 두 줄이 800 을 넘어가 잘린다. 실제로 잘렸다.
-	var by := 660.0
+	var by := 654.0
 	# 이 순간의 주인공이다. 1.0 배로 그리면 96~141px 라 화면에서 너무 작다.
-	Art.draw_actor(self, String(u.get("art", "")), Color(String(u.get("color", "#ffffff"))),
-			float(u.get("h", 100)), 640.0, by, over * 1.3, Color(1, 1, 1, hk))
+	Art.draw_unit(self, u, 640.0, by, over * 1.3, Color(1, 1, 1, hk))
 	Look.text_center_out(self, Vector2(640, by + 34.0), String(u.get("ko", "")), 40, col)
-	Look.text_center_out(self, Vector2(640, by + 74.0), String(u.get("desc", "")), 24,
-			Look.INK_DIM, Look.BG_DEEP, 2.0)
+	# ★ 겹쳤는가 · 자리가 없어 대기석으로 갔는가 — 이 한 줄이 없으면 플레이어는
+	#   "영웅이 왔는데 안뜰에 안 보인다"만 겪는다.
+	var stacked: bool = bool(result.get("stacked", false))
+	var where := String(result.get("where", "field"))
+	if stacked:
+		Look.text_center_out(self, Vector2(640, by + 74.0),
+				"겹쳤다!  %d겹 — 공격력 %d배" % [int(result.get("n", 2)), int(result.get("n", 2))],
+				26, Look.GOLD, Look.BG_DEEP, 2.0)
+	elif where == "bench":
+		Look.text_center_out(self, Vector2(640, by + 74.0),
+				"안뜰이 꽉 찼다 — 누구와 바꿀지 고른다", 26, Look.CRYSTAL, Look.BG_DEEP, 2.0)
+	else:
+		Look.text_center_out(self, Vector2(640, by + 74.0), String(u.get("desc", "")), 24,
+				Look.INK_DIM, Look.BG_DEEP, 2.0)
 	# ★ 이 줄을 화면 맨 위(y=108)에 뒀더니 카드 다섯 장에 가려 안 보였다. 영웅 밑으로.
 	var prof: Dictionary = Balance.PROFILE[String(u.get("profile", "balance"))]
 	var bul: Dictionary = Balance.BULLET[String(u.get("bullet", "shot"))]
-	Look.text_center(self, Vector2(640, by + 108.0),
+	Look.text_center(self, Vector2(640, by + 110.0),
 			"%s · %s" % [prof["ko"], bul["ko"]], 24, Look.GOLD)
+
+
+## 안뜰이 꽉 찼는데 새 영웅이 왔다. 누구를 물리고 누구를 세울지 여기서 고른다.
+func _draw_swap() -> void:
+	draw_rect(Rect2(-40, -40, 1360, 880), Color(0, 0, 0, 0.55))
+	var u: Dictionary = result.get("unit", {})
+	var tier: int = int(result.get("hand", 0))
+	var col := Look.tier_color(tier)
+	Look.text_center(self, Vector2(640, 118), "새 영웅 · %s" % String(u.get("ko", "")), 40, col)
+	Look.text_center(self, Vector2(640, 158),
+			"안뜰은 %d자리뿐이다. 바꿔 세울 사람을 고르거나, 이대로 두고 전투로 간다."
+			% Balance.HERO_SLOTS, 22, Look.INK_DIM)
+
+	hv.draw(self, ui, Rect2(60, 190, 1160, 480))
+	ui.button(self, Rect2(490, 706, 300, 66), "이대로 전투로", "tobattle", true, Look.GOLD, 28)
