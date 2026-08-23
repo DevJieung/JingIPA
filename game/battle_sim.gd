@@ -84,6 +84,8 @@ func setup(run_state, wave_no: int, seed_value: int = 0) -> void:
 			"kind": String(st["bullet"]), "atk": float(st["atk"]),
 			"rate": float(st["rate"]), "rng": float(st["rng"]),
 			"crit": float(st["crit"]), "critx": float(st["critx"]),
+			# 공격 속성. 매 명중마다 Dictionary 를 뒤지지 않으려고 여기 꺼내 둔다.
+			"elem": String(st.get("elem", "none")),
 			"col": Color(String(h["unit"].get("color", "#ffffff"))),
 		})
 
@@ -95,7 +97,15 @@ func setup(run_state, wave_no: int, seed_value: int = 0) -> void:
 
 
 func _build_queue() -> void:
-	var kinds := Roster.wave_kinds(wave, _rng)
+	# ★ 편성은 **Run 이 씨앗으로 정해 둔 것**을 그대로 쓴다. 여기서 다시 굴리면
+	#   상점이 "다음 탄에 이 놈들이 온다"고 보여 준 것과 실제가 달라진다 —
+	#   그 순간 상성은 플레이어가 쓸 수 없는 규칙이 된다.
+	#   (검사기가 넣는 가짜 Run 처럼 kinds_for 가 없으면 예전처럼 굴린다)
+	var kinds: Array = []
+	if run != null and run.has_method("kinds_for"):
+		kinds = run.kinds_for(wave)
+	if kinds.is_empty():
+		kinds = Roster.wave_kinds(wave, _rng)
 	var cnt := Balance.wave_count(wave)
 	for i in range(cnt):
 		_queue.append(kinds[i % kinds.size()])
@@ -124,6 +134,8 @@ func _spawn(m: Dictionary) -> void:
 		"slow": 0.0, "slow_t": 0.0, "burn": 0.0, "burn_t": 0.0,
 		"flash": 0.0, "cast_t": Balance.CURSE_EVERY * _rng.randf_range(0.5, 1.0),
 		"h": float(m["h"]),
+		# 몸 속성 — 무엇에 약하고 무엇을 튕겨 내는가 (Balance.MBODY).
+		"body": String(m.get("body", "null")),
 		"gold": Balance.kill_gold(wave, kind),
 		"crush": int(k.get("crush", 1)),
 	})
@@ -174,7 +186,11 @@ func use_item(id: String) -> bool:
 			# ★ 뒤에서부터 도는 이유는 없다 — _hurt 는 배열을 안 건드리고 hp 만 깎는다.
 			#   실제로 치우는 것은 이번 걸음 끝의 _reap 이다.
 			for i in range(monsters.size()):
-				_hurt(i, dmg, false, -1)
+				# ★ 폭탄은 **무상성**이다. 이름은 「벼락」이지만 상성을 안 탄다.
+				#   왜냐하면 이것은 후반 방어의 안전망이기 때문이다 — 전기로 두면
+				#   돌골렘(뒷 구간 체력의 3분의 1을 차지한다)에게 반밖에 안 들어가서,
+				#   **안전망이 정확히 제일 필요한 곳에서만 사라진다.**
+				_hurt(i, dmg, false, -1, "none")
 			events.append({"t": "bomb", "p": Balance.ARENA_CENTER})
 		"freeze":
 			freeze_t = Balance.ITEM_FREEZE_SEC
@@ -305,7 +321,7 @@ func _heroes_fire(dt: float) -> void:
 			var first := -1
 			for mi in range(_mp.size()):
 				if pos.distance_squared_to(_mp[mi]) <= rng2:
-					_hurt(mi, dps * dt * rm, false, hi)
+					_hurt(mi, dps * dt * rm, false, hi, String(he["elem"]))
 					any = true
 					if first < 0:
 						first = mi
@@ -318,7 +334,7 @@ func _heroes_fire(dt: float) -> void:
 					"c": he["col"]})
 				# 연쇄 낙뢰만은 대상마다 굴리면 초당 수십 번이 된다. 한 번만 굴린다.
 				if first >= 0 and run.has("bolt") and _rng.randf() < Balance.PASSIVE_BOLT_P:
-					_chain(first, dps * 0.25 * 0.5, 2, 0.7, 150.0, [first], Look.BLUE, hi)
+					_chain(first, dps * 0.25 * 0.5, 2, 0.7, 150.0, [first], Look.BLUE, hi, "elec")
 			continue
 
 		he["cool"] = float(he["cool"]) - dt * rm
@@ -340,11 +356,14 @@ func _shoot(hi: int, tgt: int, dmg: float, kind: String, crit: bool) -> void:
 	var pos: Vector2 = he["pos"]
 	var col: Color = he["col"]
 	var spec: Dictionary = Balance.BULLET[kind]
+	var elem: String = he["elem"]
 	events.append({"t": "fire", "p": pos, "d": (_mp[tgt] - pos).normalized(), "c": col})
 
 	if kind == "beam":
 		events.append({"t": "beam", "a": pos, "b": _mp[tgt], "c": col, "big": true})
-		_hurt(tgt, dmg, crit, hi)
+		var em: float = _hurt(tgt, dmg, crit, hi, elem)
+		events.append({"t": "hit", "p": _mp[tgt], "c": col, "kind": kind,
+			"crit": crit, "em": em, "el": elem})
 		_on_hit_extras(tgt, dmg, hi)
 		return
 
@@ -355,6 +374,7 @@ func _shoot(hi: int, tgt: int, dmg: float, kind: String, crit: bool) -> void:
 		"p": pos, "v": (_mp[tgt] - pos).normalized() * float(spec["speed"]),
 		"tgt": tgt, "dmg": dmg, "kind": kind, "spd": float(spec["speed"]),
 		"life": 2.6, "pierce": pierce, "hit": [], "c": col, "crit": crit, "src": hi,
+		"el": elem,
 	})
 
 
@@ -407,55 +427,65 @@ func _impact(b: Dictionary, mi: int) -> void:
 	var spec: Dictionary = Balance.BULLET[kind]
 	var src: int = int(b["src"])
 	var rad_mul: float = run.wpn_mult("radius")
-	_hurt(mi, dmg, bool(b["crit"]), src)
+	var elem := String(b.get("el", "none"))
+	var em: float = _hurt(mi, dmg, bool(b["crit"]), src, elem)
 	events.append({"t": "hit", "p": b["p"], "c": b["c"], "kind": kind,
-		"crit": bool(b["crit"])})
+		"crit": bool(b["crit"]), "em": em, "el": elem})
 
 	match kind:
 		"splash":
 			var at: Vector2 = _mp[mi] if mi < _mp.size() else Vector2(b["p"])
 			var rad: float = float(spec["radius"]) * rad_mul
-			_splash(mi, at, rad, dmg * float(spec["falloff"]), src)
+			_splash(mi, at, rad, dmg * float(spec["falloff"]), src, elem)
 			events.append({"t": "splash", "p": at, "r": rad, "c": b["c"]})
 		"chain":
 			_chain(mi, dmg * float(spec["decay"]), int(spec["jumps"]) - 1,
-					float(spec["decay"]), float(spec["hop"]), [mi], b["c"], src)
+					float(spec["decay"]), float(spec["hop"]), [mi], b["c"], src, elem)
 		"slow":
 			_slow(mi, float(spec["slow"]), float(spec["slow_sec"]))
 		"burn":
-			_burn(mi, dmg * float(spec["burn"]), float(spec["burn_sec"]))
+			_burn(mi, dmg * float(spec["burn"]), float(spec["burn_sec"]), elem)
 
 	# 무기 「분열 탄두」 — 방식과 상관없이 모든 탄이 작게 터진다.
 	var split: float = run.wpn_best("split")
 	if split > 0.0 and kind != "splash":
 		var sat: Vector2 = _mp[mi] if mi < _mp.size() else Vector2(b["p"])
 		var srad: float = split * rad_mul
-		_splash(mi, sat, srad, dmg * 0.35, src)
+		# 분열 조각은 **쏜 놈의 속성 그대로** 터진다. 무기가 속성을 바꾸지는 않는다.
+		_splash(mi, sat, srad, dmg * 0.35, src, elem)
 		events.append({"t": "splash", "p": sat, "r": srad, "c": b["c"]})
 	_on_hit_extras(mi, dmg, src)
 
 
 ## 한 점 둘레를 함께 때린다. 광역탄과 분열 탄두가 같은 함수를 쓴다.
-func _splash(skip: int, at: Vector2, radius: float, dmg: float, src: int) -> void:
+func _splash(skip: int, at: Vector2, radius: float, dmg: float, src: int,
+		elem: String = "none") -> void:
 	var r2: float = radius * radius
 	for j in range(_mp.size()):
 		if j == skip:
 			continue
 		if at.distance_squared_to(_mp[j]) <= r2:
-			_hurt(j, dmg, false, src)
+			_hurt(j, dmg, false, src, elem)
 
 
 ## 패시브가 붙여 주는 추가 효과. 공격 방식과 상관없이 **모든 명중**에 붙는다.
+## ★ 속성을 안 받는다. 여기서 붙는 것은 패시브·무기뿐이고 그것들은 **자기 속성이
+##   정해져 있다** — 「연쇄 낙뢰」는 언제나 전기, 「화염 부적」은 언제나 불이다.
+##   쏜 영웅의 속성을 받아 두면 언젠가 그것을 잘못 연결하게 된다.
 func _on_hit_extras(mi: int, dmg: float, src: int) -> void:
 	_field_extras(mi, dmg)
+	# ★ 「연쇄 낙뢰」는 이름 그대로 **번개**다. 쏜 영웅의 속성이 아니라 늘 전기로 친다 —
+	#   불 마법사가 지른 낙뢰가 불이 되면 상점 설명과 화면이 어긋난다.
 	if run.has("bolt") and _rng.randf() < Balance.PASSIVE_BOLT_P:
-		_chain(mi, dmg * 0.5, 2, 0.7, 150.0, [mi], Look.BLUE, src)
+		_chain(mi, dmg * 0.5, 2, 0.7, 150.0, [mi], Look.BLUE, src, "elec")
 
 
 ## 화상·서리처럼 **대상에게 남는** 효과만. 장판은 이쪽만 쓴다(연쇄는 따로 굴린다).
+## ★ 패시브·무기가 붙이는 것은 **자기 속성이 정해져 있다.** 「화염 부적」은 언제나 불이고
+##   「서리 부적」·「서리 심」은 피해가 없어 속성을 안 탄다.
 func _field_extras(mi: int, dmg: float) -> void:
 	if run.has("flame"):
-		_burn(mi, dmg * Balance.PASSIVE_FLAME_BURN, Balance.PASSIVE_FLAME_SEC)
+		_burn(mi, dmg * Balance.PASSIVE_FLAME_BURN, Balance.PASSIVE_FLAME_SEC, "fire")
 	if run.has("frost"):
 		_slow(mi, Balance.PASSIVE_FROST_SLOW, Balance.PASSIVE_FROST_SEC)
 	# 무기 「서리 심」
@@ -465,7 +495,7 @@ func _field_extras(mi: int, dmg: float) -> void:
 
 
 func _chain(from_i: int, dmg: float, jumps: int, decay: float, hop: float,
-		seen: Array, col: Color, src: int) -> void:
+		seen: Array, col: Color, src: int, elem: String = "none") -> void:
 	if jumps <= 0 or from_i >= _mp.size():
 		return
 	var at: Vector2 = _mp[from_i]
@@ -481,9 +511,9 @@ func _chain(from_i: int, dmg: float, jumps: int, decay: float, hop: float,
 	if best < 0:
 		return
 	events.append({"t": "bolt", "a": at, "b": _mp[best], "c": col})
-	_hurt(best, dmg, false, src)
+	_hurt(best, dmg, false, src, elem)
 	seen.append(best)
-	_chain(best, dmg * decay, jumps - 1, decay, hop, seen, col, src)
+	_chain(best, dmg * decay, jumps - 1, decay, hop, seen, col, src, elem)
 
 
 ## 겹치지 않고 **센 쪽으로 덮어쓴다.** 곱해 버리면 둔화 둘만 겹쳐도 몬스터가 멈춘다.
@@ -507,23 +537,37 @@ func _slow(mi: int, amount: float, sec: float) -> void:
 			"h": float(mo["h"])})
 
 
-func _burn(mi: int, dps: float, sec: float) -> void:
+## ★ 상성 배수를 **붙이는 순간에 미리 곱해** 둔다. 화상 도트는 매 걸음 _move_monsters()
+##   에서 hp 를 직접 깎으므로 _hurt() 를 안 거친다 — 거기서 다시 곱하려면 몬스터마다
+##   "이 화상은 무슨 속성이었나"를 들고 다녀야 하고, 겹쳐 걸릴 때 어느 쪽 속성을 남길지가
+##   또 문제가 된다. 미리 곱해 두면 max() 로 센 쪽을 남기는 규칙이 그대로 맞는다.
+func _burn(mi: int, dps: float, sec: float, elem: String = "none") -> void:
 	if mi >= monsters.size():
 		return
 	var mo: Dictionary = monsters[mi]
+	dps *= Balance.elem_mult(elem, String(mo.get("body", "null")))
 	mo["burn"] = dps if float(mo["burn_t"]) <= 0.0 else max(float(mo["burn"]), dps)
 	mo["burn_t"] = max(float(mo["burn_t"]), sec)
 
 
-func _hurt(mi: int, dmg: float, crit: bool, _src: int) -> void:
+## 몬스터 하나를 때린다. **피가 깎이는 곳은 여기 한 군데뿐이다** — 상성 배수도
+## 그래서 여기서만 곱한다. 광역·연쇄·장판·분열이 저마다 곱하기 시작하면
+## "광역은 상성을 타는데 연쇄는 안 타는" 식으로 조용히 갈라진다.
+##
+## 돌려주는 것: **실제로 적용된 상성 배수.** 화면이 「약점!」을 띄우는 데 쓴다 —
+## 화면이 같은 계산을 다시 하면 전투와 표시가 언젠가 어긋난다.
+func _hurt(mi: int, dmg: float, crit: bool, _src: int, elem: String = "none") -> float:
 	if mi < 0 or mi >= monsters.size():
-		return
+		return 1.0
 	var mo: Dictionary = monsters[mi]
+	var em: float = Balance.elem_mult(elem, String(mo.get("body", "null")))
+	dmg *= em
 	mo["hp"] = float(mo["hp"]) - dmg
 	mo["flash"] = 1.0
 	if crit:
 		events.append({"t": "crit", "p": _mp[mi] if mi < _mp.size() else Vector2.ZERO,
 			"n": int(dmg)})
+	return em
 
 
 ## 사거리(제곱) 안에서 **가장 앞선**(크리스탈에 가장 가까운) 몬스터.

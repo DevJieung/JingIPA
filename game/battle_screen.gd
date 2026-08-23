@@ -36,6 +36,9 @@ var _sh: Vector2 = Vector2.ZERO
 ##   프레임에서 폰이 그 시간을 이 숫자 하나에 쓴다. 반 초에 한 번만 센다.
 var _dps: float = 0.0
 var _dps_t: float = 0.0
+## ★ 「약점!」 글자를 띄우는 텀. 약점 명중은 초당 수십 번이라 매번 띄우면 글자가
+##   투기장을 통째로 덮는다. 불똥은 매번 튀고 **글자만** 이 텀으로 잡는다.
+var _weak_t: float = 0.0
 
 
 func _ready() -> void:
@@ -52,6 +55,8 @@ func _process(dt: float) -> void:
 		_dps = Run.total_dps()
 	if _crack_t > 0.0:
 		_crack_t = max(0.0, _crack_t - dt)
+	if _weak_t > 0.0:
+		_weak_t = max(0.0, _weak_t - dt)
 	var sdt: float = dt * speed
 	if not sim.done:
 		# ★ 배속을 걸어도 한 걸음이 너무 커지지 않게 잘라서 여러 번 돈다.
@@ -148,8 +153,27 @@ func _drain() -> void:
 			"hit":
 				var hc: Color = e.get("c", Look.INK)
 				var big: bool = bool(e.get("crit", false))
-				fx.burst(p, hc, 10 if big else 6, 220.0, 0.28, 3.4, 0.0)
-				fx.ring(p, Color(1, 1, 1, 1), 2.0, 26.0 if big else 17.0, 0.20, 3.0)
+				# 상성 — 시뮬레이터가 **실제로 적용한** 배수를 그대로 받는다.
+				# ★ 여기서 다시 계산하지 않는다. 화면이 제 나름대로 곱하면 언젠가
+				#   전투와 표시가 어긋나고, 그 어긋남은 아무도 못 잡는다.
+				var em: float = float(e.get("em", 1.0))
+				if em > 1.01:
+					var ec := Balance.elem_color(String(e.get("el", "none")))
+					fx.burst(p, ec, 16 if big else 12, 300.0, 0.34, 4.2, 0.0)
+					fx.ring(p, ec, 3.0, 44.0 if big else 32.0, 0.26, 4.5)
+					if _weak_t <= 0.0:
+						_weak_t = 0.5
+						fx.float_text(p + Vector2(0, -34), "약점!", ec, 24, 0.7)
+				elif em < 0.99:
+					# 튕겨 냈다 — 불똥이 몇 알 안 튀고 색이 빠진다.
+					fx.burst(p, Color(hc.r, hc.g, hc.b, 0.55), 3, 130.0, 0.20, 2.4, 0.0)
+					fx.ring(p, Color(0.72, 0.72, 0.80), 2.0, 13.0, 0.16, 2.0)
+				elif String(e.get("kind", "")) != "beam":
+					# ★ 광선은 평상시엔 불똥을 안 그린다. 이미 제 몸(fx.beam)이 끝점에
+					#   흰 구슬을 그려서, 여기에 또 그리면 광선 영웅만 유난히 번쩍인다.
+					#   약점·저항일 때는 위 두 가지가 그려 준다 — 그때는 보여야 하니까.
+					fx.burst(p, hc, 10 if big else 6, 220.0, 0.28, 3.4, 0.0)
+					fx.ring(p, Color(1, 1, 1, 1), 2.0, 26.0 if big else 17.0, 0.20, 3.0)
 			"splash":
 				fx.disc(p, e.get("c", Look.GOLD), float(e["r"]), 0.28, 0.26)
 				fx.ring(p, e.get("c", Look.GOLD), 8.0, float(e["r"]), 0.32, 5.0)
@@ -586,6 +610,13 @@ func _draw_hp_bars() -> void:
 			#   (y<68)에 통째로 가려진다.** 이쪽은 대신 보여 줄 곳이 없으니 밀어 내린다.
 			y = maxf(72.0, y)
 		_hp_bar(Rect2(p.x - w * 0.5, y, w, 7.0), hp, ghost)
+		# ★ 무엇에 약한가를 **막대 왼쪽 끝에 한 점**으로. 여기 말고는 둘 자리가 없다 —
+		#   몸에 겹쳐 그리면 스프라이트에 가려지고(얼음 기둥 때 겪었다), 정보판에 적으면
+		#   지금 화면 어느 놈 이야기인지가 안 붙는다.
+		var wk := Balance.body_weak(String(mo.get("body", "null")))
+		if wk != "":
+			draw_rect(Rect2(p.x - w * 0.5 - 11.0, y - 1.0, 7.0, 9.0), Color(0, 0, 0, 0.72))
+			draw_rect(Rect2(p.x - w * 0.5 - 10.0, y, 5.0, 7.0), Balance.elem_color(wk))
 
 
 ## 막대 하나. ghost 는 방금 깎인 만큼을 남겨 둔 흰 띠다.
@@ -777,7 +808,8 @@ func _draw_hero_list(x: float, y: float, w: float) -> void:
 		var n: int = int(h.get("n", 1))
 		Look.fill_round(self, Rect2(x + 20, row_y, w, 32), 6.0, Look.BG_DEEP)
 		draw_rect(Rect2(x + 20, row_y, 6, 32), tc)
-		Look.text_left(self, Vector2(x + 36, row_y + 16), String(u.get("ko", "")), 20, Look.INK)
+		Look.draw_elem(self, Vector2(x + 42, row_y + 16), 10.0, String(u.get("elem", "none")))
+		Look.text_left(self, Vector2(x + 58, row_y + 16), String(u.get("ko", "")), 20, Look.INK)
 		if n > 1:
 			Look.text_right(self, Vector2(x + 20 + w - 8, row_y + 16),
 					"%d겹" % n, 20, Look.GOLD)

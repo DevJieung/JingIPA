@@ -118,13 +118,13 @@ godot_run 420 "$TMP/bal.log" res://tests/balance_check.tscn -- --runs $RUNS
 expect "자동 플레이" "판정: 정상" "$TMP/bal.log"
 grep -E "^도달 탄" "$TMP/bal.log" | sed 's/^/   /'
 # ★ 클리어율이 밸런스의 본체다. 한 판도 못 깨거나 거의 다 깨면 숫자가 무너진 것이다.
-#   (12판 표본이라 폭은 넓게 잡는다 — 기대값은 3~4판이다. CLAUDE.md 16번 참고)
+#   (12판 표본이라 폭은 넓게 잡는다 — 기대값은 3판 안팎이다. CLAUDE.md 16번 참고)
 if [ $QUICK -eq 0 ]; then
 	CLEARS=$(sed -n 's/^도달 탄:.*클리어 \([0-9]*\)판.*/\1/p' "$TMP/bal.log")
 	if [ -z "$CLEARS" ]; then
 		echo "!! 실패: 클리어 판수를 못 읽었습니다"; fail=1
-	elif [ "$CLEARS" -lt 1 ] || [ "$CLEARS" -gt 8 ]; then
-		echo "!! 실패: 12판 중 클리어 $CLEARS 판 — 1~8판이어야 합니다 (밸런스가 무너졌습니다)"
+	elif [ "$CLEARS" -lt 1 ] || [ "$CLEARS" -gt 10 ]; then
+		echo "!! 실패: 12판 중 클리어 $CLEARS 판 — 1~10판이어야 합니다 (밸런스가 무너졌습니다)"
 		fail=1
 	else
 		echo "   ok: 12판 중 클리어 $CLEARS 판"

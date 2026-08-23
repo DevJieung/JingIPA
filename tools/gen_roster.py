@@ -60,25 +60,31 @@ def main() -> int:
 	w("## 그 높이는 지팡이·꼬리·회오리까지 포함한 **테두리 상자**의 높이다. 그래서 소품이 큰")
 	w("## 캐릭터는 사람 몸이 그만큼 작게 나온다 — 같은 등급인데 누구는 크고 누구는 작아 보인다.")
 	w("## sc 가 그 몫을 되돌린다(1.0 이 보정 없음). 값은 tools/roster.json 에 손으로 적는다.")
+	w("##")
+	w("## elem 은 **공격 속성**이다(Balance.ELEM). 무상성(none)은 어떤 몸에도 1.0 배 —")
+	w("## 활·총·대포·표창이 여기 든다. 나머지 넷은 몬스터의 몸(Balance.MBODY)에 따라")
+	w("## 2배(약점)나 0.5배(저항)가 된다. 곱하는 곳은 BattleSim._hurt() 한 군데뿐이다.")
 	w("const UNITS := [")
 	for ti, t in enumerate(r["tiers"]):
 		w("\t# --- %s ---" % t["ko"])
 		for u in t["units"]:
 			w('\t{"id": "%s", "ko": "%s", "tier": %d, "profile": "%s", "bullet": "%s", '
-			  '"desc": "%s", "color": "%s", "h": %d, "sc": %.2f, '
+			  '"elem": "%s", "desc": "%s", "color": "%s", "h": %d, "sc": %.2f, '
 			  '"art": "res://art/units/%s.png"},'
-			  % (u["id"], esc(u["ko"]), ti, u["profile"], u["bullet"], esc(u["desc"]),
+			  % (u["id"], esc(u["ko"]), ti, u["profile"], u["bullet"],
+				 u.get("elem", "none"), esc(u["desc"]),
 				 u["color"], gen_art.unit_h(ti), float(u.get("sc", 1.0)), u["id"]))
 	w("]")
 	w("")
 
-	w("## 몬스터 %d종." % len(r["monsters"]))
+	w("## 몬스터 %d종. body 는 **몸 속성**이다 — 무엇에 약하고 무엇을 튕겨 내는가" % len(r["monsters"]))
+	w("## (Balance.MBODY). null 은 상성을 아예 안 타는 몬스터다.")
 	w("const MONSTERS := [")
 	for m in r["monsters"]:
-		w('\t{"id": "%s", "ko": "%s", "kind": "%s", "stage": "%s", "desc": "%s", '
-		  '"color": "%s", "h": %d, "art": "res://art/monsters/%s.png"},'
-		  % (m["id"], esc(m["ko"]), m["kind"], m["stage"], esc(m["desc"]),
-			 m["color"], gen_art.MON_H[m["kind"]], m["id"]))
+		w('\t{"id": "%s", "ko": "%s", "kind": "%s", "stage": "%s", "body": "%s", '
+		  '"desc": "%s", "color": "%s", "h": %d, "art": "res://art/monsters/%s.png"},'
+		  % (m["id"], esc(m["ko"]), m["kind"], m["stage"], m.get("body", "null"),
+			 esc(m["desc"]), m["color"], gen_art.MON_H[m["kind"]], m["id"]))
 	w("]")
 	w("")
 
@@ -129,6 +135,33 @@ static func monsters_of_stage(stage: String) -> Array:
 		if m["stage"] == stage:
 			pool.append(m)
 	return pool
+
+
+## 씨앗 하나로 정해지는 w 탄의 편성. **같은 씨앗이면 언제 물어도 같은 답이다.**
+##
+## ★ 이것이 상성을 "운"이 아니라 "선택"으로 만드는 열쇠다. 예전에는 전투가 시작될 때
+##   비로소 난수를 굴려 두세 종을 골랐다. 그러면 플레이어는 무엇이 올지 모른 채로
+##   안뜰 여섯을 짜야 하고, 저항에 걸리는 것은 순전히 사고였다 — 자동 플레이 24판이
+##   한 판도 못 깼다. 지금은 탄 번호만으로 편성이 정해지므로 **상점이 다음 탄에 나올
+##   몬스터를 정확히 보여 주고**, 플레이어는 그에 맞춰 영웅을 세운다.
+static func wave_kinds_seeded(w: int, seed_value: int) -> Array:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	return wave_kinds(w, rng)
+
+
+## w 탄에 **나올 수 있는** 몬스터 전부(보스 제외). 난수를 안 쓴다.
+## 씨앗을 모르는 자리(검사기·미리보기)에서 "이 구간에는 이런 놈들이 있다"를 보일 때 쓴다.
+static func stage_pool(w: int) -> Array:
+	var mix := _mix_for(w)
+	var out: Array = []
+	for stage in mix:
+		for m in monsters_of_stage(stage):
+			if w <= 3 and (m["kind"] == "tank" or m["kind"] == "caster"):
+				continue
+			if not out.has(m):
+				out.append(m)
+	return out
 
 
 ## 이번 보스가 누구인가. 앞쪽 보스탄은 용, 30탄부터는 트럼프 마왕이 나온다.

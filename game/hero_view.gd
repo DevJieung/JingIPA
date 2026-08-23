@@ -193,9 +193,15 @@ func _cell(ci: CanvasItem, ui: Ui, r: Rect2, code: int, big: bool) -> void:
 	Look.fill_round(ci, Rect2(r.position, Vector2(r.size.x, top)), 8.0, Look.BG_DEEP)
 	Look.fill_round(ci, Rect2(r.position, Vector2(r.size.x, 4.0)), 2.0, tc)
 	var n: int = int(h.get("n", 1))
+	# 속성 — 머리띠 왼쪽 끝에. ★ 얼굴 위에 얹으면 그림을 가리고, 이름 옆에 붙이면
+	#   칸이 좁아졌을 때 이름을 밀어낸다. 머리띠는 늘 같은 높이라 자리가 흔들리지 않는다.
+	var er: float = top * 0.36
+	var ex: float = r.position.x + 5.0 + er
+	Look.draw_elem(ci, Vector2(ex, r.position.y + top * 0.5), er,
+			String(u.get("elem", "none")))
 	if big:
-		Look.text_left(ci, Vector2(r.position.x + 7.0, r.position.y + top * 0.5 + 2.0),
-				Roster.TIER_KO[tier], clampi(int(r.size.x * 0.092), 10, 14), tc)
+		Look.text_left(ci, Vector2(ex + er + 5.0, r.position.y + top * 0.5 + 2.0),
+				Roster.TIER_KO[tier], clampi(int(r.size.x * 0.088), 10, 13), tc)
 	# 겹친 수 — 이 게임에서 제일 중요한 숫자다. ('×' 는 번들 폰트에 없다)
 	if n > 1:
 		Look.text_right(ci, Vector2(r.position.x + r.size.x - 7.0,

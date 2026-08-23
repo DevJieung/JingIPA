@@ -27,6 +27,8 @@ const LIST_W := 700.0
 const SIDE_X := 790.0
 const SIDE_W := 450.0
 const TOP_Y := 136.0
+## 「영웅」 탭에서 "다음 탄에 오는 몬스터" 줄이 놓이는 높이. 탭(78~124) 바로 아래다.
+const MON_Y := 130.0
 
 var main = null
 var ui := Ui.new()
@@ -268,7 +270,37 @@ func _draw_item(it: Dictionary, r: Rect2) -> void:
 func _draw_heroes() -> void:
 	Look.text_left(self, Vector2(SIDE_X, 100),
 			"같은 캐릭터가 또 나오면 겹쳐서 공격력이 배가 된다", 20, Look.INK_DIM)
-	hv.draw(self, ui, Rect2(LIST_X, TOP_Y - 4.0, 1240.0 - LIST_X, 680.0 - TOP_Y))
+	# ★ 몬스터 줄은 **탭 아래**에 깐다. 탭과 같은 높이(y 78~124)에 두었더니 탭 넷을
+	#   통째로 덮어서 다른 탭으로 갈 수가 없었다(사진으로 확인). 그만큼 편성 판을 내린다.
+	_draw_next_monsters()
+	hv.draw(self, ui, Rect2(LIST_X, MON_Y + 34.0, 1240.0 - LIST_X, 680.0 - MON_Y - 34.0))
+
+
+## 다음 탄에 **실제로 오는** 몬스터와 그놈이 무엇에 약한가.
+##
+## ★ 이 줄이 없으면 상성은 그냥 운이다. 안뜰 여섯을 다시 짜는 자리가 여기인데,
+##   "다음에 무엇이 오는가"를 못 보면 누구를 세울지 고를 근거가 하나도 없다.
+## ★ Run.wave_lineup() 은 씨앗으로 정해진 답이라 전투가 뽑는 것과 **정확히 같다.**
+##   난수를 여기서 굴리면 화면이 거짓말을 한다.
+func _draw_next_monsters() -> void:
+	var w: int = mini(Run.wave + 1, Balance.LAST_WAVE)
+	var pool: Array = Run.wave_lineup(w)
+	var head: String = "%d탄에 오는 몬스터" % w
+	var cy: float = MON_Y + 13.0
+	Look.text_left(self, Vector2(LIST_X, cy), head, 19, Look.INK_DIM)
+	var x: float = LIST_X + Look.text_width(head, 19) + 14.0
+	for m in pool:
+		var nm := String(m["ko"])
+		var wk := Balance.body_weak(String(m.get("body", "null")))
+		var cw: float = Look.text_width(nm, 18) + (32.0 if wk != "" else 14.0)
+		# 자리가 모자라면 조용히 자른다. 넘쳐 그리면 화면 밖으로 흘러나간다.
+		if x + cw > 1240.0 - 16.0:
+			break
+		Look.fill_round(self, Rect2(x, MON_Y, cw, 26), 8.0, Look.BG_DEEP)
+		Look.text_left(self, Vector2(x + 7, cy), nm, 18, Look.INK)
+		if wk != "":
+			Look.draw_elem(self, Vector2(x + cw - 13.0, cy), 9.0, wk)
+		x += cw + 7.0
 
 
 func _draw_passives() -> void:

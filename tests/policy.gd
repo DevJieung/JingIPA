@@ -68,10 +68,29 @@ static func hero_power(run, h: Dictionary) -> float:
 	return float(st["atk"]) * float(st["rate"]) * cmul
 
 
+## 이번 탄에 오는 몬스터들에게 이 영웅의 속성이 평균 몇 배로 들어가는가.
+##
+## ★ 왜 정책이 상성까지 보는가: 상점의 「영웅」 탭이 **다음 탄에 나올 몬스터와 그 약점**을
+##   그대로 그려 준다(Run.wave_lineup). 그걸 보고도 안 쓰는 것은 "웬만큼 하는 사람"이
+##   아니다. 편성이 씨앗으로 정해져 있으므로 화면이 보여 주는 것과 여기서 보는 것이 같다.
+static func elem_factor(run, h: Dictionary) -> float:
+	var e := String(h["unit"].get("elem", "none"))
+	if e == "none":
+		return 1.0
+	var pool: Array = run.wave_lineup(run.wave) if run.has_method("wave_lineup") \
+			else Roster.stage_pool(run.wave)
+	if pool.is_empty():
+		return 1.0
+	var s := 0.0
+	for m in pool:
+		s += Balance.elem_mult(e, String(m.get("body", "null")))
+	return s / float(pool.size())
+
+
 ## 안뜰 여섯 자리를 정리한다. 센 놈 여섯을 세우고 나머지는 인벤토리로 내린다.
 ##
 ## ★ 이 함수가 곧 "기준 실력"이다. 여기를 세게 만들면 게임이 쉬워 보이고 약하게 만들면
-##   어려워 보인다. 그래서 판단은 하나뿐이다 — **초당 피해가 큰 순서로 여섯.**
+##   어려워 보인다. 그래서 판단은 둘뿐이다 — **초당 피해**와 **이번 탄 상성**.
 ##   (겹친 수가 공격력에 이미 곱해져 있으므로 "1겹 로열" 과 "8겹 원페어" 가 같은 저울에 선다)
 static func arrange(run) -> void:
 	var all: Array = []
@@ -79,7 +98,8 @@ static func arrange(run) -> void:
 		all.append(h)
 	for h in run.bench:
 		all.append(h)
-	all.sort_custom(func(a, b): return hero_power(run, a) > hero_power(run, b))
+	var score := func(h): return hero_power(run, h) * elem_factor(run, h)
+	all.sort_custom(func(a, b): return score.call(a) > score.call(b))
 	var keep: int = mini(Balance.HERO_SLOTS, all.size())
 	# ★ 배열을 통째로 갈아 끼운다. 한 칸씩 맞바꾸면 자리 번호가 밀려서 같은 영웅이
 	#   두 배열에 다 들어가거나 조용히 사라진다(실제로 흔한 실수다).

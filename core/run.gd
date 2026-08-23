@@ -49,6 +49,17 @@ var _deck: Array[int] = []
 
 var rng := RandomNumberGenerator.new()
 
+## 이 판의 씨앗. **탄마다의 몬스터 편성이 여기서 나온다.**
+##
+## ★ 왜 따로 두는가: 편성을 전투가 시작될 때 굴리면 플레이어는 무엇이 올지 모른 채로
+##   안뜰 여섯을 짜야 한다. 그러면 상성은 선택이 아니라 사고다 — 저항에 걸리는 그 탄에
+##   크리스탈 스무 개가 통째로 날아가는데 피할 길이 없다(자동 플레이 24판이 한 판도
+##   못 깼다). 씨앗과 탄 번호만으로 정해 두면 **상점이 다음 탄을 정확히 보여 줄 수 있고**,
+##   화면·검사기·전투가 언제 물어도 같은 답을 받는다.
+## ★ rng 로 굴리지 않는 이유도 같다 — 리롤을 몇 번 했느냐에 따라 편성이 달라지면
+##   상점에서 보여 준 것과 실제가 어긋난다.
+var run_seed: int = 0
+
 ## 마지막으로 확정한 결과 — 전투 화면과 연출이 읽는다.
 var last_hand: int = -1
 var last_cards: Array[int] = []
@@ -70,6 +81,7 @@ func start_run(seed_value: int = 0) -> void:
 		rng.seed = seed_value
 	else:
 		rng.randomize()
+	run_seed = seed_value if seed_value != 0 else int(rng.randi())
 	wave = 0
 	lives = Balance.START_LIVES
 	gold = Balance.START_GOLD
@@ -103,6 +115,30 @@ func end_run(won: bool) -> void:
 	running = false
 	phase = Phase.WIN if won else Phase.OVER
 	Save.record_run(wave, kills, won)
+
+
+## w 탄의 편성을 정하는 씨앗. 탄 번호만으로 정해진다.
+func wave_seed(w: int) -> int:
+	return run_seed * 1000003 + w * 7919 + 11
+
+
+## w 탄에 실제로 나올 몬스터 종류(보스 제외). **언제 물어도 같은 답이다.**
+## 보스는 따로다 — Balance.is_boss_wave(w) 이면 Roster.boss_for_wave(w) 가 하나 더 온다.
+func kinds_for(w: int) -> Array:
+	return Roster.wave_kinds_seeded(w, wave_seed(w))
+
+
+## w 탄에 나오는 것 전부(보스 포함). 화면이 "다음 탄에 뭐가 오나"를 그릴 때 쓴다.
+func wave_lineup(w: int) -> Array:
+	var out: Array = []
+	if Balance.is_boss_wave(w):
+		var b := Roster.boss_for_wave(w)
+		if not b.is_empty():
+			out.append(b)
+	for m in kinds_for(w):
+		if not out.has(m):
+			out.append(m)
+	return out
 
 
 func lv(id: String) -> int:
@@ -461,6 +497,9 @@ func hero_stats(h: Dictionary) -> Dictionary:
 	return {
 		"atk": atk, "rate": rate, "rng": rng_px,
 		"bullet": String(u.get("bullet", "shot")),
+		# 공격 속성. 상성 배수는 전투(BattleSim._hurt)에서만 곱한다 —
+		# 여기서 미리 곱해 두면 "어느 몬스터를 때리느냐"를 모르는 채로 곱하는 셈이 된다.
+		"elem": String(u.get("elem", "none")),
 		"crit": min(0.85, Balance.crit_chance(lv("crit")) + wpn_add("crit")),
 		"critx": Balance.crit_mult(lv("critx")),
 	}
@@ -468,6 +507,8 @@ func hero_stats(h: Dictionary) -> Dictionary:
 
 ## 지금 세워 둔 영웅 전부의 **단일 대상** 초당 데미지 합(치명타 기대값 포함).
 ## ⚠ 광역·연쇄·장판이 여럿을 동시에 때리는 몫은 여기 안 들어간다. 어림수로만 써라.
+## ⚠ **상성 배수도 안 들어간다.** 어느 몬스터를 때릴지 모르는 값이라 넣을 자리가 없다 —
+##   같은 영웅이 식물에게는 2배, 물에게는 반이다. 화면의 「초당 피해」도 그래서 어림수다.
 func total_dps() -> float:
 	var s := 0.0
 	for h in heroes:

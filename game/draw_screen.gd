@@ -368,8 +368,15 @@ func _draw_reveal() -> void:
 	# ★ 이 줄을 화면 맨 위(y=108)에 뒀더니 카드 다섯 장에 가려 안 보였다. 영웅 밑으로.
 	var prof: Dictionary = Balance.PROFILE[String(u.get("profile", "balance"))]
 	var bul: Dictionary = Balance.BULLET[String(u.get("bullet", "shot"))]
-	Look.text_center(self, Vector2(640, by + 110.0),
-			"%s · %s" % [prof["ko"], bul["ko"]], 24, Look.GOLD)
+	# ★ 속성만 제 색으로 쓴다. 한 줄을 통째로 금색으로 두면 "무상성인지 불인지"가
+	#   글자를 읽어야만 알 수 있는데, 이 줄은 0.3초쯤 스쳐 가는 줄이다.
+	var el := String(u.get("elem", "none"))
+	var s1: String = "%s · %s · " % [prof["ko"], bul["ko"]]
+	var s2: String = Balance.elem_ko(el)
+	var w1: float = Look.text_width(s1, 24)
+	var x0: float = 640.0 - (w1 + Look.text_width(s2, 24)) * 0.5
+	Look.text_left(self, Vector2(x0, by + 110.0), s1, 24, Look.GOLD)
+	Look.text_left(self, Vector2(x0 + w1, by + 110.0), s2, 24, Balance.elem_color(el))
 
 
 ## 안뜰이 꽉 찼는데 새 영웅이 왔다. 누구를 물리고 누구를 세울지 여기서 고른다.

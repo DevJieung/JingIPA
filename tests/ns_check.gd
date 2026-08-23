@@ -12,6 +12,7 @@ func _ready() -> void:
 	var strict := "--strict" in OS.get_cmdline_user_args()
 	_check_scripts()
 	_check_roster()
+	_check_elem()
 	_check_balance()
 	_check_geometry()
 	_check_roster_slots()
@@ -109,6 +110,144 @@ func _check_roster() -> void:
 			_bad("%s 구간에 몬스터가 하나도 없다" % st)
 	if Roster.TIER_KO.size() != 10:
 		_bad("등급 이름이 10개가 아니다")
+
+
+## 속성 표 — 다섯 공격 속성과 몬스터의 몸.
+##
+## ★ 이 검사가 지키는 것은 하나다: **어느 속성을 뽑아도 40탄 전체로는 손해가 아니어야
+##   한다.** 약점 셋·저항 하나짜리 속성이 생기면 그 속성 영웅이 나오는 순간 그 판이
+##   결정돼 버린다 — 뽑기가 선택이 아니라 사형선고가 된다.
+func _check_elem() -> void:
+	# 1) 표 자체가 성한가
+	if Balance.ELEM_ORDER.size() != Balance.ELEM.size():
+		_bad("ELEM_ORDER(%d)와 ELEM(%d)의 개수가 다르다"
+				% [Balance.ELEM_ORDER.size(), Balance.ELEM.size()])
+	for e in Balance.ELEM_ORDER:
+		if not Balance.ELEM.has(e):
+			_bad("ELEM_ORDER 에 표에 없는 속성이 있다: %s" % e)
+	for e in Balance.ELEM:
+		if not Color.html_is_valid(String(Balance.ELEM[e]["color"])):
+			_bad("속성 %s 의 색이 이상하다" % e)
+	if not Balance.ELEM.has("none"):
+		_bad("무상성(none)이 속성 표에 없다")
+	if Balance.ELEM_WEAK <= 1.0 or Balance.ELEM_RESIST >= 1.0 or Balance.ELEM_RESIST <= 0.0:
+		_bad("상성 배수가 이상하다 (약점 %.2f · 저항 %.2f) — 약점>1>저항>0 이어야 한다"
+				% [Balance.ELEM_WEAK, Balance.ELEM_RESIST])
+
+	# 2) 몸 표 — 약점·저항이 실재하는 속성이고 서로 다른가
+	for b in Balance.MBODY:
+		var wk := Balance.body_weak(String(b))
+		var rs := Balance.body_resist(String(b))
+		for v in [wk, rs]:
+			if v != "" and not Balance.ELEM.has(v):
+				_bad("몸 %s 가 없는 속성을 가리킨다: %s" % [b, v])
+			if v == "none":
+				_bad("몸 %s 가 무상성을 약점/저항으로 삼는다 — 무상성은 늘 1.0 이어야 한다" % b)
+		if wk != "" and wk == rs:
+			_bad("몸 %s 의 약점과 저항이 같다: %s" % [b, wk])
+		# ★ **무상성 공격은 어떤 몸에도 정확히 1.0.** 이것이 무상성 영웅의 값어치 전부다.
+		if not is_equal_approx(Balance.elem_mult("none", String(b)), 1.0):
+			_bad("무상성 공격이 %s 에게 1.0 배가 아니다 (%.2f)"
+					% [b, Balance.elem_mult("none", String(b))])
+		if wk != "" and not is_equal_approx(Balance.elem_mult(wk, String(b)), Balance.ELEM_WEAK):
+			_bad("%s 의 약점(%s)이 약점 배수로 안 들어간다" % [b, wk])
+		if rs != "" and not is_equal_approx(Balance.elem_mult(rs, String(b)), Balance.ELEM_RESIST):
+			_bad("%s 의 저항(%s)이 저항 배수로 안 들어간다" % [b, rs])
+
+	# 3) 캐릭터의 속성이 표에 있는가 · 공격 방식과 어긋나지 않는가
+	var hero_n := {}
+	for u in Roster.UNITS:
+		var e := String(u.get("elem", ""))
+		if not Balance.ELEM.has(e):
+			_bad("%s 의 속성이 표에 없다: '%s'" % [u["id"], e])
+			continue
+		hero_n[e] = int(hero_n.get(e, 0)) + 1
+		# ★ 공격 방식과 속성이 어긋나면 화면이 거짓말을 한다 — 연쇄는 번개로 그려지고
+		#   화상은 불로 그려진다. 표가 그 그림과 다르면 플레이어는 영영 규칙을 못 배운다.
+		var bul := String(u.get("bullet", "shot"))
+		if bul == "chain" and e != "elec":
+			_bad("%s 는 연쇄(번개로 그려진다)인데 속성이 %s 다" % [u["id"], e])
+		if bul == "burn" and e != "fire":
+			_bad("%s 는 화상(불로 그려진다)인데 속성이 %s 다" % [u["id"], e])
+
+	# 4) 몬스터의 몸이 표에 있는가
+	var weak_n := {}
+	var res_n := {}
+	var body_by_stage := {}
+	for m in Roster.MONSTERS:
+		var b := String(m.get("body", ""))
+		if not Balance.MBODY.has(b):
+			_bad("%s 의 몸이 표에 없다: '%s'" % [m["id"], b])
+			continue
+		var wk2 := Balance.body_weak(b)
+		var rs2 := Balance.body_resist(b)
+		if wk2 != "":
+			weak_n[wk2] = int(weak_n.get(wk2, 0)) + 1
+		if rs2 != "":
+			res_n[rs2] = int(res_n.get(rs2, 0)) + 1
+		var st := String(m["stage"])
+		if not body_by_stage.has(st):
+			body_by_stage[st] = {}
+		if wk2 != "":
+			body_by_stage[st][wk2] = true
+
+	# 5) 죽은 속성이 없는가
+	for e in Balance.ELEM_ORDER:
+		if e == "none":
+			continue
+		if int(hero_n.get(e, 0)) < 2:
+			# 하나뿐이면 그 캐릭터가 안 나오는 판에서는 그 속성이 아예 없는 것과 같다.
+			_bad("%s 속성 영웅이 %d명뿐이다 (둘 이상)"
+					% [Balance.elem_ko(String(e)), int(hero_n.get(e, 0))])
+		if int(weak_n.get(e, 0)) < 1:
+			_bad("%s 를 약점으로 갖는 몬스터가 하나도 없다 — 그 속성은 이득이 영영 없다"
+					% Balance.elem_ko(String(e)))
+		# 약점보다 저항이 훨씬 많으면 그 속성은 평균적으로 손해다. 하나 차이는 봐준다 —
+		# 아래 §7 의 구간별 검사가 훨씬 날카롭게 같은 것을 본다.
+		if int(res_n.get(e, 0)) > int(weak_n.get(e, 0)) + 1:
+			_bad("%s 는 약점 %d마리 · 저항 %d마리다 — 뽑으면 손해인 속성이 되어 버린다"
+					% [Balance.elem_ko(String(e)), int(weak_n.get(e, 0)), int(res_n.get(e, 0))])
+
+	# 6) 상성을 아예 안 타는 몬스터가 있어야 한다 — 순수 화력에도 뜻이 남아야 하고,
+	#    무상성 영웅이 설 자리가 거기다.
+	var nulls := 0
+	for m2 in Roster.MONSTERS:
+		if Balance.body_weak(String(m2.get("body", ""))) == "":
+			nulls += 1
+	if nulls < 1:
+		_bad("모든 몬스터가 어딘가에 약하다 — 상성만 맞추면 되는 게임이 된다")
+	if nulls >= Roster.MONSTERS.size():
+		_bad("상성을 타는 몬스터가 하나도 없다 — 속성 표가 아무 일도 안 한다")
+
+	# 7) 구간마다 약점이 두 가지 이상 섞여야 "지금 누가 나오나"가 선택이 된다.
+	#    한 구간이 통째로 한 속성에만 약하면 그 구간은 정답이 하나뿐이다.
+	for st2 in ["early", "mid", "late"]:
+		var ws: Dictionary = body_by_stage.get(st2, {})
+		if ws.size() < 2:
+			_bad("%s 구간의 약점이 %d가지뿐이다 (둘 이상 섞여야 한다)" % [st2, ws.size()])
+
+	# 8) ★ 이 검사가 이 파일에서 제일 값어치가 있다 — **구간마다** 모든 속성의 기대 배수가
+	#    1.0 이상이어야 한다. 표 전체로는 대칭인데 한 구간만 기울어 있는 것이 제일 무섭다.
+	#    실제로 그랬다: 뒷 구간(35~40탄)에 얼음 약점이 하나도 없어서 얼음의 기대 배수가
+	#    0.75 였고, 하필 얼음이 영웅이 제일 많은 속성(로열·스플 포함)이라 자동 플레이
+	#    24판이 **한 판도 못 깼다.** 표를 눈으로 봐서는 절대 안 보인다.
+	#    (보스 구간은 뺀다 — 두 마리뿐이라 "불에 강한 용"이 곧 -0.25 가 되는데,
+	#     그건 고장이 아니라 보스의 성격이다)
+	for st3 in ["early", "mid", "late"]:
+		var pool: Array = Roster.monsters_of_stage(st3)
+		if pool.is_empty():
+			continue
+		for e2 in Balance.ELEM_ORDER:
+			if e2 == "none":
+				continue
+			var sum_m := 0.0
+			for m3 in pool:
+				sum_m += Balance.elem_mult(String(e2), String(m3.get("body", "null")))
+			var avg: float = sum_m / float(pool.size())
+			if avg < 0.999:
+				_bad("%s 구간에서 %s 속성의 기대 배수가 %.2f 다 — 그 구간 내내 손해만 본다"
+						% [st3, Balance.elem_ko(String(e2)), avg])
+	print("  속성 정상 (영웅 %s · 약점 %s · 저항 %s)" % [str(hero_n), str(weak_n), str(res_n)])
 
 
 func _check_balance() -> void:

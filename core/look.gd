@@ -70,6 +70,31 @@ static func tier_color(t: int) -> Color:
 	return TIER_COLOR[clampi(t, 0, TIER_COLOR.size() - 1)]
 
 
+## 속성을 한 글자로. 칸이 40px 도 안 되는 자리에 「무상성」을 쓸 수는 없다.
+const ELEM_CHAR := {"none": "무", "fire": "불", "ice": "얼", "elec": "전", "water": "물"}
+
+static func elem_char(e: String) -> String:
+	return String(ELEM_CHAR.get(e, "무"))
+
+
+## 속성 표시 한 개 — 속성 색 동그라미 안에 한 글자.
+##
+## ★ 왜 색만으로 안 두는가: 캐릭터마다 이미 제 색(탄알 색)이 있어서, 색 점 하나를 더
+##   찍으면 그게 속성인지 그 캐릭터 색인지 구별이 안 된다. 글자가 한 자 들어가야
+##   "아, 이건 속성이구나"가 읽힌다. 무상성은 회백색이라 저절로 뒤로 물러난다.
+## ★ 테두리를 두르는 이유: 얼음(하늘)과 크리스탈, 전기(노랑)와 금색이 같은 화면에 있다.
+##   어두운 테두리가 있어야 배경이 무엇이든 동그라미로 읽힌다.
+static func draw_elem(ci: CanvasItem, c: Vector2, r: float, e: String) -> void:
+	if r < 3.0:
+		return
+	var col := Color(String(Balance.ELEM.get(e, Balance.ELEM["none"])["color"]))
+	ci.draw_circle(c, r + 1.5, BG_DEEP)
+	ci.draw_circle(c, r, col)
+	var sz := int(r * 1.5)
+	if sz >= 9:
+		text_center(ci, c, elem_char(e), sz, BG_DEEP)
+
+
 ## 체력 막대의 색. 넉넉하면 초록, 반쯤이면 금색, 얼마 안 남으면 빨강.
 ##
 ## ★ 세 토막으로 딱 끊지 않고 이어서 섞는다. 끊어 두면 34%와 36%가 전혀 다른 색이라
