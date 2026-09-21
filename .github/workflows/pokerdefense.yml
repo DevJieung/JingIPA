@@ -1,0 +1,205 @@
+name: 올인 디펜스 APK + IPA
+
+on:
+  push:
+    branches: [pokerdefense]
+    tags: ['pokerdefense-v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pokerdefense-mobile-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  GODOT_VERSION: '4.7.1'
+  IOS_BUNDLE_ID: ${{ vars.POKERDEFENSE_IOS_BUNDLE_ID || 'com.devjieung.pokerdefense' }}
+
+jobs:
+  export:
+    name: APK 빌드 + Xcode 프로젝트
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    outputs:
+      revision: ${{ steps.source.outputs.revision }}
+    env:
+      GODOT_ANDROID_KEYSTORE_DEBUG_PATH: /home/runner/.local/share/godot/keystores/pokerdefense-debug.keystore
+      GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+      GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The default branch holds another game; manual builds use this game's branch.
+          ref: ${{ github.event_name == 'workflow_dispatch' && 'pokerdefense' || github.sha }}
+          persist-credentials: false
+      - id: source
+        run: echo "revision=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Android SDK 설치
+        run: sdkmanager 'platform-tools' 'platforms;android-36' 'build-tools;36.0.0' 'ndk;28.2.13676358' 'cmake;3.10.2.4988404'
+      - uses: actions/cache@v4
+        id: engine
+        with:
+          path: |
+            ~/.local/share/pokerdefense-godot
+            ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
+          key: pokerdefense-godot-${{ runner.os }}-${{ runner.arch }}-${{ env.GODOT_VERSION }}-v1
+      - name: Godot 및 모바일 템플릿 설치
+        if: steps.engine.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
+          name="Godot_v${GODOT_VERSION}-stable"
+          engine_dir="$HOME/.local/share/pokerdefense-godot"
+          template_dir="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "$engine_dir" "$template_dir" "$RUNNER_TEMP/godot-download"
+          cd "$RUNNER_TEMP/godot-download"
+          curl -fL --retry 3 "$base/${name}_linux.x86_64.zip" -o "${name}_linux.x86_64.zip"
+          curl -fL --retry 3 "$base/${name}_export_templates.tpz" -o "${name}_export_templates.tpz"
+          curl -fL --retry 3 "$base/SHA512-SUMS.txt" -o SHA512-SUMS.txt
+          grep -E " (${name}_linux.x86_64.zip|${name}_export_templates.tpz)$" SHA512-SUMS.txt > selected.sha512
+          test "$(wc -l < selected.sha512)" -eq 2
+          sha512sum --check selected.sha512
+          unzip -q "${name}_linux.x86_64.zip" -d "$engine_dir"
+          unzip -q "${name}_export_templates.tpz" 'templates/ios.zip' 'templates/android_source.zip' 'templates/android_debug.apk' 'templates/android_release.apk' 'templates/version.txt' -d extracted
+          mv extracted/templates/* "$template_dir/"
+      - name: Godot 경로 설정
+        run: |
+          binary="$HOME/.local/share/pokerdefense-godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64"
+          chmod +x "$binary"
+          "$binary" --version
+          echo "GODOT=$binary" >> "$GITHUB_ENV"
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: pokerdefense-gradle-${{ runner.os }}-${{ env.GODOT_VERSION }}-${{ hashFiles('addons/admob/android/bin/**', 'tools/ci/prepare.py') }}
+          restore-keys: pokerdefense-gradle-${{ runner.os }}-${{ env.GODOT_VERSION }}-
+      - name: 테스트 APK 서명 키 유지
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.GODOT_ANDROID_KEYSTORE_DEBUG_PATH }}
+          key: pokerdefense-android-debug-keystore-v1
+      - name: 모바일 빌드 설정
+        env:
+          IOS_TEAM_ID: ${{ secrets.POKERDEFENSE_IOS_TEAM_ID || secrets.IOS_TEAM_ID }}
+          POKERDEFENSE_ADMOB_ENV: ${{ secrets.POKERDEFENSE_ADMOB_ENV }}
+        run: python3 tools/ci/prepare.py
+      - name: 게임 검사 및 APK / Xcode 프로젝트 빌드
+        run: bash tools/ci/export.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pokerdefense-apk
+          path: build/apk/pokerdefense-test.apk
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pokerdefense-xcode-project
+          path: build/ci/ios-project.tar.gz
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: pokerdefense-export-logs
+          path: build/ci/*.log
+          retention-days: 7
+
+  ipa:
+    name: IPA 빌드
+    needs: export
+    runs-on: ${{ vars.MACOS_RUNNER || 'macos-latest' }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.export.outputs.revision }}
+          persist-credentials: false
+          sparse-checkout: tools/ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: pokerdefense-xcode-project
+          path: ${{ runner.temp }}/ios-download
+      - name: Xcode 프로젝트 풀기
+        run: |
+          mkdir -p build
+          tar -xzf "$RUNNER_TEMP/ios-download/ios-project.tar.gz" -C build
+      - name: IPA 빌드 및 패키지 검사
+        env:
+          IOS_TEAM_ID: ${{ secrets.POKERDEFENSE_IOS_TEAM_ID || secrets.IOS_TEAM_ID }}
+          IOS_P12_BASE64: ${{ secrets.POKERDEFENSE_IOS_P12_BASE64 || secrets.IOS_P12_BASE64 }}
+          IOS_P12_PASSWORD: ${{ secrets.POKERDEFENSE_IOS_P12_PASSWORD || secrets.IOS_P12_PASSWORD }}
+          IOS_MOBILEPROVISION_BASE64: ${{ secrets.POKERDEFENSE_IOS_MOBILEPROVISION_BASE64 || secrets.IOS_MOBILEPROVISION_BASE64 }}
+          IOS_EXPORT_METHOD: ${{ vars.POKERDEFENSE_IOS_EXPORT_METHOD || 'debugging' }}
+        run: bash tools/ci/build_ipa.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pokerdefense-ipa
+          path: build/ipa/pokerdefense.ipa
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: pokerdefense-xcode-logs
+          path: build/ci/*.log
+          retention-days: 7
+
+  artifacts:
+    name: APK + IPA 함께 받기
+    needs: [export, ipa]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: pokerdefense-apk
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: pokerdefense-ipa
+          path: dist
+      - name: 동일 커밋 산출물 확인
+        env:
+          REVISION: ${{ needs.export.outputs.revision }}
+        run: |
+          test -s dist/pokerdefense-test.apk
+          test -s dist/pokerdefense.ipa
+          printf '%s\n' "$REVISION" > dist/commit.txt
+          (cd dist && sha256sum pokerdefense-test.apk pokerdefense.ipa > SHA256SUMS.txt)
+          echo '### APK와 IPA 준비 완료' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Artifacts의 **pokerdefense-apk-ipa**를 다운로드하면 두 파일이 함께 들어 있습니다.' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pokerdefense-apk-ipa
+          path: dist/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+      - name: 버전 태그는 GitHub Release에도 게시
+        if: startsWith(github.ref, 'refs/tags/pokerdefense-v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist/* --target "$GITHUB_SHA" \
+              --title "올인 디펜스 $GITHUB_REF_NAME" \
+              --notes '동일 커밋의 Android APK와 iOS IPA. IPA 서명 상태는 Actions 실행 요약을 확인하세요.'
+          fi
