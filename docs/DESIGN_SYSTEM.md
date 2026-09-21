@@ -36,6 +36,9 @@
   확인 전까지 화면을 유지하며 `영웅 배치 / Arrange heroes`를 누르면 편성으로 이동한다.
   `last_result.reward_pending`을 저장해 재접속 시 미확인 획득을 다시 보여 주되 재지급하지
   않는다. 연출: `game/revive_reward_view.gd`; 지급/확인: `Run.revive_wave/acknowledge_revive_reward`.
+- 광고 부활은 같은 판·같은 탄에서도 횟수 제한 없이 반복할 수 있다. 패배 화면은 이전
+  부활 여부와 무관하게 동일한 광고 버튼·보상 안내를 표시하며 기회 소진 문구를 두지 않는다.
+  근거: 2026-09-22 사용자 요청, `game/over_screen.gd`, `Run.reward_allowed/revive_wave`.
 - 공통 글꼴은 번들 `core/fonts/RefugeSans-Bold.otf`다. 작은 한국어·영문·숫자도 실제로
   읽혀야 한다. 카드 무늬는 기존 `Look.draw_suit()` 표현을 재사용한다.
 - 타이틀은 번들 글꼴의 한국어 `올인 디펜스` / 영어 `All-in Defense`를 금색 금속 전면,
@@ -1086,3 +1089,16 @@ SDXL을 비교 기준으로 같이 시험하고, 외형·방향 수정에서 필
   `*_camp_info_{full,scroll,five,empty}.png`, `*_hero_detail.png`, `*_draw_info.png`,
   `*_collection.png`, `*_contact.jpg`; 촬영 진입점: `build/wordmark-ui/preview.tscn`.
   Android 실기기 육안 검수는 수행하지 않았으며 BGM·통합 검사·APK 빌드는 메인 담당이다.
+
+## 2026-09-22 광고 부활 횟수 제한 안내 제거
+
+- `game/over_screen.gd`의 기회 소진 안내를 제거하고 기존 청록색 회복·최고등급 영웅
+  보상 안내와 금색 광고 버튼을 유지했다. `core/locales/ui.json`의 소진·한 판 1회 과거
+  번역도 제거했다. `tests/camp_refresh_preview.gd`는 반복 패배 버튼 활성 상태를 확인한다.
+- 실제 Godot 한영1280×800/1000×625 첫 패배·반복 패배·체크포인트 없음·승리를 촬영했다.
+  반복 패배의 버튼 활성·안내 문구 가독성을 직접 검수했으며 첫 패배와 반복 패배 이미지는
+  픽셀 단위로 동일했다. 두 크기 각각304건 실패0, `presentation_check`329건 실패0,
+  폰트42파일·영어570문구 검사를 통과했다. 가상 OpenGL의 V-Sync/MSAA 경고만 남았다.
+- 자료: `build/revive-unlimited/<해상도>/{ko,en}_over_{first,repeat,unavailable}.png`,
+  `*_victory.png`, `text-audit.json`; 재현: `python3 build/revive-unlimited/review.py`.
+  Android 실기기 육안 검수는 수행하지 않았으며 광고 흐름·통합 검사·APK 빌드는 메인 담당이다.

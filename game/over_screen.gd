@@ -72,8 +72,6 @@ func _draw() -> void:
 		Look.text_center_fit(self, Vector2(640, 619), "크리스탈 전체 회복 + 최고 등급 영웅 1명 랜덤 획득", 27, Look.CRYSTAL, 1100, 23)
 		ui.reward_button(self, Rect2(340, 649, 600, 64), "광고 보고 다시 도전", "continue",
 				Run.reward_allowed("continue"), Look.GOLD, 30)
-		if Run.continue_used:
-			Look.text_center(self, Vector2(640, 733), "재도전 기회를 사용했습니다.", 18, Look.INK_DIM)
 	ui.button(self, Rect2(1090, 740, 150, 36), "타이틀로", "again", true, Look.PANEL_EDGE, 18)
 	fx.draw_back(self)
 	fx.draw(self)

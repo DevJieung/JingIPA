@@ -134,6 +134,7 @@ func _ready() -> void:
 	check_card_choice_ads(service, ids["card"])
 	check_load_recovery(service)
 	check_interstitial_rewards(service)
+	check_repeated_revive_ads(service)
 	check_repeated_fusion_ads(service)
 
 	for path in originals:
@@ -183,6 +184,62 @@ func check_interstitial_rewards(service: FakeAds) -> void:
 		exercised = true
 		break
 	check(exercised, "merge restore callback exercised")
+
+
+func check_repeated_revive_ads(service: FakeAds) -> void:
+	Fixture.fresh(922816, 12)
+	var previous_ad: RefCounted
+	for attempt in range(12):
+		Run.prepare_battle()
+		var before := Run.snapshot()
+		Run.add_lives(-Run.max_lives())
+		var defeat := Run.snapshot()
+		check(service._preload_kind() == "continue", "every repeated defeat preloads another revive ad")
+		if attempt == 1:
+			check(service.request_reward("continue"), "repeat revival can request an ad before cancellation")
+			var cancelled_load := service.loads.size() - 1
+			service._finish(false, "cancel")
+			check(service.complete_load(cancelled_load).destroyed and Run.snapshot() == defeat,
+					"cancelled repeat revival discards late ads without changing the defeat")
+			check(service.request_reward("continue"), "cancelled revival can retry")
+			var skipped := service.complete_load(service.loads.size() - 1)
+			skipped.full_screen_content_callback.on_ad_dismissed_full_screen_content.call()
+			skipped.listener.on_user_earned_reward.call(null)
+			check(Run.snapshot() == defeat and Run.reward_allowed("continue"),
+					"incomplete viewing and late reward do not revive or consume eligibility")
+			check(service.request_reward("continue"), "incomplete viewing can retry")
+			fail_load(service, service.loads.size() - 1, 3)
+			check(not service.busy and Run.snapshot() == defeat and Run.reward_allowed("continue"),
+					"failed ad load does not consume another revival")
+			check(service.request_reward("continue"), "failed load can retry revival")
+			var failed := service.complete_load(service.loads.size() - 1)
+			failed.full_screen_content_callback.on_ad_failed_to_show_full_screen_content.call(AdError.new(1, "test", "show failure", null))
+			check(not service.busy and Run.snapshot() == defeat and Run.reward_allowed("continue"),
+					"failed ad display does not consume another revival")
+		var requested := service.request_reward("continue")
+		check(requested, "every repeated defeat can request a fresh ad: " + str(attempt + 1))
+		if not requested:
+			break
+		check(not service.request_reward("continue"), "repeated taps cannot request parallel revival ads")
+		var ad := service.complete_load(service.loads.size() - 1)
+		check(ad is FakeInterstitial and ad.shown and Run.snapshot() == defeat,
+				"every revival needs completion of a newly shown interstitial")
+		if previous_ad != null:
+			previous_ad.listener.on_user_earned_reward.call(null)
+			previous_ad.full_screen_content_callback.on_ad_dismissed_full_screen_content.call()
+			check(service.busy and Run.snapshot() == defeat, "earlier ad callbacks cannot revive or close the current request")
+		ad.listener.on_user_earned_reward.call(null)
+		check(Run.phase == Run.Phase.SWAP and Run.lives == Run.max_lives() and Run.wave == before["wave"],
+				"each new ad completion revives the same wave")
+		check(Run.snapshot()["heroes"] == before["heroes"] and Run.bench.size() == before["bench"].size() + 1,
+				"each new ad preserves the formation and grants exactly one reserve hero")
+		var rewarded := Run.snapshot()
+		ad.listener.on_user_earned_reward.call(null)
+		check(Run.snapshot() == rewarded, "duplicate completion cannot grant another revival reward")
+		ad.full_screen_content_callback.on_ad_dismissed_full_screen_content.call()
+		check(not service.busy and ad.destroyed and Run.acknowledge_revive_reward(),
+				"closing each ad unlocks confirmation and the next battle")
+		previous_ad = ad
 
 
 func fail_load(service: FakeAds, index: int, code: int, domain := "com.google.android.gms.ads") -> void:

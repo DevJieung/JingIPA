@@ -159,12 +159,14 @@ func _ready() -> void:
 	check(Run.acknowledge_revive_reward(), "reward can be acknowledged before deploying")
 	Run.prepare_battle()
 	Run.add_lives(-Run.max_lives())
-	check(not Run.reward_allowed("continue"), "continue limited to once per run")
+	check(Run.reward_allowed("continue"), "another defeat offers a new continue in the same run")
 	var kills_before := Save.total_kills
 	Run.finish_defeat()
 	Run.finish_defeat()
 	check(Save.total_kills == kills_before + Run.kills, "run statistics settle only once")
+	check(not Run.reward_allowed("continue"), "accepting defeat ends continue eligibility")
 	check_revive_reserve()
+	check_repeated_revives()
 
 	fresh(715, 2)
 	Run.phase = Run.Phase.SHOP
@@ -412,6 +414,45 @@ func check_card_choices() -> void:
 	Run.cards[2] = before[2]
 	check(not Run.apply_ad_reward("card", request), "old callback cannot replay if the former card returns")
 	Run.cards[2] = desired
+
+
+func check_repeated_revives() -> void:
+	fresh(9222026, 12)
+	Run.phase = Run.Phase.SWAP
+	for attempt in range(12):
+		Run.prepare_battle()
+		var before := Run.snapshot()
+		Run.gold += 200
+		Run.kills += 20
+		Run.add_lives(-Run.max_lives())
+		var defeat := Run.snapshot()
+		check(RunValidation.valid(defeat, Run.SAVE_VERSION) and Run.restore(defeat),
+				"every repeated defeat remains resumable, including saves with continue_used=true")
+		check(Run.reward_allowed("continue") and Run.apply_ad_reward("continue", {}),
+				"each earned ad can revive the same wave again: " + str(attempt + 1))
+		if Run.phase != Run.Phase.SWAP:
+			break
+		check(Run.wave == before["wave"] and Run.lives == Run.max_lives() and Run.running,
+				"every revival returns to the failed wave with full crystals")
+		check(Run.gold == before["gold"] and Run.kills == before["kills"],
+				"each revival rolls back only the current failed battle")
+		check(Run.snapshot()["heroes"] == before["heroes"] and Run.bench.size() == before["bench"].size() + 1,
+				"repeated revival preserves earlier heroes and adds one reserve reward")
+		var pending := Run.snapshot()
+		check(RunValidation.valid(pending, Run.SAVE_VERSION) and Run.restore(pending),
+				"each repeated revival reward survives restart")
+		check(not Run.apply_ad_reward("continue", {}) and Run.snapshot() == pending,
+				"each revival rejects duplicate rewards before another defeat")
+		check(Run.acknowledge_revive_reward(), "each repeated reward can be confirmed")
+		if attempt == 5:
+			Run.prepare_battle()
+			Run.settle_wave(false)
+			Run.begin_draw()
+			Run.confirm_hand()
+	check(Run.bench.size() >= 12, "all repeated revival rewards are retained")
+	Run.phase = Run.Phase.OVER
+	Run.battle_checkpoint = {}
+	check(not Run.reward_allowed("continue") and not Run.revive_wave(), "defeat without a checkpoint cannot revive")
 
 
 func check_revive_reserve() -> void:

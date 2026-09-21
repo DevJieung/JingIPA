@@ -114,8 +114,10 @@ func _ready() -> void:
 		main.screen.fx.clear()
 		await capture(language + "_over")
 		check(Run.best_player()["unit"]["id"] == "sigrid", "best player uses cumulative damage")
+		check(bool(zone_of(main.screen, "continue").get("on", false)), "first defeat offers ad continue")
 		Run.continue_used = true
-		await capture(language + "_over_used")
+		await capture(language + "_over_repeat")
+		check(bool(zone_of(main.screen, "continue").get("on", false)), "repeat defeat still offers ad continue")
 		main.menu.open()
 		await capture(language + "_menu")
 		check(tap(main.menu, "language:en" if language == "ko" else "language:ko"), "language switches while menu is open")

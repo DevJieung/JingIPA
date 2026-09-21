@@ -64,7 +64,7 @@ var _at: Array[int] = []
 const FUSION_BENCH := 100000
 var fusion_pending: Dictionary = {}
 var fusion_serial: int = 0
-var continue_used: bool = false
+var continue_used: bool = false # 부활 이력/저장 호환용. 부활 횟수를 제한하지 않는다.
 var battle_checkpoint: Dictionary = {}
 var rng := RandomNumberGenerator.new()
 
@@ -1450,7 +1450,7 @@ func reward_allowed(kind: String, data: Dictionary = {}) -> bool:
 		"crystal":
 			return running and phase == Phase.SHOP and lives < max_lives()
 		"continue":
-			return phase == Phase.OVER and not continue_used and not battle_checkpoint.is_empty()
+			return phase == Phase.OVER and not battle_checkpoint.is_empty()
 	return false
 
 
@@ -1473,7 +1473,7 @@ func apply_ad_reward(kind: String, data: Dictionary) -> bool:
 
 
 func revive_wave() -> bool:
-	if phase != Phase.OVER or continue_used or battle_checkpoint.is_empty():
+	if not reward_allowed("continue"):
 		return false
 	var checkpoint := battle_checkpoint.duplicate(true)
 	if not restore(checkpoint):
