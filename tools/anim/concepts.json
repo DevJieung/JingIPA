@@ -1,0 +1,2874 @@
+{
+ "limne": {
+  "ko": "림네",
+  "elem": "water",
+  "tier": 0,
+  "neighbors": [
+   "phorkys",
+   "protea",
+   "marea",
+   "glaukos",
+   "thalassa",
+   "triton",
+   "keto",
+   "galene",
+   "nerea"
+  ],
+  "pose": ", standing in a three-quarter front view, both forearms lifted up beside the head with the elbows bent and the palms turned upward, the head and face clearly visible between the raised hands, the feet planted wide and the cloak hanging straight",
+  "bodies": {
+   "a": "a barefoot fisher girl with warm tan skin in a bright cerulean linen smock and rolled canvas trousers, a wide sea-blue headscarf knotted over a thick low bun, hugging a broad turquoise water pail against her chest with both arms, silver fish scales sewn along the hem, a silver spade crest worn on the costume, a single playing card hovering and spinning between the fingers of the free hand"
+  },
+  "_note_ramp": "물 — 둥근 심 + 흔들리는 물갈기. ★ 심을 **청록(민트)**에서 시작한다. 얼음처럼 창백한 하늘빛으로 시작하면 얼음과 픽셀로 구별이 안 된다 — 둘 다 파랑이라 램프가 갈라지지 않으면 화면에서 같은 이펙트가 된다.",
+  "ramp": [
+   [
+    186,
+    255,
+    246
+   ],
+   [
+    92,
+    236,
+    220
+   ],
+   [
+    40,
+    168,
+    246
+   ],
+   [
+    22,
+    92,
+    200
+   ],
+   [
+    8,
+    36,
+    112
+   ]
+  ],
+  "edge": [
+   4,
+   18,
+   58
+  ],
+  "facets": 0,
+  "motion": "raise"
+ },
+ "chispa": {
+  "ko": "치스파",
+  "elem": "fire",
+  "tier": 0,
+  "neighbors": [
+   "solana",
+   "ceniza",
+   "igni",
+   "volcan",
+   "carmen",
+   "saeta",
+   "candela",
+   "estoque",
+   "brasa"
+  ],
+  "pose": ", in a three-quarter side view, aiming the gun across the frame, both arms out in front, standing tall with the feet planted wide and the shoulders square",
+  "bodies": {
+   "a": "a freckled apprentice gunner with pale rose skin and a wide crown of copper curls, brass goggles pushed up on the forehead, a scorched vermilion work jacket with rolled sleeves and bright bandages on both hands, holding a stubby flintlock card-pistol, a scarlet heart crest worn on the costume, a single playing card hovering and spinning between the fingers of the free hand"
+  },
+  "_note_ramp": "불 — 둥근 심 + 흔들리는 혓바닥. 게임의 불 속성색 #FF6A2A 에서 이어 뽑았다.",
+  "ramp": [
+   [
+    255,
+    247,
+    219
+   ],
+   [
+    255,
+    221,
+    112
+   ],
+   [
+    255,
+    170,
+    60
+   ],
+   [
+    240,
+    106,
+    26
+   ],
+   [
+    196,
+    48,
+    10
+   ]
+  ],
+  "edge": [
+   78,
+   16,
+   6
+  ],
+  "facets": 0,
+  "motion": "draw_heavy",
+  "muzzle": "prop",
+  "link": "shaft",
+  "shot": "arrow",
+  "stretch": "0.85,1.35"
+ },
+ "lind": {
+  "ko": "린드",
+  "elem": "ice",
+  "tier": 0,
+  "neighbors": [
+   "jokull",
+   "vidarr",
+   "kari",
+   "eira",
+   "snorri",
+   "helga",
+   "sigrid",
+   "frosti",
+   "isa"
+  ],
+  "pose": ", in a three-quarter side view, the whip arm sweeping out low and wide across the frame with the long chain trailing behind in a flat arc, the other arm out for balance, the feet planted wide and the hips turned into the swing",
+  "bodies": {
+   "a": "a slight courier with porcelain pale skin in layered deep cobalt and vivid cyan scarves wound to the chin, a shock of bright teal-streaked hair swept to one side, navy quilted coat and indigo mittens, holding a short chain of linked icicle cards, a white diamond crest worn on the costume, a single playing card hovering and spinning between the fingers of the free hand"
+  },
+  "_note_ramp": "얼음 — 육각 결정 + 곧고 뾰족한 가시(안 흔들린다). 흔들림을 넣어 봤더니 그냥 **녹는 것**으로 보였다. 게임의 얼음 속성색 #7BDCFF 에서 뽑았다.",
+  "ramp": [
+   [
+    226,
+    250,
+    255
+   ],
+   [
+    160,
+    233,
+    255
+   ],
+   [
+    96,
+    200,
+    246
+   ],
+   [
+    46,
+    140,
+    219
+   ],
+   [
+    24,
+    78,
+    166
+   ]
+  ],
+  "edge": [
+   10,
+   30,
+   74
+  ],
+  "facets": 6,
+  "motion": "cast_sweep",
+  "holes": true,
+  "_note_holes": "★ 활·쇠뇌·총·대포는 holes 를 켠다. 시위 안쪽·방아쇠울 안쪽은 그림에 빙 둘러싸인 흰 구멍이라 모서리에서 부은 물이 못 들어간다 — 안 켜면 흰 판때기가 붙어 나온다 (CLAUDE.md 4-3). 켜는 것은 **사람의 판단**이고, 활은 그 판단이 늘 같은 몇 안 되는 경우다."
+ },
+ "brigid": {
+  "ko": "브리지드",
+  "elem": "elec",
+  "tier": 0,
+  "neighbors": [
+   "rhiannon",
+   "finn",
+   "donn",
+   "conor",
+   "niamh",
+   "morrigan",
+   "caden",
+   "lugh",
+   "brian"
+  ],
+  "pose": ", in a three-quarter side view, aiming the bow across the frame, both arms out in front, standing tall with the feet planted wide and the shoulders square",
+  "bodies": {
+   "a": "a young priestess with warm bronze skin and a long straight fall of black hair, eyes closed, in bright chartreuse vestments with wide sleeves, a woven clover circlet on the brow, drawing a slim white bow strung with a folded card, a bright chartreuse clover crest worn on the costume, a single playing card hovering and spinning between the fingers of the free hand"
+  },
+  "_note_ramp": "전기 — 작고 사나운 심 + 꺾이고 갈라지는 지그재그 가지. ★ 노랑에서 **주황을 건너뛰고 보라로** 간다. 주황을 거치면 불 램프와 같은 길이 되어 나란히 놓았을 때 같은 이펙트로 보인다.",
+  "ramp": [
+   [
+    255,
+    246,
+    176
+   ],
+   [
+    255,
+    216,
+    77
+   ],
+   [
+    222,
+    170,
+    242
+   ],
+   [
+    140,
+    92,
+    226
+   ],
+   [
+    64,
+    34,
+    140
+   ]
+  ],
+  "edge": [
+   22,
+   12,
+   54
+  ],
+  "facets": -1,
+  "motion": "draw_heavy",
+  "muzzle": "prop",
+  "link": "shaft",
+  "shot": "arrow",
+  "holes": true,
+  "_note_holes": "★ 활·쇠뇌·총·대포는 holes 를 켠다. 시위 안쪽·방아쇠울 안쪽은 그림에 빙 둘러싸인 흰 구멍이라 모서리에서 부은 물이 못 들어간다 — 안 켜면 흰 판때기가 붙어 나온다 (CLAUDE.md 4-3). 켜는 것은 **사람의 판단**이고, 활은 그 판단이 늘 같은 몇 안 되는 경우다.",
+  "stretch": "0.85,1.35"
+ },
+ "pip": {
+  "ko": "핍",
+  "elem": "none",
+  "tier": 0,
+  "neighbors": [
+   "mimic",
+   "dummy",
+   "echo",
+   "shift",
+   "phantom",
+   "blank",
+   "grey",
+   "null",
+   "zero"
+  ],
+  "pose": ", in a three-quarter side view, the blade drawn back across the chest at shoulder height and about to cut down and across the frame, the free hand open in front for balance, the feet set wide and the shoulders square over them",
+  "bodies": {
+   "a": "a tiny paper doll figure built from folded playing cards, a single painted dot for a face on a flat card head, pearl-white card body panels with iridescent magenta edges, holding a slender folded-card blade, a blank white card crest worn on the costume, a single playing card hovering and spinning between the fingers of the free hand"
+  },
+  "_note_ramp": "무상성 — 놋쇠빛 불똥. 마법이 아니라 **쇠붙이가 부딪힌 자국**이다. 활·총·대포·표창이 여기 든다. 속성 이펙트를 주면 「무상성인데 무언가를 두르고 있는」 그림이 되어 안전한 줄이라는 뜻이 흐려진다.",
+  "ramp": [
+   [
+    255,
+    244,
+    206
+   ],
+   [
+    246,
+    214,
+    140
+   ],
+   [
+    206,
+    160,
+    88
+   ],
+   [
+    140,
+    96,
+    44
+   ],
+   [
+    72,
+    44,
+    18
+   ]
+  ],
+  "edge": [
+   30,
+   18,
+   8
+  ],
+  "facets": 0,
+  "motion": "cast_sweep"
+ },
+ "phorkys": {
+  "ko": "포르키스",
+  "elem": "water",
+  "tier": 1,
+  "neighbors": [
+   "limne",
+   "protea",
+   "marea",
+   "glaukos",
+   "thalassa",
+   "triton",
+   "keto",
+   "galene",
+   "nerea"
+  ],
+  "pose": ", in a three-quarter side view, aiming the gun across the frame, both arms out in front, weight shifted onto the front foot and the torso leaning into the shot",
+  "bodies": {
+   "a": "an aged sailor standing straight in a long bright indigo pilot coat with silver buttons, a full white beard and a wide swept-back mane of white hair, a leather eye patch ringed with pale octopus suckers, levelling a heavy brass water revolver, a silver spade crest worn on the costume, a single playing card hovering and spinning between the fingers of the free hand"
+  },
+  "_note_ramp": "물 — 둥근 심 + 흔들리는 물갈기. ★ 심을 **청록(민트)**에서 시작한다. 얼음처럼 창백한 하늘빛으로 시작하면 얼음과 픽셀로 구별이 안 된다 — 둘 다 파랑이라 램프가 갈라지지 않으면 화면에서 같은 이펙트가 된다.",
+  "ramp": [
+   [
+    186,
+    255,
+    246
+   ],
+   [
+    92,
+    236,
+    220
+   ],
+   [
+    40,
+    168,
+    246
+   ],
+   [
+    22,
+    92,
+    200
+   ],
+   [
+    8,
+    36,
+    112
+   ]
+  ],
+  "edge": [
+   4,
+   18,
+   58
+  ],
+  "facets": 0,
+  "motion": "draw_snap",
+  "muzzle": "prop",
+  "link": "shaft",
+  "shot": "arrow",
+  "stretch": "0.85,1.35"
+ },
+ "solana": {
+  "ko": "솔라나",
+  "elem": "fire",
+  "tier": 1,
+  "neighbors": [
+   "chispa",
+   "ceniza",
+   "igni",
+   "volcan",
+   "carmen",
+   "saeta",
+   "candela",
+   "estoque",
+   "brasa"
+  ],
+  "pose": ", in a three-quarter side view, aiming the bow across the frame, both arms out in front, weight shifted onto the front foot and the torso leaning into the shot",
+  "bodies": {
+   "a": "a proud archer with golden tan skin and a tall sunburst headdress over a high coiled updo, a scarlet and marigold gown whose hem burns away into bright embers, raising a gilded recurve bow strung with a glowing card, a scarlet heart crest worn on the costume, a single playing card hovering and spinning between the fingers of the free hand"
+  },
+  "_note_ramp": "불 — 둥근 심 + 흔들리는 혓바닥. 게임의 불 속성색 #FF6A2A 에서 이어 뽑았다.",
+  "ramp": [
+   [
+    255,
+    247,
+    219
+   ],
+   [
+    255,
+    221,
+    112
+   ],
+   [
+    255,
+    170,
+    60
+   ],
+   [
+    240,
+    106,
+    26
+   ],
+   [
+    196,
+    48,
+    10
+   ]
+  ],
+  "edge": [
+   78,
+   16,
+   6
+  ],
+  "facets": 0,
+  "motion": "draw",
+  "muzzle": "prop",
+  "link": "shaft",
+  "shot": "arrow",
+  "holes": true,
+  "_note_holes": "★ 활·쇠뇌·총·대포는 holes 를 켠다. 시위 안쪽·방아쇠울 안쪽은 그림에 빙 둘러싸인 흰 구멍이라 모서리에서 부은 물이 못 들어간다 — 안 켜면 흰 판때기가 붙어 나온다 (CLAUDE.md 4-3). 켜는 것은 **사람의 판단**이고, 활은 그 판단이 늘 같은 몇 안 되는 경우다.",
+  "stretch": "0.85,1.35"
+ },
+ "jokull": {
+  "ko": "요쿨",
+  "elem": "ice",
+  "tier": 1,
+  "neighbors": [
+   "lind",
+   "vidarr",
+   "kari",
+   "eira",
+   "snorri",
+   "helga",
+   "sigrid",
+   "frosti",
+   "isa"
+  ],
+  "pose": ", in a three-quarter side view, the blade drawn back across the chest at shoulder height and about to cut down and across the frame, the free hand open in front for balance, lunging onto the front foot with the coat flaring out behind",
+  "bodies": {
+   "a": "a huge broad-shouldered warrior with pale rose skin and a great rime-crusted beard under a wide fur hood, a heavy snow-white bearskin mantle over bright steel-blue plate, a branded white diamond on the bare shoulder, hefting a broad ice greatsword, a white diamond crest worn on the costume, a single playing card hovering and spinning between the fingers of the free hand"
+  },
+  "_note_ramp": "얼음 — 육각 결정 + 곧고 뾰족한 가시(안 흔들린다). 흔들림을 넣어 봤더니 그냥 **녹는 것**으로 보였다. 게임의 얼음 속성색 #7BDCFF 에서 뽑았다.",
+  "ramp": [
+   [
+    226,
+    250,
+    255
+   ],
+   [
+    160,
+    233,
+    255
+   ],
+   [
+    96,
+    200,
+    246
+   ],
+   [
+    46,
+    140,
+    219
+   ],
+   [
+    24,
+    78,
+    166
+   ]
+  ],
+  "edge": [
+   10,
+   30,
+   74
+  ],
+  "facets": 6,
+  "motion": "cast_lunge"
+ },
+ "rhiannon": {
+  "ko": "리아넌",
+  "elem": "elec",
+  "tier": 1,
+  "neighbors": [
+   "brigid",
+   "finn",
+   "donn",
+   "conor",
+   "niamh",
+   "morrigan",
+   "caden",
+   "lugh",
+   "brian"
+  ],
+  "pose": ", in a three-quarter side view, the whip arm sweeping out low and wide across the frame with the long chain trailing behind in a flat arc, the other arm out for balance, stepping forward onto the front foot with the hem swinging out",
+  "bodies": {
+   "a": "a barefoot dancer with deep umber skin and a very long fall of black hair streaked violet that lifts against gravity, a floating gauze gown of chartreuse and amethyst crackling with sparks, bright anklets, whirling a long lash of linked cards, a bright chartreuse clover crest worn on the costume, a single playing card hovering and spinning between the fingers of the free hand"
+  },
+  "_note_ramp": "전기 — 작고 사나운 심 + 꺾이고 갈라지는 지그재그 가지. ★ 노랑에서 **주황을 건너뛰고 보라로** 간다. 주황을 거치면 불 램프와 같은 길이 되어 나란히 놓았을 때 같은 이펙트로 보인다.",
+  "ramp": [
+   [
+    255,
+    246,
+    176
+   ],
+   [
+    255,
+    216,
+    77
+   ],
+   [
+    222,
+    170,
+    242
+   ],
+   [
+    140,
+    92,
+    226
+   ],
+   [
+    64,
+    34,
+    140
+   ]
+  ],
+  "edge": [
+   22,
+   12,
+   54
+  ],
+  "facets": -1,
+  "motion": "cast",
+  "holes": true,
+  "_note_holes": "★ 활·쇠뇌·총·대포는 holes 를 켠다. 시위 안쪽·방아쇠울 안쪽은 그림에 빙 둘러싸인 흰 구멍이라 모서리에서 부은 물이 못 들어간다 — 안 켜면 흰 판때기가 붙어 나온다 (CLAUDE.md 4-3). 켜는 것은 **사람의 판단**이고, 활은 그 판단이 늘 같은 몇 안 되는 경우다."
+ },
+ "mimic": {
+  "ko": "미믹",
+  "elem": "none",
+  "tier": 1,
+  "neighbors": [
+   "pip",
+   "dummy",
+   "echo",
+   "shift",
+   "phantom",
+   "blank",
+   "grey",
+   "null",
+   "zero"
+  ],
+  "pose": ", standing in a three-quarter front view, both forearms lifted up beside the head with the elbows bent and the palms turned upward, the head and face clearly visible between the raised hands, the back arched and the chin lifted, the cloak billowing out behind",
+  "bodies": {
+   "a": "a small round figure made of packed playing cards pretending to be a person, a shifting card face that never settles, pearl-white and iridescent panels catching rainbow sheen, stubby card arms flung wide, a blank white card crest worn on the costume, a single playing card hovering and spinning between the fingers of the free hand"
+  },
+  "_note_ramp": "무상성 — 놋쇠빛 불똥. 마법이 아니라 **쇠붙이가 부딪힌 자국**이다. 활·총·대포·표창이 여기 든다. 속성 이펙트를 주면 「무상성인데 무언가를 두르고 있는」 그림이 되어 안전한 줄이라는 뜻이 흐려진다.",
+  "ramp": [
+   [
+    255,
+    244,
+    206
+   ],
+   [
+    246,
+    214,
+    140
+   ],
+   [
+    206,
+    160,
+    88
+   ],
+   [
+    140,
+    96,
+    44
+   ],
+   [
+    72,
+    44,
+    18
+   ]
+  ],
+  "edge": [
+   30,
+   18,
+   8
+  ],
+  "facets": 0,
+  "motion": "raise_slam"
+ },
+ "protea": {
+  "ko": "프로테아",
+  "elem": "water",
+  "tier": 2,
+  "neighbors": [
+   "limne",
+   "phorkys",
+   "marea",
+   "glaukos",
+   "thalassa",
+   "triton",
+   "keto",
+   "galene",
+   "nerea"
+  ],
+  "pose": ", in a three-quarter side view, aiming the bow across the frame, both arms out in front, weight settled back on the rear leg, the head tucked down behind the weapon",
+  "bodies": {
+   "a": "a masked archer in a flowing pale sea-mist cloak over bright teal wrappings, three carved water masks hung at the belt, a smooth featureless silver mask on the face, a high wrapped headcloth, loosing from a slim triple-limbed bow, a silver spade crest worn on the costume, a single playing card hovering and spinning between the fingers of the free hand"
+  },
+  "_note_ramp": "물 — 둥근 심 + 흔들리는 물갈기. ★ 심을 **청록(민트)**에서 시작한다. 얼음처럼 창백한 하늘빛으로 시작하면 얼음과 픽셀로 구별이 안 된다 — 둘 다 파랑이라 램프가 갈라지지 않으면 화면에서 같은 이펙트가 된다.",
+  "ramp": [
+   [
+    186,
+    255,
+    246
+   ],
+   [
+    92,
+    236,
+    220
+   ],
+   [
+    40,
+    168,
+    246
+   ],
+   [
+    22,
+    92,
+    200
+   ],
+   [
+    8,
+    36,
+    112
+   ]
+  ],
+  "edge": [
+   4,
+   18,
+   58
+  ],
+  "facets": 0,
+  "motion": "draw_snap",
+  "muzzle": "prop",
+  "link": "shaft",
+  "shot": "arrow",
+  "holes": true,
+  "_note_holes": "★ 활·쇠뇌·총·대포는 holes 를 켠다. 시위 안쪽·방아쇠울 안쪽은 그림에 빙 둘러싸인 흰 구멍이라 모서리에서 부은 물이 못 들어간다 — 안 켜면 흰 판때기가 붙어 나온다 (CLAUDE.md 4-3). 켜는 것은 **사람의 판단**이고, 활은 그 판단이 늘 같은 몇 안 되는 경우다.",
+  "stretch": "0.85,1.35"
+ },
+ "ceniza": {
+  "ko": "세니자",
+  "elem": "fire",
+  "tier": 2,
+  "neighbors": [
+   "chispa",
+   "solana",
+   "igni",
+   "volcan",
+   "carmen",
+   "saeta",
+   "candela",
+   "estoque",
+   "brasa"
+  ],
+  "pose": ", in a three-quarter side view, the whip arm sweeping out low and wide across the frame with the long chain trailing behind in a flat arc, the other arm out for balance, the shoulders dropped low and the head following the arc",
+  "bodies": {
+   "a": "a hooded figure in a ragged ash-white robe with a deep empty hood, only glowing coral-red fingertips showing at the cuffs, bright cinders drifting from the torn hem, dragging a long whip of charred cards low across the ground, a scarlet heart crest worn on the costume, a single playing card hovering and spinning between the fingers of the free hand"
+  },
+  "_note_ramp": "불 — 둥근 심 + 흔들리는 혓바닥. 게임의 불 속성색 #FF6A2A 에서 이어 뽑았다.",
+  "ramp": [
+   [
+    255,
+    247,
+    219
+   ],
+   [
+    255,
+    221,
+    112
+   ],
+   [
+    255,
+    170,
+    60
+   ],
+   [
+    240,
+    106,
+    26
+   ],
+   [
+    196,
+    48,
+    10
+   ]
+  ],
+  "edge": [
+   78,
+   16,
+   6
+  ],
+  "facets": 0,
+  "motion": "cast_lunge",
+  "holes": true,
+  "_note_holes": "★ 활·쇠뇌·총·대포는 holes 를 켠다. 시위 안쪽·방아쇠울 안쪽은 그림에 빙 둘러싸인 흰 구멍이라 모서리에서 부은 물이 못 들어간다 — 안 켜면 흰 판때기가 붙어 나온다 (CLAUDE.md 4-3). 켜는 것은 **사람의 판단**이고, 활은 그 판단이 늘 같은 몇 안 되는 경우다."
+ },
+ "vidarr": {
+  "ko": "비다르",
+  "elem": "ice",
+  "tier": 2,
+  "neighbors": [
+   "lind",
+   "jokull",
+   "kari",
+   "eira",
+   "snorri",
+   "helga",
+   "sigrid",
+   "frosti",
+   "isa"
+  ],
+  "pose": ", standing in a three-quarter front view, both forearms lifted up beside the head with the elbows bent and the palms turned upward, the head and face clearly visible between the raised hands, one foot stepped forward and the body leaning into it",
+  "bodies": {
+   "a": "a towering silent giant with pale rose skin and a broad flat-topped mass of white hair, bright glacier-blue quilted coat over frost plate, one enormous iron-shod boot far thicker than the other, both fists closed at the sides, a white diamond crest worn on the costume, a single playing card hovering and spinning between the fingers of the free hand"
+  },
+  "_note_ramp": "얼음 — 육각 결정 + 곧고 뾰족한 가시(안 흔들린다). 흔들림을 넣어 봤더니 그냥 **녹는 것**으로 보였다. 게임의 얼음 속성색 #7BDCFF 에서 뽑았다.",
+  "ramp": [
+   [
+    226,
+    250,
+    255
+   ],
+   [
+    160,
+    233,
+    255
+   ],
+   [
+    96,
+    200,
+    246
+   ],
+   [
+    46,
+    140,
+    219
+   ],
+   [
+    24,
+    78,
+    166
+   ]
+  ],
+  "edge": [
+   10,
+   30,
+   74
+  ],
+  "facets": 6,
+  "motion": "raise_slam"
+ },
+ "finn": {
+  "ko": "핀",
+  "elem": "elec",
+  "tier": 2,
+  "neighbors": [
+   "brigid",
+   "rhiannon",
+   "donn",
+   "conor",
+   "niamh",
+   "morrigan",
+   "caden",
+   "lugh",
+   "brian"
+  ],
+  "pose": ", in a three-quarter side view, the blade drawn back across the chest at shoulder height and about to cut down and across the frame, the free hand open in front for balance, the torso coiled away from the cut and the chin tucked down",
+  "bodies": {
+   "a": "a boy soldier with golden tan skin and spiky forward-swept hair standing straight up, swamped sleeves rolled back on a bright lime military coat with clover buttons, a short crackling card-sword held low in a fast guard, a bright chartreuse clover crest worn on the costume, a single playing card hovering and spinning between the fingers of the free hand"
+  },
+  "_note_ramp": "전기 — 작고 사나운 심 + 꺾이고 갈라지는 지그재그 가지. ★ 노랑에서 **주황을 건너뛰고 보라로** 간다. 주황을 거치면 불 램프와 같은 길이 되어 나란히 놓았을 때 같은 이펙트로 보인다.",
+  "ramp": [
+   [
+    255,
+    246,
+    176
+   ],
+   [
+    255,
+    216,
+    77
+   ],
+   [
+    222,
+    170,
+    242
+   ],
+   [
+    140,
+    92,
+    226
+   ],
+   [
+    64,
+    34,
+    140
+   ]
+  ],
+  "edge": [
+   22,
+   12,
+   54
+  ],
+  "facets": -1,
+  "motion": "cast_sweep"
+ },
+ "dummy": {
+  "ko": "더미",
+  "elem": "none",
+  "tier": 2,
+  "neighbors": [
+   "pip",
+   "mimic",
+   "echo",
+   "shift",
+   "phantom",
+   "blank",
+   "grey",
+   "null",
+   "zero"
+  ],
+  "pose": ", in a three-quarter side view, aiming the gun across the frame, both arms out in front, weight settled back on the rear leg, the head tucked down behind the weapon",
+  "bodies": {
+   "a": "a wooden mannequin with visible ball joints and a painted smiling face on a pale carved head, a crisp ivory suit with pearl buttons and iridescent piping, holding a long-barrelled card pistol level, a blank white card crest worn on the costume, a single playing card hovering and spinning between the fingers of the free hand"
+  },
+  "_note_ramp": "무상성 — 놋쇠빛 불똥. 마법이 아니라 **쇠붙이가 부딪힌 자국**이다. 활·총·대포·표창이 여기 든다. 속성 이펙트를 주면 「무상성인데 무언가를 두르고 있는」 그림이 되어 안전한 줄이라는 뜻이 흐려진다.",
+  "ramp": [
+   [
+    255,
+    244,
+    206
+   ],
+   [
+    246,
+    214,
+    140
+   ],
+   [
+    206,
+    160,
+    88
+   ],
+   [
+    140,
+    96,
+    44
+   ],
+   [
+    72,
+    44,
+    18
+   ]
+  ],
+  "edge": [
+   30,
+   18,
+   8
+  ],
+  "facets": 0,
+  "motion": "draw_heavy",
+  "muzzle": "prop",
+  "link": "shaft",
+  "shot": "arrow",
+  "stretch": "0.85,1.35"
+ },
+ "marea": {
+  "ko": "마레아",
+  "elem": "water",
+  "tier": 3,
+  "neighbors": [
+   "limne",
+   "phorkys",
+   "protea",
+   "glaukos",
+   "thalassa",
+   "triton",
+   "keto",
+   "galene",
+   "nerea"
+  ],
+  "pose": ", in a three-quarter side view, the whip arm sweeping out low and wide across the frame with the long chain trailing behind in a flat arc, the other arm out for balance, the body turned side-on and the trailing hand raised near the chest",
+  "bodies": {
+   "a": "a bright-eyed fisher woman with golden tan skin and short choppy sea-green hair, a sleeveless turquoise work vest over rolled canvas trousers, thick rope coiled up one forearm, swinging a long whip of linked cards in a wide arc, a silver spade crest worn on the costume, three playing cards hovering and fanning around the free hand"
+  },
+  "_note_ramp": "물 — 둥근 심 + 흔들리는 물갈기. ★ 심을 **청록(민트)**에서 시작한다. 얼음처럼 창백한 하늘빛으로 시작하면 얼음과 픽셀로 구별이 안 된다 — 둘 다 파랑이라 램프가 갈라지지 않으면 화면에서 같은 이펙트가 된다.",
+  "ramp": [
+   [
+    186,
+    255,
+    246
+   ],
+   [
+    92,
+    236,
+    220
+   ],
+   [
+    40,
+    168,
+    246
+   ],
+   [
+    22,
+    92,
+    200
+   ],
+   [
+    8,
+    36,
+    112
+   ]
+  ],
+  "edge": [
+   4,
+   18,
+   58
+  ],
+  "facets": 0,
+  "motion": "cast_sweep",
+  "holes": true,
+  "_note_holes": "★ 활·쇠뇌·총·대포는 holes 를 켠다. 시위 안쪽·방아쇠울 안쪽은 그림에 빙 둘러싸인 흰 구멍이라 모서리에서 부은 물이 못 들어간다 — 안 켜면 흰 판때기가 붙어 나온다 (CLAUDE.md 4-3). 켜는 것은 **사람의 판단**이고, 활은 그 판단이 늘 같은 몇 안 되는 경우다."
+ },
+ "igni": {
+  "ko": "이그니",
+  "elem": "fire",
+  "tier": 3,
+  "neighbors": [
+   "chispa",
+   "solana",
+   "ceniza",
+   "volcan",
+   "carmen",
+   "saeta",
+   "candela",
+   "estoque",
+   "brasa"
+  ],
+  "pose": ", in a three-quarter side view, the blade drawn back across the chest at shoulder height and about to cut down and across the frame, the free hand open in front for balance, rising up onto the front toe with the trailing arm flung back",
+  "bodies": {
+   "a": "a smiling card dealer with warm bronze skin and slicked-back black hair, a sharp crimson suit with bright heart cufflinks and a marigold pocket square, sleeves turned back, sweeping a burning folded-card blade across the body, a scarlet heart crest worn on the costume, three playing cards hovering and fanning around the free hand"
+  },
+  "_note_ramp": "불 — 둥근 심 + 흔들리는 혓바닥. 게임의 불 속성색 #FF6A2A 에서 이어 뽑았다.",
+  "ramp": [
+   [
+    255,
+    247,
+    219
+   ],
+   [
+    255,
+    221,
+    112
+   ],
+   [
+    255,
+    170,
+    60
+   ],
+   [
+    240,
+    106,
+    26
+   ],
+   [
+    196,
+    48,
+    10
+   ]
+  ],
+  "edge": [
+   78,
+   16,
+   6
+  ],
+  "facets": 0,
+  "motion": "cast_sweep"
+ },
+ "kari": {
+  "ko": "카레",
+  "elem": "ice",
+  "tier": 3,
+  "neighbors": [
+   "lind",
+   "jokull",
+   "vidarr",
+   "eira",
+   "snorri",
+   "helga",
+   "sigrid",
+   "frosti",
+   "isa"
+  ],
+  "pose": ", in a three-quarter side view, aiming the gun across the frame, both arms out in front, the body turned side-on and narrow, the trailing arm braced hard",
+  "bodies": {
+   "a": "a lean masked scout with the whole face hidden behind bright snow goggles and a high wound scarf, a pale ice-white hooded parka with a diamond patch, gloved hands levelling a short wide-mouthed frost scattergun, a white diamond crest worn on the costume, three playing cards hovering and fanning around the free hand"
+  },
+  "_note_ramp": "얼음 — 육각 결정 + 곧고 뾰족한 가시(안 흔들린다). 흔들림을 넣어 봤더니 그냥 **녹는 것**으로 보였다. 게임의 얼음 속성색 #7BDCFF 에서 뽑았다.",
+  "ramp": [
+   [
+    226,
+    250,
+    255
+   ],
+   [
+    160,
+    233,
+    255
+   ],
+   [
+    96,
+    200,
+    246
+   ],
+   [
+    46,
+    140,
+    219
+   ],
+   [
+    24,
+    78,
+    166
+   ]
+  ],
+  "edge": [
+   10,
+   30,
+   74
+  ],
+  "facets": 6,
+  "motion": "draw_snap",
+  "muzzle": "prop",
+  "link": "shaft",
+  "shot": "arrow",
+  "stretch": "0.85,1.35"
+ },
+ "donn": {
+  "ko": "도난",
+  "elem": "elec",
+  "tier": 3,
+  "neighbors": [
+   "brigid",
+   "rhiannon",
+   "finn",
+   "conor",
+   "niamh",
+   "morrigan",
+   "caden",
+   "lugh",
+   "brian"
+  ],
+  "pose": ", standing in a three-quarter front view, both forearms lifted up beside the head with the elbows bent and the palms turned upward, the head and face clearly visible between the raised hands, the shoulders rolled up and the head lifted between them",
+  "bodies": {
+   "a": "an old storm caller with deep umber skin and a great wild white mane, a patched bright olive robe with clover stitching, a tall copper lightning rod strapped upright across the back, both forearms lifted, a bright chartreuse clover crest worn on the costume, three playing cards hovering and fanning around the free hand"
+  },
+  "_note_ramp": "전기 — 작고 사나운 심 + 꺾이고 갈라지는 지그재그 가지. ★ 노랑에서 **주황을 건너뛰고 보라로** 간다. 주황을 거치면 불 램프와 같은 길이 되어 나란히 놓았을 때 같은 이펙트로 보인다.",
+  "ramp": [
+   [
+    255,
+    246,
+    176
+   ],
+   [
+    255,
+    216,
+    77
+   ],
+   [
+    222,
+    170,
+    242
+   ],
+   [
+    140,
+    92,
+    226
+   ],
+   [
+    64,
+    34,
+    140
+   ]
+  ],
+  "edge": [
+   22,
+   12,
+   54
+  ],
+  "facets": -1,
+  "motion": "raise"
+ },
+ "echo": {
+  "ko": "에코",
+  "elem": "none",
+  "tier": 3,
+  "neighbors": [
+   "pip",
+   "mimic",
+   "dummy",
+   "shift",
+   "phantom",
+   "blank",
+   "grey",
+   "null",
+   "zero"
+  ],
+  "pose": ", in a three-quarter side view, aiming the bow across the frame, both arms out in front, the body turned side-on and narrow, the trailing arm braced hard",
+  "bodies": {
+   "a": "a hooded archer in a pale ash-white cloak with iridescent seams, a featureless shadowed face, a faint offset double of the body trailing half a step behind in translucent violet, drawing a plain white bow, a blank white card crest worn on the costume, three playing cards hovering and fanning around the free hand"
+  },
+  "_note_ramp": "무상성 — 놋쇠빛 불똥. 마법이 아니라 **쇠붙이가 부딪힌 자국**이다. 활·총·대포·표창이 여기 든다. 속성 이펙트를 주면 「무상성인데 무언가를 두르고 있는」 그림이 되어 안전한 줄이라는 뜻이 흐려진다.",
+  "ramp": [
+   [
+    255,
+    244,
+    206
+   ],
+   [
+    246,
+    214,
+    140
+   ],
+   [
+    206,
+    160,
+    88
+   ],
+   [
+    140,
+    96,
+    44
+   ],
+   [
+    72,
+    44,
+    18
+   ]
+  ],
+  "edge": [
+   30,
+   18,
+   8
+  ],
+  "facets": 0,
+  "motion": "draw_snap",
+  "muzzle": "prop",
+  "link": "shaft",
+  "shot": "arrow",
+  "holes": true,
+  "_note_holes": "★ 활·쇠뇌·총·대포는 holes 를 켠다. 시위 안쪽·방아쇠울 안쪽은 그림에 빙 둘러싸인 흰 구멍이라 모서리에서 부은 물이 못 들어간다 — 안 켜면 흰 판때기가 붙어 나온다 (CLAUDE.md 4-3). 켜는 것은 **사람의 판단**이고, 활은 그 판단이 늘 같은 몇 안 되는 경우다.",
+  "stretch": "0.85,1.35"
+ },
+ "glaukos": {
+  "ko": "글라우코스",
+  "elem": "water",
+  "tier": 4,
+  "neighbors": [
+   "limne",
+   "phorkys",
+   "protea",
+   "marea",
+   "thalassa",
+   "triton",
+   "keto",
+   "galene",
+   "nerea"
+  ],
+  "pose": ", in a three-quarter side view, the blade drawn back across the chest at shoulder height and about to cut down and across the frame, the free hand open in front for balance, the rear heel lifted and the free hand thrown out to the side",
+  "bodies": {
+   "a": "a sea-changed fisherman with luminous teal skin and long streaming kelp-green hair, bright aquamarine scale wrappings over the chest, thick ribbons of living kelp covering the legs, driving a curved water blade upward, a silver spade crest worn on the costume, three playing cards hovering and fanning around the free hand"
+  },
+  "_note_ramp": "물 — 둥근 심 + 흔들리는 물갈기. ★ 심을 **청록(민트)**에서 시작한다. 얼음처럼 창백한 하늘빛으로 시작하면 얼음과 픽셀로 구별이 안 된다 — 둘 다 파랑이라 램프가 갈라지지 않으면 화면에서 같은 이펙트가 된다.",
+  "ramp": [
+   [
+    186,
+    255,
+    246
+   ],
+   [
+    92,
+    236,
+    220
+   ],
+   [
+    40,
+    168,
+    246
+   ],
+   [
+    22,
+    92,
+    200
+   ],
+   [
+    8,
+    36,
+    112
+   ]
+  ],
+  "edge": [
+   4,
+   18,
+   58
+  ],
+  "facets": 0,
+  "motion": "cast"
+ },
+ "volcan": {
+  "ko": "볼칸",
+  "elem": "fire",
+  "tier": 4,
+  "neighbors": [
+   "chispa",
+   "solana",
+   "ceniza",
+   "igni",
+   "carmen",
+   "saeta",
+   "candela",
+   "estoque",
+   "brasa"
+  ],
+  "pose": ", standing in a three-quarter front view, both forearms lifted up beside the head with the elbows bent and the palms turned upward, the head and face clearly visible between the raised hands, the feet close together and the whole body drawn tall and straight",
+  "bodies": {
+   "a": "a massive lava-armoured brawler with cracked basalt plating over molten orange seams, half the face set in pale hardened ash, a short blazing crest of hair, smoke rising from the shoulders, both forearms raised, a scarlet heart crest worn on the costume, three playing cards hovering and fanning around the free hand"
+  },
+  "_note_ramp": "불 — 둥근 심 + 흔들리는 혓바닥. 게임의 불 속성색 #FF6A2A 에서 이어 뽑았다.",
+  "ramp": [
+   [
+    255,
+    247,
+    219
+   ],
+   [
+    255,
+    221,
+    112
+   ],
+   [
+    255,
+    170,
+    60
+   ],
+   [
+    240,
+    106,
+    26
+   ],
+   [
+    196,
+    48,
+    10
+   ]
+  ],
+  "edge": [
+   78,
+   16,
+   6
+  ],
+  "facets": 0,
+  "motion": "raise_slam"
+ },
+ "eira": {
+  "ko": "에이라",
+  "elem": "ice",
+  "tier": 4,
+  "neighbors": [
+   "lind",
+   "jokull",
+   "vidarr",
+   "kari",
+   "snorri",
+   "helga",
+   "sigrid",
+   "frosti",
+   "isa"
+  ],
+  "pose": ", in a three-quarter side view, aiming the bow across the frame, both arms out in front, one knee driven forward and the shoulders rolled over the weapon",
+  "bodies": {
+   "a": "a quiet hunter with porcelain pale skin, white brows and a long snow-white braid, a bright ivory fur-trimmed hunting coat with a diamond clasp, a small white fox curled on the shoulder, drawing a pale birch bow, a white diamond crest worn on the costume, three playing cards hovering and fanning around the free hand"
+  },
+  "_note_ramp": "얼음 — 육각 결정 + 곧고 뾰족한 가시(안 흔들린다). 흔들림을 넣어 봤더니 그냥 **녹는 것**으로 보였다. 게임의 얼음 속성색 #7BDCFF 에서 뽑았다.",
+  "ramp": [
+   [
+    226,
+    250,
+    255
+   ],
+   [
+    160,
+    233,
+    255
+   ],
+   [
+    96,
+    200,
+    246
+   ],
+   [
+    46,
+    140,
+    219
+   ],
+   [
+    24,
+    78,
+    166
+   ]
+  ],
+  "edge": [
+   10,
+   30,
+   74
+  ],
+  "facets": 6,
+  "motion": "draw_heavy",
+  "muzzle": "prop",
+  "link": "shaft",
+  "shot": "arrow",
+  "holes": true,
+  "_note_holes": "★ 활·쇠뇌·총·대포는 holes 를 켠다. 시위 안쪽·방아쇠울 안쪽은 그림에 빙 둘러싸인 흰 구멍이라 모서리에서 부은 물이 못 들어간다 — 안 켜면 흰 판때기가 붙어 나온다 (CLAUDE.md 4-3). 켜는 것은 **사람의 판단**이고, 활은 그 판단이 늘 같은 몇 안 되는 경우다.",
+  "stretch": "0.85,1.35"
+ },
+ "conor": {
+  "ko": "코너",
+  "elem": "elec",
+  "tier": 4,
+  "neighbors": [
+   "brigid",
+   "rhiannon",
+   "finn",
+   "donn",
+   "niamh",
+   "morrigan",
+   "caden",
+   "lugh",
+   "brian"
+  ],
+  "pose": ", in a three-quarter side view, aiming the gun across the frame, both arms out in front, one knee driven forward and the shoulders rolled over the weapon",
+  "bodies": {
+   "a": "a cocky gunman with golden tan skin and a big static-frizzed mane of chestnut hair standing on end, a bright citron leather jacket over a clover-print shirt, forked spark scars across the back of the hand, firing a snub electric card pistol, a bright chartreuse clover crest worn on the costume, three playing cards hovering and fanning around the free hand"
+  },
+  "_note_ramp": "전기 — 작고 사나운 심 + 꺾이고 갈라지는 지그재그 가지. ★ 노랑에서 **주황을 건너뛰고 보라로** 간다. 주황을 거치면 불 램프와 같은 길이 되어 나란히 놓았을 때 같은 이펙트로 보인다.",
+  "ramp": [
+   [
+    255,
+    246,
+    176
+   ],
+   [
+    255,
+    216,
+    77
+   ],
+   [
+    222,
+    170,
+    242
+   ],
+   [
+    140,
+    92,
+    226
+   ],
+   [
+    64,
+    34,
+    140
+   ]
+  ],
+  "edge": [
+   22,
+   12,
+   54
+  ],
+  "facets": -1,
+  "motion": "draw_snap",
+  "muzzle": "prop",
+  "link": "shaft",
+  "shot": "arrow",
+  "stretch": "0.85,1.35"
+ },
+ "shift": {
+  "ko": "시프트",
+  "elem": "none",
+  "tier": 4,
+  "neighbors": [
+   "pip",
+   "mimic",
+   "dummy",
+   "echo",
+   "phantom",
+   "blank",
+   "grey",
+   "null",
+   "zero"
+  ],
+  "pose": ", in a three-quarter side view, the whip arm sweeping out low and wide across the frame with the long chain trailing behind in a flat arc, the other arm out for balance, the weight rolled onto the back foot and the chin lifted",
+  "bodies": {
+   "a": "a glitching figure in a sleek pearl-white bodysuit with iridescent panel seams, slabs of the torso and one arm displaced sideways into bright magenta and cyan ghost copies, a smooth blank visor face, cracking a whip of scattered cards, a blank white card crest worn on the costume, three playing cards hovering and fanning around the free hand"
+  },
+  "_note_ramp": "무상성 — 놋쇠빛 불똥. 마법이 아니라 **쇠붙이가 부딪힌 자국**이다. 활·총·대포·표창이 여기 든다. 속성 이펙트를 주면 「무상성인데 무언가를 두르고 있는」 그림이 되어 안전한 줄이라는 뜻이 흐려진다.",
+  "ramp": [
+   [
+    255,
+    244,
+    206
+   ],
+   [
+    246,
+    214,
+    140
+   ],
+   [
+    206,
+    160,
+    88
+   ],
+   [
+    140,
+    96,
+    44
+   ],
+   [
+    72,
+    44,
+    18
+   ]
+  ],
+  "edge": [
+   30,
+   18,
+   8
+  ],
+  "facets": 0,
+  "motion": "cast_sweep",
+  "holes": true,
+  "_note_holes": "★ 활·쇠뇌·총·대포는 holes 를 켠다. 시위 안쪽·방아쇠울 안쪽은 그림에 빙 둘러싸인 흰 구멍이라 모서리에서 부은 물이 못 들어간다 — 안 켜면 흰 판때기가 붙어 나온다 (CLAUDE.md 4-3). 켜는 것은 **사람의 판단**이고, 활은 그 판단이 늘 같은 몇 안 되는 경우다."
+ },
+ "thalassa": {
+  "ko": "탈라사",
+  "elem": "water",
+  "tier": 5,
+  "neighbors": [
+   "limne",
+   "phorkys",
+   "protea",
+   "marea",
+   "glaukos",
+   "triton",
+   "keto",
+   "galene",
+   "nerea"
+  ],
+  "pose": ", standing in a three-quarter front view, both forearms lifted up beside the head with the elbows bent and the palms turned upward, the head and face clearly visible between the raised hands, the hips turned to one side while the face stays to the front",
+  "bodies": {
+   "a": "a serene sea priestess in a huge branching coral crown of bright rose and turquoise, polished shell pauldrons over deep sapphire robes, the lower body dissolving downward into pale sea mist, both forearms lifted beside the head, a silver spade crest worn on the costume, three playing cards hovering and fanning around the free hand"
+  },
+  "_note_ramp": "물 — 둥근 심 + 흔들리는 물갈기. ★ 심을 **청록(민트)**에서 시작한다. 얼음처럼 창백한 하늘빛으로 시작하면 얼음과 픽셀로 구별이 안 된다 — 둘 다 파랑이라 램프가 갈라지지 않으면 화면에서 같은 이펙트가 된다.",
+  "ramp": [
+   [
+    186,
+    255,
+    246
+   ],
+   [
+    92,
+    236,
+    220
+   ],
+   [
+    40,
+    168,
+    246
+   ],
+   [
+    22,
+    92,
+    200
+   ],
+   [
+    8,
+    36,
+    112
+   ]
+  ],
+  "edge": [
+   4,
+   18,
+   58
+  ],
+  "facets": 0,
+  "motion": "raise_slam",
+  "holes": true,
+  "_note_holes": "★ 활·쇠뇌·총·대포는 holes 를 켠다. 시위 안쪽·방아쇠울 안쪽은 그림에 빙 둘러싸인 흰 구멍이라 모서리에서 부은 물이 못 들어간다 — 안 켜면 흰 판때기가 붙어 나온다 (CLAUDE.md 4-3). 켜는 것은 **사람의 판단**이고, 활은 그 판단이 늘 같은 몇 안 되는 경우다."
+ },
+ "carmen": {
+  "ko": "카르멘",
+  "elem": "fire",
+  "tier": 5,
+  "neighbors": [
+   "chispa",
+   "solana",
+   "ceniza",
+   "igni",
+   "volcan",
+   "saeta",
+   "candela",
+   "estoque",
+   "brasa"
+  ],
+  "pose": ", in a three-quarter side view, aiming the gun across the frame, both arms out in front, standing square to the front with the chin raised over the sight line",
+  "bodies": {
+   "a": "a dancer-gunslinger with warm bronze skin and a high glossy black chignon pinned with a scarlet flower, a short embroidered crimson bolero over a bright ruffled skirt, red marks under both eyes, both hands firing paired card revolvers, a scarlet heart crest worn on the costume, three playing cards hovering and fanning around the free hand"
+  },
+  "_note_ramp": "불 — 둥근 심 + 흔들리는 혓바닥. 게임의 불 속성색 #FF6A2A 에서 이어 뽑았다.",
+  "ramp": [
+   [
+    255,
+    247,
+    219
+   ],
+   [
+    255,
+    221,
+    112
+   ],
+   [
+    255,
+    170,
+    60
+   ],
+   [
+    240,
+    106,
+    26
+   ],
+   [
+    196,
+    48,
+    10
+   ]
+  ],
+  "edge": [
+   78,
+   16,
+   6
+  ],
+  "facets": 0,
+  "motion": "draw_snap",
+  "muzzle": "prop",
+  "link": "shaft",
+  "shot": "arrow",
+  "stretch": "0.85,1.35"
+ },
+ "snorri": {
+  "ko": "스노리",
+  "elem": "ice",
+  "tier": 5,
+  "neighbors": [
+   "lind",
+   "jokull",
+   "vidarr",
+   "kari",
+   "eira",
+   "helga",
+   "sigrid",
+   "frosti",
+   "isa"
+  ],
+  "pose": ", in a three-quarter side view, the whip arm sweeping out low and wide across the frame with the long chain trailing behind in a flat arc, the other arm out for balance, one foot crossed behind and the coat wrapping around the turn",
+  "bodies": {
+   "a": "a round cheerful furrier with pale rose skin, ruddy cheeks and a shaggy sand-blond mop, a thick bright cream fleece coat with ice-blue trim and a diamond toggle, swinging a frost-glazed chain of cards in a low sweep, a white diamond crest worn on the costume, three playing cards hovering and fanning around the free hand"
+  },
+  "_note_ramp": "얼음 — 육각 결정 + 곧고 뾰족한 가시(안 흔들린다). 흔들림을 넣어 봤더니 그냥 **녹는 것**으로 보였다. 게임의 얼음 속성색 #7BDCFF 에서 뽑았다.",
+  "ramp": [
+   [
+    226,
+    250,
+    255
+   ],
+   [
+    160,
+    233,
+    255
+   ],
+   [
+    96,
+    200,
+    246
+   ],
+   [
+    46,
+    140,
+    219
+   ],
+   [
+    24,
+    78,
+    166
+   ]
+  ],
+  "edge": [
+   10,
+   30,
+   74
+  ],
+  "facets": 6,
+  "motion": "cast",
+  "holes": true,
+  "_note_holes": "★ 활·쇠뇌·총·대포는 holes 를 켠다. 시위 안쪽·방아쇠울 안쪽은 그림에 빙 둘러싸인 흰 구멍이라 모서리에서 부은 물이 못 들어간다 — 안 켜면 흰 판때기가 붙어 나온다 (CLAUDE.md 4-3). 켜는 것은 **사람의 판단**이고, 활은 그 판단이 늘 같은 몇 안 되는 경우다."
+ },
+ "niamh": {
+  "ko": "니브",
+  "elem": "elec",
+  "tier": 5,
+  "neighbors": [
+   "brigid",
+   "rhiannon",
+   "finn",
+   "donn",
+   "conor",
+   "morrigan",
+   "caden",
+   "lugh",
+   "brian"
+  ],
+  "pose": ", in a three-quarter side view, aiming the bow across the frame, both arms out in front, standing square to the front with the chin raised over the sight line",
+  "bodies": {
+   "a": "a sharp-eyed huntress with olive skin and a high whipping ponytail of raven-black hair lifting on its own, bright lime-green leathers with a clover brand over one eye, a violet-black raven on the shoulder, loosing three arrows from a short bow, a bright chartreuse clover crest worn on the costume, three playing cards hovering and fanning around the free hand"
+  },
+  "_note_ramp": "전기 — 작고 사나운 심 + 꺾이고 갈라지는 지그재그 가지. ★ 노랑에서 **주황을 건너뛰고 보라로** 간다. 주황을 거치면 불 램프와 같은 길이 되어 나란히 놓았을 때 같은 이펙트로 보인다.",
+  "ramp": [
+   [
+    255,
+    246,
+    176
+   ],
+   [
+    255,
+    216,
+    77
+   ],
+   [
+    222,
+    170,
+    242
+   ],
+   [
+    140,
+    92,
+    226
+   ],
+   [
+    64,
+    34,
+    140
+   ]
+  ],
+  "edge": [
+   22,
+   12,
+   54
+  ],
+  "facets": -1,
+  "motion": "draw_snap",
+  "muzzle": "prop",
+  "link": "shaft",
+  "shot": "arrow",
+  "holes": true,
+  "_note_holes": "★ 활·쇠뇌·총·대포는 holes 를 켠다. 시위 안쪽·방아쇠울 안쪽은 그림에 빙 둘러싸인 흰 구멍이라 모서리에서 부은 물이 못 들어간다 — 안 켜면 흰 판때기가 붙어 나온다 (CLAUDE.md 4-3). 켜는 것은 **사람의 판단**이고, 활은 그 판단이 늘 같은 몇 안 되는 경우다.",
+  "stretch": "0.85,1.35"
+ },
+ "phantom": {
+  "ko": "팬텀",
+  "elem": "none",
+  "tier": 5,
+  "neighbors": [
+   "pip",
+   "mimic",
+   "dummy",
+   "echo",
+   "shift",
+   "blank",
+   "grey",
+   "null",
+   "zero"
+  ],
+  "pose": ", in a three-quarter side view, the blade drawn back across the chest at shoulder height and about to cut down and across the frame, the free hand open in front for balance, settled back on the rear leg with the head turned along the blade",
+  "bodies": {
+   "a": "a hollow silhouette with nothing inside the outline, a single porcelain white mask floating where the head should be, a mantle built from overlapping playing cards in pearl and iridescent violet, an empty sleeve swinging a card blade, a blank white card crest worn on the costume, three playing cards hovering and fanning around the free hand"
+  },
+  "_note_ramp": "무상성 — 놋쇠빛 불똥. 마법이 아니라 **쇠붙이가 부딪힌 자국**이다. 활·총·대포·표창이 여기 든다. 속성 이펙트를 주면 「무상성인데 무언가를 두르고 있는」 그림이 되어 안전한 줄이라는 뜻이 흐려진다.",
+  "ramp": [
+   [
+    255,
+    244,
+    206
+   ],
+   [
+    246,
+    214,
+    140
+   ],
+   [
+    206,
+    160,
+    88
+   ],
+   [
+    140,
+    96,
+    44
+   ],
+   [
+    72,
+    44,
+    18
+   ]
+  ],
+  "edge": [
+   30,
+   18,
+   8
+  ],
+  "facets": 0,
+  "motion": "cast"
+ },
+ "triton": {
+  "ko": "트리톤",
+  "elem": "water",
+  "tier": 6,
+  "neighbors": [
+   "limne",
+   "phorkys",
+   "protea",
+   "marea",
+   "glaukos",
+   "thalassa",
+   "keto",
+   "galene",
+   "nerea"
+  ],
+  "pose": ", in a three-quarter side view, aiming the gun across the frame, both arms out in front, standing tall with the feet planted wide and the shoulders square",
+  "bodies": {
+   "a": "a broad sea elder with deep umber skin and a long braided blue-black beard, bright turquoise scale cuirass with a silver spade sigil and gill scars along the throat, shouldering a long musket built around a great spiral conch horn, a silver spade crest worn on the costume, five playing cards hovering in a wide fan around the free hand"
+  },
+  "_note_ramp": "물 — 둥근 심 + 흔들리는 물갈기. ★ 심을 **청록(민트)**에서 시작한다. 얼음처럼 창백한 하늘빛으로 시작하면 얼음과 픽셀로 구별이 안 된다 — 둘 다 파랑이라 램프가 갈라지지 않으면 화면에서 같은 이펙트가 된다.",
+  "ramp": [
+   [
+    186,
+    255,
+    246
+   ],
+   [
+    92,
+    236,
+    220
+   ],
+   [
+    40,
+    168,
+    246
+   ],
+   [
+    22,
+    92,
+    200
+   ],
+   [
+    8,
+    36,
+    112
+   ]
+  ],
+  "edge": [
+   4,
+   18,
+   58
+  ],
+  "facets": 0,
+  "motion": "draw_heavy",
+  "muzzle": "prop",
+  "link": "shaft",
+  "shot": "arrow",
+  "stretch": "0.85,1.35"
+ },
+ "saeta": {
+  "ko": "사에타",
+  "elem": "fire",
+  "tier": 6,
+  "neighbors": [
+   "chispa",
+   "solana",
+   "ceniza",
+   "igni",
+   "volcan",
+   "carmen",
+   "candela",
+   "estoque",
+   "brasa"
+  ],
+  "pose": ", in a three-quarter side view, aiming the bow across the frame, both arms out in front, standing tall with the feet planted wide and the shoulders square",
+  "bodies": {
+   "a": "a tall veiled archer with a long neck and pale rose skin under fine black lace, a bright scarlet high-waisted gown, a rack of lit candles standing upright across the back instead of a quiver, tilting a gilt longbow high, a scarlet heart crest worn on the costume, five playing cards hovering in a wide fan around the free hand"
+  },
+  "_note_ramp": "불 — 둥근 심 + 흔들리는 혓바닥. 게임의 불 속성색 #FF6A2A 에서 이어 뽑았다.",
+  "ramp": [
+   [
+    255,
+    247,
+    219
+   ],
+   [
+    255,
+    221,
+    112
+   ],
+   [
+    255,
+    170,
+    60
+   ],
+   [
+    240,
+    106,
+    26
+   ],
+   [
+    196,
+    48,
+    10
+   ]
+  ],
+  "edge": [
+   78,
+   16,
+   6
+  ],
+  "facets": 0,
+  "motion": "draw_heavy",
+  "muzzle": "prop",
+  "link": "shaft",
+  "shot": "arrow",
+  "holes": true,
+  "_note_holes": "★ 활·쇠뇌·총·대포는 holes 를 켠다. 시위 안쪽·방아쇠울 안쪽은 그림에 빙 둘러싸인 흰 구멍이라 모서리에서 부은 물이 못 들어간다 — 안 켜면 흰 판때기가 붙어 나온다 (CLAUDE.md 4-3). 켜는 것은 **사람의 판단**이고, 활은 그 판단이 늘 같은 몇 안 되는 경우다.",
+  "stretch": "0.85,1.35"
+ },
+ "helga": {
+  "ko": "헬가",
+  "elem": "ice",
+  "tier": 6,
+  "neighbors": [
+   "lind",
+   "jokull",
+   "vidarr",
+   "kari",
+   "eira",
+   "snorri",
+   "sigrid",
+   "frosti",
+   "isa"
+  ],
+  "pose": ", in a three-quarter side view, the blade drawn back across the chest at shoulder height and about to cut down and across the frame, the free hand open in front for balance, the feet set wide and the shoulders square over them",
+  "bodies": {
+   "a": "a silver-armoured shieldmaiden with pale rose skin, a thick white-blonde braid over one shoulder and frost tattoos across the cheek, bright ice-blue enamelled plate, a great slab of clear ice slung on the back, crossing two ice blades, a white diamond crest worn on the costume, five playing cards hovering in a wide fan around the free hand"
+  },
+  "_note_ramp": "얼음 — 육각 결정 + 곧고 뾰족한 가시(안 흔들린다). 흔들림을 넣어 봤더니 그냥 **녹는 것**으로 보였다. 게임의 얼음 속성색 #7BDCFF 에서 뽑았다.",
+  "ramp": [
+   [
+    226,
+    250,
+    255
+   ],
+   [
+    160,
+    233,
+    255
+   ],
+   [
+    96,
+    200,
+    246
+   ],
+   [
+    46,
+    140,
+    219
+   ],
+   [
+    24,
+    78,
+    166
+   ]
+  ],
+  "edge": [
+   10,
+   30,
+   74
+  ],
+  "facets": 6,
+  "motion": "cast"
+ },
+ "morrigan": {
+  "ko": "모리안",
+  "elem": "elec",
+  "tier": 6,
+  "neighbors": [
+   "brigid",
+   "rhiannon",
+   "finn",
+   "donn",
+   "conor",
+   "niamh",
+   "caden",
+   "lugh",
+   "brian"
+  ],
+  "pose": ", in a three-quarter side view, the whip arm sweeping out low and wide across the frame with the long chain trailing behind in a flat arc, the other arm out for balance, the feet planted wide and the hips turned into the swing",
+  "bodies": {
+   "a": "a barefoot war-witch with pale rose skin and a huge crow-feather mantle of violet black, long loose hair lifting on static, deep red eyes, bright chartreuse under-robes, an ankle chain, spinning a crackling card lash overhead, a bright chartreuse clover crest worn on the costume, five playing cards hovering in a wide fan around the free hand"
+  },
+  "_note_ramp": "전기 — 작고 사나운 심 + 꺾이고 갈라지는 지그재그 가지. ★ 노랑에서 **주황을 건너뛰고 보라로** 간다. 주황을 거치면 불 램프와 같은 길이 되어 나란히 놓았을 때 같은 이펙트로 보인다.",
+  "ramp": [
+   [
+    255,
+    246,
+    176
+   ],
+   [
+    255,
+    216,
+    77
+   ],
+   [
+    222,
+    170,
+    242
+   ],
+   [
+    140,
+    92,
+    226
+   ],
+   [
+    64,
+    34,
+    140
+   ]
+  ],
+  "edge": [
+   22,
+   12,
+   54
+  ],
+  "facets": -1,
+  "motion": "cast_sweep",
+  "holes": true,
+  "_note_holes": "★ 활·쇠뇌·총·대포는 holes 를 켠다. 시위 안쪽·방아쇠울 안쪽은 그림에 빙 둘러싸인 흰 구멍이라 모서리에서 부은 물이 못 들어간다 — 안 켜면 흰 판때기가 붙어 나온다 (CLAUDE.md 4-3). 켜는 것은 **사람의 판단**이고, 활은 그 판단이 늘 같은 몇 안 되는 경우다."
+ },
+ "blank": {
+  "ko": "블랭크",
+  "elem": "none",
+  "tier": 6,
+  "neighbors": [
+   "pip",
+   "mimic",
+   "dummy",
+   "echo",
+   "shift",
+   "phantom",
+   "grey",
+   "null",
+   "zero"
+  ],
+  "pose": ", standing in a three-quarter front view, both forearms lifted up beside the head with the elbows bent and the palms turned upward, the head and face clearly visible between the raised hands, the feet planted wide and the cloak hanging straight",
+  "bodies": {
+   "a": "a faceless figure stacked out of blank white playing cards in the shape of a person, no printing anywhere, pearl and iridescent sheen shifting across the card edges, both forearms lifted beside the smooth blank head, a blank white card crest worn on the costume, five playing cards hovering in a wide fan around the free hand"
+  },
+  "_note_ramp": "무상성 — 놋쇠빛 불똥. 마법이 아니라 **쇠붙이가 부딪힌 자국**이다. 활·총·대포·표창이 여기 든다. 속성 이펙트를 주면 「무상성인데 무언가를 두르고 있는」 그림이 되어 안전한 줄이라는 뜻이 흐려진다.",
+  "ramp": [
+   [
+    255,
+    244,
+    206
+   ],
+   [
+    246,
+    214,
+    140
+   ],
+   [
+    206,
+    160,
+    88
+   ],
+   [
+    140,
+    96,
+    44
+   ],
+   [
+    72,
+    44,
+    18
+   ]
+  ],
+  "edge": [
+   30,
+   18,
+   8
+  ],
+  "facets": 0,
+  "motion": "raise_wide"
+ },
+ "keto": {
+  "ko": "케토",
+  "elem": "water",
+  "tier": 7,
+  "neighbors": [
+   "limne",
+   "phorkys",
+   "protea",
+   "marea",
+   "glaukos",
+   "thalassa",
+   "triton",
+   "galene",
+   "nerea"
+  ],
+  "pose": ", in a three-quarter side view, aiming the bow across the frame, both arms out in front, weight shifted onto the front foot and the torso leaning into the shot",
+  "bodies": {
+   "a": "a blindfolded commander with luminous teal skin, indigo bandages wound over the eyes and a long silver-white ponytail, a dorsal-fin shaped bright cobalt mantle, webbed-pattern tattoos down both arms, drawing a bow of compressed water, a silver spade crest worn on the costume, five playing cards hovering in a wide fan around the free hand"
+  },
+  "_note_ramp": "물 — 둥근 심 + 흔들리는 물갈기. ★ 심을 **청록(민트)**에서 시작한다. 얼음처럼 창백한 하늘빛으로 시작하면 얼음과 픽셀로 구별이 안 된다 — 둘 다 파랑이라 램프가 갈라지지 않으면 화면에서 같은 이펙트가 된다.",
+  "ramp": [
+   [
+    186,
+    255,
+    246
+   ],
+   [
+    92,
+    236,
+    220
+   ],
+   [
+    40,
+    168,
+    246
+   ],
+   [
+    22,
+    92,
+    200
+   ],
+   [
+    8,
+    36,
+    112
+   ]
+  ],
+  "edge": [
+   4,
+   18,
+   58
+  ],
+  "facets": 0,
+  "motion": "draw",
+  "muzzle": "prop",
+  "link": "shaft",
+  "shot": "arrow",
+  "holes": true,
+  "_note_holes": "★ 활·쇠뇌·총·대포는 holes 를 켠다. 시위 안쪽·방아쇠울 안쪽은 그림에 빙 둘러싸인 흰 구멍이라 모서리에서 부은 물이 못 들어간다 — 안 켜면 흰 판때기가 붙어 나온다 (CLAUDE.md 4-3). 켜는 것은 **사람의 판단**이고, 활은 그 판단이 늘 같은 몇 안 되는 경우다.",
+  "stretch": "0.85,1.35"
+ },
+ "candela": {
+  "ko": "칸델라",
+  "elem": "fire",
+  "tier": 7,
+  "neighbors": [
+   "chispa",
+   "solana",
+   "ceniza",
+   "igni",
+   "volcan",
+   "carmen",
+   "saeta",
+   "estoque",
+   "brasa"
+  ],
+  "pose": ", in a three-quarter side view, the whip arm sweeping out low and wide across the frame with the long chain trailing behind in a flat arc, the other arm out for balance, stepping forward onto the front foot with the hem swinging out",
+  "bodies": {
+   "a": "a monastic figure with deep umber skin and a shaved head ringed by a bright flame halo, a heavy vermilion habit with a scarlet heart sigil, a girdle hung with many lit brass candlesticks, whirling a burning card lash in a full circle, a scarlet heart crest worn on the costume, five playing cards hovering in a wide fan around the free hand"
+  },
+  "_note_ramp": "불 — 둥근 심 + 흔들리는 혓바닥. 게임의 불 속성색 #FF6A2A 에서 이어 뽑았다.",
+  "ramp": [
+   [
+    255,
+    247,
+    219
+   ],
+   [
+    255,
+    221,
+    112
+   ],
+   [
+    255,
+    170,
+    60
+   ],
+   [
+    240,
+    106,
+    26
+   ],
+   [
+    196,
+    48,
+    10
+   ]
+  ],
+  "edge": [
+   78,
+   16,
+   6
+  ],
+  "facets": 0,
+  "motion": "cast_lunge",
+  "holes": true,
+  "_note_holes": "★ 활·쇠뇌·총·대포는 holes 를 켠다. 시위 안쪽·방아쇠울 안쪽은 그림에 빙 둘러싸인 흰 구멍이라 모서리에서 부은 물이 못 들어간다 — 안 켜면 흰 판때기가 붙어 나온다 (CLAUDE.md 4-3). 켜는 것은 **사람의 판단**이고, 활은 그 판단이 늘 같은 몇 안 되는 경우다."
+ },
+ "sigrid": {
+  "ko": "시그리드",
+  "elem": "ice",
+  "tier": 7,
+  "neighbors": [
+   "lind",
+   "jokull",
+   "vidarr",
+   "kari",
+   "eira",
+   "snorri",
+   "helga",
+   "frosti",
+   "isa"
+  ],
+  "pose": ", standing in a three-quarter front view, both forearms lifted up beside the head with the elbows bent and the palms turned upward, the head and face clearly visible between the raised hands, the back arched and the chin lifted, the cloak billowing out behind",
+  "bodies": {
+   "a": "a floating frost queen with pale rose skin in a gown woven from bright ice crystals, a thin translucent ice veil over the face, a tall spray of white-blue hair like a rime plume, feet hovering clear of the ground, both forearms raised beside the head, a white diamond crest worn on the costume, five playing cards hovering in a wide fan around the free hand"
+  },
+  "_note_ramp": "얼음 — 육각 결정 + 곧고 뾰족한 가시(안 흔들린다). 흔들림을 넣어 봤더니 그냥 **녹는 것**으로 보였다. 게임의 얼음 속성색 #7BDCFF 에서 뽑았다.",
+  "ramp": [
+   [
+    226,
+    250,
+    255
+   ],
+   [
+    160,
+    233,
+    255
+   ],
+   [
+    96,
+    200,
+    246
+   ],
+   [
+    46,
+    140,
+    219
+   ],
+   [
+    24,
+    78,
+    166
+   ]
+  ],
+  "edge": [
+   10,
+   30,
+   74
+  ],
+  "facets": 6,
+  "motion": "raise"
+ },
+ "caden": {
+  "ko": "케이든",
+  "elem": "elec",
+  "tier": 7,
+  "neighbors": [
+   "brigid",
+   "rhiannon",
+   "finn",
+   "donn",
+   "conor",
+   "niamh",
+   "morrigan",
+   "lugh",
+   "brian"
+  ],
+  "pose": ", in a three-quarter side view, the blade drawn back across the chest at shoulder height and about to cut down and across the frame, the free hand open in front for balance, lunging onto the front foot with the coat flaring out behind",
+  "bodies": {
+   "a": "a young swordsman with pale rose skin and short silver hair standing on end with static, an old scar across one cheek, bright lime-trimmed light armour with clover rivets, slashing a crackling card-sword forward, a bright chartreuse clover crest worn on the costume, five playing cards hovering in a wide fan around the free hand"
+  },
+  "_note_ramp": "전기 — 작고 사나운 심 + 꺾이고 갈라지는 지그재그 가지. ★ 노랑에서 **주황을 건너뛰고 보라로** 간다. 주황을 거치면 불 램프와 같은 길이 되어 나란히 놓았을 때 같은 이펙트로 보인다.",
+  "ramp": [
+   [
+    255,
+    246,
+    176
+   ],
+   [
+    255,
+    216,
+    77
+   ],
+   [
+    222,
+    170,
+    242
+   ],
+   [
+    140,
+    92,
+    226
+   ],
+   [
+    64,
+    34,
+    140
+   ]
+  ],
+  "edge": [
+   22,
+   12,
+   54
+  ],
+  "facets": -1,
+  "motion": "cast_sweep"
+ },
+ "grey": {
+  "ko": "그레이",
+  "elem": "none",
+  "tier": 7,
+  "neighbors": [
+   "pip",
+   "mimic",
+   "dummy",
+   "echo",
+   "shift",
+   "phantom",
+   "blank",
+   "null",
+   "zero"
+  ],
+  "pose": ", in a three-quarter side view, aiming the gun across the frame, both arms out in front, weight shifted onto the front foot and the torso leaning into the shot",
+  "bodies": {
+   "a": "a plain-looking agent in a pale silver-white trench coat with a holographic sheen and a matching fedora tilted low, a playing card held between the teeth, a smooth shadowed face, levelling a single card revolver, a blank white card crest worn on the costume, five playing cards hovering in a wide fan around the free hand"
+  },
+  "_note_ramp": "무상성 — 놋쇠빛 불똥. 마법이 아니라 **쇠붙이가 부딪힌 자국**이다. 활·총·대포·표창이 여기 든다. 속성 이펙트를 주면 「무상성인데 무언가를 두르고 있는」 그림이 되어 안전한 줄이라는 뜻이 흐려진다.",
+  "ramp": [
+   [
+    255,
+    244,
+    206
+   ],
+   [
+    246,
+    214,
+    140
+   ],
+   [
+    206,
+    160,
+    88
+   ],
+   [
+    140,
+    96,
+    44
+   ],
+   [
+    72,
+    44,
+    18
+   ]
+  ],
+  "edge": [
+   30,
+   18,
+   8
+  ],
+  "facets": 0,
+  "motion": "draw",
+  "muzzle": "prop",
+  "link": "shaft",
+  "shot": "arrow",
+  "stretch": "0.85,1.35"
+ },
+ "galene": {
+  "ko": "갈레네",
+  "elem": "water",
+  "tier": 8,
+  "neighbors": [
+   "limne",
+   "phorkys",
+   "protea",
+   "marea",
+   "glaukos",
+   "thalassa",
+   "triton",
+   "keto",
+   "nerea"
+  ],
+  "pose": ", in a three-quarter side view, the whip arm sweeping out low and wide across the frame with the long chain trailing behind in a flat arc, the other arm out for balance, the shoulders dropped low and the head following the arc",
+  "bodies": {
+   "a": "a still-faced demigoddess with luminous pale-teal skin and a floor-length pale blue-silver ceremonial robe, a shallow bowl of water balanced perfectly on the crown of a smooth coiled headdress, snapping a chain of cards once, low and short, a silver spade crest worn on the costume, five playing cards hovering in a wide fan around the free hand"
+  },
+  "_note_ramp": "물 — 둥근 심 + 흔들리는 물갈기. ★ 심을 **청록(민트)**에서 시작한다. 얼음처럼 창백한 하늘빛으로 시작하면 얼음과 픽셀로 구별이 안 된다 — 둘 다 파랑이라 램프가 갈라지지 않으면 화면에서 같은 이펙트가 된다.",
+  "ramp": [
+   [
+    186,
+    255,
+    246
+   ],
+   [
+    92,
+    236,
+    220
+   ],
+   [
+    40,
+    168,
+    246
+   ],
+   [
+    22,
+    92,
+    200
+   ],
+   [
+    8,
+    36,
+    112
+   ]
+  ],
+  "edge": [
+   4,
+   18,
+   58
+  ],
+  "facets": 0,
+  "motion": "cast_lunge",
+  "holes": true,
+  "_note_holes": "★ 활·쇠뇌·총·대포는 holes 를 켠다. 시위 안쪽·방아쇠울 안쪽은 그림에 빙 둘러싸인 흰 구멍이라 모서리에서 부은 물이 못 들어간다 — 안 켜면 흰 판때기가 붙어 나온다 (CLAUDE.md 4-3). 켜는 것은 **사람의 판단**이고, 활은 그 판단이 늘 같은 몇 안 되는 경우다."
+ },
+ "estoque": {
+  "ko": "에스토크",
+  "elem": "fire",
+  "tier": 8,
+  "neighbors": [
+   "chispa",
+   "solana",
+   "ceniza",
+   "igni",
+   "volcan",
+   "carmen",
+   "saeta",
+   "candela",
+   "brasa"
+  ],
+  "pose": ", in a three-quarter side view, the blade drawn back across the chest at shoulder height and about to cut down and across the frame, the free hand open in front for balance, the torso coiled away from the cut and the chin tucked down",
+  "bodies": {
+   "a": "a matador demigod with warm bronze skin and slicked black hair in a short queue, a crimson bolero heavy with gold embroidery, one eye closed, a broad burn scar across the bare shoulder, lunging with a thin blazing card rapier, a scarlet heart crest worn on the costume, five playing cards hovering in a wide fan around the free hand"
+  },
+  "_note_ramp": "불 — 둥근 심 + 흔들리는 혓바닥. 게임의 불 속성색 #FF6A2A 에서 이어 뽑았다.",
+  "ramp": [
+   [
+    255,
+    247,
+    219
+   ],
+   [
+    255,
+    221,
+    112
+   ],
+   [
+    255,
+    170,
+    60
+   ],
+   [
+    240,
+    106,
+    26
+   ],
+   [
+    196,
+    48,
+    10
+   ]
+  ],
+  "edge": [
+   78,
+   16,
+   6
+  ],
+  "facets": 0,
+  "motion": "cast_sweep"
+ },
+ "frosti": {
+  "ko": "프로스티",
+  "elem": "ice",
+  "tier": 8,
+  "neighbors": [
+   "lind",
+   "jokull",
+   "vidarr",
+   "kari",
+   "eira",
+   "snorri",
+   "helga",
+   "sigrid",
+   "isa"
+  ],
+  "pose": ", in a three-quarter side view, aiming the gun across the frame, both arms out in front, weight settled back on the rear leg, the head tucked down behind the weapon",
+  "bodies": {
+   "a": "an expressionless young officer with porcelain pale skin and neat pale-blue hair, a bright white military greatcoat with silver epaulettes and a diamond pin, one entire arm grown into clear ice crystal, sighting a long bolt-action frost rifle, a white diamond crest worn on the costume, five playing cards hovering in a wide fan around the free hand"
+  },
+  "_note_ramp": "얼음 — 육각 결정 + 곧고 뾰족한 가시(안 흔들린다). 흔들림을 넣어 봤더니 그냥 **녹는 것**으로 보였다. 게임의 얼음 속성색 #7BDCFF 에서 뽑았다.",
+  "ramp": [
+   [
+    226,
+    250,
+    255
+   ],
+   [
+    160,
+    233,
+    255
+   ],
+   [
+    96,
+    200,
+    246
+   ],
+   [
+    46,
+    140,
+    219
+   ],
+   [
+    24,
+    78,
+    166
+   ]
+  ],
+  "edge": [
+   10,
+   30,
+   74
+  ],
+  "facets": 6,
+  "motion": "draw_heavy",
+  "muzzle": "prop",
+  "link": "shaft",
+  "shot": "arrow",
+  "stretch": "0.85,1.35"
+ },
+ "lugh": {
+  "ko": "루흐",
+  "elem": "elec",
+  "tier": 8,
+  "neighbors": [
+   "brigid",
+   "rhiannon",
+   "finn",
+   "donn",
+   "conor",
+   "niamh",
+   "morrigan",
+   "caden",
+   "brian"
+  ],
+  "pose": ", standing in a three-quarter front view, both forearms lifted up beside the head with the elbows bent and the palms turned upward, the head and face clearly visible between the raised hands, one foot stepped forward and the body leaning into it",
+  "bodies": {
+   "a": "a radiant storm demigod with golden tan skin and a wild upswept mane of white-gold hair, glowing white eyes, a gold-plated spear locked across the back, bright chartreuse arcs leaping from both shoulders, a small thundercloud overhead, a bright chartreuse clover crest worn on the costume, five playing cards hovering in a wide fan around the free hand"
+  },
+  "_note_ramp": "전기 — 작고 사나운 심 + 꺾이고 갈라지는 지그재그 가지. ★ 노랑에서 **주황을 건너뛰고 보라로** 간다. 주황을 거치면 불 램프와 같은 길이 되어 나란히 놓았을 때 같은 이펙트로 보인다.",
+  "ramp": [
+   [
+    255,
+    246,
+    176
+   ],
+   [
+    255,
+    216,
+    77
+   ],
+   [
+    222,
+    170,
+    242
+   ],
+   [
+    140,
+    92,
+    226
+   ],
+   [
+    64,
+    34,
+    140
+   ]
+  ],
+  "edge": [
+   22,
+   12,
+   54
+  ],
+  "facets": -1,
+  "motion": "raise_wide"
+ },
+ "null": {
+  "ko": "널",
+  "elem": "none",
+  "tier": 8,
+  "neighbors": [
+   "pip",
+   "mimic",
+   "dummy",
+   "echo",
+   "shift",
+   "phantom",
+   "blank",
+   "grey",
+   "zero"
+  ],
+  "pose": ", in a three-quarter side view, aiming the bow across the frame, both arms out in front, weight settled back on the rear leg, the head tucked down behind the weapon",
+  "bodies": {
+   "a": "a figure drawn only as a clean white contour line with nothing at all inside the outline, faint iridescent violet glow along the stroke, holding a bow that also exists only as a drawn line, at full draw, a blank white card crest worn on the costume, five playing cards hovering in a wide fan around the free hand"
+  },
+  "_note_ramp": "무상성 — 놋쇠빛 불똥. 마법이 아니라 **쇠붙이가 부딪힌 자국**이다. 활·총·대포·표창이 여기 든다. 속성 이펙트를 주면 「무상성인데 무언가를 두르고 있는」 그림이 되어 안전한 줄이라는 뜻이 흐려진다.",
+  "ramp": [
+   [
+    255,
+    244,
+    206
+   ],
+   [
+    246,
+    214,
+    140
+   ],
+   [
+    206,
+    160,
+    88
+   ],
+   [
+    140,
+    96,
+    44
+   ],
+   [
+    72,
+    44,
+    18
+   ]
+  ],
+  "edge": [
+   30,
+   18,
+   8
+  ],
+  "facets": 0,
+  "motion": "draw_heavy",
+  "muzzle": "prop",
+  "link": "shaft",
+  "shot": "arrow",
+  "holes": true,
+  "_note_holes": "★ 활·쇠뇌·총·대포는 holes 를 켠다. 시위 안쪽·방아쇠울 안쪽은 그림에 빙 둘러싸인 흰 구멍이라 모서리에서 부은 물이 못 들어간다 — 안 켜면 흰 판때기가 붙어 나온다 (CLAUDE.md 4-3). 켜는 것은 **사람의 판단**이고, 활은 그 판단이 늘 같은 몇 안 되는 경우다.",
+  "stretch": "0.85,1.35"
+ },
+ "nerea": {
+  "ko": "네레아",
+  "elem": "water",
+  "tier": 9,
+  "neighbors": [
+   "limne",
+   "phorkys",
+   "protea",
+   "marea",
+   "glaukos",
+   "thalassa",
+   "triton",
+   "keto",
+   "galene"
+  ],
+  "pose": ", in a three-quarter side view, the blade drawn back across the chest at shoulder height and about to cut down and across the frame, the free hand open in front for balance, rising up onto the front toe with the trailing arm flung back",
+  "bodies": {
+   "a": "a barefoot sea empress with luminous pale-teal skin and knee-length silver hair flowing like water, pupil-less deep-blue eyes, bright sapphire water-plate armour with a great silver spade sigil on the back, raising a broad blade of clear water, a silver spade crest worn on the costume, a whole deck of playing cards orbiting the body in a broad ring"
+  },
+  "_note_ramp": "물 — 둥근 심 + 흔들리는 물갈기. ★ 심을 **청록(민트)**에서 시작한다. 얼음처럼 창백한 하늘빛으로 시작하면 얼음과 픽셀로 구별이 안 된다 — 둘 다 파랑이라 램프가 갈라지지 않으면 화면에서 같은 이펙트가 된다.",
+  "ramp": [
+   [
+    186,
+    255,
+    246
+   ],
+   [
+    92,
+    236,
+    220
+   ],
+   [
+    40,
+    168,
+    246
+   ],
+   [
+    22,
+    92,
+    200
+   ],
+   [
+    8,
+    36,
+    112
+   ]
+  ],
+  "edge": [
+   4,
+   18,
+   58
+  ],
+  "facets": 0,
+  "motion": "cast_lunge"
+ },
+ "brasa": {
+  "ko": "브라사",
+  "elem": "fire",
+  "tier": 9,
+  "neighbors": [
+   "chispa",
+   "solana",
+   "ceniza",
+   "igni",
+   "volcan",
+   "carmen",
+   "saeta",
+   "candela",
+   "estoque"
+  ],
+  "pose": ", standing in a three-quarter front view, both forearms lifted up beside the head with the elbows bent and the palms turned upward, the head and face clearly visible between the raised hands, the shoulders rolled up and the head lifted between them",
+  "bodies": {
+   "a": "a bare-chested ember titan with deep umber skin split by blazing molten orange fissures across the whole body, a mantle woven from bright ash and cinders, sparks streaming from the eyes, a burning crest of hair, both forearms raised, a scarlet heart crest worn on the costume, a whole deck of playing cards orbiting the body in a broad ring"
+  },
+  "_note_ramp": "불 — 둥근 심 + 흔들리는 혓바닥. 게임의 불 속성색 #FF6A2A 에서 이어 뽑았다.",
+  "ramp": [
+   [
+    255,
+    247,
+    219
+   ],
+   [
+    255,
+    221,
+    112
+   ],
+   [
+    255,
+    170,
+    60
+   ],
+   [
+    240,
+    106,
+    26
+   ],
+   [
+    196,
+    48,
+    10
+   ]
+  ],
+  "edge": [
+   78,
+   16,
+   6
+  ],
+  "facets": 0,
+  "motion": "raise_slam"
+ },
+ "isa": {
+  "ko": "이사",
+  "elem": "ice",
+  "tier": 9,
+  "neighbors": [
+   "lind",
+   "jokull",
+   "vidarr",
+   "kari",
+   "eira",
+   "snorri",
+   "helga",
+   "sigrid",
+   "frosti"
+  ],
+  "pose": ", in a three-quarter side view, aiming the bow across the frame, both arms out in front, the body turned side-on and narrow, the trailing arm braced hard",
+  "bodies": {
+   "a": "a silver-white empress with porcelain pale skin and very long straight platinum hair, eyes cut as clear white diamonds, bright ice-crystal wings of uneven length spread behind the shoulders, drawing a great icicle arrow on a crystal bow, a white diamond crest worn on the costume, a whole deck of playing cards orbiting the body in a broad ring"
+  },
+  "_note_ramp": "얼음 — 육각 결정 + 곧고 뾰족한 가시(안 흔들린다). 흔들림을 넣어 봤더니 그냥 **녹는 것**으로 보였다. 게임의 얼음 속성색 #7BDCFF 에서 뽑았다.",
+  "ramp": [
+   [
+    226,
+    250,
+    255
+   ],
+   [
+    160,
+    233,
+    255
+   ],
+   [
+    96,
+    200,
+    246
+   ],
+   [
+    46,
+    140,
+    219
+   ],
+   [
+    24,
+    78,
+    166
+   ]
+  ],
+  "edge": [
+   10,
+   30,
+   74
+  ],
+  "facets": 6,
+  "motion": "draw_heavy",
+  "muzzle": "prop",
+  "link": "shaft",
+  "shot": "arrow",
+  "holes": true,
+  "_note_holes": "★ 활·쇠뇌·총·대포는 holes 를 켠다. 시위 안쪽·방아쇠울 안쪽은 그림에 빙 둘러싸인 흰 구멍이라 모서리에서 부은 물이 못 들어간다 — 안 켜면 흰 판때기가 붙어 나온다 (CLAUDE.md 4-3). 켜는 것은 **사람의 판단**이고, 활은 그 판단이 늘 같은 몇 안 되는 경우다.",
+  "stretch": "0.85,1.35"
+ },
+ "brian": {
+  "ko": "브리안",
+  "elem": "elec",
+  "tier": 9,
+  "neighbors": [
+   "brigid",
+   "rhiannon",
+   "finn",
+   "donn",
+   "conor",
+   "niamh",
+   "morrigan",
+   "caden",
+   "lugh"
+  ],
+  "pose": ", in a three-quarter side view, aiming the gun across the frame, both arms out in front, the body turned side-on and narrow, the trailing arm braced hard",
+  "bodies": {
+   "a": "a half-lidded gunsmith demigod with olive skin and a heavy swept-back mass of storm-white hair, a half-burnt bright citron coat, the entire right arm a coil-wound brass mechanical prosthetic, a grounding cable at the throat, levelling that arm forward as a rail cannon, a bright chartreuse clover crest worn on the costume, a whole deck of playing cards orbiting the body in a broad ring"
+  },
+  "_note_ramp": "전기 — 작고 사나운 심 + 꺾이고 갈라지는 지그재그 가지. ★ 노랑에서 **주황을 건너뛰고 보라로** 간다. 주황을 거치면 불 램프와 같은 길이 되어 나란히 놓았을 때 같은 이펙트로 보인다.",
+  "ramp": [
+   [
+    255,
+    246,
+    176
+   ],
+   [
+    255,
+    216,
+    77
+   ],
+   [
+    222,
+    170,
+    242
+   ],
+   [
+    140,
+    92,
+    226
+   ],
+   [
+    64,
+    34,
+    140
+   ]
+  ],
+  "edge": [
+   22,
+   12,
+   54
+  ],
+  "facets": -1,
+  "motion": "draw_heavy",
+  "muzzle": "prop",
+  "link": "shaft",
+  "shot": "arrow",
+  "stretch": "0.85,1.35"
+ },
+ "zero": {
+  "ko": "제로",
+  "elem": "none",
+  "tier": 9,
+  "neighbors": [
+   "pip",
+   "mimic",
+   "dummy",
+   "echo",
+   "shift",
+   "phantom",
+   "blank",
+   "grey",
+   "null"
+  ],
+  "pose": ", in a three-quarter side view, the whip arm sweeping out low and wide across the frame with the long chain trailing behind in a flat arc, the other arm out for balance, the body turned side-on and the trailing hand raised near the chest",
+  "bodies": {
+   "a": "a tall figure in a crisp ivory and black formal suit, the entire face covered by a single blank white playing card, iridescent rainbow sheen bleeding across the shoulders and lapels, uncoiling a long chain of blank cards, a blank white card crest worn on the costume, a whole deck of playing cards orbiting the body in a broad ring"
+  },
+  "_note_ramp": "무상성 — 놋쇠빛 불똥. 마법이 아니라 **쇠붙이가 부딪힌 자국**이다. 활·총·대포·표창이 여기 든다. 속성 이펙트를 주면 「무상성인데 무언가를 두르고 있는」 그림이 되어 안전한 줄이라는 뜻이 흐려진다.",
+  "ramp": [
+   [
+    255,
+    244,
+    206
+   ],
+   [
+    246,
+    214,
+    140
+   ],
+   [
+    206,
+    160,
+    88
+   ],
+   [
+    140,
+    96,
+    44
+   ],
+   [
+    72,
+    44,
+    18
+   ]
+  ],
+  "edge": [
+   30,
+   18,
+   8
+  ],
+  "facets": 0,
+  "motion": "cast_lunge",
+  "holes": true,
+  "_note_holes": "★ 활·쇠뇌·총·대포는 holes 를 켠다. 시위 안쪽·방아쇠울 안쪽은 그림에 빙 둘러싸인 흰 구멍이라 모서리에서 부은 물이 못 들어간다 — 안 켜면 흰 판때기가 붙어 나온다 (CLAUDE.md 4-3). 켜는 것은 **사람의 판단**이고, 활은 그 판단이 늘 같은 몇 안 되는 경우다."
+ }
+}

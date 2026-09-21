@@ -76,6 +76,9 @@ def cut_white(img, thresh=26):
 
 def main() -> int:
     os.makedirs(OUT, exist_ok=True)
+    # ★ Krea2 와 MiniMax H3 는 같은 순간에 못 뜬다 — 올리기 전에 문지기를 부른다 (tools/gpu_guard.py)
+    import gpu_guard
+    gpu_guard.claim("krea2")
     from krea2.pipelines.image import Krea2ImagePipeline
     t0 = time.time()
     print("[style] 모델 올리는 중...", flush=True)

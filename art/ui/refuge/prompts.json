@@ -1,0 +1,22 @@
+{
+  "camp": {
+    "model": "Krea 2 Turbo (local)",
+    "seed": 699074,
+    "prompt": "A welcoming fantasy expedition trading camp inside an ancient ruined stone sanctuary, teal canvas awnings at both sides, amber hanging lanterns, timber merchant counters, a small blacksmith forge on the right, playing cards and brass tokens on the left, distant blue crystal shrine visible through a central archway, no people, wide composition, clear quiet central space, warm chestnut wood, deep teal shadows, soft amber light, chunky deliberate pixel clusters, rich midtone colors, 16-bit pixel art game background illustration, retro SNES style, crisp clean pixels, limited color palette, flat cel shading with dithering, no text, no watermark, no user interface, no border"
+  },
+  "wood": {
+    "model": "Krea 2 Turbo (local)",
+    "seed": 241578,
+    "prompt": "Seamless flat texture of dark chestnut timber planks, straight overhead view, subtle grain and small worn scratches, three warm brown tones, evenly illuminated, quiet low contrast surface for a fantasy game equipment board, entire frame is wood, 16-bit pixel art game background illustration, retro SNES style, crisp clean pixels, limited color palette, flat cel shading with dithering, no text, no watermark, no user interface, no border"
+  },
+  "stone": {
+    "model": "Krea 2 Turbo (local)",
+    "seed": 732302,
+    "prompt": "Seamless flat ground texture of ancient blue slate flagstone tiles, directly overhead, small moss seams and worn sandstone edges, muted teal gray and warm slate, quiet low contrast three tone pixel blocks, entire frame is stone, 16-bit pixel art game background illustration, retro SNES style, crisp clean pixels, limited color palette, flat cel shading with dithering, no text, no watermark, no user interface, no border"
+  },
+  "button": {
+    "model": "Krea 2 Turbo (local)",
+    "seed": 1231125,
+    "prompt": "One long horizontal fantasy game wooden sign plaque fills the entire frame edge to edge, straight front view, ornate antique brass bevel around chestnut wood center, small brass corner rivets, symmetrical stepped pixel corners, central seventy percent is empty dark polished wood for a readable label, amber upper left highlights, teal inlay at the ends, bold chunky pixel clusters, no lettering, 16-bit pixel art game background illustration, retro SNES style, crisp clean pixels, limited color palette, flat cel shading with dithering, no text, no watermark, no user interface, no border"
+  }
+}

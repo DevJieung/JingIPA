@@ -3,555 +3,2076 @@
   {
    "tier": "high",
    "ko": "하이카드",
-   "n": 3,
+   "n": 5,
    "units": [
     {
-     "id": "straw_archer",
-     "ko": "짚신궁수",
-     "profile": "rapid",
-     "bullet": "shot",
-     "elem": "none",
-     "sc": 1.0,
-     "desc": "낡은 활을 쉼 없이 쏜다",
-     "prompt": "A skinny barefoot village boy in a patched hemp tunic and straw sandals, drawing back a crooked worn wooden shortbow taller than himself, a thin bundle of plain grey-feathered arrows tied at his waist",
-     "color": "#CFC06B"
-    },
-    {
-     "id": "ember_apprentice",
-     "ko": "불씨견습",
+     "id": "limne",
+     "ko": "림네",
+     "en": "Limne",
+     "role": "area",
      "profile": "balance",
-     "bullet": "burn",
-     "elem": "fire",
-     "sc": 1.0,
-     "desc": "손끝 불씨로 태운다",
-     "prompt": "A small round-faced apprentice swamped in an oversized soot-stained ochre robe with rolled-up sleeves, cupping one tiny flickering orange flame above an open palm, a battered brass tinderbox hanging from the rope belt",
-     "color": "#FFB24A"
-    },
-    {
-     "id": "puddle_boy",
-     "ko": "물장난꾼",
-     "profile": "rapid",
-     "bullet": "slow",
+     "bullet": "zone",
+     "weapon": "deck",
      "elem": "water",
      "sc": 1.0,
-     "desc": "물을 뿌려 미끄러뜨린다",
-     "prompt": "A grinning barefoot child in rolled-up sky blue cotton trousers, both hands aiming a long bamboo water tube spraying a wide arc of bright blue water, a sloshing wooden pail sitting at his feet",
-     "color": "#2EB9FF"
+     "desc": "물동이를 뒤집어 웅덩이를 깐다",
+     "lore": "단수된 골목에 마지막까지 물을 날랐다. 가장 먼저 불려 나오는 수호자가 주민들의 얼굴을 가장 많이 기억한다.",
+     "prompt": "A small stout adult female neighborhood water carrier, navy bob haircut, round friendly face, teal waterproof apron over cobalt work clothes, knee-high rubber boots. ONE large circular transparent water reservoir strapped to her back, visible around both shoulders, two thick blue hoses connected to short brass wrist nozzles. Clear blue water visible inside tank. Silver buckles, practical patched fabric, approachable novice rescuer.",
+     "color": "#2AC4FF",
+     "holes": false,
+     "anim": true
+    },
+    {
+     "id": "chispa",
+     "ko": "치스파",
+     "en": "Chispa",
+     "role": "single",
+     "profile": "heavy",
+     "bullet": "shot",
+     "weapon": "gun",
+     "elem": "fire",
+     "sc": 1.0,
+     "desc": "부싯돌 한 발로 불을 붙인다",
+     "lore": "대피소 취사장의 불을 처음 되살린 견습공. 작은 화력이라도 꺼지지 않게 돌보는 것이 자기 일이다.",
+     "prompt": "Petite adult female ignition mechanic apprentice, many freckles, bright curly red hair in a high ponytail, oversized round goggles on forehead, orange work overalls over a crimson shirt. ONE oversized heatproof gauntlet on right forearm. Short flared-muzzle brass ignition pistol in an open holster outside left thigh, large exposed flint wheel and tiny red fuel bottle attached. Sturdy short work boots, bright expressive confident face, modest practical equipment.",
+     "color": "#FF6A1A",
+     "holes": false,
+     "anim": true
+    },
+    {
+     "id": "lind",
+     "ko": "린드",
+     "en": "Lind",
+     "role": "rider",
+     "profile": "rapid",
+     "bullet": "ricochet",
+     "weapon": "whip",
+     "elem": "ice",
+     "sc": 1.0,
+     "desc": "고드름 사슬을 짧게 후려친다",
+     "lore": "빙고 창고 문을 잠그던 막내 관리인. 서리줄을 쳐 물자가 굴러 떨어지는 것을 막던 기술을 적에게 쓴다.",
+     "prompt": "Thin lanky adult male frost-line apprentice, spiky mint hair, short cream scarf leaving nose and face visible, bulky pale blue quilted vest, slim limbs, silver-blue work trousers. Large HEXAGONAL reel on belt holding a short metal chain with THREE chunky translucent ice segments at its end, neatly docked outside hip. Frostproof mitt cuffs with fingers visible, small sturdy boots, earnest angular face.",
+     "color": "#5CE8FF",
+     "holes": true,
+     "anim": true
+    },
+    {
+     "id": "brigid",
+     "ko": "브리지드",
+     "en": "Brigid",
+     "role": "ricochet",
+     "profile": "balance",
+     "bullet": "ricochet",
+     "weapon": "bow",
+     "elem": "elec",
+     "sc": 1.0,
+     "desc": "방전 화살이 옆으로 한 번 뛴다",
+     "lore": "끊긴 전선에 임시 연결줄을 쏘던 수습 기사. 아직 먼 곳까지는 못 잇지만 바로 옆 한 사람은 놓치지 않는다.",
+     "prompt": "Small adult female electrical line-archer apprentice, round attentive eyes, short violet hair, cropped lime-green insulated vest, oversized white ceramic elbow guards. Small U-SHAPED bow with TWO large copper electrode spheres at its tips strapped vertically behind left shoulder, visible outside body. Short copper arrow quiver with hooked arrowheads, purple trousers, rubber-soled boots, practical bright novice design.",
+     "color": "#C8FF2E",
+     "holes": true,
+     "anim": true
+    },
+    {
+     "id": "pip",
+     "ko": "핍",
+     "en": "Pip",
+     "role": "single",
+     "profile": "rapid",
+     "bullet": "shot",
+     "weapon": "sword",
+     "elem": "none",
+     "sc": 1.0,
+     "desc": "종이 칼날이 쉴 새 없이 나간다",
+     "lore": "카지노 수리용으로 만들어졌지만 피난민들이 붙여 준 이름을 가장 소중히 여긴다. 자기 키보다 낮은 틈을 맡는다.",
+     "prompt": "Small waist-high humanoid wooden maintenance automaton, round ivory faceplate with TWO black eyes and one small dot, short chunky limbs. ONE large exposed brass clockwork gear centered in chest, ivory and graphite work vest, short wide saw-toothed sword secured vertically outside hip. Wooden articulated fingers and feet, charming practical toy-like construction, single clearly readable gear and saw silhouette, restrained brass accents without elemental glow.",
+     "color": "#F03BC0",
+     "holes": false,
+     "anim": true
     }
    ]
   },
   {
    "tier": "pair",
    "ko": "원페어",
-   "n": 3,
+   "n": 5,
    "units": [
     {
-     "id": "bolt_scout",
-     "ko": "쇠뇌정찰병",
-     "profile": "rapid",
-     "bullet": "pierce",
-     "elem": "none",
-     "sc": 1,
-     "desc": "작은 쇠뇌를 연사한다",
-     "prompt": "A wiry young scout in a short tan leather coat and a red-feathered cap, holding out a small repeating crossbow with a boxy wooden bolt magazine mounted on top, a coil of rope and a stubby quiver at the belt",
-     "color": "#9ACC62"
-    },
-    {
-     "id": "frost_novice",
-     "ko": "서리도제",
+     "id": "phorkys",
+     "ko": "포르키스",
+     "en": "Phorkys",
+     "role": "single",
      "profile": "balance",
-     "bullet": "slow",
-     "elem": "ice",
-     "sc": 0.98,
-     "desc": "얼려서 몬스터를 느리게",
-     "prompt": "A small apprentice mage draped in a pale ice-blue robe, wearing a huge floppy pointed hat, holding a crooked staff topped with a glowing frost crystal",
-     "color": "#6FD0F5"
+     "bullet": "shot",
+     "weapon": "gun",
+     "elem": "water",
+     "sc": 1.0,
+     "desc": "물총 여섯 발, 마지막이 꿰뚫는다",
+     "lore": "항만 펌프장이 멈췄을 때 수동으로 밤을 버틴 정비반장. 탄 수를 세며 싸우는 버릇이 있다.",
+     "prompt": "Stocky middle-aged male harbor pump foreman with broad square jaw, white sideburns, navy sailor cap and short cobalt raincoat over round belly. His defining weapon is a HUGE BRASS WATER REVOLVER openly mounted outside left thigh, with SIX LARGE TRANSPARENT CYLINDERS filled with vivid BLUE WATER arranged around its central barrel. These clear cyan water tubes and the broad brass nozzle are entirely exposed and clearly distinguish it from an ordinary firearm. Visible pump handle, short navy trousers, heavy sea boots. Friendly weathered face, silver coat buckles. The bright blue transparent cylinder cluster is a major silhouette feature.",
+     "color": "#1C9BE5",
+     "holes": false,
+     "anim": true
     },
     {
-     "id": "match_gunner",
-     "ko": "화승총병",
-     "profile": "heavy",
+     "id": "solana",
+     "ko": "솔라나",
+     "en": "Solana",
+     "role": "ricochet",
+     "profile": "balance",
      "bullet": "shot",
+     "weapon": "bow",
+     "elem": "fire",
+     "sc": 1.0,
+     "desc": "불화살이 세 번 쌓이면 터진다",
+     "lore": "폭풍에 끊긴 대피 항로를 신호탄으로 이어 준 궁수. 가장 멀리 보이는 불이 가장 안전한 길이던 때를 기억한다.",
+     "prompt": "Slender long-necked adult female signal-flare archer, tall red topknot, triangular brass ear guards, cropped crimson riding jacket with orange panels, fitted trousers and flat riding boots. Distinctive SUN-SEMICIRCLE brass bow strapped vertically outside left thigh, orange heating wire inside curved limb. Thick signal arrows with large orange capsule tips in a side quiver, three red fuel compartments on belt. Alert elegant face, clear open silhouette.",
+     "color": "#FF9226",
+     "holes": true,
+     "anim": true
+    },
+    {
+     "id": "jokull",
+     "ko": "요쿨",
+     "en": "Jokull",
+     "role": "single",
+     "profile": "heavy",
+     "bullet": "pierce",
+     "weapon": "sword",
+     "elem": "ice",
+     "sc": 1.0,
+     "desc": "빙검이 지나간 바닥이 빙판이 된다",
+     "lore": "겨울 산길에 구조 통로를 내던 개척대원. 넘어질 사람을 위해 미끄러운 길에도 반드시 발 디딜 곳을 남긴다.",
+     "prompt": "Enormous adult male ice-path pioneer, square white beard, round polar-bear-like padded hood, very broad pale cyan shoulders, small silver eyes. Wide SPADE-SHAPED ice greatsword secured vertically outside left leg, broad flat translucent blue blade with coolant channels. Three vertical ice crampon fins on each shin, quilted silver-blue exploration suit, giant boots, warm rugged face, clean chunky silhouette.",
+     "color": "#7FD9FF",
+     "holes": false,
+     "anim": true
+    },
+    {
+     "id": "rhiannon",
+     "ko": "리아넌",
+     "en": "Rhiannon",
+     "role": "rider",
+     "profile": "balance",
+     "bullet": "chain",
+     "weapon": "whip",
+     "elem": "elec",
+     "sc": 1.0,
+     "desc": "맞은 놈들이 전선으로 이어진다",
+     "lore": "꺼진 골목의 전등을 하나씩 이어 켜던 배선공. 연결된 것들이 함께 버틴다는 믿음을 공격 기술로 쓴다.",
+     "prompt": "Tall slender adult female live-wire technician, black hair tied low with spiky violet side locks, short lime electrical jacket. TWO thick violet cables running from collar to hips, large copper cable reel on one hip, THREE large copper crocodile clips clustered at the cable tip docked outside opposite thigh. White ceramic forearm guards, heavy insulating purple boots, visible thoughtful face, long flowing cable silhouette kept neat.",
+     "color": "#9B5CFF",
+     "holes": true,
+     "anim": true
+    },
+    {
+     "id": "mimic",
+     "ko": "미믹",
+     "en": "Mimic",
+     "role": "area",
+     "profile": "balance",
+     "bullet": "zone",
+     "weapon": "deck",
      "elem": "none",
-     "sc": 1.06,
-     "desc": "화승총 한 방이 무겁다",
-     "prompt": "A stout soldier in a padded dark blue coat and a wide-brimmed steel hat, shouldering a long ornate matchlock musket with a smoldering slow-match cord and a thick puff of white powder smoke at the muzzle, curved wooden powder horns strung across the chest",
-     "color": "#DBAB7B"
+     "sc": 1.0,
+     "desc": "속성이 매번 달라지는 폭발",
+     "lore": "카지노 물품을 운반하던 인형이 압착기를 바꿔 달았다. 사람을 안을 때는 압력을 가장 낮은 칸에 둔다.",
+     "prompt": "Stout round-bellied ivory rescue automaton with square shoulders, friendly semicircular smile on simple faceplate. Huge SQUARE PRESS PLATE centered in chest, matching smaller square hydraulic plates mounted on both forearms. TWO folded mechanical braces secured flat to back. Ivory painted metal, graphite joints, restrained brass pistons, chunky articulated hands and flat feet. Cheerful compact mechanical silhouette, solid physical construction, no elemental effects.",
+     "color": "#B84FFF",
+     "holes": false,
+     "anim": true
     }
    ]
   },
   {
    "tier": "twopair",
    "ko": "투페어",
-   "n": 3,
+   "n": 5,
    "units": [
     {
-     "id": "shuriken_ninja",
-     "ko": "표창닌자",
+     "id": "protea",
+     "ko": "프로테아",
+     "en": "Protea",
+     "role": "ricochet",
      "profile": "rapid",
-     "bullet": "pierce",
-     "elem": "none",
-     "sc": 1,
-     "desc": "표창을 뿌리듯 던진다",
-     "prompt": "A lean ninja in a fitted charcoal grey bodysuit with a trailing dark red scarf, face wrapped to the eyes, three bright steel throwing stars fanned between the fingers of one raised hand, a bandolier of small blades across the chest",
-     "color": "#6FBEC7"
+     "bullet": "ricochet",
+     "weapon": "bow",
+     "elem": "water",
+     "sc": 1.0,
+     "desc": "세 발이 저마다 다른 길로 간다",
+     "lore": "안개 속에서 구조선 세 척을 동시에 인도하던 항로사. 누구 하나 남기지 않으려 세 목표를 함께 겨눈다.",
+     "prompt": "An adult female triple-shot water archer. Her main defining feature is ONE ENORMOUS TRIPLE-LIMBED BOW displayed vertically immediately outside her LEFT LEG, fully assembled and uncovered from shoulder height to ankle. The bow has THREE broad curved bronze limbs arranged in an open fan around a central aquamarine stock, three clearly visible strings and three blue arrow guide rails. The entire bow silhouette must be visibly separate from her body. Lean adult build, angular face, short brown hair, three-lens aqua goggles on forehead, short blue-gray hood capelet, navy fitted navigator uniform, one compact three-slot quiver at right hip, practical boots. The large visible fan bow dominates the equipment design.",
+     "color": "#1CE5C0",
+     "holes": true,
+     "anim": true
     },
     {
-     "id": "spark_mage",
-     "ko": "전격술사",
+     "id": "ceniza",
+     "ko": "세니자",
+     "en": "Ceniza",
+     "role": "rider",
      "profile": "balance",
-     "bullet": "chain",
-     "elem": "elec",
-     "sc": 1.1,
-     "desc": "번개 구슬이 튕겨 다닌다",
-     "prompt": "A wiry mage in a short indigo tunic and a tall crooked pointed hat, one arm raised holding up a crackling yellow lightning orb with small forked arcs leaping off it, heavy blue-grey iron bracers on both forearms",
-     "color": "#96FA00"
+     "bullet": "splash",
+     "weapon": "whip",
+     "elem": "fire",
+     "sc": 1.0,
+     "desc": "재구름이 눈을 가린다",
+     "lore": "불탄 거리에서 길을 치우던 청소반장. 살아 있는 사람이 지나갈 한 줄을 남기기 위해 싸운다.",
+     "prompt": "Short broad middle-aged female ash sweeper, cropped gray hair, dust respirator over mouth leaving alert eyes visible, brick-red heatproof apron over orange work clothes. Her main tool is a FLEXIBLE CHAIN WHIP with a broad flat tassel of short copper metal bristles at its weighted tip. A large loop of exposed BLACK METAL CHAIN hangs from the left belt to knee and curves back to a clearly visible broad COPPER BRISTLE HEAD docked outside the thigh. Every large chain link is visible and the tool has a short handheld grip, showing it bends like a whip. Large black ash canister on right hip, reinforced boots, practical heatproof forearm guards.",
+     "color": "#E5231C",
+     "holes": true,
+     "anim": true
     },
     {
-     "id": "field_mortar",
-     "ko": "야전박격포병",
+     "id": "vidarr",
+     "ko": "비다르",
+     "en": "Vidarr",
+     "role": "area",
      "profile": "heavy",
-     "bullet": "splash",
+     "bullet": "zone",
+     "weapon": "deck",
+     "elem": "ice",
+     "sc": 1.0,
+     "desc": "발을 굴러 앞을 얼린다",
+     "lore": "붕괴 직전의 교각 아래를 얼려 대피 시간을 벌었다. 말 대신 자기 발이 버티는 곳을 가리킨다.",
+     "prompt": "Huge bald adult male cryogenic foundation worker, square jaw, small ears, quiet human face. EXTREME ASYMMETRY: left boot is an enormous square industrial cold-stamping press as wide as his thigh, right boot normal sized. Large white-and-cyan cooling tank on back, thick turquoise hose visibly descending to giant boot. Pale blue insulated overalls, compact upper body armor, bare articulated hands. Heavy blocky silhouette grounded on both feet.",
+     "color": "#23E0FF",
+     "holes": false,
+     "anim": true
+    },
+    {
+     "id": "finn",
+     "ko": "핀",
+     "en": "Finn",
+     "role": "single",
+     "profile": "rapid",
+     "bullet": "shot",
+     "weapon": "sword",
+     "elem": "elec",
+     "sc": 1.0,
+     "desc": "짧은 뇌검이 두 번 찌른다",
+     "lore": "달리는 전차에 전력을 넘겨 주던 기동 정비공. 망설이기 전에 손이 먼저 나가지만 두 번째 동작은 정확하다.",
+     "prompt": "Youthful-faced ADULT male capacitor speed swordsman, short upright lime hair, fitted PURPLE lightweight jacket, slim athletic build and purple rubber racing boots. TWO FAT ROUND COPPER BATTERY CANISTERS with bright LIME cylinders mounted horizontally at left and right waist, blunt flat circular caps clearly showing they are batteries. Exposed large brass COIL SPRING mechanisms wrap the OUTSIDE OF BOTH ELBOWS and are visible with arms straight in T-pose. ONE SHORT BROAD STRAIGHT SILVER SWORD mounted fully uncovered vertically beside LEFT THIGH, single bright lime line along BARE blade, clear hilt guard, blade distinctly separate from round batteries. Compact fast melee fighter, cheerful determined visible face.",
+     "color": "#D6F01D",
+     "holes": false,
+     "anim": true
+    },
+    {
+     "id": "dummy",
+     "ko": "더미",
+     "en": "Dummy",
+     "role": "single",
+     "profile": "balance",
+     "bullet": "shot",
+     "weapon": "gun",
      "elem": "none",
-     "sc": 1.06,
-     "desc": "박격포로 넓게 터뜨린다",
-     "prompt": "A soot-faced gunner in a heavy quilted brown coat and a leather ear cap, crouched behind a stubby brass field mortar tilted upward on a wooden bipod, one hand dropping a round iron shell into the muzzle, a small stack of shells beside the base",
-     "color": "#E67ECF"
+     "sc": 1.0,
+     "desc": "효과 없이 정직한 세 점사",
+     "lore": "카지노 폐장 뒤를 순찰하던 경비 인형. 정해진 길을 벗어나지 못하던 몸이 지금은 피난 통로를 지킨다.",
+     "prompt": "Tall lanky humanoid casino security automaton, long nose-shaped ivory faceplate, round black eyes, painted white-shirt torso and short gray waistcoat, exposed circular wooden shoulder and elbow joints. Long pneumatic rifle with THREE vertically arranged chamber windows secured upright outside right leg, three small compressed-air cylinders on back connected by graphite tubes. Brass hinges, long flat mechanical feet, attentive face, elegant simple physical silhouette.",
+     "color": "#FF5CE0",
+     "holes": false,
+     "anim": true
     }
    ]
   },
   {
    "tier": "trips",
    "ko": "트리플",
-   "n": 3,
+   "n": 5,
    "units": [
     {
-     "id": "longbow_ranger",
-     "ko": "장궁수",
-     "profile": "sniper",
-     "bullet": "pierce",
-     "elem": "none",
-     "sc": 1.12,
-     "desc": "키만 한 활로 꿰뚫는다",
-     "prompt": "a tall lean archer in a weathered olive green hooded tunic and brown leather bracers, standing straight and drawing back an enormous upright yew longbow taller than himself, one long grey-fletched arrow nocked at the cheek, a tall quiver of arrows strapped high on the back",
-     "color": "#23B82F"
-    },
-    {
-     "id": "flame_mage",
-     "ko": "화염술사",
-     "profile": "rapid",
-     "bullet": "burn",
-     "elem": "fire",
-     "sc": 1.08,
-     "desc": "불덩이를 던져 태운다",
-     "prompt": "a young fire mage in a short crimson tunic and a long tattered orange scarf trailing behind, black leather gloves, three blazing orange fireballs orbiting in a ring above one raised open hand, wild ash grey hair",
-     "color": "#F57520"
-    },
-    {
-     "id": "tide_monk",
-     "ko": "파도승",
+     "id": "marea",
+     "ko": "마레아",
+     "en": "Marea",
+     "role": "rider",
      "profile": "balance",
      "bullet": "splash",
+     "weapon": "whip",
      "elem": "water",
-     "sc": 1.1,
-     "desc": "물벼락을 불러 터뜨린다",
-     "prompt": "A barefoot warrior monk with a shaved head and a sleeveless deep teal robe over white arm wrappings, one arm sweeping wide to hurl an enormous curling crescent wave of bright turquoise water that towers over his shoulder, thick white foam spray bursting off its crest",
-     "color": "#0F35D6"
+     "sc": 1.0,
+     "desc": "반원 물결이 밀어낸다",
+     "lore": "침수 구역에서 사람들을 끌어내던 현장 대장. 공격 후 호스를 잡아당기는 복귀 동작도 구조 작업 그대로다.",
+     "prompt": "Muscular athletic adult female flood rescue captain, tanned skin, short orange cropped hair, sleeveless cobalt rescue jumpsuit, orange life ring attached to one shoulder. Large exposed blue fire-hose reel fixed outside right hip, flattened hose coiled into it, broad fan-shaped brass nozzle holstered at the opposite hip. Thick wrist braces, reinforced rubber boots, determined open face. Powerful shoulders and clearly visible mechanical hose reel.",
+     "color": "#1DF0A4",
+     "holes": true,
+     "anim": true
+    },
+    {
+     "id": "igni",
+     "ko": "이그니",
+     "en": "Igni",
+     "role": "single",
+     "profile": "balance",
+     "bullet": "pierce",
+     "weapon": "sword",
+     "elem": "fire",
+     "sc": 1.0,
+     "desc": "부채꼴 화염 참격이 줄지어 뚫는다",
+     "lore": "무너진 전차 문을 절단해 승객을 꺼내던 검사. 허세 섞인 인사 뒤에는 늘 탈출로부터 확인한다.",
+     "prompt": "Lean athletic adult male thermal swordsman, angular jaw, slicked-back dark red hair, cropped vivid red work jacket and ONE oversized brass shoulder heat shield. His defining weapon is a LARGE BROAD STRAIGHT SABER mounted entirely uncovered vertically outside his left leg, visible from waist to ankle, the BARE SILVER BLADE prominently exposed. ONE thick RED HEATING COIL runs the full length along the back edge of the blade, joined by copper cable to its trigger grip and a small red fuel cartridge at belt. Charcoal fitted trousers with orange seams, tall work boots, confident smile. The visible red-hot thermal blade is the visual focal point.",
+     "color": "#F0451D",
+     "holes": false,
+     "anim": true
+    },
+    {
+     "id": "kari",
+     "ko": "카레",
+     "en": "Kari",
+     "role": "single",
+     "profile": "rapid",
+     "bullet": "splash",
+     "weapon": "gun",
+     "elem": "ice",
+     "sc": 1.0,
+     "desc": "냉기 산탄이 부채꼴로 얼린다",
+     "lore": "냉동 창고 연무 속에서 길을 찾던 경비원. 보이지 않는 적을 무작정 쫓지 않고 가까운 공간부터 확보한다.",
+     "prompt": "Compact adult female cryogenic SHOTGUN guard, short platinum hair, goggles pushed onto forehead, uncovered focused face, short filter mask resting at neck. Angular sky-blue insulated jacket and fitted dark blue trousers, three coolant bottles on belt, knee guards and snow boots. ONE SINGLE LARGE DOUBLE-BARRELED SHOTGUN mounted uncovered vertically just outside LEFT LEG. This one weapon has ONE wooden stock, ONE trigger, and TWO huge WIDE SHORT PARALLEL BARRELS sharing the same silver body. Both wide muzzle openings have visible perforated blue diffuser plates, the weapon is bulky and wide rather than thin or long. Entire gun is exposed from hip to shin, two small mounting clips only. Other hip carries coolant bottles only.",
+     "color": "#5CE8FF",
+     "holes": false,
+     "anim": true
+    },
+    {
+     "id": "donn",
+     "ko": "도난",
+     "en": "Donn",
+     "role": "area",
+     "profile": "balance",
+     "bullet": "zone",
+     "weapon": "deck",
+     "elem": "elec",
+     "sc": 1.0,
+     "desc": "낙뢰가 젖은 놈부터 찾아간다",
+     "lore": "번개가 치는 날에도 꼭대기 전선을 점검하던 접지공. 위험한 전류가 사람을 피해 흐를 길을 먼저 만든다.",
+     "prompt": "Elderly male lightning grounding engineer with stooped shoulders but upright standing posture, long tied white beard, violet work mantle covering shoulders. ONE exceptionally tall THREE-PRONG copper lightning rod on backpack rising high above head, large round copper palm plates attached to open hands, thick grounding cables down the backs of his purple rubber boots. Lime insulating panels, deeply lined kind face, narrow tall antenna silhouette.",
+     "color": "#B6F01D",
+     "holes": false,
+     "anim": true
+    },
+    {
+     "id": "echo",
+     "ko": "에코",
+     "en": "Echo",
+     "role": "ricochet",
+     "profile": "balance",
+     "bullet": "shot",
+     "weapon": "bow",
+     "elem": "none",
+     "sc": 1.0,
+     "desc": "잔상이 같은 화살을 한 번 더 쏜다",
+     "lore": "대피소 치수를 재던 계측기사. 첫 기록이 틀릴 수 있어 언제나 한 번 더 확인하던 버릇이 무기가 됐다.",
+     "prompt": "A silver-gray short-haired FEMALE ARCHER wearing an IVORY WHITE short-sleeved surveying jacket, fitted CHARCOAL BLACK trousers and gray boots, one round BRASS MONOCLE on one eye. Her TWO NATURAL HUMAN ARMS have exposed skin forearms and empty human hands in horizontal T-pose. A HUGE DOUBLE ARCHERY BOW stands visibly beside her left leg, TWO silver curved bow limbs paired in parallel with TWO CLEAR STRINGS and small brass connecting bridges. The large bow is completely exposed from above shoulder to ankle, bow and strings clearly separate from the character silhouette. A small brass AUTOMATIC STRING-RELEASE CLAMP fixed at the central bow grip explains the delayed second arrow. Compact single gray arrow quiver at right hip. Cool silver, ivory and charcoal palette. Keep the reference standing pose and prominent visible bow, transform the clothing and hair to the white-gray surveyor design.",
+     "color": "#E84FE0",
+     "holes": true,
+     "anim": true
     }
    ]
   },
   {
    "tier": "straight",
    "ko": "스트레이트",
-   "n": 3,
+   "n": 5,
    "units": [
     {
-     "id": "rifle_marksman",
-     "ko": "장총저격수",
+     "id": "glaukos",
+     "ko": "글라우코스",
+     "en": "Glaukos",
+     "role": "single",
+     "profile": "balance",
+     "bullet": "pierce",
+     "weapon": "sword",
+     "elem": "water",
+     "sc": 1.0,
+     "desc": "올려베면 물기둥이 솟는다",
+     "lore": "무너진 갑문을 잘라 갇힌 배를 꺼내던 기술자. 잘라야 할 것은 적과 생존자 사이의 장애물뿐이라고 말한다.",
+     "prompt": "Huge adult male sluice cutter, broad robust torso, sea-green short beard, teal heavy diving work suit with massive forearms, brass hydraulic upper-arm pistons and oversized diver boots. His defining weapon is an ENORMOUS WIDE HOOK-TIPPED CLEAVER GREATSWORD mounted fully exposed vertically beside his LEFT LEG. This blade runs from SHOULDER TO FLOOR, is as wide as his thigh and curls forward into a hooked nose at its bottom tip. Thick transparent blue water channel follows the inner blade edge. Entire uncovered broad hooked blade visibly separated from body on two tiny metal clips. Cobalt knee panels, silver rivets, rugged friendly human face.",
+     "color": "#1DC8E5",
+     "holes": false,
+     "anim": true
+    },
+    {
+     "id": "volcan",
+     "ko": "볼칸",
+     "en": "Volcan",
+     "role": "area",
+     "profile": "heavy",
+     "bullet": "zone",
+     "weapon": "deck",
+     "elem": "fire",
+     "sc": 1.0,
+     "desc": "땅을 치면 균열이 달려간다",
+     "lore": "지하 난방관을 놓던 공사 책임자. 붕괴된 지하도에 공기를 넣기 위해 처음으로 땅을 공격했다.",
+     "prompt": "Enormous bald adult male geothermal demolition foreman, broad nose, short black beard, round furnace belly armor, TWO short chimney pipes behind neck. Two gigantic rectangular brass piston gauntlets, several times larger than hands, with heat nozzles on lower faces. Crimson industrial coveralls, orange boiler windows, stone-thick knee guards and broad work boots. Very broad square industrial silhouette, friendly stubborn human face.",
+     "color": "#FF6A1A",
+     "holes": false,
+     "anim": true
+    },
+    {
+     "id": "eira",
+     "ko": "에이라",
+     "en": "Eira",
+     "role": "ricochet",
      "profile": "sniper",
      "bullet": "shot",
-     "elem": "none",
-     "sc": 1.02,
-     "desc": "긴 화승총으로 한 발씩",
-     "prompt": "a steady-eyed sharpshooter in a long dust brown greatcoat and a wide flat brimmed hat, sighting down an extremely long ornate matchlock rifle with a brass banded dark wood stock and a smoldering slow match, a thick curl of grey powder smoke at the muzzle, a bandolier of powder horns across the chest",
-     "color": "#AD8CDB"
-    },
-    {
-     "id": "frost_witch",
-     "ko": "서리마녀",
-     "profile": "heavy",
-     "bullet": "slow",
+     "weapon": "bow",
      "elem": "ice",
-     "sc": 1.14,
-     "desc": "얼음 창을 무겁게 박는다",
-     "prompt": "a stern tall witch in a deep navy blue robe with a wide white fur collar and a tall crooked pointed hat, long silver white hair, both hands hoisting one massive jagged pale ice blue frozen spear overhead, thick hoarfrost crusting her sleeves",
-     "color": "#0C5FCC"
+     "sc": 1.0,
+     "desc": "명중 자리에 작은 눈보라가 남는다",
+     "lore": "설원에서 실종자의 발자국을 찾던 추적자. 적의 발도 눈 위에서 오래 멈추게 만든다.",
+     "prompt": "Tall flexible adult female snow-trail archer, white hair in two long braids, pointed fox-ear-shaped pale blue winter cap, short white-blue capelet ending at waist. Beautiful silver bow with a large HEXAGONAL SNOWFLAKE ring at its grip, strapped vertically outside left side, broad folding six-petal arrowheads in side quiver. Fitted cyan ranger clothing, fur-trimmed flat boots, clear alert face, no animal companion.",
+     "color": "#7FD9FF",
+     "holes": true,
+     "anim": true
     },
     {
-     "id": "blast_ninja",
-     "ko": "폭탄닌자",
+     "id": "conor",
+     "ko": "코너",
+     "en": "Conor",
+     "role": "single",
      "profile": "rapid",
-     "bullet": "splash",
-     "elem": "fire",
-     "sc": 1.04,
-     "desc": "불붙은 수리검을 흩뿌린다",
-     "prompt": "a crouching lithe ninja in a charcoal black bodysuit with a burnt crimson sash and face wrap, flinging a wide fan of four burning shuriken trailing orange flame from one outstretched hand, a bandolier of small round black bombs with lit sputtering fuses across the chest",
-     "color": "#F0433A"
+     "bullet": "shot",
+     "weapon": "gun",
+     "elem": "elec",
+     "sc": 1.0,
+     "desc": "같은 놈을 다섯 번 맞히면 터진다",
+     "lore": "전차 배터리를 검사하던 순회 기사. 숫자를 끝까지 확인한 뒤에야 괜찮다고 말하는 성격이다.",
+     "prompt": "Dark-skinned athletic adult male electrical inspection officer, angular face, short violet flat-top hair, lime-green leather maintenance jacket. Large FIVE-SEGMENT horizontal capacitor meter on chest, chunky rectangular copper-and-purple electric pistol in open outside-thigh holster with twin top electrodes. Visible copper line from back of hand to hip battery, neat ceramic knuckle plates, rubber work boots, dependable serious eyes.",
+     "color": "#C8FF2E",
+     "holes": false,
+     "anim": true
+    },
+    {
+     "id": "shift",
+     "ko": "시프트",
+     "en": "Shift",
+     "role": "rider",
+     "profile": "rapid",
+     "bullet": "ricochet",
+     "weapon": "whip",
+     "elem": "none",
+     "sc": 1.0,
+     "desc": "파동이 목표 뒤에서 나타난다",
+     "lore": "좁은 잔해 틈의 철근을 잘라 구조하던 절단사. 정면에서 닿지 않는 곳에도 도구가 돌아 들어갈 길을 찾는다.",
+     "prompt": "Lean adult female articulated-blade rescue cutter, high cheekbones, distinctive half-shaved black hair, ONE oversized ivory shoulder plate and fitted graphite work suit. Her main defining weapon is a HUGE FLEXIBLE SEGMENTED BLADE WHIP: twelve LARGE RECTANGULAR SILVER BLADE LINKS with clearly visible brass hinges between them. This long articulated blade forms a large OPEN C-SHAPED loop mounted on a crescent rail outside her LEFT HIP, extending from waist to knee, all rectangular segments completely visible and separate from body silhouette. One end has a short black handle, the other a broad chisel blade. White shin guards, brass rotary wrist controller, practical work boots, uncovered alert human face. The curved segmented metal blade dominates her silhouette.",
+     "color": "#D93BF0",
+     "holes": true,
+     "anim": true
     }
    ]
   },
   {
    "tier": "flush",
    "ko": "플러시",
-   "n": 4,
+   "n": 5,
    "units": [
     {
-     "id": "storm_shaman",
-     "ko": "폭풍주술사",
+     "id": "thalassa",
+     "ko": "탈라사",
+     "en": "Thalassa",
+     "role": "area",
      "profile": "balance",
-     "bullet": "chain",
-     "elem": "elec",
-     "sc": 1.12,
-     "desc": "먹구름에서 번개가 튄다",
-     "prompt": "A wiry shaman in a slate blue feathered mantle and a horned bone mask, one arm raised into a small churning dark storm cloud hovering just above his head, forked yellow lightning cracking down along a short crooked totem staff in the other hand",
-     "color": "#F0E91D"
+     "bullet": "zone",
+     "weapon": "deck",
+     "elem": "water",
+     "sc": 1.0,
+     "desc": "카드가 비가 되어 넓게 내린다",
+     "lore": "화재 때 도시의 빗물 저장소를 개방했던 수리기사. 물을 아끼라는 명령보다 사람을 살리라는 부탁을 택했다.",
+     "prompt": "Tall stately middle-aged female rainworks engineer, silver hair in a thick practical bun, long split navy engineering coat over fitted teal trousers. A huge circular aquamarine irrigation ring mechanically mounted on her back, wider than shoulders and visible above her head like a solid pipe halo, SIX thick hanging water tubes forming a structured skirt silhouette. Brass chest valve and compact back pump. Grounded waterproof boots, dignified capable face.",
+     "color": "#1D9BF0",
+     "holes": true,
+     "anim": true
     },
     {
-     "id": "siege_cannon",
-     "ko": "공성포병",
-     "profile": "heavy",
-     "bullet": "splash",
-     "elem": "none",
-     "sc": 1.04,
-     "desc": "대포로 여럿을 터뜨린다",
-     "prompt": "A burly gunner in a soot-stained ochre coat and a leather half-hood, one hand braced on the raised muzzle of a huge engraved bronze siege cannon standing on a heavy spoked wooden carriage beside him, a smoking slow-match cord in the other hand and grey powder smoke curling off the barrel",
-     "color": "#879CC7"
-    },
-    {
-     "id": "hail_shaman",
-     "ko": "우박주술사",
+     "id": "carmen",
+     "ko": "카르멘",
+     "en": "Carmen",
+     "role": "single",
      "profile": "rapid",
-     "bullet": "aura",
-     "elem": "ice",
-     "sc": 1.08,
-     "desc": "우박을 뿌려 얼린다",
-     "prompt": "A hunched shaman wrapped in a shaggy pale ice-blue fur cloak and an antlered reindeer skull mask, shaking a fan of bone rattles in each hand, a thick ring of white hailstones and glittering frost whirling around him at waist height",
-     "color": "#94C2FF"
+     "bullet": "shot",
+     "weapon": "gun",
+     "elem": "fire",
+     "sc": 1.0,
+     "desc": "쌍권총 속사, 카드가 탄피처럼 흩날린다",
+     "lore": "피난 행렬의 옆길을 혼자 막던 호위대원. 사람들이 발걸음을 멈추지 않도록 총성을 일정하게 맞춘다.",
+     "prompt": "Athletic adult female dual-pistol escort, lively face, curly black hair in two short side bunches, cropped red bolero over orange protective bodice, fitted riding trousers. Fan-shaped COPPER COOLING FINS around hips like a short mechanical ruffle, two chunky crimson pistols secured in open outer-thigh holsters, orange ammunition magazines strapped to both thighs. Compact heat vents, sturdy boots, energetic elegant industrial fantasy design.",
+     "color": "#F0291D",
+     "holes": false,
+     "anim": true
     },
     {
-     "id": "volt_sniper",
-     "ko": "뇌격저격수",
-     "profile": "sniper",
-     "bullet": "beam",
+     "id": "snorri",
+     "ko": "스노리",
+     "en": "Snorri",
+     "role": "rider",
+     "profile": "balance",
+     "bullet": "splash",
+     "weapon": "whip",
+     "elem": "ice",
+     "sc": 1.0,
+     "desc": "서리 파동이 적을 끌어당긴다",
+     "lore": "얼음에 갇힌 짐과 사람을 함께 끌어올리던 인양공. 무거울수록 웃으며 다른 사람부터 손을 놓게 한다.",
+     "prompt": "Round stout adult male ice-salvage winch master, broad friendly face, thick blond mustache, sky-blue insulated snowsuit wider at belly than shoulders. ONE large salvage pulley rising behind head, two heavy silver chain wheels at hips, thick ice-segment chain neatly coiled with a broad ANCHOR-SHAPED ice hook docked beside right thigh. Oversized grippy snow boots, brass crank handles, cheerful robust industrial fantasy character.",
+     "color": "#23E0FF",
+     "holes": true,
+     "anim": true
+    },
+    {
+     "id": "niamh",
+     "ko": "니브",
+     "en": "Niamh",
+     "role": "ricochet",
+     "profile": "rapid",
+     "bullet": "chain",
+     "weapon": "bow",
      "elem": "elec",
-     "sc": 1.1,
-     "desc": "번개를 재워 멀리 쏜다",
-     "prompt": "A poised markswoman in a long charcoal coat with a yellow lightning crest on the shoulder, sighting down an ornate brass matchlock long rifle wound with coiled copper wire spitting yellow sparks, a glowing amber powder horn hanging at her hip",
-     "color": "#DBA8F0"
+     "sc": 1.0,
+     "desc": "화살이 가까운 놈으로 두 번 뛴다",
+     "lore": "산봉우리 중계탑을 잇던 통신 궁수. 한 곳이 끊겨도 다음 연결 지점을 즉시 찾아낸다.",
+     "prompt": "Athletic adult female relay-network archer, high cheekbones, short asymmetrical silver hair, lime and violet ranger jacket, triangular folded insulated collar. THREE large copper electrode nodes forming a clear triangle above back, bow with three-pronged forked limbs strapped vertically outside left side. Three narrow purple arrow tubes at hip, white ceramic fittings, sturdy climbing boots, watchful uncovered face, sharp triangular silhouette.",
+     "color": "#B6F01D",
+     "holes": true,
+     "anim": true
+    },
+    {
+     "id": "phantom",
+     "ko": "팬텀",
+     "en": "Phantom",
+     "role": "single",
+     "profile": "sniper",
+     "bullet": "pierce",
+     "weapon": "sword",
+     "elem": "none",
+     "sc": 1.0,
+     "desc": "무형 참격이 방어를 무시한다",
+     "lore": "높은 철골 위에서 잔해를 해체하던 기사. 허공에 남는 두 번째 궤적 때문에 사람들이 유령이라고 불렀다.",
+     "prompt": "Tall thin adult male counterweight blade knight, white hair tied behind ears, long gray eyebrows, short split ivory coat over fitted graphite armor. TWO narrow vertical counterweight rails on back extending above shoulders. Long sword with TWO curved sickle-like blade sections on one spine secured vertically outside left leg, visible brass hinge between the main and trailing blade. Slim weighted boots, restrained silver surfaces, calm visible human face.",
+     "color": "#F03BC0",
+     "holes": false,
+     "anim": true
     }
    ]
   },
   {
    "tier": "fullhouse",
    "ko": "풀하우스",
-   "n": 4,
+   "n": 5,
    "units": [
     {
-     "id": "steel_tank",
-     "ko": "강철전차",
-     "profile": "heavy",
-     "bullet": "splash",
-     "elem": "none",
-     "sc": 0.88,
-     "desc": "포탑을 돌려 포격한다",
-     "prompt": "A squat riveted iron and brass war wagon on four studded steel wheels, one fat swiveling cannon turret aimed forward with a wide flared muzzle, hissing steam pipes and a big brass winding key turning on its flank, a small goggled driver standing in the open top hatch",
-     "color": "#E0687E"
-    },
-    {
-     "id": "inferno_mage",
-     "ko": "지옥불술사",
-     "profile": "balance",
-     "bullet": "burn",
-     "elem": "fire",
-     "sc": 1.12,
-     "desc": "불바다를 만들어 태운다",
-     "prompt": "A gaunt archmage in a heavy black robe lined with molten orange runes and a horned bone crown, one hand spread over a wide boiling pool of roaring orange hellfire at his feet, a tall charred staff topped with a burning skull in the other hand",
-     "color": "#CC2176"
-    },
-    {
-     "id": "rain_shaman",
-     "ko": "비구름주술사",
-     "profile": "rapid",
-     "bullet": "aura",
-     "elem": "water",
-     "sc": 1.12,
-     "desc": "비구름으로 물장판을 깐다",
-     "prompt": "A calm barefoot shaman in a woven straw rain cape and a wide round straw hat, a small dark blue rain cloud floating right above the hat pouring a bright blue curtain of rain over him, a bamboo rattle in one hand and splashing puddles ringing his feet",
-     "color": "#457AE6"
-    },
-    {
-     "id": "mist_ninja",
-     "ko": "물안개닌자",
+     "id": "triton",
+     "ko": "트리톤",
+     "en": "Triton",
+     "role": "single",
      "profile": "sniper",
      "bullet": "pierce",
+     "weapon": "gun",
      "elem": "water",
-     "sc": 1,
-     "desc": "물안개 속 표창을 던진다",
-     "prompt": "A lithe ninja in a deep teal wrapped bodysuit with a long torn mist-grey scarf trailing behind, crouched low and cocking one arm back to hurl a big spinning shuriken of clear rushing water, thick white mist coiling around the legs",
-     "color": "#11D1A4"
+     "sc": 1.0,
+     "desc": "발사음 자체가 충격파로 뚫는다",
+     "lore": "입항 신호를 담당했던 포수. 지금도 세 번째 발사 뒤에는 살아 있는 배가 듣기를 바라며 경적을 울린다.",
+     "prompt": "Broad-chested middle-aged Black male harbor artillery officer, neatly rounded white beard, flat navy harbor officer cap, layered silver shell-shaped shoulder guards, vivid royal-blue reinforced coat. A huge spiral-conch pressure cannon mounted VERTICALLY on a rigid back cradle beside right shoulder, flared trumpet muzzle visible above shoulder, connected by blue hose to cylindrical pressure tank. Heavy sailor boots, brass chest pressure gauge, resolute face.",
+     "color": "#1D55F0",
+     "holes": false,
+     "anim": true
+    },
+    {
+     "id": "saeta",
+     "ko": "사에타",
+     "en": "Saeta",
+     "role": "ricochet",
+     "profile": "sniper",
+     "bullet": "splash",
+     "weapon": "bow",
+     "elem": "fire",
+     "sc": 1.0,
+     "desc": "곡사 화살이 떨어진 자리를 태운다",
+     "lore": "산간 역에서 밤하늘에 구조 좌표를 올리던 관측관. 밝은 궤적을 보면 아직 구조를 기다리는 사람이 있다는 뜻이다.",
+     "prompt": "Very tall slender mature female meteor-flare observer, long black hair tied low, orange observation hood pushed back revealing face, funnel-shaped copper shoulder guards, red long split field coat. SIX tall signal-rocket tubes mounted visibly above back, broad orange rocket caps. Long heavy recurved brass bow strapped vertically outside leg with a wide rocket cradle at grip. Observation lenses at belt, solid flat boots, vigilant serious eyes.",
+     "color": "#FF9226",
+     "holes": true,
+     "anim": true
+    },
+    {
+     "id": "helga",
+     "ko": "헬가",
+     "en": "Helga",
+     "role": "single",
+     "profile": "balance",
+     "bullet": "splash",
+     "weapon": "sword",
+     "elem": "ice",
+     "sc": 1.0,
+     "desc": "X자 참격이 교차점에서 터진다",
+     "lore": "빙벽 사이 좁은 통로를 맡았던 방패대장. 두 손으로 길의 양쪽을 막는 기술을 검으로 이어 받았다.",
+     "prompt": "Muscular adult female cross-ice knight, broad jaw, short white braids, silver-and-cyan segmented armor split into two clean halves. Rigid X-SHAPED cooling frame visibly rising behind shoulders. TWO matching wedge-shaped translucent ice swords in open scabbards secured vertically outside both thighs. Broad articulated shoulder plates, short armored skirt panels over trousers, steel snow boots, composed battle-scarred human face.",
+     "color": "#5CE8FF",
+     "holes": false,
+     "anim": true
+    },
+    {
+     "id": "morrigan",
+     "ko": "모리안",
+     "en": "Morrigan",
+     "role": "rider",
+     "profile": "rapid",
+     "bullet": "chain",
+     "weapon": "whip",
+     "elem": "elec",
+     "sc": 1.0,
+     "desc": "머리 위로 돌려 방전 필드를 편다",
+     "lore": "야간 송전탑의 순찰 책임자. 피난소 주변에 아무도 뚫고 지나가지 못할 전기 울타리를 세운다.",
+     "prompt": "Large powerful adult female rotating-grid sentry, short black braids, broad purple shoulder armor layered with feather-shaped lime ceramic insulation plates. Tall U-SHAPED safety support frame rises behind head providing overhead chain clearance. Thick copper chain coiled into a prominent belt reel, sturdy forearm protection, grounded heavy rubber boots. Clear strong human face, shield-like broad industrial silhouette, metallic plates rather than real feathers.",
+     "color": "#9B5CFF",
+     "holes": true,
+     "anim": true
+    },
+    {
+     "id": "blank",
+     "ko": "블랭크",
+     "en": "Blank",
+     "role": "area",
+     "profile": "balance",
+     "bullet": "zone",
+     "weapon": "deck",
+     "elem": "none",
+     "sc": 1.0,
+     "desc": "떨어진 자리의 속성을 복사해 터진다",
+     "lore": "피난소에 칸막이를 세우던 방벽 설계자. 빈 판이라고 불린 장비가 가장 많은 사람의 이름을 지켜 냈다.",
+     "prompt": "Broad powerful adult female deployable-bulwark engineer, very short white hair, angular visible face. Armor built from SIX large smooth MATTE IVORY plates with graphite hinges. Three-section folding wall mounted on back like a folded screen, clear rectangular panels rising beside shoulders. Square pneumatic impact stakes mounted on both forearms, brass compression pistons, thick gray boots. Monumental clean white-plane silhouette with minimal ornament, solid fully clothed human character.",
+     "color": "#E84FE0",
+     "holes": false,
+     "anim": true
     }
    ]
   },
   {
    "tier": "quads",
    "ko": "포카드",
-   "n": 3,
+   "n": 5,
    "units": [
     {
-     "id": "railgun_ranger",
-     "ko": "전자포수",
-     "profile": "sniper",
-     "bullet": "beam",
-     "elem": "elec",
-     "sc": 1.06,
-     "desc": "번개 광선으로 멀리 저격",
-     "prompt": "a lean gunner in a dark cobalt longcoat with brass buckles and one heavy steel shoulder brace, balancing an enormous rune-etched arcane rail cannon on that shoulder, thick copper coils wound along the long barrel spitting yellow lightning arcs, a small crackling aiming lens over one eye",
-     "color": "#EAF0B6"
-    },
-    {
-     "id": "glacier_shaman",
-     "ko": "빙하주술사",
-     "profile": "heavy",
-     "bullet": "splash",
-     "elem": "ice",
-     "sc": 1.16,
-     "desc": "빙하를 떨궈 터뜨린다",
-     "prompt": "a hunched old shaman bundled in thick pale ice-blue fur robes and a white bone tusk mask, both arms raised high, one huge jagged boulder of pale blue glacier ice floating above the open hands, hoarfrost crusting the shoulders and dripping icicles from the sleeves",
-     "color": "#049AD1"
-    },
-    {
-     "id": "magma_gunner",
-     "ko": "용암포병",
+     "id": "keto",
+     "ko": "케토",
+     "en": "Keto",
+     "role": "ricochet",
      "profile": "balance",
-     "bullet": "burn",
+     "bullet": "pierce",
+     "weapon": "bow",
+     "elem": "water",
+     "sc": 1.0,
+     "desc": "관통한 뒤 뒤쪽으로 튄다",
+     "lore": "심해 관측소 구조 임무에서 돌아온 잠수대장. 두꺼운 외피 뒤에 숨어 있는 목표까지 찾아낸다.",
+     "prompt": "Tall athletic androgynous adult deep-sea harpoon commander, shaved sides and tied navy hair, one round aqua optical targeting lens over an eye. Streamlined indigo diving armor with ONE tall shark-fin-shaped dorsal back plate. Extremely long narrow aquamarine harpoon bow strapped vertically outside left side from shoulder to ankle, two transparent compression chambers around its central grip, three-grooved harpoon tip. Silver rib reinforcements, strong grounded boots.",
+     "color": "#1CE5C0",
+     "holes": true,
+     "anim": true
+    },
+    {
+     "id": "candela",
+     "ko": "칸델라",
+     "en": "Candela",
+     "role": "rider",
+     "profile": "balance",
+     "bullet": "splash",
+     "weapon": "whip",
      "elem": "fire",
      "sc": 1.0,
-     "desc": "용암탄으로 불태운다",
-     "prompt": "a burly bombardier in soot-stained ochre leather and a dented iron shoulder guard, hauling a stubby wide-mouthed bronze mortar cannon glowing red-hot along the muzzle, molten orange lava sloshing out of the barrel, black powder smoke curling around the boots",
-     "color": "#D64F0B"
+     "desc": "불채찍이 제 둘레를 한 바퀴 돈다",
+     "lore": "성당 급식소 화덕을 지키던 수도사. 자신을 중심으로 안전한 원을 만들고 사람들을 그 안으로 부른다.",
+     "prompt": "Sturdy mature bald female firebreak nun-engineer, warm stern human face, short crimson monastic work tunic over orange padded trousers, scorched gold gorget. Huge EIGHT-SEGMENT brass burner ring around waist, heavy iron chain coiled neatly and fastened on one side of ring, heatproof gloves. Broad flat pivot-friendly boots, compact sleeves leaving elbows articulated. Circular mechanical waist silhouette and bold red-gold palette.",
+     "color": "#E5231C",
+     "holes": true,
+     "anim": true
+    },
+    {
+     "id": "sigrid",
+     "ko": "시그리드",
+     "en": "Sigrid",
+     "role": "area",
+     "profile": "sniper",
+     "bullet": "zone",
+     "weapon": "deck",
+     "elem": "ice",
+     "sc": 1.0,
+     "desc": "눈보라 필드가 끝나며 파편으로 터진다",
+     "lore": "붕괴한 냉각탑의 바람길을 다시 설계한 공학자. 사람이 숨 쉴 공간만큼은 얼리지 않도록 제어한다.",
+     "prompt": "Very tall upright adult female snowstorm architect, short silver hair, straight brows, elegant pale cyan flared engineering coat with separated geometric panels. Huge HEXAGONAL cooling frame behind her, six angular turbine housings at its corners, visible above and beside shoulders. Circular wind-direction controller discs attached to wrists. Silver insulation piping, fitted blue trousers and grounded boots. Precise symmetrical architectural silhouette, face uncovered.",
+     "color": "#7FD9FF",
+     "holes": false,
+     "anim": true
+    },
+    {
+     "id": "caden",
+     "ko": "케이든",
+     "en": "Caden",
+     "role": "single",
+     "profile": "rapid",
+     "bullet": "chain",
+     "weapon": "sword",
+     "elem": "elec",
+     "sc": 1.0,
+     "desc": "삼타째가 인접 둘에게 튄다",
+     "lore": "정전 중 멈춘 승강기를 재시동한 기동대장. 세 단계를 생략하지 않는 습관 덕에 무모한 돌격에서도 살아 돌아왔다.",
+     "prompt": "Lean athletic adult male triple-stage lightning knight, silver spiky hair, scar above eyebrow, narrow chest and pointed lime armor shoulders over purple undersuit. THREE stepped copper capacitors mounted along outside of right arm, segmented sword with THREE purple inset channels and a forked tip secured vertically outside left leg. Precise articulated ceramic joints, angular boots, concentrated human face, sharp stepped silhouette.",
+     "color": "#C8FF2E",
+     "holes": false,
+     "anim": true
+    },
+    {
+     "id": "grey",
+     "ko": "그레이",
+     "en": "Grey",
+     "role": "single",
+     "profile": "sniper",
+     "bullet": "shot",
+     "weapon": "gun",
+     "elem": "none",
+     "sc": 1.0,
+     "desc": "치명타 확률이 가장 높다",
+     "lore": "금고 잠금 장치를 검사하던 정밀 기술자. 평범한 한 발에 필요한 준비를 남들보다 오래 한다.",
+     "prompt": "Short sturdy elderly male precision vault inspector, gray fedora, small white mustache, THREE folding concentric targeting lenses over one eye. Fitted gray knee-length coat, large visible brass CLOCK PENDULUM hanging below chest in a rigid ivory frame. Long square-barreled silver precision pistol secured vertically outside thigh in an open bracket. Polished black work boots, reserved sharp expression, distinctive pendulum and monocle silhouette.",
+     "color": "#FF5CE0",
+     "holes": false,
+     "anim": true
     }
    ]
   },
   {
-   "tier": "sf",
+   "tier": "sflush",
    "ko": "스트레이트플러시",
-   "n": 3,
+   "n": 5,
    "units": [
     {
-     "id": "tempest_shaman",
-     "ko": "태풍주술사",
-     "profile": "balance",
-     "bullet": "aura",
-     "elem": "elec",
-     "sc": 1.16,
-     "desc": "태풍 장판으로 감전시킨다",
-     "prompt": "a barefoot shaman in torn deep teal robes with long streaming ribbons, arms spread wide and standing perfectly calm inside a towering spiral of grey storm wind, forked yellow lightning crawling all through the whirl, long hair blown straight upward",
-     "color": "#D2FA8E"
-    },
-    {
-     "id": "siege_walker",
-     "ko": "공성보행포",
+     "id": "galene",
+     "ko": "갈레네",
+     "en": "Galene",
+     "role": "rider",
      "profile": "heavy",
      "bullet": "splash",
-     "elem": "none",
-     "sc": 0.92,
-     "desc": "일제 포격으로 쓸어버린다",
-     "prompt": "a huge four-legged brass and dark iron walking siege engine with riveted armor plates and exposed clockwork gears, three fat stubby mortar barrels fanned across its back, a small goggled dwarf gunner standing on the top hatch pulling a lever, white gunpowder smoke puffing from the muzzles",
-     "color": "#23917A"
+     "weapon": "whip",
+     "elem": "water",
+     "sc": 1.0,
+     "desc": "한 번만 휘둘러 젖음을 세 겹 남긴다",
+     "lore": "폭풍 속에서도 대피선의 항로를 유지한 조류 제어사. 장비가 힘을 만들기 때문에 사람은 작고 정확하게 움직인다.",
+     "prompt": "Mature broad-shouldered female tidal-control commander with a narrow waist, swept-back blue-gray bob, calm commanding face. Two enormous FLAT CIRCULAR transparent blue water reservoirs mounted left and right behind torso, giving a butterfly-like broad silhouette, visible silver counter-rotating rims. Tailored cobalt officer coat split above knees, wide flattened ribbon hoses coiled along both forearm braces, brass pressure regulators, solid boots. Functional majestic hydraulic equipment.",
+     "color": "#1D9BF0",
+     "holes": true,
+     "anim": true
     },
     {
-     "id": "moon_archer",
-     "ko": "달빛궁수",
+     "id": "estoque",
+     "ko": "에스토크",
+     "en": "Estoque",
+     "role": "single",
+     "profile": "sniper",
+     "bullet": "pierce",
+     "weapon": "sword",
+     "elem": "fire",
+     "sc": 1.0,
+     "desc": "직선 화염 찌르기가 줄지어 뚫는다",
+     "lore": "두꺼운 피난문을 최소한의 절단면으로 열던 공병 기사. 큰 불로 주변까지 태우지 않고 필요한 한 점만 녹인다.",
+     "prompt": "Tall wiry mature male precision heat-lance knight, short white mustache, one red targeting monocle, cropped crimson matador-like jacket with restrained gold trim, slim trousers and riding boots. His main visual feature is an ENORMOUS EXPOSED BRASS PISTON mounted along the entire RIGHT ARM from shoulder to wrist, a long thick golden cylinder above forearm, sliding polished steel rod alongside it, red hot heat conduit directly feeding the weapon. Both arms horizontal in T-pose so the piston is clearly visible. A VERY LONG STRAIGHT NEEDLE-LIKE THRUSTING SWORD with oversized red insulated grip mounted fully exposed vertically outside LEFT LEG, thin blade from chest height to floor. Stern mature face, unmistakable long linear mechanism and precision rapier.",
+     "color": "#F0451D",
+     "holes": false,
+     "anim": true
+    },
+    {
+     "id": "frosti",
+     "ko": "프로스티",
+     "en": "Frosti",
+     "role": "single",
      "profile": "sniper",
      "bullet": "beam",
+     "weapon": "gun",
      "elem": "ice",
-     "sc": 1.12,
-     "desc": "달빛 화살로 얼려 뚫는다",
-     "prompt": "a tall slender archer in a silver-white hooded cloak over pale blue silks, drawing a very long curved silver longbow, the nocked arrow a shaft of frozen moonlight, one huge glowing crescent moon disc hanging behind the shoulders, fine frost drifting off the fingertips",
-     "color": "#D3C9F5"
+     "sc": 1.0,
+     "desc": "단발 저격이 대상을 완전히 멈춘다",
+     "lore": "혹한 관측소에서 구조 로프 끝만 정확히 맞히던 명사수. 움직임이 멈추는 순간을 오래 기다릴 줄 안다.",
+     "prompt": "Tall lean mature male cryogenic marksman with swept white hair, hollow cheeks and long WHITE AND PALE CYAN sniper coat. An enormous LONG TRANSPARENT CYLINDRICAL GLASS COOLING JACKET encases the entire sniper rifle barrel, bright cyan liquid and a silver inner rail clearly visible through the thick glass. The rifle is displayed fully uncovered vertically immediately outside LEFT LEG from shoulder to ankle, oversized exposed bolt handle and white stock. Right forearm is encased in a THICK TRANSLUCENT ICE-BLUE mechanical support brace with visible silver hinges and natural hand, visible in the horizontal T-pose. Hexagonal cyan ammunition box at belt, silver insulation piping, snow boots. The bright glass coolant barrel is the dominant equipment feature.",
+     "color": "#23E0FF",
+     "holes": false,
+     "anim": true
+    },
+    {
+     "id": "lugh",
+     "ko": "루흐",
+     "en": "Lugh",
+     "role": "area",
+     "profile": "sniper",
+     "bullet": "zone",
+     "weapon": "deck",
+     "elem": "elec",
+     "sc": 1.0,
+     "desc": "뇌운이 넓게 퍼져 연달아 내리친다",
+     "lore": "도시 전력망을 끝까지 나누어 공급한 총괄 기사. 한 사람이 모든 빛을 독차지하지 않도록 설계했던 힘이다.",
+     "prompt": "Very tall broad middle-aged male city-electricity commander with swept blond hair, short white beard and a violet officer coat. An ENORMOUS RIGID COPPER TRANSMISSION ARCH mounted on his back towers far ABOVE HIS HEAD, the arch is the full width of his outstretched shoulders and forms an unmistakable upside-down U shape. TWO huge copper TESLA COILS with vivid lime ceramic cores sit under the left and right ends of the arch above shoulders. At the top center of the arch is a large THREE-PRONG TRANSMITTER with clear pointed electrodes. Visible heavy copper busbars descend across chest into torso armor. This gigantic back-mounted aerial dominates the silhouette. Grounded rubber boots, articulate empty human hands, dignified powerful stance.",
+     "color": "#D6F01D",
+     "holes": false,
+     "anim": true
+    },
+    {
+     "id": "null",
+     "ko": "널",
+     "en": "Null",
+     "role": "ricochet",
+     "profile": "sniper",
+     "bullet": "pierce",
+     "weapon": "bow",
+     "elem": "none",
+     "sc": 1.0,
+     "desc": "존재하지 않는 화살이 저항을 무시한다",
+     "lore": "두꺼운 금고 벽에 가장 작은 구멍을 내던 장인. 부수지 않고 통과하는 방법을 찾던 기록이 남아 있다.",
+     "prompt": "Exceptionally tall slender bald adult female needle-penetration master archer, thin black measuring line above eyes, calm visible face. Minimal ivory ceramic armor only on chest and shins over a slim graphite bodysuit, fully solid body. Enormous clean BLACK recurve bow secured vertically beside body, extremely long silver needle arrows at hip. TWO thin straight tension rods rise behind shoulders. Restrained silver joints, flat boots, striking sparse architectural silhouette, purely mechanical tension system.",
+     "color": "#B84FFF",
+     "holes": true,
+     "anim": true
     }
    ]
   },
   {
    "tier": "royal",
    "ko": "로열플러시",
-   "n": 2,
+   "n": 5,
    "units": [
     {
-     "id": "spade_monarch",
-     "ko": "스페이드왕",
+     "id": "nerea",
+     "ko": "네레아",
+     "en": "Nerea",
+     "role": "single",
      "profile": "heavy",
-     "bullet": "aura",
-     "elem": "none",
-     "sc": 0.92,
-     "desc": "빛 폭풍으로 주변을 쓸어버린다",
-     "prompt": "A towering broad-shouldered king in radiant golden plate armor, gripping a huge spade-shaped greatsword, heavy black cape, enormous jagged crown, white light glowing from every armor seam",
-     "color": "#FFC630"
+     "bullet": "pierce",
+     "weapon": "sword",
+     "elem": "water",
+     "sc": 1.0,
+     "desc": "물기둥 참격이 세 번마다 세 갈래로 갈라진다",
+     "lore": "첫 홍수 때 몸으로 갑문을 지킨 방어망 창설자. 이름이 전설이 된 뒤에도 스스로를 문지기라고 소개한다.",
+     "prompt": "Very tall legendary adult female great-floodgate guardian, long silver hair secured behind neck, powerful regal stance, richly engineered navy and silver heavy armor. TWO enormous rectangular sluice-gate plates rise behind her like closed rigid wings, broad brass circular valve centered on chest, thick blue pressure pipes run to armored shins. Body-length straight floodgate greatsword secured vertically OUTSIDE right leg with THREE clearly inset aquamarine water channels. Geometric monumental silhouette, visible human face and feet.",
+     "color": "#1D55F0",
+     "holes": false,
+     "anim": true
     },
     {
-     "id": "prism_empress",
-     "ko": "다이아 여왕",
-     "profile": "sniper",
-     "bullet": "beam",
+     "id": "brasa",
+     "ko": "브라사",
+     "en": "Brasa",
+     "role": "area",
+     "profile": "heavy",
+     "bullet": "zone",
+     "weapon": "deck",
+     "elem": "fire",
+     "sc": 1.0,
+     "desc": "올인 한 번에 불바다가 깔린다",
+     "lore": "첫 대피소의 보일러를 지키던 수석 기관사. 강력한 수호자의 기록에도 사람을 데우던 본래 목적이 남아 있다.",
+     "prompt": "Massive broad mature female legendary furnace guardian, short white hair, thick eyebrows, reassuring human face. Monumental crimson and brass armored heatproof coat to knees, large round ORANGE REACTOR WINDOW on chest. SIX enormous petal-shaped solid furnace doors arranged behind torso like a mechanical flower, dark red outer panels and orange ceramic inner edges, all closed at rest. Thick locking-handle gauntlets, huge anchored boots, majestic functional silhouette, fully clothed.",
+     "color": "#FF6A1A",
+     "holes": false,
+     "anim": true
+    },
+    {
+     "id": "isa",
+     "ko": "이사",
+     "en": "Isa",
+     "role": "ricochet",
+     "profile": "heavy",
+     "bullet": "pierce",
+     "weapon": "bow",
      "elem": "ice",
-     "sc": 0.98,
-     "desc": "얼음 광선으로 멀리 저격",
-     "prompt": "A tall slender queen in white pearl armor and a long flowing rose-pink gown, holding a very long slim scepter tipped with one giant cut diamond, thin winged tiara",
-     "color": "#8FE9FF"
+     "sc": 1.0,
+     "desc": "풀차지 고드름이 길을 막는다",
+     "lore": "마지막 산악 대피로의 빙문을 세운 수호장. 길을 봉쇄하는 힘으로 사람에게 열어 줄 시간을 만든다.",
+     "prompt": "Very tall legendary adult female frostgate grand archer, silver-white hair tied high into one long tail, massive angular translucent ice shoulder armor, narrow armored waist. THREE towering crystal cooling columns of unequal height mounted behind her, striking stepped skyline silhouette. Person-height giant silver and cyan bow strapped vertically outside right side, long crystal arrow guide rail at center. White-blue articulated plate armor, grounded crystal-reinforced boots, strong calm face.",
+     "color": "#5CE8FF",
+     "holes": true,
+     "anim": true
+    },
+    {
+     "id": "brian",
+     "ko": "브리안",
+     "en": "Brian",
+     "role": "single",
+     "profile": "heavy",
+     "bullet": "beam",
+     "weapon": "gun",
+     "elem": "elec",
+     "sc": 1.0,
+     "desc": "레일건 뇌격이 줄지어 꿰뚫는다",
+     "lore": "주 전력선이 끊기자 자기 장비를 임시 송전선으로 쓴 수석 기사. 남은 한 번의 전류도 허투루 쏘지 않는다.",
+     "prompt": "Legendary mature male last-transmission railgun guardian, short gray hair, half-lidded steady eyes, cropped purple heavy armored coat. Huge ROUND lime-and-copper capacitor on LEFT shoulder. Entire RIGHT arm is a mechanical cannon prosthesis with TWO long parallel open rails and huge copper coils, twin prongs instead of fingers, integrated arm extends horizontally in T-pose. Thick power bus across chest, grounding pins on massive boots. Distinctive asymmetrical silhouette, fully visible face.",
+     "color": "#9B5CFF",
+     "holes": false,
+     "anim": true
+    },
+    {
+     "id": "zero",
+     "ko": "제로",
+     "en": "Zero",
+     "role": "rider",
+     "profile": "sniper",
+     "bullet": "splash",
+     "weapon": "whip",
+     "elem": "none",
+     "sc": 1.0,
+     "desc": "무색 파동이 옆 아군의 속성을 흉내 낸다",
+     "lore": "서로 다른 도시 설비를 한 방어망으로 이은 창설자. 혼자 가장 강한 것보다 함께 작동하는 것을 완성품이라고 여긴다.",
+     "prompt": "Legendary androgynous adult master systems engineer, short hair half WHITE half BLACK, ivory jacket over graphite breastplate, visible calm human face. A MASSIVE PENTAGONAL MECHANICAL PATCH PANEL mounted on the BACK rises ABOVE THE HEAD and extends widely beside both shoulders. FIVE HUGE DISTINCT SOCKETS around the five corners of this back panel: a round pipe coupler, a square furnace connector, a hexagonal coolant port, a forked electric plug, and a flat mechanical jack. All FIVE connector heads clearly project into the background outside body silhouette. Five thick gray cables feed from the sockets down to a large coiled SILVER ARTICULATED CHAIN at waist. Oversized UNIVERSAL COUPLER HEAD docked at outside left thigh, broad flat metal chain links with brass hinges. Grounded armored boots. The giant five-connector panel is the dominant unmistakable equipment silhouette.",
+     "color": "#FF4FD8",
+     "holes": true,
+     "anim": true
     }
    ]
   }
  ],
  "monsters": [
   {
-   "id": "slime_blob",
-   "ko": "초록슬라임",
+   "id": "drop_slime",
+   "ko": "물방울슬라임",
    "kind": "swarm",
-   "stage": "early",
    "body": "aqua",
-   "desc": "느릿느릿 굴러오는 잡몹",
-   "prompt": "a tiny round glossy lime green slime blob with two huge black dot eyes, a wobbly jelly body, and one thick white shine spot",
-   "color": "#57E04A"
+   "desc": "탁한 물이 굴러온다",
+   "prompt": "a knee-high blob of deep blue-green water, its deep navy body sagging into a heavy teardrop shape held together by a thick black outline, two hollow black dot eyes sunk deep into the mass, clear ripples crossing its surface, and a steel-blue rim along its crown",
+   "color": "#3FC8FF",
+   "holes": false
   },
   {
-   "id": "cave_bat",
-   "ko": "동굴박쥐",
+   "id": "rapid_ray",
+   "ko": "격류가오리",
    "kind": "fast",
-   "stage": "early",
-   "body": "beast",
-   "desc": "파닥이며 빠르게 달려든다",
-   "prompt": "a small fuzzy purple bat with oversized pale lilac wings, giant round yellow eyes, two big white fangs, and tiny stubby legs",
-   "color": "#9B7BE8"
+   "body": "aqua",
+   "desc": "검은 물살을 가른다",
+   "prompt": "a lean gliding manta ray shaped from bright storm-blue water, wide thin wing fins spread into a flat readable silhouette trailing bright spray, a long whipping tail, teal edges rimming the fins, and two hollow black eye holes set on its flat brow",
+   "color": "#00C8C0",
+   "holes": false
+  },
+  {
+   "id": "wave_giant",
+   "ko": "파도거인",
+   "kind": "tank",
+   "body": "aqua",
+   "desc": "밤바다가 걸어온다",
+   "prompt": "a heavy humanoid giant built from churning midnight blue seawater, broad slab shoulders spilling bright white-green foam, thick arms curling into breaking waves with gaps between the curls, two hollow black dots for eyes in a face, and teal accents along the wave crests",
+   "color": "#2E86FF",
+   "holes": true
+  },
+  {
+   "id": "jelly_seer",
+   "ko": "해파리술사",
+   "kind": "caster",
+   "body": "aqua",
+   "desc": "촉수로 저주를 흘린다",
+   "prompt": "a drifting bell-shaped jellyfish sorcerer with a violet-blue dome, teal veins tracing its heavy hood, long ragged tentacles trailing beneath it in tangled coils, two hollow black dots for eyes on the bell, and a darkened orb cradled in its curled tendrils",
+   "color": "#9C7BFF",
+   "holes": true
+  },
+  {
+   "id": "ember_imp",
+   "ko": "불씨꼬마",
+   "kind": "swarm",
+   "body": "flame",
+   "desc": "재 속의 잔불 떼",
+   "prompt": "a compact imp of glowing coals with a cracked crust body of warm pale ash, bright molten orange light pouring out of the cracks, stubby dark grey limbs, two hollow black dot eyes, and a bright ember tuft burning at the crown of its head with thin smoke curling off",
+   "color": "#FFC24A",
+   "holes": false
+  },
+  {
+   "id": "blaze_fox",
+   "ko": "불꽃여우",
+   "kind": "fast",
+   "body": "flame",
+   "desc": "그을린 꼬리를 끈다",
+   "prompt": "a lean sprinting fox with a soot-darkened coat of rust and charcoal, a long ragged tail streaming ember-red fire behind it, scorched black paws, two hollow eye holes in a narrow muzzle, and thin grey smoke curling from its shoulders",
+   "color": "#FF7A2E",
+   "holes": false
+  },
+  {
+   "id": "magma_brute",
+   "ko": "용암괴수",
+   "kind": "tank",
+   "body": "flame",
+   "desc": "갈라진 틈이 벌겋다",
+   "prompt": "a massive four-legged beast sheathed in cracked warm grey stone with bright glowing molten orange seams pouring light between its plates, thick heavy legs, a broad low skull with blunt outward horns, two hollow black eye sockets, and smoke drifting off its hot back",
+   "color": "#E8401A",
+   "holes": false
+  },
+  {
+   "id": "pyre_priest",
+   "ko": "화염사제",
+   "kind": "caster",
+   "body": "flame",
+   "desc": "잿불을 던져 온다",
+   "prompt": "a robed fire priest in deep oxblood and polished brass vestments, a horned skull mask shadowing its face, gripping a long staff crowned with a soot-blackened brazier of embers, ash drifting from one raised hand, and charcoal wrappings over its narrow shoulders",
+   "color": "#FF6B4A",
+   "holes": true
+  },
+  {
+   "id": "bramble_imp",
+   "ko": "덤불꼬마",
+   "kind": "swarm",
+   "body": "wood",
+   "desc": "가시덤불이 몰려온다",
+   "prompt": "a knotted imp woven from thorny vines and dead leaves, a compact body of tangled twigs with open gaps between them, two hollow black eye holes peering from inside the bramble, short gnarled root legs, and a few ochre leaves caught in its matted growth",
+   "color": "#6FD44F",
+   "holes": true
+  },
+  {
+   "id": "vine_lynx",
+   "ko": "덩굴표범",
+   "kind": "fast",
+   "body": "wood",
+   "desc": "덩굴을 타고 달려든다",
+   "prompt": "a lean prowling panther bound from green vines and strips of rough bark, a ruff of pointed leaves along its neck, long curved thorn claws, a lashing tail of braided creeper looping back on itself, and two hollow black eyes in a flat mossy face",
+   "color": "#A6E03C",
+   "holes": true
+  },
+  {
+   "id": "elder_treant",
+   "ko": "고목거인",
+   "kind": "tank",
+   "body": "wood",
+   "desc": "이끼 낀 늙은 나무",
+   "prompt": "a towering treant with a thick gnarled trunk for a body, deeply cracked well-used bark, two heavy branch arms hanging low with open gaps under them, a dense crown of moss-green leaves, two hollow black eyes sunk in a knothole face, and mossy root feet",
+   "color": "#5FA83C",
+   "holes": true
   },
   {
    "id": "spore_cap",
    "ko": "포자버섯",
    "kind": "caster",
-   "stage": "early",
-   "body": "plant",
-   "desc": "멀리서 포자를 뿜는다",
-   "prompt": "a stubby walking mushroom monster with a huge round crimson cap covered in three fat white spots, tiny black eyes, and a puffy cream stalk body",
-   "color": "#FF5C7A"
+   "body": "wood",
+   "desc": "포자를 흩뿌린다",
+   "prompt": "a walking mushroom monster with a broad domed cap of deep maroon marked by pale ash spots, two hollow black dot eyes under the shadowed cap rim, a thick fibrous dun stalk for a body, stubby root feet, and spore dust sifting from its gills",
+   "color": "#FF5C7A",
+   "holes": false
   },
   {
-   "id": "shell_bug",
-   "ko": "딱정벌레",
-   "kind": "tank",
-   "stage": "early",
-   "body": "stone",
-   "desc": "껍질이 단단해 안 죽는다",
-   "prompt": "a chunky armored beetle with a glossy turquoise dome shell, six short black legs, one thick curved horn, and small angry orange eyes",
-   "color": "#35B9C4"
-  },
-  {
-   "id": "goblin",
-   "ko": "고블린",
+   "id": "pebble_imp",
+   "ko": "자갈꼬마",
    "kind": "swarm",
-   "stage": "mid",
-   "body": "null",
-   "desc": "단검 들고 떼로 몰려온다",
-   "prompt": "a scrawny yellow-green goblin with huge pointed ears, a red headband, a ragged brown loincloth, and a crooked rusty dagger raised in one hand",
-   "color": "#B9D93C"
+   "body": "rock",
+   "desc": "돌멩이가 떼로 굴러온다",
+   "prompt": "a compact creature stacked from grey and dun river stones, a boulder head with two hollow black eye holes, blunt rock arms, cracked slabs across its chest, moss staining the seams between the stones, and gravel crumbling from its blocky feet",
+   "color": "#A9B2B8",
+   "holes": false
   },
   {
-   "id": "bone_soldier",
-   "ko": "해골병사",
-   "kind": "tank",
-   "stage": "mid",
-   "body": "undead",
-   "desc": "녹슨 칼을 든 뼈다귀",
-   "prompt": "a bare bone-white skeleton warrior with a cracked skull, glowing red eye sockets, a dented dark iron chestplate, and a short notched sword",
-   "color": "#EDE6CE"
-  },
-  {
-   "id": "dire_wolf",
-   "ko": "사나운늑대",
+   "id": "crystal_skink",
+   "ko": "수정도마뱀",
    "kind": "fast",
-   "stage": "mid",
-   "body": "beast",
-   "desc": "엄청 빠르게 파고든다",
-   "prompt": "a lean charcoal grey wolf with a bristling silver blue mane, glowing pale blue eyes, bared white fangs, and long sharp claws",
-   "color": "#7FA8E8"
-  },
-  {
-   "id": "kobold_bow",
-   "ko": "코볼트궁수",
-   "kind": "caster",
-   "stage": "mid",
-   "body": "flame",
-   "desc": "멀리서 불화살을 쏜다",
-   "prompt": "a small orange lizard kobold in a brown leather vest, drawing a curved wooden bow with a burning arrow, thick tail curled behind",
-   "color": "#F2A03D"
-  },
-  {
-   "id": "orc_brute",
-   "ko": "오크전사",
-   "kind": "tank",
-   "stage": "late",
-   "body": "beast",
-   "desc": "도끼를 휘두르는 덩치",
-   "prompt": "a huge muscular dark green orc in brick red spiked shoulder armor, a tusked jaw, gripping a massive double-headed iron axe",
-   "color": "#C0452F"
+   "body": "rock",
+   "desc": "수정 비늘로 재빠르다",
+   "prompt": "a quick darting lizard armoured in jagged amber crystal shards, blunt stone claws, a ridge of citrine spines running down its back, a heavy tail of fused rock, well-used grey hide between the shards, and two hollow black eyes in a wedge-shaped skull",
+   "color": "#F2B33A",
+   "holes": false
   },
   {
    "id": "stone_golem",
    "ko": "돌골렘",
    "kind": "tank",
-   "stage": "late",
-   "body": "stone",
+   "body": "rock",
    "desc": "느리지만 아주 튼튼하다",
-   "prompt": "a bulky boulder golem built from sandy tan rock slabs, blocky oversized fists, no neck, and a single glowing amber eye",
-   "color": "#C89B5A"
+   "prompt": "a bulky golem built from well-used dun sandstone slabs, blocky heavy fists hanging past its knees, no neck, a cracked boulder head with one hollow eye socket, ochre lichen in the deep seams, and grit falling from its scarred plates",
+   "color": "#C89B5A",
+   "holes": true
   },
   {
-   "id": "hex_witch",
-   "ko": "마녀",
+   "id": "runestone_idol",
+   "ko": "석상술사",
    "kind": "caster",
-   "stage": "late",
-   "body": "arcane",
-   "desc": "저주 구슬을 날린다",
-   "prompt": "a hunched old witch in a tall pointed violet hat and flowing purple robe, holding a gnarled staff crowned with a glowing magenta orb",
-   "color": "#C64BE8"
+   "body": "rock",
+   "desc": "돌기둥이 저주를 쏜다",
+   "prompt": "a hovering carved stone idol shaped like a blunt totem pillar, an angular granite face with two hollow black eye holes, well-used rune grooves cut across its cracked surface and stained ochre, chipped edges along its flanks, and a chunk of raw crystal drifting above its flat crown",
+   "color": "#BFD0DC",
+   "holes": false
   },
   {
-   "id": "wraith",
-   "ko": "망령",
+   "id": "frost_imp",
+   "ko": "서리꼬마",
+   "kind": "swarm",
+   "body": "frost",
+   "desc": "언 눈덩이가 굴러온다",
+   "prompt": "a rounded imp packed from snow and grey-blue ice, two hollow black dot eyes, stubby icicle arms, a jagged frost shard jutting from the top of its head, a rime crust flaking off its shoulders, and dirt frozen into its lower half",
+   "color": "#B7F0FF",
+   "holes": false
+  },
+  {
+   "id": "blizzard_wolf",
+   "ko": "눈보라늑대",
    "kind": "fast",
-   "stage": "late",
-   "body": "undead",
-   "desc": "스르륵 빠르게 스쳐간다",
-   "prompt": "a tattered floating wraith with no legs, a hollow black hood, glowing mint green eyes, and long ragged spectral sleeves ending in bony claws",
-   "color": "#5FEFC6"
+   "body": "frost",
+   "desc": "눈보라처럼 파고든다",
+   "prompt": "a lean sprinting wolf with a frost-matted coat of slate and steel blue, long icicle fangs, a ridge of ice crystals along its spine, frozen tufts on its haunches, and two hollow black eyes above a narrow scarred muzzle",
+   "color": "#C3CCFF",
+   "holes": false
+  },
+  {
+   "id": "glacier_titan",
+   "ko": "빙하거인",
+   "kind": "tank",
+   "body": "frost",
+   "desc": "잿빛 얼음의 거인",
+   "prompt": "a hulking giant carved from clouded glacier ice, broad angular shoulders of thick frozen slabs, massive blunt fists, jagged icicles jutting from its back, deep fracture lines running through its grey-blue chest, and two black pits for eyes in a flat brow",
+   "color": "#74DAF2",
+   "holes": true
+  },
+  {
+   "id": "rime_witch",
+   "ko": "얼음마녀",
+   "kind": "caster",
+   "body": "frost",
+   "desc": "얼음 저주를 날린다",
+   "prompt": "a gaunt ice witch in a long deep indigo robe trimmed with frosted crystal, a tall pointed shard crown set above a tall stiff crest of hair, gripping a crooked staff topped with a grey-blue gem, and rime dusting her narrow sleeves and collar",
+   "color": "#8A9CFF",
+   "holes": true
+  },
+  {
+   "id": "abyss_leviathan",
+   "ko": "심연해룡",
+   "kind": "boss",
+   "body": "aqua",
+   "desc": "심연에서 올라온 거수",
+   "prompt": "a colossal serpentine sea leviathan rearing up, a massive fanged maw, broad ridged fins running along a coiling midnight blue body, thick polished scales darkened with grime, two black pits for eyes, and heavy torrents of water spilling from its jaws",
+   "color": "#1F63E8",
+   "holes": true
   },
   {
    "id": "flame_dragon",
    "ko": "화염용",
    "kind": "boss",
-   "stage": "boss",
-   "body": "dragon",
+   "body": "flame",
    "desc": "불을 뿜는 거대한 용",
-   "prompt": "a colossal crimson dragon with vast leathery wings spread wide, a spiked orange crest, thick armored belly scales, and molten fire glowing in its open jaws",
-   "color": "#FF5A16"
+   "prompt": "a colossal dragon of scorched crimson and charcoal scale, vast leathery wings spread wide with torn membranes, a spiked pale ash crest down its neck, thick armoured belly plates, two black eye pits, and molten red seams deep inside its open jaws",
+   "color": "#FF5A16",
+   "holes": true
   },
   {
-   "id": "demon_king",
-   "ko": "트럼프마왕",
+   "id": "titan_bloom",
+   "ko": "식인꽃왕",
    "kind": "boss",
-   "stage": "boss",
-   "body": "null",
-   "desc": "카드 세계의 최종보스",
-   "prompt": "a towering horned demon king in black armor with a crimson cape, glowing red spade and heart card symbols carved across his chestplate, holding a jagged black sword",
-   "color": "#FF2D55"
+   "body": "wood",
+   "desc": "아가리를 벌린 거대 꽃",
+   "prompt": "a colossal carnivorous flower monster, an enormous petal maw of deep magenta lined with long fangs, three thick writhing vine necks tipped with snapping buds, a bulbous mossy base of rotting leaves, and huge clawed roots curling into the ground",
+   "color": "#E64BD8",
+   "holes": true
+  },
+  {
+   "id": "crystal_golem_king",
+   "ko": "수정골렘왕",
+   "kind": "boss",
+   "body": "rock",
+   "desc": "산더미 같은 수정 거인",
+   "prompt": "a titanic golem king assembled from massive well-used granite slabs, enormous violet crystal shards erupting from its shoulders and back, a broad crownlike stone head, two black eye pits, a deep purple core sunk in its cracked chest, and huge blocky fists",
+   "color": "#B056F5",
+   "holes": false
+  },
+  {
+   "id": "glacier_dragon",
+   "ko": "빙하용왕",
+   "kind": "boss",
+   "body": "frost",
+   "desc": "얼어붙은 거대한 용",
+   "prompt": "a colossal ice dragon rearing up, vast frozen wings of grey-blue crystal, a long spined neck sheathed in cracked glacier armour, huge curved ice horns arching over its skull, two black eye pits, and freezing mist pouring in a plume from its open jaws",
+   "color": "#59BFF0",
+   "holes": true
+  }
+ ],
+ "themes": [
+  {
+   "id": "calm_lake",
+   "ko": "잔잔한 호수",
+   "main_body": "aqua",
+   "boss_body": "aqua",
+   "rank": 1,
+   "weights": {
+    "aqua": 0.7,
+    "flame": 0.06,
+    "wood": 0.12,
+    "rock": 0.06,
+    "frost": 0.06
+   },
+   "bg": "#10243A",
+   "floor": "#1B3A4A",
+   "prompt": "A calm mountain lake at dusk, flat dark water, reed banks, a half sunken wooden jetty, rounded hills on the far shore, thin mist",
+   "floor_prompt": "Still dark lake water with faint ripples, patches of algae and lily pads, a muddy reed-fringed rim"
+  },
+  {
+   "id": "reed_marsh",
+   "ko": "갈대 늪",
+   "main_body": "aqua",
+   "boss_body": "aqua",
+   "rank": 1,
+   "weights": {
+    "aqua": 0.7,
+    "flame": 0.06,
+    "wood": 0.12,
+    "rock": 0.06,
+    "frost": 0.06
+   },
+   "bg": "#142A2A",
+   "floor": "#22362C",
+   "prompt": "A wide brackish marsh of tall grey reeds, black standing water between mud banks, drowned tree stumps, low fog",
+   "floor_prompt": "Black marsh water and soft mud, mats of cut reeds, scattered peat islands"
+  },
+  {
+   "id": "aqueduct_ruin",
+   "ko": "수도교 폐허",
+   "main_body": "aqua",
+   "boss_body": "aqua",
+   "rank": 2,
+   "weights": {
+    "aqua": 0.72,
+    "flame": 0.05,
+    "wood": 0.06,
+    "rock": 0.12,
+    "frost": 0.05
+   },
+   "bg": "#1A2233",
+   "floor": "#2A3038",
+   "prompt": "A ruined stone aqueduct crossing a shallow river, broken arches, water spilling from a cracked channel, wet moss on the piers",
+   "floor_prompt": "Cracked stone aqueduct paving with a shallow water channel cut through it, wet moss in the joints"
+  },
+  {
+   "id": "falls_gorge",
+   "ko": "폭포 골짜기",
+   "main_body": "aqua",
+   "boss_body": "aqua",
+   "rank": 2,
+   "weights": {
+    "aqua": 0.72,
+    "flame": 0.05,
+    "wood": 0.06,
+    "rock": 0.12,
+    "frost": 0.05
+   },
+   "bg": "#0E2833",
+   "floor": "#1D3540",
+   "prompt": "A narrow gorge with a tall waterfall pounding into a dark plunge pool, drifting spray, wet black boulders, slick rock ledges",
+   "floor_prompt": "Wet river-worn boulders and shallow rushing water, streaks of white foam between the stones"
+  },
+  {
+   "id": "tidal_flats",
+   "ko": "밀물 갯벌",
+   "main_body": "aqua",
+   "boss_body": "aqua",
+   "rank": 3,
+   "weights": {
+    "aqua": 0.75,
+    "flame": 0.05,
+    "wood": 0.06,
+    "rock": 0.1,
+    "frost": 0.04
+   },
+   "bg": "#17293A",
+   "floor": "#2A3340",
+   "prompt": "A vast tidal mudflat at low tide, shallow braided channels, dark wet sand, barnacled rocks, stranded fishing stakes, distant grey sea",
+   "floor_prompt": "Rippled grey tidal mudflat with shallow pools and scattered shells"
+  },
+  {
+   "id": "glacier_lake",
+   "ko": "빙하호",
+   "main_body": "aqua",
+   "boss_body": "aqua",
+   "rank": 3,
+   "weights": {
+    "aqua": 0.75,
+    "flame": 0.04,
+    "wood": 0.06,
+    "rock": 0.05,
+    "frost": 0.1
+   },
+   "bg": "#102A3E",
+   "floor": "#1E3A4C",
+   "prompt": "A meltwater lake below a glacier snout, floating ice chunks, milky blue grey water, bare moraine gravel shores, steep valley walls",
+   "floor_prompt": "Milky turquoise glacial water with floating ice shards and grey silt"
+  },
+  {
+   "id": "sunken_fleet",
+   "ko": "침몰선 무덤",
+   "main_body": "aqua",
+   "boss_body": "aqua",
+   "rank": 4,
+   "weights": {
+    "aqua": 0.78,
+    "flame": 0.07,
+    "wood": 0.04,
+    "rock": 0.07,
+    "frost": 0.04
+   },
+   "bg": "#0B1F2E",
+   "floor": "#17303A",
+   "prompt": "A shallow ship graveyard, broken hulls and snapped masts jutting from dark water, tangled rigging, drifting seaweed, low grey horizon",
+   "floor_prompt": "Dark seabed silt strewn with broken ship planks, rusted iron rings and coils of rope"
+  },
+  {
+   "id": "geyser_mud",
+   "ko": "간헐천 진흙벌",
+   "main_body": "aqua",
+   "boss_body": "aqua",
+   "rank": 4,
+   "weights": {
+    "aqua": 0.78,
+    "flame": 0.1,
+    "wood": 0.04,
+    "rock": 0.04,
+    "frost": 0.04
+   },
+   "bg": "#1E2429",
+   "floor": "#2E2A22",
+   "prompt": "A geyser field of bubbling grey mud pools, hissing steam vents, crusted mineral rims, warm shallow runoff channels",
+   "floor_prompt": "Bubbling grey mud pools crusted with yellow sulphur rims"
+  },
+  {
+   "id": "deep_trench",
+   "ko": "심해 해구",
+   "main_body": "aqua",
+   "boss_body": "aqua",
+   "rank": 5,
+   "weights": {
+    "aqua": 0.8,
+    "flame": 0.07,
+    "wood": 0.03,
+    "rock": 0.06,
+    "frost": 0.04
+   },
+   "bg": "#060F1C",
+   "floor": "#0E1E2A",
+   "prompt": "The floor of a deep ocean trench, black water, towering rock walls, pale hydrothermal chimneys, drifting marine snow, faint bioluminescence",
+   "floor_prompt": "Near-black abyssal seabed silt with pale scattered bones and faint bioluminescent specks"
+  },
+  {
+   "id": "maelstrom_sea",
+   "ko": "소용돌이 바다",
+   "main_body": "aqua",
+   "boss_body": "aqua",
+   "rank": 5,
+   "weights": {
+    "aqua": 0.8,
+    "flame": 0.03,
+    "wood": 0.07,
+    "rock": 0.04,
+    "frost": 0.06
+   },
+   "bg": "#0A1826",
+   "floor": "#142A38",
+   "prompt": "A storm lashed open sea with a vast spinning whirlpool, towering waves, spray torn off the crests, black clouds low over the water",
+   "floor_prompt": "Churning dark seawater spiralling inward, long streaks of white foam"
+  },
+  {
+   "id": "kiln_yard",
+   "ko": "가마터",
+   "main_body": "flame",
+   "boss_body": "flame",
+   "rank": 1,
+   "weights": {
+    "aqua": 0.06,
+    "flame": 0.7,
+    "wood": 0.06,
+    "rock": 0.13,
+    "frost": 0.05
+   },
+   "bg": "#241A16",
+   "floor": "#33251C",
+   "prompt": "A pottery kiln yard, squat brick kilns with open fireboxes glowing, stacked firewood, ash heaps, scorched clay ground",
+   "floor_prompt": "Packed ash-grey kiln yard of fired clay tiles, scattered charcoal and broken pottery"
+  },
+  {
+   "id": "burn_field",
+   "ko": "화전 들판",
+   "main_body": "flame",
+   "boss_body": "flame",
+   "rank": 1,
+   "weights": {
+    "aqua": 0.06,
+    "flame": 0.7,
+    "wood": 0.12,
+    "rock": 0.06,
+    "frost": 0.06
+   },
+   "bg": "#2A1E14",
+   "floor": "#33291F",
+   "prompt": "Farmland cleared by burning, blackened stubble rows still smoldering, thin smoke drifting low, charred fence posts, hazy orange sky",
+   "floor_prompt": "Burnt black field soil with smouldering stubble rows and drifts of grey ash"
+  },
+  {
+   "id": "forge_canyon",
+   "ko": "대장간 골",
+   "main_body": "flame",
+   "boss_body": "flame",
+   "rank": 2,
+   "weights": {
+    "aqua": 0.05,
+    "flame": 0.72,
+    "wood": 0.06,
+    "rock": 0.12,
+    "frost": 0.05
+   },
+   "bg": "#1E1310",
+   "floor": "#2E1E17",
+   "prompt": "A narrow canyon of stone forges built into the walls, glowing furnace mouths, hanging chains and anvils, coal piles, drifting sparks",
+   "floor_prompt": "Soot-black forge floor of iron plates and slag, glowing ember cracks between them"
+  },
+  {
+   "id": "burnt_forest",
+   "ko": "불탄 숲",
+   "main_body": "flame",
+   "boss_body": "flame",
+   "rank": 2,
+   "weights": {
+    "aqua": 0.05,
+    "flame": 0.72,
+    "wood": 0.12,
+    "rock": 0.06,
+    "frost": 0.05
+   },
+   "bg": "#201A18",
+   "floor": "#2B2320",
+   "prompt": "A burnt out forest of black standing trunks, ash covered ground, smoldering roots glowing dull red, fallen charred logs, smoke haze",
+   "floor_prompt": "Charred forest floor of black ash, fallen burnt logs and grey cinders"
+  },
+  {
+   "id": "sulfur_springs",
+   "ko": "유황 온천",
+   "main_body": "flame",
+   "boss_body": "flame",
+   "rank": 3,
+   "weights": {
+    "aqua": 0.1,
+    "flame": 0.75,
+    "wood": 0.05,
+    "rock": 0.05,
+    "frost": 0.05
+   },
+   "bg": "#2A2412",
+   "floor": "#35301A",
+   "prompt": "A sulfur spring basin, yellow crusted terraces, steaming milky pools, bubbling vents, stained rock rims, thick vapor",
+   "floor_prompt": "Crusted yellow sulphur terraces with steaming shallow hot pools"
+  },
+  {
+   "id": "ash_city",
+   "ko": "잿빛 폐허",
+   "main_body": "flame",
+   "boss_body": "flame",
+   "rank": 3,
+   "weights": {
+    "aqua": 0.04,
+    "flame": 0.75,
+    "wood": 0.07,
+    "rock": 0.1,
+    "frost": 0.04
+   },
+   "bg": "#221D1C",
+   "floor": "#2C2726",
+   "prompt": "A ruined city buried in volcanic ash, collapsed roofs, ash drifts against broken walls, embers glowing in the rubble, dark air",
+   "floor_prompt": "Ash-covered broken city paving stones with soot drifts in the gaps"
+  },
+  {
+   "id": "lava_river",
+   "ko": "용암 강",
+   "main_body": "flame",
+   "boss_body": "flame",
+   "rank": 4,
+   "weights": {
+    "aqua": 0.02,
+    "flame": 0.78,
+    "wood": 0.07,
+    "rock": 0.08,
+    "frost": 0.05
+   },
+   "bg": "#1A0D0A",
+   "floor": "#2B120C",
+   "prompt": "A river of molten lava cutting across black basalt, glowing orange cracks in the crust, heat shimmer, spatter cones on the banks",
+   "floor_prompt": "Black basalt crust cracked open by glowing orange lava veins"
+  },
+  {
+   "id": "obsidian_flats",
+   "ko": "흑요석 벌",
+   "main_body": "flame",
+   "boss_body": "flame",
+   "rank": 4,
+   "weights": {
+    "aqua": 0.09,
+    "flame": 0.78,
+    "wood": 0.04,
+    "rock": 0.05,
+    "frost": 0.04
+   },
+   "bg": "#14100F",
+   "floor": "#1C1A1D",
+   "prompt": "A plain of glassy black obsidian slabs where lava met the sea, sharp shards underfoot, steaming shoreline fissures, dark cliffs behind",
+   "floor_prompt": "Glossy black obsidian flats of sharp fractured plates"
+  },
+  {
+   "id": "volcano_crater",
+   "ko": "활화산 분화구",
+   "main_body": "flame",
+   "boss_body": "flame",
+   "rank": 5,
+   "weights": {
+    "aqua": 0.02,
+    "flame": 0.8,
+    "wood": 0.07,
+    "rock": 0.07,
+    "frost": 0.04
+   },
+   "bg": "#180A08",
+   "floor": "#2A100A",
+   "prompt": "The crater of an active volcano, a churning lava lake below, steep ash walls, fume columns, fresh bombs and spatter on the rim",
+   "floor_prompt": "Dark volcanic gravel crater floor with glowing fumarole cracks"
+  },
+  {
+   "id": "ash_blizzard",
+   "ko": "잿눈 화산",
+   "main_body": "flame",
+   "boss_body": "flame",
+   "rank": 5,
+   "weights": {
+    "aqua": 0.08,
+    "flame": 0.8,
+    "wood": 0.03,
+    "rock": 0.02,
+    "frost": 0.07
+   },
+   "bg": "#1C1A1E",
+   "floor": "#2A2426",
+   "prompt": "A volcano slope in a falling ash storm, grey ash drifting like snow over old flows, dim glowing vents, buried boulders, choked sky",
+   "floor_prompt": "Fine grey volcanic ash drifted into dunes over dark rock"
+  },
+  {
+   "id": "spring_grove",
+   "ko": "봄 숲",
+   "main_body": "wood",
+   "boss_body": "wood",
+   "rank": 1,
+   "weights": {
+    "aqua": 0.14,
+    "flame": 0.05,
+    "wood": 0.7,
+    "rock": 0.05,
+    "frost": 0.06
+   },
+   "bg": "#16281B",
+   "floor": "#24371F",
+   "prompt": "A young broadleaf grove in spring, slender trunks, soft undergrowth, scattered wildflowers, a worn dirt path, low slanting light",
+   "floor_prompt": "Soft spring forest floor of green moss, young grass and scattered petals"
+  },
+  {
+   "id": "mushroom_hollow",
+   "ko": "버섯 골짜기",
+   "main_body": "wood",
+   "boss_body": "wood",
+   "rank": 1,
+   "weights": {
+    "aqua": 0.14,
+    "flame": 0.06,
+    "wood": 0.7,
+    "rock": 0.04,
+    "frost": 0.06
+   },
+   "bg": "#17201F",
+   "floor": "#26302A",
+   "prompt": "A damp hollow crowded with oversized mushrooms, thick caps on pale stalks, rotting logs, spore haze, mossy stones",
+   "floor_prompt": "Damp humus forest floor thick with small mushrooms and rotting leaves"
+  },
+  {
+   "id": "bamboo_grove",
+   "ko": "대숲",
+   "main_body": "wood",
+   "boss_body": "wood",
+   "rank": 2,
+   "weights": {
+    "aqua": 0.15,
+    "flame": 0.05,
+    "wood": 0.72,
+    "rock": 0.03,
+    "frost": 0.05
+   },
+   "bg": "#13251C",
+   "floor": "#203122",
+   "prompt": "A dense bamboo grove, tall segmented stalks packed close, deep leaf litter, narrow gaps of pale sky, drifting mist",
+   "floor_prompt": "Packed earth carpeted with fallen bamboo leaves and cut bamboo stumps"
+  },
+  {
+   "id": "vine_ruins",
+   "ko": "덩굴 폐허",
+   "main_body": "wood",
+   "boss_body": "wood",
+   "rank": 2,
+   "weights": {
+    "aqua": 0.16,
+    "flame": 0.05,
+    "wood": 0.72,
+    "rock": 0.02,
+    "frost": 0.05
+   },
+   "bg": "#1A2419",
+   "floor": "#283026",
+   "prompt": "Stone temple ruins swallowed by vines, toppled pillars, roots prying apart flagstones, hanging creepers, heavy green shade",
+   "floor_prompt": "Cracked stone ruin paving overgrown with thick vines and moss"
+  },
+  {
+   "id": "misty_cedar",
+   "ko": "안개 삼나무",
+   "main_body": "wood",
+   "boss_body": "wood",
+   "rank": 3,
+   "weights": {
+    "aqua": 0.14,
+    "flame": 0.05,
+    "wood": 0.75,
+    "rock": 0.02,
+    "frost": 0.04
+   },
+   "bg": "#16221F",
+   "floor": "#223028",
+   "prompt": "An old cedar forest in fog, enormous fluted trunks, hanging moss, deep needle litter, ferns, visibility closing in",
+   "floor_prompt": "Damp cedar forest floor of needles, roots and pale lichen"
+  },
+  {
+   "id": "thornbrake",
+   "ko": "가시덤불",
+   "main_body": "wood",
+   "boss_body": "wood",
+   "rank": 3,
+   "weights": {
+    "aqua": 0.04,
+    "flame": 0.15,
+    "wood": 0.75,
+    "rock": 0.02,
+    "frost": 0.04
+   },
+   "bg": "#221F14",
+   "floor": "#2E2A1B",
+   "prompt": "A dry thorn thicket, tangled black brambles with long spines, cracked earth, brittle dead brush, old scorch marks",
+   "floor_prompt": "Dry brown earth tangled with thorny bramble runners"
+  },
+  {
+   "id": "moss_bog",
+   "ko": "이끼 습지",
+   "main_body": "wood",
+   "boss_body": "wood",
+   "rank": 4,
+   "weights": {
+    "aqua": 0.12,
+    "flame": 0.04,
+    "wood": 0.78,
+    "rock": 0.02,
+    "frost": 0.04
+   },
+   "bg": "#12201A",
+   "floor": "#1E2C20",
+   "prompt": "A peat bog under thick moss, spongy hummocks, tea dark pools, half sunken bog trees, clouds of midges, low grey light",
+   "floor_prompt": "Spongy green sphagnum moss bog with dark peat pools"
+  },
+  {
+   "id": "frost_pines",
+   "ko": "서리 침엽수",
+   "main_body": "wood",
+   "boss_body": "wood",
+   "rank": 4,
+   "weights": {
+    "aqua": 0.04,
+    "flame": 0.04,
+    "wood": 0.78,
+    "rock": 0.01,
+    "frost": 0.13
+   },
+   "bg": "#16222A",
+   "floor": "#223029",
+   "prompt": "A pine forest under hard frost, dark needles rimed white, frozen ground, snow loaded boughs, a stiff frozen creek",
+   "floor_prompt": "Frozen pine needle floor with thin snow patches and rime-edged roots"
+  },
+  {
+   "id": "rotroot_hollow",
+   "ko": "썩은 뿌리굴",
+   "main_body": "wood",
+   "boss_body": "wood",
+   "rank": 5,
+   "weights": {
+    "aqua": 0.1,
+    "flame": 0.03,
+    "wood": 0.8,
+    "rock": 0.02,
+    "frost": 0.05
+   },
+   "bg": "#171A14",
+   "floor": "#23261A",
+   "prompt": "A hollow beneath toppled trees, a mass of rotting roots and black fungus, soft decayed wood, seeping dark water, sour haze",
+   "floor_prompt": "Dark rotting root mat and black mould over wet soil"
+  },
+  {
+   "id": "worldtree_roots",
+   "ko": "세계수 뿌리",
+   "main_body": "wood",
+   "boss_body": "wood",
+   "rank": 5,
+   "weights": {
+    "aqua": 0.12,
+    "flame": 0.03,
+    "wood": 0.8,
+    "rock": 0.02,
+    "frost": 0.03
+   },
+   "bg": "#131C18",
+   "floor": "#1F2A1E",
+   "prompt": "The base of a colossal tree, roots the size of hills arching over a gorge, hollow root caverns, hanging aerial roots, deep gloom",
+   "floor_prompt": "Enormous pale tree roots braided over dark soil, faint glowing sap seams"
+  },
+  {
+   "id": "gravel_hills",
+   "ko": "자갈 언덕",
+   "main_body": "rock",
+   "boss_body": "rock",
+   "rank": 1,
+   "weights": {
+    "aqua": 0.06,
+    "flame": 0.06,
+    "wood": 0.07,
+    "rock": 0.7,
+    "frost": 0.11
+   },
+   "bg": "#24241F",
+   "floor": "#33322A",
+   "prompt": "Low bare hills of loose gravel and scree, scattered boulders, thin dry grass in the gullies, a stony track, dusty air",
+   "floor_prompt": "Loose grey gravel and scattered pebbles over hard dry ground"
+  },
+  {
+   "id": "stone_terraces",
+   "ko": "돌담 밭",
+   "main_body": "rock",
+   "boss_body": "rock",
+   "rank": 1,
+   "weights": {
+    "aqua": 0.11,
+    "flame": 0.06,
+    "wood": 0.07,
+    "rock": 0.7,
+    "frost": 0.06
+   },
+   "bg": "#222620",
+   "floor": "#30322A",
+   "prompt": "Abandoned hillside terraces walled with dry stacked stone, collapsed sections, weeds in the beds, a rutted stone lane",
+   "floor_prompt": "Dry-stone terrace paving with packed earth between the stones"
+  },
+  {
+   "id": "quarry_pit",
+   "ko": "채석장",
+   "main_body": "rock",
+   "boss_body": "rock",
+   "rank": 2,
+   "weights": {
+    "aqua": 0.05,
+    "flame": 0.11,
+    "wood": 0.07,
+    "rock": 0.72,
+    "frost": 0.05
+   },
+   "bg": "#26241F",
+   "floor": "#34322B",
+   "prompt": "A working stone quarry, stepped cut benches, blocks half split from the face, timber scaffolds and sledges, rubble and dust",
+   "floor_prompt": "Cut stone quarry floor with saw-marked blocks and pale rock dust"
+  },
+  {
+   "id": "red_canyon",
+   "ko": "붉은 협곡",
+   "main_body": "rock",
+   "boss_body": "rock",
+   "rank": 2,
+   "weights": {
+    "aqua": 0.06,
+    "flame": 0.11,
+    "wood": 0.06,
+    "rock": 0.72,
+    "frost": 0.05
+   },
+   "bg": "#2A1C16",
+   "floor": "#38251B",
+   "prompt": "A red sandstone canyon, layered walls, a dry stony wash on the floor, fallen slabs, narrow slot side channels, heat haze",
+   "floor_prompt": "Red sandstone canyon floor with wind-carved ripples and dust"
+  },
+  {
+   "id": "broken_wall",
+   "ko": "무너진 성벽",
+   "main_body": "rock",
+   "boss_body": "rock",
+   "rank": 3,
+   "weights": {
+    "aqua": 0.09,
+    "flame": 0.05,
+    "wood": 0.06,
+    "rock": 0.75,
+    "frost": 0.05
+   },
+   "bg": "#22242A",
+   "floor": "#2E3036",
+   "prompt": "A ruined fortress wall, a breached curtain of huge blocks, a collapsed gate tower, rubble slopes, weeds between fallen stones",
+   "floor_prompt": "Collapsed fortress paving of broken flagstones and rubble"
+  },
+  {
+   "id": "crystal_cavern",
+   "ko": "수정 동굴",
+   "main_body": "rock",
+   "boss_body": "rock",
+   "rank": 3,
+   "weights": {
+    "aqua": 0.07,
+    "flame": 0.03,
+    "wood": 0.05,
+    "rock": 0.75,
+    "frost": 0.1
+   },
+   "bg": "#171C2A",
+   "floor": "#232838",
+   "prompt": "A cavern lined with huge crystal columns, faceted growths from floor and ceiling, dark rock between, faint refracted glow, still pools",
+   "floor_prompt": "Dark cavern rock floor studded with pale violet crystal clusters"
+  },
+  {
+   "id": "desert_mesa",
+   "ko": "사막 바위기둥",
+   "main_body": "rock",
+   "boss_body": "rock",
+   "rank": 4,
+   "weights": {
+    "aqua": 0.06,
+    "flame": 0.07,
+    "wood": 0.05,
+    "rock": 0.78,
+    "frost": 0.04
+   },
+   "bg": "#2C2318",
+   "floor": "#382C1E",
+   "prompt": "A desert of wind carved rock pillars and flat mesas, banded stone, blown sand at the bases, cracked hardpan, glaring sky",
+   "floor_prompt": "Cracked desert hardpan with sand drifts and flat stone slabs"
+  },
+  {
+   "id": "iron_mine",
+   "ko": "철광 갱도",
+   "main_body": "rock",
+   "boss_body": "rock",
+   "rank": 4,
+   "weights": {
+    "aqua": 0.06,
+    "flame": 0.08,
+    "wood": 0.04,
+    "rock": 0.78,
+    "frost": 0.04
+   },
+   "bg": "#1C1A18",
+   "floor": "#282422",
+   "prompt": "An iron mine gallery, timber propped tunnels, rusty ore heaps, ore cart rails, dripping seep water, lantern lit dark",
+   "floor_prompt": "Iron mine floor of dark ore rubble, rusted rails and coal dust"
+  },
+  {
+   "id": "peak_cliffs",
+   "ko": "산정 절벽",
+   "main_body": "rock",
+   "boss_body": "rock",
+   "rank": 5,
+   "weights": {
+    "aqua": 0.06,
+    "flame": 0.03,
+    "wood": 0.04,
+    "rock": 0.8,
+    "frost": 0.07
+   },
+   "bg": "#1B222C",
+   "floor": "#272E38",
+   "prompt": "High mountain cliffs above the clouds, sheer grey faces, narrow ledges, loose rockfall chutes, thin snow in the cracks, hard wind",
+   "floor_prompt": "Bare wind-scoured summit rock with thin snow packed into the cracks"
+  },
+  {
+   "id": "rift_chasm",
+   "ko": "지진 균열",
+   "main_body": "rock",
+   "boss_body": "rock",
+   "rank": 5,
+   "weights": {
+    "aqua": 0.06,
+    "flame": 0.06,
+    "wood": 0.04,
+    "rock": 0.8,
+    "frost": 0.04
+   },
+   "bg": "#1A1512",
+   "floor": "#26201C",
+   "prompt": "A land torn by an earthquake, a huge chasm splitting the plain, tilted slabs, dust pouring off the edges, faint glow far below",
+   "floor_prompt": "Fractured earth split by deep dark cracks and tilted slabs"
+  },
+  {
+   "id": "first_snow_hills",
+   "ko": "첫눈 언덕",
+   "main_body": "frost",
+   "boss_body": "frost",
+   "rank": 1,
+   "weights": {
+    "aqua": 0.06,
+    "flame": 0.06,
+    "wood": 0.12,
+    "rock": 0.06,
+    "frost": 0.7
+   },
+   "bg": "#1E2A38",
+   "floor": "#2C3A46",
+   "prompt": "Rolling hills under a first thin snowfall, brown grass showing through, bare shrubs, a snow dusted track, pale overcast",
+   "floor_prompt": "Thin fresh snow over brown grass with patches of bare ground showing through"
+  },
+  {
+   "id": "frozen_pond",
+   "ko": "얼어붙은 연못",
+   "main_body": "frost",
+   "boss_body": "frost",
+   "rank": 1,
+   "weights": {
+    "aqua": 0.16,
+    "flame": 0.06,
+    "wood": 0.06,
+    "rock": 0.02,
+    "frost": 0.7
+   },
+   "bg": "#182838",
+   "floor": "#263846",
+   "prompt": "A frozen pond, grey ice with cracks and trapped bubbles, frost stiffened reeds at the edge, snow banks, a bare willow",
+   "floor_prompt": "Cracked pond ice with trapped bubbles and a dusting of snow"
+  },
+  {
+   "id": "snowed_village",
+   "ko": "눈 덮인 마을터",
+   "main_body": "frost",
+   "boss_body": "frost",
+   "rank": 2,
+   "weights": {
+    "aqua": 0.05,
+    "flame": 0.05,
+    "wood": 0.12,
+    "rock": 0.06,
+    "frost": 0.72
+   },
+   "bg": "#1E2634",
+   "floor": "#2C3440",
+   "prompt": "An abandoned village buried in snow, sagging roofs, drifts against doorways, a broken well, frozen ruts in the lane",
+   "floor_prompt": "Snow-covered village ground with buried thatch and old stone paving"
+  },
+  {
+   "id": "frost_gorge",
+   "ko": "서리 협곡",
+   "main_body": "frost",
+   "boss_body": "frost",
+   "rank": 2,
+   "weights": {
+    "aqua": 0.05,
+    "flame": 0.06,
+    "wood": 0.05,
+    "rock": 0.12,
+    "frost": 0.72
+   },
+   "bg": "#182430",
+   "floor": "#26323C",
+   "prompt": "A narrow gorge glazed in frost, frozen seeps down the rock walls, an ice locked stream, hoarfrost on every ledge",
+   "floor_prompt": "Frost-rimed grey rock floor with packed snow between the stones"
+  },
+  {
+   "id": "drift_ice_sea",
+   "ko": "유빙 바다",
+   "main_body": "frost",
+   "boss_body": "frost",
+   "rank": 3,
+   "weights": {
+    "aqua": 0.04,
+    "flame": 0.1,
+    "wood": 0.05,
+    "rock": 0.06,
+    "frost": 0.75
+   },
+   "bg": "#12283A",
+   "floor": "#203846",
+   "prompt": "A cold sea packed with drifting ice floes, black water leads between them, ridged pressure ice, spray freezing on the edges",
+   "floor_prompt": "Broken sea ice floes with dark water showing between them"
+  },
+  {
+   "id": "icicle_cave",
+   "ko": "고드름 동굴",
+   "main_body": "frost",
+   "boss_body": "frost",
+   "rank": 3,
+   "weights": {
+    "aqua": 0.04,
+    "flame": 0.04,
+    "wood": 0.07,
+    "rock": 0.1,
+    "frost": 0.75
+   },
+   "bg": "#141E2C",
+   "floor": "#202C3A",
+   "prompt": "An ice cave, the ceiling dense with long icicles, frozen floor, blue ice walls, a frozen waterfall at the back, cold vapor",
+   "floor_prompt": "Blue cave ice floor with frozen ripples and scattered icicle shards"
+  },
+  {
+   "id": "blizzard_plateau",
+   "ko": "눈보라 고원",
+   "main_body": "frost",
+   "boss_body": "frost",
+   "rank": 4,
+   "weights": {
+    "aqua": 0.02,
+    "flame": 0.07,
+    "wood": 0.05,
+    "rock": 0.08,
+    "frost": 0.78
+   },
+   "bg": "#1A222E",
+   "floor": "#28303A",
+   "prompt": "A high plateau in a blizzard, driving snow, wind carved sastrugi ridges, half buried cairns, whiteout a few paces out",
+   "floor_prompt": "Wind-carved snow plateau with hard sastrugi ridges"
+  },
+  {
+   "id": "glacier_crevasse",
+   "ko": "빙하 균열",
+   "main_body": "frost",
+   "boss_body": "frost",
+   "rank": 4,
+   "weights": {
+    "aqua": 0.02,
+    "flame": 0.11,
+    "wood": 0.04,
+    "rock": 0.05,
+    "frost": 0.78
+   },
+   "bg": "#0E2436",
+   "floor": "#1A3244",
+   "prompt": "A glacier surface split by deep crevasses, blue ice walls dropping away, leaning seracs, meltwater channels, bands of grit",
+   "floor_prompt": "Deep blue glacier ice split by narrow crevasses"
+  },
+  {
+   "id": "ice_spire_field",
+   "ko": "얼음 첨탑 벌",
+   "main_body": "frost",
+   "boss_body": "frost",
+   "rank": 5,
+   "weights": {
+    "aqua": 0.02,
+    "flame": 0.08,
+    "wood": 0.03,
+    "rock": 0.07,
+    "frost": 0.8
+   },
+   "bg": "#101C2E",
+   "floor": "#1C2A3C",
+   "prompt": "A field of towering ice spires and pinnacles, wind sculpted blades, frozen ground between, blowing snow, a low sun",
+   "floor_prompt": "Pale ice field with broken spire stumps and frost cracks"
+  },
+  {
+   "id": "polar_night",
+   "ko": "극야 빙원",
+   "main_body": "frost",
+   "boss_body": "frost",
+   "rank": 5,
+   "weights": {
+    "aqua": 0.02,
+    "flame": 0.12,
+    "wood": 0.02,
+    "rock": 0.04,
+    "frost": 0.8
+   },
+   "bg": "#0A1220",
+   "floor": "#14202E",
+   "prompt": "A polar ice sheet in the long night, a flat frozen waste, pressure ridges, faint aurora on the horizon, deep cold dark",
+   "floor_prompt": "Dark polar ice sheet under starlight with faint blue snow drifts"
   }
  ],
  "arts": [
@@ -578,6 +2099,7 @@
   },
   {
    "id": "title_art",
+   "art": "res://art/ui/title_allin_courtyard.png",
    "ko": "타이틀 그림",
    "cut": false,
    "prompt": "five playing cards fanned wide across the foreground, a lone armored hero silhouetted above them raising a glowing sword, a swarm of small monster shapes swirling behind, dramatic backlight, filling the whole frame",
@@ -610,6 +2132,550 @@
    "cut": true,
    "prompt": "a single starburst explosion, blazing white hot core ringed by thick jagged yellow and orange spikes shooting outward in all directions, bold chunky shape, nothing else around it",
    "color": "#FFE14D"
+  },
+  {
+   "id": "crystal",
+   "ko": "크리스탈",
+   "cut": true,
+   "fx": true,
+   "prompt": "a single upright faceted crystal shard, glowing cyan blue glass with sharp flat facets, a bright pale core and a darker teal base, one hard white shine streak down the left face, pointed at the top",
+   "color": "#5FE0FF"
+  },
+  {
+   "id": "fx_fire",
+   "cut": true,
+   "fx": true,
+   "ko": "불 효과",
+   "prompt": "a single upright tongue of flame, a white hot base rising into thick yellow then orange then deep red licks with sharp chunky tips, a few round embers breaking off the top",
+   "color": "#FF7A1E"
+  },
+  {
+   "id": "fx_ice_bg",
+   "ko": "얼음 바닥",
+   "cut": true,
+   "fx": true,
+   "prompt": "a flat patch of ice frozen onto the ground, a shallow squashed ellipse seen from a low angle, deep saturated cyan blue in the middle with cracked ice facets, a jagged spiky rim of bright teal rime around the edge, strongly colored, no white, nothing standing up",
+   "color": "#9FE8FF"
+  },
+  {
+   "id": "fx_ice_fg",
+   "ko": "얼음 파편",
+   "cut": true,
+   "fx": true,
+   "prompt": "a low row of jagged pale blue ice shards jutting upward from nothing, tallest in the middle and shorter toward both ends, translucent glassy blue with white edges, the bottom of the row flat and empty",
+   "color": "#9FE8FF"
+  },
+  {
+   "id": "fx_stun_bg",
+   "ko": "마비 바닥",
+   "cut": true,
+   "fx": true,
+   "prompt": "a flat oval ring of crackling yellow electricity on the ground, seen from a low angle so it reads as a shallow ellipse, sharp sawtooth spikes around the rim and a completely empty hollow middle, nothing standing up",
+   "color": "#FFD84D",
+   "holes": true
+  },
+  {
+   "id": "fx_stun_fg",
+   "ko": "마비 번개",
+   "cut": true,
+   "fx": true,
+   "prompt": "a short burst of jagged yellow white lightning bolts snapping upward from nothing, three thin angular zigzag arcs of different heights with hard corners, a few tiny bright sparks around the tips",
+   "color": "#FFD84D"
+  },
+  {
+   "id": "el_none",
+   "ko": "무상성 아이콘",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    32,
+    32,
+    768,
+    768
+   ],
+   "prompt": "a single four pointed steel throwing star, four fat blunt spikes meeting at one thick round hub, polished pale silver grey metal with a dark slate rim, and one hard white shine on the upper left spike",
+   "color": "#D8DEE6"
+  },
+  {
+   "id": "el_fire",
+   "ko": "불 아이콘",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    32,
+    32,
+    768,
+    768
+   ],
+   "prompt": "a single fat teardrop flame, one bold rounded orange body tapering to a thick curled tip at the top, a glowing yellow core low in the middle, a deep red base and one hard white shine on the left curve",
+   "color": "#FF6A2A"
+  },
+  {
+   "id": "el_ice",
+   "ko": "얼음 아이콘",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    32,
+    32,
+    768,
+    768
+   ],
+   "prompt": "a single bold snowflake symbol, one solid six armed star of fat wedge shaped arms radiating from a thick round hub, completely filled in with strong sky blue and deep teal edges, chunky and heavy, one shape only, not falling snow, no scattered dots, no speckles, no tiny crystals, no thin branches, not white",
+   "color": "#7BDCFF"
+  },
+  {
+   "id": "el_elec",
+   "ko": "전기 아이콘",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    32,
+    32,
+    768,
+    768
+   ],
+   "prompt": "a single fat lightning bolt, one thick angular zigzag stabbing diagonally down to the right, three wide straight segments with sharp square cut ends and one pointed tip, glowing golden yellow with a white hot streak down the middle and deep amber edges, no letters, no text, no alphabet",
+   "color": "#FFD84D"
+  },
+  {
+   "id": "el_water",
+   "ko": "물 아이콘",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    32,
+    32,
+    768,
+    768
+   ],
+   "prompt": "a single fat water droplet, a round heavy bottom rising to one blunt pointed tip, deep blue glass with a pale cyan band across the lower curve, a dark navy rim and one hard white shine spot on the upper left",
+   "color": "#3B8CFF"
+  },
+  {
+   "id": "el_wood",
+   "ko": "나무 아이콘",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    32,
+    32,
+    768,
+    768
+   ],
+   "prompt": "a single broad leaf tilted to the right, one solid rounded jade green blade with a fat dark green midrib bar down its middle, a short thick stem at the base and one white shine on the upper left edge",
+   "color": "#5AD07A"
+  },
+  {
+   "id": "el_rock",
+   "ko": "바위 아이콘",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    32,
+    32,
+    768,
+    768
+   ],
+   "prompt": "a single chunky boulder, one blunt lump of tan brown stone with three big flat facets, a lighter sandy top face, a deep umber base shadow and one hard white glint on the upper left facet",
+   "color": "#C89B5A"
+  },
+  {
+   "id": "pi_repeater",
+   "ko": "연발 장치 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single fat cog wheel facing the viewer, five deep chunky teeth with wide gaps on a thick brass gold rim, one square hole punched through the middle and one white glint on the upper left tooth",
+   "color": "#F6C445"
+  },
+  {
+   "id": "pi_keenedge",
+   "ko": "예리한 촉 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single fat arrow head pointing straight up, one wide solid triangle of bright jade green with a deep notch cut into its flat bottom edge, a dark forest green rim and one white shine on the left face",
+   "color": "#5AD07A"
+  },
+  {
+   "id": "pi_heavytip",
+   "ko": "무거운 촉 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single squat iron anvil, a heavy bright crimson block with a blunt horn jutting left, a pinched waist over a wide flat foot, a dull grey steel top face and one hard white glint on the upper left corner",
+   "color": "#E2415A"
+  },
+  {
+   "id": "pi_scope",
+   "ko": "조준경 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single short fat spyglass tube tilted diagonally, smooth steel blue metal flaring wide at the front with one thick raised ring around the middle, a glowing pale cyan lens sunk in the mouth and one white shine along the top",
+   "color": "#4AA3FF"
+  },
+  {
+   "id": "pi_midas",
+   "ko": "황금손 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single fat gold bar, a squat trapezoid ingot of polished warm yellow metal with a wide flat top, chunky bevelled sides, a deep amber underside and one sharp white shine streak across the top face",
+   "color": "#F6C445"
+  },
+  {
+   "id": "pi_first",
+   "ko": "첫 격돌 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single squat hourglass pinched to a narrow waist, thick dark bronze caps at the top and bottom, bright orange sand heaped in the lower bulb and one hard white shine down the upper left glass",
+   "color": "#FF6A2A"
+  },
+  {
+   "id": "pi_deal",
+   "ko": "큰손 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single wide spread of three overlapping playing cards, thick rounded rectangles of deep violet with plain unpatterned backs, the middle card standing tallest, a bold pale lilac rim and one hard white shine across it",
+   "color": "#A56CF0"
+  },
+  {
+   "id": "pi_frost",
+   "ko": "서리 부적 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single bold six armed snowflake, six fat blunt bars radiating from one big round center with wide empty gaps between them, pale icy blue with deep teal tips, thick and chunky, no fine branches, no small crystals, no speckles",
+   "color": "#7BDCFF"
+  },
+  {
+   "id": "pi_flame",
+   "ko": "화염 부적 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single upright talisman tag, a thick slab of glowing molten orange with a deep red rim and a V notch cut into its bottom edge, a bold dark flame shape stamped in the middle and one white shine upper left",
+   "color": "#FF6A2A"
+  },
+  {
+   "id": "pi_pierce",
+   "ko": "관통 촉 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single fat dart flying to the right, a blunt jade green head on a thick short body with two swept back barbs and a chunky wedge tail fin, one pale mint bevel down its side and a white glint on the tip",
+   "color": "#5AD07A"
+  },
+  {
+   "id": "pi_split",
+   "ko": "분열 탄두 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single fat blunt nosed shell casing broken clean in two, the front half tilted up away from the back half with a wide jagged gap between, hot orange metal with a deep rust red underside and one hard white shine on top",
+   "color": "#FF9A3C"
+  },
+  {
+   "id": "pi_mortar",
+   "ko": "공성 조준 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single bold bullseye target, three thick concentric rings of burnt orange and pale cream around one solid dark brown center dot, heavy blunt rings with wide gaps and one white shine on the upper left ring",
+   "color": "#FF9A3C"
+  },
+  {
+   "id": "pi_rage",
+   "ko": "광폭화 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single bold X mark of two thick crossed gashes, deep crimson red with blunt squared ends and a glowing hot orange inner edge along each stroke, heaviest where the two cross, one white shine on the upper left stroke",
+   "color": "#E2415A"
+  },
+  {
+   "id": "pi_headsman",
+   "ko": "처형인의 눈 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single broad axe head with no shaft, a deeply hollowed brass gold crescent bit drawn out to sharp horns at the top and bottom, a squared blunt butt behind it and one hard white shine along the curved cutting edge",
+   "color": "#F6C445"
+  },
+  {
+   "id": "pi_overkill",
+   "ko": "마무리 일격 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single blunt skull facing the viewer, a smooth pale lilac dome over a short squared violet jaw block, two big deep black eye sockets and one white shine on the left brow, nothing at all below the jaw",
+   "color": "#A56CF0"
+  },
+  {
+   "id": "pi_giantslay",
+   "ko": "거인 사냥 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single heavy crown with three blunt points, bright magenta pink metal with a thick dark rim, split clean down the middle by one wide jagged crack, and one white shine on the left point",
+   "color": "#FF7AC0"
+  },
+  {
+   "id": "pi_surge",
+   "ko": "과열 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single boost mark of three fat chevrons pointing up, three thick blunt V shaped bars stacked tight one above another and almost touching, glowing amber yellow with the top chevron brightest, square cut ends, nothing else",
+   "color": "#FFD84D"
+  },
+  {
+   "id": "pi_bulwark",
+   "ko": "수정 방벽 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single broad domed barrier of crystal, a thick half round wall of glassy cyan blue with a flat straight bottom edge, a pale glowing core band, a deep teal underside and one hard white shine on the upper left curve",
+   "color": "#5FE6FF"
+  },
+  {
+   "id": "pi_bolt",
+   "ko": "연쇄 낙뢰 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single fat jagged lightning bolt stabbing straight downward, one bold angular zigzag with a white hot inner core, thick bright yellow body and deep amber edges, and a small sharp flash bursting at the pointed tip",
+   "color": "#FFD84D"
+  },
+  {
+   "id": "pi_chainmaster",
+   "ko": "뇌격 증폭 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "two thick square chain links hooked through each other, one stacked above the other, heavy bright yellow metal with big square holes punched through, a pale gold spark flaring where they meet, only two links and nothing else",
+   "color": "#FFD84D"
+  },
+  {
+   "id": "pi_wildfire",
+   "ko": "들불 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single low wave of fire sweeping to the right, one thick unbroken orange crest rising high at the leading edge and tapering flat along the tail, a deep red root, a bright yellow rim and one round ember off the tip",
+   "color": "#FF6A2A"
+  },
+  {
+   "id": "pi_resonance",
+   "ko": "속성 공명 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single stout two pronged tuning fork standing upright, thick violet metal with fat blunt prongs, a wide open gap between them over a heavy squared stem, two chunky lilac sparks on the prong tips and one white shine on the left prong",
+   "color": "#A56CF0"
+  },
+  {
+   "id": "pi_antibody",
+   "ko": "상극 파훼 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single squat round bottomed flask, thick glass filled with solid bright green liquid, a narrow straight neck capped by one fat dark cork, a deeper green band across the bottom curve and one hard white shine on the left",
+   "color": "#5AD07A"
+  },
+  {
+   "id": "pi_echo",
+   "ko": "잔향 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single stepped stack of three fat cyan slabs rising to the right, each slab taller than the one before it, glassy pale cyan with deep teal front edges and one hard white shine across the tallest slab",
+   "color": "#5FE6FF"
+  },
+  {
+   "id": "pi_eye",
+   "ko": "도박꾼의 눈 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single chunky six sided die tilted so its top and front faces both show, hot pink resin with sharp square corners and a hard edge splitting the two faces, three big dark pips on the front and one white shine on top",
+   "color": "#FF7AC0"
+  },
+  {
+   "id": "pi_joker",
+   "ko": "조커 문양",
+   "cut": true,
+   "fx": true,
+   "square": true,
+   "size": [
+    96,
+    96,
+    768,
+    768
+   ],
+   "prompt": "a single upright playing card seen face on, a warm cream yellow face inside a heavy gold border, a bold black five pointed star stamped dead center and one white shine spot on the upper left of the face",
+   "color": "#FFF0B8"
   }
  ]
 }

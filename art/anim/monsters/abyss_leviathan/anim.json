@@ -1,0 +1,47 @@
+{
+  "name": "abyss_leviathan",
+  "cell": {
+    "w": 192,
+    "h": 192
+  },
+  "anchor": {
+    "x": 96,
+    "y": 182
+  },
+  "scale": 1.0476190476190477,
+  "movement": "fly",
+  "source": "Krea 2 Turbo + MiniMax H3",
+  "clips": {
+    "move": {
+      "frames": 13,
+      "ms": [
+        83.33333333333333,
+        83.33333333333333,
+        83.33333333333333,
+        83.33333333333333,
+        83.33333333333333,
+        83.33333333333333,
+        83.33333333333333,
+        83.33333333333333,
+        83.33333333333333,
+        83.33333333333333,
+        83.33333333333333,
+        83.33333333333333,
+        83.33333333333333
+      ],
+      "loop": true
+    }
+  },
+  "qc": {
+    "canvas_clipping": false,
+    "source_clipping": false,
+    "unique_poses": 13,
+    "forward_only": true,
+    "fixed_scale": true,
+    "foot_patches": false,
+    "translation_range": [
+      0,
+      4
+    ]
+  }
+}

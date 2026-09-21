@@ -1,0 +1,12 @@
+# 올인 디펜스 스프라이트 — Wan 2.2 가중치가 있는 자리.
+#
+# ★ pixelforge 의 extra_model_paths.yaml 을 **고치지 않는다.** 그것은 남의 프로젝트
+#   설정이고, 거기에 Wan 을 얹으면 pixelforge 의 `doctor` 가 모르는 가중치를 보고
+#   불평한다. ComfyUI 는 --extra-model-paths-config 를 **여러 번** 받으므로
+#   둘을 나란히 준다.
+pocker_sprite:
+    base_path: /home/dgxmaruta/pjt/wan22/models/comfy
+    diffusion_models: diffusion_models/
+    text_encoders: text_encoders/
+    vae: vae/
+    loras: loras/

@@ -1,0 +1,182 @@
+{
+  "limne": [
+    "navy short-haired female water carrier in blue clothes, teal apron, blue boots, round glass water tank backpack and brass hose",
+    "raise water-hose nozzle, compress water pressure, release water with both forearms lifted, recover"
+  ],
+  "mimic": [
+    "cream white stocky service robot with simple black dot eyes, rounded skull, black joints, square chest plate, clamp-like gauntlets and cream feet",
+    "lift both mechanical palms to chest, compress an ivory glyph, spread palms to emit a neutral pressure burst, recover"
+  ],
+  "vidarr": [
+    "brown-haired male cold engineer in pale-blue work suit, heavy white cyan boots, white shoulder armor, turquoise hoses and white tank backpack",
+    "lift heavy forearms, charge the frost apparatus, extend forearms releasing a short ice pressure blast, recover"
+  ],
+  "donn": [
+    "elderly bald-crowned man with long white hair and beard, lime coat, purple sleeves and boots, copper cable coils at hips, tall copper antenna backpack",
+    "raise copper cable terminals, gather a lightning knot, spread terminals outward releasing electricity, recover"
+  ],
+  "volcan": [
+    "black-haired bearded muscular male furnace worker, heavy orange segmented industrial armor, dark boots, boiler exhaust backpack and heavy brass gauntlets",
+    "raise both brass gauntlets, charge orange heat, extend heavy forearms releasing a short heat blast, recover"
+  ],
+  "chispa": [
+    "young red curly ponytail-haired female mechanic, forehead goggles, orange overalls, red undershirt, brown boots, small steel hand cannon",
+    "lift the SAME compact pistol in her right hand to chest height, aim right, fire with small recoil and a tiny muzzle flash, lower to rest"
+  ],
+  "phorkys": [
+    "stocky older silver-haired male water constable, navy cap, cobalt duffle coat, navy boots, steel and brass water gun",
+    "lift the SAME water pistol, aim horizontally right from chest height, fire a tiny water muzzle puff and recoil, return"
+  ],
+  "dummy": [
+    "slim ivory humanoid automaton with simple face mask, gray vest over white shirt, charcoal trousers, dark boots, wood-stock long rifle",
+    "shoulder the SAME wood-stock rifle horizontally right, steady aim, fire with slight recoil and tiny muzzle flash, lower"
+  ],
+  "kari": [
+    "short tousled white-haired female ice gunner, forehead blue goggles, cobalt parka and trousers, fur-trim blue boots, short double-barreled shotgun",
+    "shoulder the SAME short shotgun rightward, steady aim, fire with clear shoulder recoil and tiny frost muzzle puff, lower"
+  ],
+  "conor": [
+    "dark-skinned male with short flat purple hair, lime-green electrician uniform, round chest gauge, dark boots, compact orange electric pistol",
+    "lift the SAME orange electric pistol rightward, steady aim, fire a tiny electric muzzle spark and recoil, lower"
+  ],
+  "carmen": [
+    "black shoulder-length wavy-haired adult woman, fitted orange armored uniform, orange boots, two red-and-silver handguns",
+    "raise the SAME two compact handguns toward the right, aim, fire tiny staggered orange muzzle flashes with recoil, lower both"
+  ],
+  "triton": [
+    "older white-bearded male marine engineer, navy peaked cap, cobalt military coat, dark brown boots, enormous silver water-pressure cannon and gauge backpack",
+    "bring the attached long water cannon nozzle forward and aim right, pressurize, fire a tiny cyan muzzle flash with controlled recoil, return"
+  ],
+  "grey": [
+    "older gray-haired man with mustache, gray fedora and round goggles, long charcoal detective coat, gray boots, black scoped wood-stock rifle",
+    "shoulder the SAME long scoped rifle horizontally right, steady aim, fire a tiny ivory muzzle flash with subtle recoil, lower"
+  ],
+  "frosti": [
+    "white spiky-haired male ice scientist, long white-and-cyan coat, white boots, long cyan glowing laboratory rifle",
+    "shoulder the SAME cyan laboratory rifle rightward, charge its blue tube, fire a short thin cyan beam pulse from the barrel, lower"
+  ],
+  "brian": [
+    "silver short-haired muscular male electric engineer, bulky purple powered armor, lime shoulder plates, purple heavy boots, green and black large railgun",
+    "raise the SAME green railgun toward the right, charge coils, fire a short thin electric beam pulse with controlled recoil, lower"
+  ],
+  "brigid": [
+    "purple short-bob-haired young female archer, lime vest over ivory shirt, purple trousers, white gaiters, brown simple bow with metal spherical tips",
+    "lift the SAME bow vertically in front of body, draw string to cheek with arrow pointing right, release string with bow hand fixed, recover"
+  ],
+  "solana": [
+    "red-haired female archer with high tied bun, red and orange ranger clothes, orange scarf, brown boots, quiver and curved gold-brown bow",
+    "lift the SAME bow vertically in front of body, draw fire-tipped arrow to cheek pointing right, release the taut string with bow hand fixed, recover"
+  ],
+  "protea": [
+    "short brown-haired young female ranger with goggles above hair, blue coat and brown boots, teal hoses and gold ornamental bow",
+    "lift the SAME teal gold bow upright, draw a water-tipped arrow to cheek pointing right, release taut string with bow hand fixed, recover"
+  ],
+  "echo": [
+    "short gray-haired female archer with round goggles, ivory shirt and black vest, dark trousers and boots, simple white curved bow",
+    "lift the SAME white bow upright, draw a slim ivory arrow to cheek pointing right, release taut string with bow hand fixed, recover"
+  ],
+  "eira": [
+    "long white braided-haired female frost ranger, blue pointed knit cap with tiny ear-like points, white fur-trim blue cloak, blue boots, branching ice bow",
+    "lift the SAME ice bow upright, draw a frost arrow to cheek pointing right, release taut string with bow hand fixed, recover"
+  ],
+  "niamh": [
+    "short spiky white-haired young male electric ranger, lime coat with purple sleeves and collar, brown shorts and white gaiters, brown boots, copper ball-antenna backpack and dark bow",
+    "lift the SAME bow upright, pull an electric arrow to cheek pointing right, release taut string with an electric spark, recover"
+  ],
+  "saeta": [
+    "orange hooded female fire ranger, long red coat with brown leather shoulder armor, dark boots, quiver and gold curved bow",
+    "lift the SAME golden bow upright, draw a broad fire-tipped arrow to cheek pointing right, release taut string with bow hand fixed, recover"
+  ],
+  "keto": [
+    "short spiky navy-haired young male water ranger, dark blue fitted armor, brown boots, cyan arrows and a dark curved cyan-edged bow",
+    "lift the SAME cyan bow upright, draw a long narrow water arrow pointing right, release taut string with bow hand fixed, recover"
+  ],
+  "null": [
+    "long black-haired female neutral ranger with high ponytail, ivory armored chest and coat panels, dark leggings, brown boots, slender gold bow",
+    "lift the SAME slender golden bow upright, draw a narrow ivory arrow pointing right, release taut string with bow hand fixed, recover"
+  ],
+  "isa": [
+    "very long silver-haired female ice guardian, gleaming blue white and gold armor, tall blue boots, crystalline ice backpack and large gold cyan bow",
+    "lift the SAME crystalline bow upright, draw a long blue-white ice arrow pointing right, release taut string with bow hand fixed, recover"
+  ],
+  "pip": [
+    "small cream-and-charcoal humanoid maintenance robot with simple dot face, brass exposed chest gear, rounded dark hood and small steel sword",
+    "raise the SAME short steel sword in a compact ready guard, draw blade back, make one short rightward slash releasing a compact ivory blade spark, recover"
+  ],
+  "jokull": [
+    "elderly white-bearded male ice knight, pale-blue hood, icy blue padded armor with silver shoulder plates, sturdy pale-blue boots, broad glowing cyan crystal sword",
+    "raise the SAME broad crystal sword to a compact ready guard, draw blade back with the tip high, slash toward the right releasing a thin ice crescent, recover"
+  ],
+  "finn": [
+    "lime-green spiky-haired young male swordsman, purple shirt, charcoal trousers, purple boots, green electrical forearm bracer and short silver sword",
+    "raise the SAME short silver sword, gather a tiny electric charge, slash toward the right releasing a compact electric blade spark, recover"
+  ],
+  "igni": [
+    "red spiky-haired adult male swordsman, red long-sleeved work jacket, charcoal pants, brown boots, red-edged single blade",
+    "raise the SAME red-edged sword to ready guard, draw blade back, slash toward the right releasing a thin flame crescent, recover"
+  ],
+  "glaukos": [
+    "stocky green-haired bearded male water engineer, teal diving suit, gold brass collar, blue knee plates and boots, broad navy cyan-edged utility blade and tank backpack",
+    "raise the SAME broad utility blade to ready guard, coil torso slightly without stepping, slash toward the right releasing a narrow water blade crescent, recover"
+  ],
+  "phantom": [
+    "silver high-ponytail-haired female swordswoman, ivory long coat panels with silver armor and charcoal joints, black boots, slim curved steel saber",
+    "raise the SAME slim saber to ready guard, draw it back, slash toward the right releasing a thin ivory cutting crescent, recover"
+  ],
+  "helga": [
+    "silver braided-haired female frost knight, blue and silver plate armor with crystal shoulders, gray heavy boots, broad cyan greatsword",
+    "raise the SAME broad cyan greatsword, gather frost along its edge, slash toward the right releasing a thick ice blade crescent, recover"
+  ],
+  "caden": [
+    "silver spiky-haired young male knight, lime green armor over purple suit, lime boots, green-edged steel sword",
+    "raise the SAME green-edged sword, gather electricity along edge, slash toward the right releasing a narrow zigzag electrical blade wave, recover"
+  ],
+  "estoque": [
+    "dark curly-haired mustached adult male duelist, red long coat and gold shoulder plates, brown boots, long slender silver rapier",
+    "raise the SAME silver rapier into a compact guard, draw the elbow back, thrust the rapier horizontally right releasing a thin fire-edged lance, recover"
+  ],
+  "nerea": [
+    "silver white-haired female water guardian, elaborate navy blue and gold armor, navy boots, large rectangular floodgate backpack, broad blue and white sword",
+    "raise the SAME blue-white sword high beside the body, brace for a heavy slash without stepping, slash rightward releasing a long narrow water blade wave, recover"
+  ],
+  "lind": [
+    "short icy teal spiky-haired male cable technician, light blue padded vest and trousers, dark boots, white scarf, articulated cyan segmented cable weapon",
+    "lift the SAME compact segmented frost cable, pull the wrist back, flick the cable tip toward the right in a short controlled arc, recover"
+  ],
+  "rhiannon": [
+    "dark purple-haired female electrician with ponytail, lime jacket, black shorts, white leg wraps, purple boots, copper belt cable reels and purple power cable",
+    "lift the SAME purple power-cable terminal, pull the wrist back, flick the cable tip rightward with a short electrical arc, recover"
+  ],
+  "ceniza": [
+    "short gray-haired bearded male firefighter wearing a dark respirator, orange coat and apron, brown boots, heavy metal ash blower on forearm and belt chain",
+    "lift the SAME heavy ash blower nozzle, charge a tiny ember, sweep the forearm rightward emitting a short dense ember puff, recover"
+  ],
+  "marea": [
+    "short orange-haired muscular male water rescuer, blue sleeveless overalls, navy boots, orange rescue ring backpack and thick brass-ended water hose",
+    "lift the SAME brass hose nozzle, pull forearm back, sweep the nozzle toward the right with a short water jet, recover"
+  ],
+  "shift": [
+    "short dark navy-haired female cable defender, ivory chest shoulder and knee armor over charcoal suit, brown boots, small mechanical hook cable with yellow warning markings",
+    "lift the SAME short hook cable, pull wrist back, flick the hook toward the right in a compact controlled arc, recover"
+  ],
+  "snorri": [
+    "stocky blond mustached male ice salvage engineer, blue fur-trim suit, brown belt, blue boots, enormous steel winch backpack and hooked anchor cable",
+    "lift the SAME anchor cable in a compact ready pose, brace forearm without stepping, fling a short anchor-led icy cable wave to the right, recover"
+  ],
+  "morrigan": [
+    "dark brown-haired female electric defender, purple plate armor, lime fabric fringes, dark purple boots, heavy steel chain on gauntlet",
+    "lift the SAME steel chain, pull wrist back, crack a short rightward electrical chain arc while keeping the chain close to body, recover"
+  ],
+  "candela": [
+    "red hooded adult female furnace monk, red and gold coat over orange robes, brown red boots, brass cable reels at belt and dark chain whip",
+    "lift the SAME chain whip, pull wrist back, sweep a compact flame-tipped chain arc toward the right, recover"
+  ],
+  "galene": [
+    "short curled blue-haired female water controller, long fitted cobalt coat and trousers, gold cuffs and buttons, navy boots, thin gold-capped flexible water hose",
+    "lift the SAME flexible brass-ended water hose, pull wrist back, sweep its nozzle rightward with a compact foamy water arc, recover"
+  ],
+  "zero": [
+    "white-haired slim young male neutral engineer, ivory suit with charcoal joints and brown harness, white boots, huge gray gold multi-tool backpack with a steel chain terminal",
+    "lift the SAME chain terminal, brace the forearm, flick a compact ivory mechanical shockwave from the terminal toward the right, recover"
+  ]
+}

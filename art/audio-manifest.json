@@ -1,0 +1,2025 @@
+{
+  "provider": "ElevenLabs",
+  "assets": [
+    {
+      "id": "camp",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Dark medieval fantasy blacksmith forge refuge, a solemn place to prepare weapons before battle. Intimate bowed chamber strings: an expressive acoustic solo cello in the foreground answers a restrained melancholic violin melody over rich low viola and double bass drones. D minor, 64 BPM, slow measured 4/4, grounded weight, patient craftsmanship, glowing embers and weathered iron. Occasional very soft low frame drum and sparse muted metallic pitched percussion suggest distant hammer strokes musically, never literal sound effects. Long legato bow strokes, warm woody resonance, serious minor harmony, quiet dignified resolve. No plucked strings, no pizzicato, no celesta, no jaunty woodwinds, no whimsical or cheerful tune, no waltz, no pop beat, no bright major cadence. Distinct memorable descending violin motif, spacious dynamics for a fantasy strategy lobby. Fully instrumental continuous even-volume gameplay loop, music begins immediately, no silent intro, no fade-out, no final cadence, no speech, no choir, no vocals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "N8tZTNX1XSITAoUvtsxA",
+      "source_sha256": "47ecf42ce2577f293c0ef06cfe7b8ee1fb2c8d9a389a14177579ffee12b6571a",
+      "path": "art/bgm/camp.ogg",
+      "sha256": "c6eee34ad505c291e414cb74d4bab43cf0a338e8c5d0d132f6d7f96d3d6172aa",
+      "seconds": 58.029,
+      "peak": 0.5075,
+      "rms": 0.08,
+      "loop_seam": 0.0010663012508302927
+    },
+    {
+      "id": "ritual",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original memorable instrumental theme for choosing poker cards in All-in Defense, a high-stakes dark fantasy strategy game. C minor with harmonic-minor tension, steady 96 BPM in 4/4. A clearly audible close-recorded acoustic piano leads a distinctive repeating four-note motif in the middle and upper-middle register, answered by expressive mid-register violins and a subtle hammered dulcimer doubling selected melody notes. Firm articulated viola ostinatos and light dry frame-drum taps keep a confident measured pulse. Warm restrained cello supports the harmony without dominating. Serious elegant suspense, focused anticipation and royal resolve, melodic and engaging without becoming cheerful. The melody is immediately present from the first beat, remains clearly in front throughout, and varies gently across four-bar phrases. Intimate dry production with short room ambience, clear attacks, strong centered midrange that carries on small mobile phone speakers, rounded highs, controlled bass and even musical density. Leave space for short card flick and button sounds. No bass-led melody, no sub-bass drone, no muffled pads, no distant reverb wash, no piercing bells, no harsh cymbals, no trailer impacts, no swing, no jazz lounge, no playful waltz, no triumphant major chorus. Continuous even-volume gameplay loop with no silent intro, no quiet breakdown, no fade-out, no final cadence, no speech, no vocals, no choir.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "nduS3xWVJag9IjvWtX66",
+      "source_sha256": "9dfa95e9b74f27c4db0548d74901e1ada0827b76d40a9a4d6d7957934fce945c",
+      "path": "art/bgm/ritual.ogg",
+      "sha256": "7c5f4b546b1c0e5af2836f93b1ac37c57a026eb5a8b233692315fc9df0634b73",
+      "seconds": 58.029,
+      "peak": 0.6568,
+      "rms": 0.103,
+      "loop_seam": 0.0020414036698639393
+    },
+    {
+      "id": "battle",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Fantasy tower defense tactical battle background. 116 BPM steady pulsing strings, low frame drums, warm French horn accents, delicate magical celesta motif. Determined and energetic yet sustainable for repeated gameplay, no harsh cymbals, clear midrange space for combat sound effects. Continuous even-volume instrumental loop with no silent intro, no ending fade, no big final cadence, no vocals, no sound effects.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v1"
+      },
+      "character_cost": null,
+      "song_id": "ikPNkHvhY67LitOaQfzs",
+      "source_sha256": "8e7ebdae83f759dc2f39233b4640447d763702bf5c56652742f1f309fb11a01c",
+      "path": "art/bgm/battle.ogg",
+      "sha256": "9e8eee1da7793ce9a637ceba496712360fbd316151355e13e0ac169743ff4fb7",
+      "seconds": 58.029,
+      "peak": 0.466,
+      "rms": 0.0793,
+      "loop_seam": 0.00920899212360382
+    },
+    {
+      "id": "boss",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Fantasy tower defense boss battle background, 128 BPM driving low strings, taiko-like restrained deep drums, dark chamber brass, magical celesta motif. Urgent and formidable, adventurous not horror, controlled dynamics for phone speakers and clear combat sound effects. Continuous even-volume instrumental gameplay loop, no silent intro, no ending fade or final cadence, no vocals, no sound effects.",
+        "music_length_ms": 48000,
+        "force_instrumental": true,
+        "model_id": "music_v1"
+      },
+      "character_cost": null,
+      "song_id": "jOU9pvseENnuvFfGua4m",
+      "source_sha256": "a2b88eb2cd9e126fd5fb0456f34e84e64b6bc5e8fbc6aa63baf0657cfb84d4eb",
+      "path": "art/bgm/boss.ogg",
+      "sha256": "fe7d20c2256bead0007f0d1126f7e1c17b5d5bc928a50b406af190971288de92",
+      "seconds": 45.961,
+      "peak": 0.436,
+      "rms": 0.0858,
+      "loop_seam": 0.03148852288722992
+    },
+    {
+      "id": "theme_calm_lake",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A calm moonlit lake defended by a small refuge. Gentle rippling harp leads a hopeful pentatonic flute melody; calm resolve with a steady tactical pulse. Flowing harp arpeggios, rounded marimba, lyrical flute, fluid string ostinatos and soft rolling frame drums. Around 104 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "69SxruzhZaOOczDdkV0x",
+      "source_sha256": "599e0d3ce9bf51e5884b8898977be96709985826d027ed3ab6f9e6174ea8962f",
+      "path": "art/bgm/theme_calm_lake.ogg",
+      "sha256": "d3deb7256a73bb9782e308a7f8bfbc35d3c4bf405270920859cfb9a8f55c4ab1",
+      "seconds": 58.029,
+      "peak": 0.4941,
+      "rms": 0.0801,
+      "loop_seam": 0.0014094131765887141
+    },
+    {
+      "id": "theme_reed_marsh",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. Reeds sway over a hidden marsh. A syncopated marimba figure and low bass flute answer each other over brushed hand drums, elusive and alert. Flowing harp arpeggios, rounded marimba, lyrical flute, fluid string ostinatos and soft rolling frame drums. Around 104 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "tDC0Yg4wOqXvp7L8ukaD",
+      "source_sha256": "ff6afdc6609e38f377ddab2fd6203d4d89ac1d6d6bc95b879e331ced3b8f9062",
+      "path": "art/bgm/theme_reed_marsh.ogg",
+      "sha256": "34fdedf21db0e5c94660585a4e22eb6c9dc8f85dec7282592fce698d023cf11c",
+      "seconds": 58.029,
+      "peak": 0.6599,
+      "rms": 0.0792,
+      "loop_seam": 0.0016186406137421727
+    },
+    {
+      "id": "theme_aqueduct_ruin",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. An ancient aqueduct above deep blue water. Spacious stone-like bell intervals and stately plucked strings suggest forgotten engineering and resilient defenders. Flowing harp arpeggios, rounded marimba, lyrical flute, fluid string ostinatos and soft rolling frame drums. Around 109 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "8CzQzr3NFO6ycUSA7Zga",
+      "source_sha256": "e614922e11012adefb99b95f3f35619fff07e6744f5c2814af8587d3e3b62ead",
+      "path": "art/bgm/theme_aqueduct_ruin.ogg",
+      "sha256": "f303fb282ae7f352b3bf5648eef27aa9f2157f0b458f81fcee653a8b0ce368d2",
+      "seconds": 58.029,
+      "peak": 0.6158,
+      "rms": 0.0801,
+      "loop_seam": 0.0007771525415591896
+    },
+    {
+      "id": "theme_falls_gorge",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A tall waterfall cuts through a narrow gorge. Descending harp cascades meet rising string figures and energetic rolling drums, adventurous vertical movement. Flowing harp arpeggios, rounded marimba, lyrical flute, fluid string ostinatos and soft rolling frame drums. Around 109 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "s6w9gp0C1Cl03x1Zc11U",
+      "source_sha256": "1392238882ff34336c48efcd9a409ce8f255f4ce95275878f29dffb4edb04889",
+      "path": "art/bgm/theme_falls_gorge.ogg",
+      "sha256": "b87fc25dbd7a0f8945074f1f6e6634bd2a3301a0fc74fbfa56fc419b8a237b96",
+      "seconds": 58.029,
+      "peak": 0.5542,
+      "rms": 0.0799,
+      "loop_seam": 0.0011710725957527757
+    },
+    {
+      "id": "theme_tidal_flats",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. Tidal flats beneath a broad silver horizon. A gently swaying compound-meter rhythm, rounded bass and bright interlocking marimba suggest advancing tides. Flowing harp arpeggios, rounded marimba, lyrical flute, fluid string ostinatos and soft rolling frame drums. Around 114 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "qHpHXjqyWabnGuwDclGa",
+      "source_sha256": "3a337e886eddf2bd74b2b548b3f8cd20263dff96ddda4c68acf2fa6ccb0c8326",
+      "path": "art/bgm/theme_tidal_flats.ogg",
+      "sha256": "995e0719494a1ca52ea0fd817318253696f7ab9c800c98afb691f7c0357009ba",
+      "seconds": 58.029,
+      "peak": 0.5421,
+      "rms": 0.0801,
+      "loop_seam": 0.0030838055536150932
+    },
+    {
+      "id": "theme_glacier_lake",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A clear glacial lake below white mountain peaks. Crystal celesta doubles a spacious harp theme, cool sustained strings and measured drums convey shining depth. Flowing harp arpeggios, rounded marimba, lyrical flute, fluid string ostinatos and soft rolling frame drums. Around 114 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "sPuphFCI17nynX2fELJs",
+      "source_sha256": "885395a1a15252828f240c3eb4d331f4b0013e3d5b5a936b020d3de90417d5e9",
+      "path": "art/bgm/theme_glacier_lake.ogg",
+      "sha256": "bea5616c01f466824f9f27b26b3b9d1aa2db947de5cd18bbe55be46191feb51c",
+      "seconds": 58.029,
+      "peak": 0.4167,
+      "rms": 0.08,
+      "loop_seam": 0.003119765082374215
+    },
+    {
+      "id": "theme_sunken_fleet",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A graveyard of sunken ships. Low cello and a distant solo bassoon carry a nautical minor-mode melody above muted rolling drums; solemn determination. Flowing harp arpeggios, rounded marimba, lyrical flute, fluid string ostinatos and soft rolling frame drums. Around 119 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "9Ycd4ifDY0YvkOJOMDR2",
+      "source_sha256": "d4ee4526d6f7b66d8d52846689d1a6a9bcab8ce9c80723ffba6f1c96b3844834",
+      "path": "art/bgm/theme_sunken_fleet.ogg",
+      "sha256": "7dfdffd15708737ea6b69e03fdbd18cf5fd9e8e4c8f509d7e121a42a5cc8e3ac",
+      "seconds": 58.029,
+      "peak": 0.5088,
+      "rms": 0.0799,
+      "loop_seam": 0.000620506179984659
+    },
+    {
+      "id": "theme_geyser_mud",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A steaming field of geysers and dark mud pools. Playful low marimba ostinatos, short bass clarinet accents and upward string bursts form a restless asymmetric groove. Flowing harp arpeggios, rounded marimba, lyrical flute, fluid string ostinatos and soft rolling frame drums. Around 119 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "s1iI2cL3dal2jX3dERgE",
+      "source_sha256": "a4de664814f2b5ec64d169cddc3289f7076dc4361d0be84fdcd99694f4cd6691",
+      "path": "art/bgm/theme_geyser_mud.ogg",
+      "sha256": "997a8b0ef8a01fbb4e3968df7a9aa7a1e518591d6b8abfc86f4e51c99215b6b5",
+      "seconds": 58.029,
+      "peak": 0.4541,
+      "rms": 0.0801,
+      "loop_seam": 0.0008683328633196652
+    },
+    {
+      "id": "theme_deep_trench",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. The immense pressure of an abyssal ocean trench. Slow-moving contrabass harmony under a steady urgent drum pulse, sparse low harp and isolated celesta lights. Flowing harp arpeggios, rounded marimba, lyrical flute, fluid string ostinatos and soft rolling frame drums. Around 124 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "L5pC51SmPQuUEE1Rb1iN",
+      "source_sha256": "de34a44e68c4acb6e3aa2c79b91ec8888b9f157d0033b6ad7140722eb03fa2ff",
+      "path": "art/bgm/theme_deep_trench.ogg",
+      "sha256": "540c6e1ed95ffe2f38f0ce5670ed9566aa61d373ffee89e9d2e2e3e437cf5ece",
+      "seconds": 58.029,
+      "peak": 0.5563,
+      "rms": 0.0799,
+      "loop_seam": 0.0023603197187185287
+    },
+    {
+      "id": "theme_maelstrom_sea",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A vast spiraling maelstrom. Circular interlocking harp and strings, sweeping low horn phrases and surging tom patterns sustain an intense nautical battle. Flowing harp arpeggios, rounded marimba, lyrical flute, fluid string ostinatos and soft rolling frame drums. Around 124 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "n4j9oPvBHVL0utLipnrG",
+      "source_sha256": "380b57c7b6f1378bdde5a7b5a9cb6b3644eb4467ee5ca7dc113ef6bfe2e2d6fd",
+      "path": "art/bgm/theme_maelstrom_sea.ogg",
+      "sha256": "49e726d401f405e9c575a36fd0405a1417458ac0c5d38ca33c124c36b6e4c576",
+      "seconds": 58.029,
+      "peak": 0.4639,
+      "rms": 0.0798,
+      "loop_seam": 0.001987662399187684
+    },
+    {
+      "id": "theme_kiln_yard",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. An old pottery kiln glowing in a village yard. Warm dulcimer and small ceramic-like marimba notes above a compact earthy drum groove; intimate and industrious. Rhythmic low strings, hammered dulcimer, warm assertive horns, dry hand drums and restrained metallic accents. Around 104 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "piWyr08179Y4KrSbb688",
+      "source_sha256": "bd621434a2538d0f53cfadaa2aa696135d6b537f68fc8cca088f17cad2393654",
+      "path": "art/bgm/theme_kiln_yard.ogg",
+      "sha256": "0e2e7cf6e83705d70bca5a114f46843070c75ba84180c78eb63c56fa7eb3d11f",
+      "seconds": 58.029,
+      "peak": 0.4201,
+      "rms": 0.0798,
+      "loop_seam": 0.0008282972848974168
+    },
+    {
+      "id": "theme_burn_field",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. Fields burning at sunset. Nimble plucked strings and a rustic solo fiddle theme, crisp hand percussion and warm bass create determined forward motion. Rhythmic low strings, hammered dulcimer, warm assertive horns, dry hand drums and restrained metallic accents. Around 104 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "JMuW4N6nff7VZvTh7jgw",
+      "source_sha256": "32a5e13dba13bd3f41d826b6379fe51c32781cecc8a1f0a08b8e401aedeccf1c",
+      "path": "art/bgm/theme_burn_field.ogg",
+      "sha256": "66649148cacad02f48d5a867b7b92be905518dbb08457392f8598e3a2d44c8f3",
+      "seconds": 58.029,
+      "peak": 0.6344,
+      "rms": 0.0798,
+      "loop_seam": 0.001370095182210207
+    },
+    {
+      "id": "theme_forge_canyon",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A canyon sheltering a great forge. Measured bronze percussion, angular cello ostinatos and short horn calls evoke craftsmanship and gathering heat. Rhythmic low strings, hammered dulcimer, warm assertive horns, dry hand drums and restrained metallic accents. Around 109 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "xCBXBeAJH9ErQGabNzKa",
+      "source_sha256": "9a42245b6825c2ae5be8c144a16326a8d6a3c4aa2fccfdf648e4e8bb2459ee4e",
+      "path": "art/bgm/theme_forge_canyon.ogg",
+      "sha256": "c20cb5c02ff2d4fdbd87f2cdd97f8cd44026732ac94efe464a978113ab90cffc",
+      "seconds": 58.029,
+      "peak": 0.5923,
+      "rms": 0.08,
+      "loop_seam": 0.00011997109686490148
+    },
+    {
+      "id": "theme_burnt_forest",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. Charred tree trunks beneath drifting embers. A haunting oboe melody over dry plucked strings, restrained deep drums and glowing sustained viola chords. Rhythmic low strings, hammered dulcimer, warm assertive horns, dry hand drums and restrained metallic accents. Around 109 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "Y8YWKHexNBNPXzzRVOAD",
+      "source_sha256": "09b95a2d663572c0c9c17850f5abe16e47362e8cc1d323196139827c600410a2",
+      "path": "art/bgm/theme_burnt_forest.ogg",
+      "sha256": "4ef77e223d36deda90f8377bb808c4d329707608b262753301c161912f576db8",
+      "seconds": 58.029,
+      "peak": 0.446,
+      "rms": 0.08,
+      "loop_seam": 0.006085589062422514
+    },
+    {
+      "id": "theme_sulfur_springs",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. Sulfur springs among volcanic rocks. Winding bass clarinet figures, tremolo dulcimer and bubbling rhythmic pizzicato over a low, restless drum pulse. Rhythmic low strings, hammered dulcimer, warm assertive horns, dry hand drums and restrained metallic accents. Around 114 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "ESjo1VhyjdW81ZScGdBp",
+      "source_sha256": "dba0b8bdf46c5112162ba9384b2e9c8ec3355c733f2115af96e52085261b6302",
+      "path": "art/bgm/theme_sulfur_springs.ogg",
+      "sha256": "862d376f86d610116aeb8bd2f6efe0f44152356af8e23d080bdbf763d778d10e",
+      "seconds": 58.029,
+      "peak": 0.4602,
+      "rms": 0.0797,
+      "loop_seam": 0.0013889928814023733
+    },
+    {
+      "id": "theme_ash_city",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. The ruins of a city buried in ash. A dignified minor-mode horn melody with low strings and hollow bell accents, steady marching rhythm and stubborn hope. Rhythmic low strings, hammered dulcimer, warm assertive horns, dry hand drums and restrained metallic accents. Around 114 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "EOq07V9PHUXixl9AuAAL",
+      "source_sha256": "30eaec3751cc6388704032a4881cf345f743e8c54700f7bd1b38112e5bf3d266",
+      "path": "art/bgm/theme_ash_city.ogg",
+      "sha256": "5805aac2055858384be79fb29c0ea52aeae6fef50275538e8b0a76a99b8cb836",
+      "seconds": 58.029,
+      "peak": 0.5793,
+      "rms": 0.0798,
+      "loop_seam": 0.001121882232837379
+    },
+    {
+      "id": "theme_lava_river",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A bright molten river flowing through black stone. Continuous quick cello figures, rising dulcimer runs and heavy rolling drums create liquid relentless momentum. Rhythmic low strings, hammered dulcimer, warm assertive horns, dry hand drums and restrained metallic accents. Around 119 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "WXDmtc4s9bcCSUM723vn",
+      "source_sha256": "d7e922701f77c50e2e766e205512ad6e3e6a881404e6542848073934515aca44",
+      "path": "art/bgm/theme_lava_river.ogg",
+      "sha256": "e1eea99cf74e6106e8e65f1612b25b5698d4191fa2f6e65b1334a58a6bce5fcf",
+      "seconds": 58.029,
+      "peak": 0.448,
+      "rms": 0.0796,
+      "loop_seam": 0.0010800668969750404
+    },
+    {
+      "id": "theme_obsidian_flats",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A field of sharp black volcanic glass. Dry staccato strings, clear metallic bell intervals and tightly syncopated low percussion; angular and precise. Rhythmic low strings, hammered dulcimer, warm assertive horns, dry hand drums and restrained metallic accents. Around 119 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "dFq8yrnhNs52sGXYoYBx",
+      "source_sha256": "32ba8f75c420776ee4522abd81bf397b512f88c163ab1594f256e72ee841941e",
+      "path": "art/bgm/theme_obsidian_flats.ogg",
+      "sha256": "89780a98912c0eb0c1787a16a0242665cc77be8995eace98a3b956d9a8536820",
+      "seconds": 58.003,
+      "peak": 0.5253,
+      "rms": 0.0798,
+      "loop_seam": 0.0015444637974724174
+    },
+    {
+      "id": "theme_volcano_crater",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. Defenders at the rim of an active volcano. Broad powerful horn intervals, forceful low-string ostinatos and deep layered drums; heroic heat and controlled urgency. Rhythmic low strings, hammered dulcimer, warm assertive horns, dry hand drums and restrained metallic accents. Around 124 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "2xqmv8FTuGZ4q6dSpm5m",
+      "source_sha256": "9b6d03b8eb1a74b23f9210e38080729dc0b1025b323ec9ca1dfcd075ebc6b0e5",
+      "path": "art/bgm/theme_volcano_crater.ogg",
+      "sha256": "8ca5083b1edc753412184c527cf1fe7b543c6f9ae7ab895d5b81396180d76c65",
+      "seconds": 58.029,
+      "peak": 0.5508,
+      "rms": 0.0793,
+      "loop_seam": 0.0009577799355611205
+    },
+    {
+      "id": "theme_ash_blizzard",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. Hot ash whirling through a volcanic storm. Fast circling viola phrases, high shimmering dulcimer and surging low drum rolls, dark windborne intensity. Rhythmic low strings, hammered dulcimer, warm assertive horns, dry hand drums and restrained metallic accents. Around 124 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "xM0Nl0RGX1QMuNpsWEo3",
+      "source_sha256": "e309fdc5f30e50ab07540a6cd7fab1aefc447e45a4f995a143fd13ddabaaa59c",
+      "path": "art/bgm/theme_ash_blizzard.ogg",
+      "sha256": "c486a3d349bc9979d479537b64b586c60fb0fd3214cab3783ebccc109d5ceccf",
+      "seconds": 58.029,
+      "peak": 0.466,
+      "rms": 0.0796,
+      "loop_seam": 0.0017102517886087298
+    },
+    {
+      "id": "theme_spring_grove",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A bright grove in early spring. A buoyant wooden flute melody with warm acoustic plucks and tiny hand drums; fresh growth, welcoming but ready for battle. Organic plucked strings, breathy wooden flutes, bass clarinet, woody marimba and nimble hand percussion. Around 104 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "aAc5AgwFXpJSNrSpfKuC",
+      "source_sha256": "5d027665bb137c3d2732fa835332a7b2960bd0356fc36d514166a7b22ae9c5d5",
+      "path": "art/bgm/theme_spring_grove.ogg",
+      "sha256": "301d55af4412a2502ab9348147c3e1ff48af181d3c21218bfb16c379ac555850",
+      "seconds": 58.029,
+      "peak": 0.346,
+      "rms": 0.08,
+      "loop_seam": 0.0003124500217381865
+    },
+    {
+      "id": "theme_mushroom_hollow",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A secret hollow full of luminous mushrooms. Quirky bass clarinet and hollow marimba exchange little motifs over a lilting pizzicato groove, curious and magical. Organic plucked strings, breathy wooden flutes, bass clarinet, woody marimba and nimble hand percussion. Around 104 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "7loyojKsME5poPfxjKS7",
+      "source_sha256": "79522be45b45ce8f8dadde31070e23dd6455735dd9d151398a433f2109aa077c",
+      "path": "art/bgm/theme_mushroom_hollow.ogg",
+      "sha256": "35d7354efc0ab1fb6f1a85de5ab02b5b1046c9d2fe99732205181aea188bd0c8",
+      "seconds": 58.029,
+      "peak": 0.5796,
+      "rms": 0.0799,
+      "loop_seam": 0.0011376600014045835
+    },
+    {
+      "id": "theme_bamboo_grove",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. Tall bamboo casts narrow shifting shadows. Airy bamboo-flute-like phrasing and dry wooden percussion, spare pentatonic plucks and agile syncopation. Organic plucked strings, breathy wooden flutes, bass clarinet, woody marimba and nimble hand percussion. Around 109 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "L1kFR2C8HQqREXik1Q62",
+      "source_sha256": "e14361a3217b920b689f6c02998202b24f072ede70f323d47ff3dab7c0b20926",
+      "path": "art/bgm/theme_bamboo_grove.ogg",
+      "sha256": "f47106203c39ccae868efd3ba361b56f43762f4d15e7bd4601f90c20d5d94718",
+      "seconds": 58.029,
+      "peak": 0.5042,
+      "rms": 0.0803,
+      "loop_seam": 0.0032507716678082943
+    },
+    {
+      "id": "theme_vine_ruins",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. Vines reclaim an ancient sanctuary. Intertwining lute and flute figures, moss-soft viola chords and a measured ritual hand-drum pattern. Organic plucked strings, breathy wooden flutes, bass clarinet, woody marimba and nimble hand percussion. Around 109 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "zC73ypoQnf9N5Q0hpArn",
+      "source_sha256": "fe4638103e93fb49b03e215d482a52edd66e31199cc881ab70d6abe4442c863d",
+      "path": "art/bgm/theme_vine_ruins.ogg",
+      "sha256": "d719e94414422651935c2d10fbe6e54ee30b4f83e4ed2bae49fcd425e64fe493",
+      "seconds": 58.029,
+      "peak": 0.6191,
+      "rms": 0.0801,
+      "loop_seam": 0.0002948407200165093
+    },
+    {
+      "id": "theme_misty_cedar",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. Old cedar trees disappear into silver mist. A breathy low flute melody and slow-moving warm strings over quiet but insistent woody percussion. Organic plucked strings, breathy wooden flutes, bass clarinet, woody marimba and nimble hand percussion. Around 114 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "ngBSZyYertXyNAiOkU62",
+      "source_sha256": "3584f327ad87464079e93fc80f765572773ad0ba9feb9c7ec62a06927f825373",
+      "path": "art/bgm/theme_misty_cedar.ogg",
+      "sha256": "98e1a346c1d266f9c10f37db99648dcb7f27e9c5623fdbbdf17b090d9d046488",
+      "seconds": 58.029,
+      "peak": 0.64,
+      "rms": 0.0729,
+      "loop_seam": 0.00042139229481108487
+    },
+    {
+      "id": "theme_thornbrake",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A dense maze of sharp thorn branches. Short sharp pizzicato figures, angular marimba patterns and tense hand drums, cunning movement and quick tactical turns. Organic plucked strings, breathy wooden flutes, bass clarinet, woody marimba and nimble hand percussion. Around 114 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "Oc7M98kfN9nHBzkrpX10",
+      "source_sha256": "349052b4769ba787431b832906d1533ba3701f2f3b09bfbea5eaf3923f6e854d",
+      "path": "art/bgm/theme_thornbrake.ogg",
+      "sha256": "3cbe2fa932329d6551bfe52c7ec26326dadbe03601e365c988fc564c01ec8592",
+      "seconds": 58.029,
+      "peak": 0.6475,
+      "rms": 0.0736,
+      "loop_seam": 0.0002522626891732216
+    },
+    {
+      "id": "theme_moss_bog",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. Deep green moss floats over a hidden bog. Dark bass clarinet, rounded low marimba and loping hand drums, mysterious earthy harmonic motion. Organic plucked strings, breathy wooden flutes, bass clarinet, woody marimba and nimble hand percussion. Around 119 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "6HAWZUrf4OgpDkNrRefr",
+      "source_sha256": "50cc83763f2e64d96b4c079ab03045b17af81f876a8c6b8ec65d06fe7e2d8642",
+      "path": "art/bgm/theme_moss_bog.ogg",
+      "sha256": "d71bd379f2313edf3eaa58823fca19bff98926387887aac0f791fa84692eae72",
+      "seconds": 58.029,
+      "peak": 0.5898,
+      "rms": 0.08,
+      "loop_seam": 0.00014687505608890206
+    },
+    {
+      "id": "theme_frost_pines",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. Frost coats a forest of tall pines. Wooden flute and cool celesta trade a restrained motif over crisp plucked strings, organic warmth beneath winter light. Organic plucked strings, breathy wooden flutes, bass clarinet, woody marimba and nimble hand percussion. Around 119 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "N3VC580e6Gj8frxKHzAC",
+      "source_sha256": "b266e694ccf2cec7e2df1d8e4cb31344049bbc9c3e23d319c80770700a77bb83",
+      "path": "art/bgm/theme_frost_pines.ogg",
+      "sha256": "ad274edcc5ba2f51ba44e95cb7fd74efde4aa60199c6d9defa9dacf9a44f3bd1",
+      "seconds": 58.029,
+      "peak": 0.6192,
+      "rms": 0.08,
+      "loop_seam": 0.0008114799857139587
+    },
+    {
+      "id": "theme_rotroot_hollow",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A hollow beneath immense decaying roots. Low woody percussion and contrabass clarinet, twisting cello pulses and sparse eerie dulcimer, threatening yet adventurous. Organic plucked strings, breathy wooden flutes, bass clarinet, woody marimba and nimble hand percussion. Around 124 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "9zP4MRUYNmwEWCW0WSBI",
+      "source_sha256": "244bbf6066a10c746403d8da778d0aa03091991d99816bff748302a121930e07",
+      "path": "art/bgm/theme_rotroot_hollow.ogg",
+      "sha256": "e53cfe0a0ca2c0ba036806c72bf9b42546f061f562e61b4d57252a80e120299c",
+      "seconds": 58.029,
+      "peak": 0.6526,
+      "rms": 0.0772,
+      "loop_seam": 0.00012419579434208572
+    },
+    {
+      "id": "theme_worldtree_roots",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. The vast living roots of the world tree. A noble expansive horn-and-flute melody, deep resonant wooden drums and interwoven flowing strings; ancient living strength. Organic plucked strings, breathy wooden flutes, bass clarinet, woody marimba and nimble hand percussion. Around 124 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "frn1mrajaJvgouBLqnl6",
+      "source_sha256": "b456b316472b4193c62cc6961483227e9c422649365e8e8219cdb636848a1d72",
+      "path": "art/bgm/theme_worldtree_roots.ogg",
+      "sha256": "4484f69c5abc639e24ea366996b361201430f71eaacc5476d286ff87967a1db3",
+      "seconds": 58.029,
+      "peak": 0.4997,
+      "rms": 0.0799,
+      "loop_seam": 0.0016399443848058581
+    },
+    {
+      "id": "theme_gravel_hills",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. Rolling gravel hills on the edge of a refuge. A simple sturdy cello theme, light bronze accents and warm steady hand drums, grounded adventurous optimism. Grounded cello ostinatos, resonant low drums, bronze bells, sparse dulcimer and broad horn intervals. Around 104 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "t2f0vmIDRvv67645ZGrP",
+      "source_sha256": "f4701b1fe978dbbeb2b0970ca7f7ed2d0e19fb4e5e212f2834af94598f8ddd86",
+      "path": "art/bgm/theme_gravel_hills.ogg",
+      "sha256": "faf372c592d671e7eab2ede46298a23a3c3bf3206503788b93192a535a727ac0",
+      "seconds": 58.029,
+      "peak": 0.4408,
+      "rms": 0.08,
+      "loop_seam": 0.0012931268429383636
+    },
+    {
+      "id": "theme_stone_terraces",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. Old stone terraces step down a mountain. Repeating ascending dulcimer figures, plucked cello and small bronze bells, measured geometric rhythms. Grounded cello ostinatos, resonant low drums, bronze bells, sparse dulcimer and broad horn intervals. Around 104 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "KdhSBRxdscv0NzjfkpcC",
+      "source_sha256": "abd6b24b2077ac608018d32e9da6f1aa53c546d1e36cde80bb083e37faebde9e",
+      "path": "art/bgm/theme_stone_terraces.ogg",
+      "sha256": "a97f3a7b5020cc9cb7ce1cf41ddc304aad145d4dfcdb5e7e08a32cfbb5f98e34",
+      "seconds": 58.029,
+      "peak": 0.49,
+      "rms": 0.0798,
+      "loop_seam": 0.0006832071812823415
+    },
+    {
+      "id": "theme_quarry_pit",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A deep quarry with enormous cut stone blocks. Firm low drum patterns, resonant cello plucks and open horn calls, purposeful industrious weight. Grounded cello ostinatos, resonant low drums, bronze bells, sparse dulcimer and broad horn intervals. Around 109 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "DKk1kSqh9FTeVUX33ind",
+      "source_sha256": "20d66172ecac2b5deb66d67a4a04a5f5b793449a75c4981fb8bdbbb9790c770d",
+      "path": "art/bgm/theme_quarry_pit.ogg",
+      "sha256": "c105dbb60cf0345043bde05a06c4d169d359b0b34f96d472feeabc866b823f93",
+      "seconds": 58.029,
+      "peak": 0.4988,
+      "rms": 0.0795,
+      "loop_seam": 0.00232145213522017
+    },
+    {
+      "id": "theme_red_canyon",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A sweeping red sandstone canyon at dusk. Spacious low flute phrases and broad horn intervals over dry hand drums and rolling acoustic plucks. Grounded cello ostinatos, resonant low drums, bronze bells, sparse dulcimer and broad horn intervals. Around 109 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "bpI8Vp4H4rabkkEd25cz",
+      "source_sha256": "ab8efbaa32c5b05be7d857b35dc22ef53f6a470e36139bca9c67fabb9e76b119",
+      "path": "art/bgm/theme_red_canyon.ogg",
+      "sha256": "12c29526f673855b9381f13b0b43b2d422ae3e6298046629f01b6ebeaa1521aa",
+      "seconds": 58.029,
+      "peak": 0.6451,
+      "rms": 0.0798,
+      "loop_seam": 0.015696948394179344
+    },
+    {
+      "id": "theme_broken_wall",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. Defenders hold a shattered ancient fortress wall. A resolute restrained brass motif, marching low strings and worn bronze bell accents, stubborn courage. Grounded cello ostinatos, resonant low drums, bronze bells, sparse dulcimer and broad horn intervals. Around 114 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "SZWxtBr54SgyRfcznGa7",
+      "source_sha256": "e7586364bcb1dc302a060ddac531c4bc2faafd7d753f6ba605360576eeef9b4d",
+      "path": "art/bgm/theme_broken_wall.ogg",
+      "sha256": "55fad4c638606dff7868eee32e632d6a2c18eb1501177a65fae3248eff2328fd",
+      "seconds": 58.029,
+      "peak": 0.6509,
+      "rms": 0.0738,
+      "loop_seam": 0.0009123546769842505
+    },
+    {
+      "id": "theme_crystal_cavern",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. An underground cavern filled with glowing crystals. Interlocking celesta and dulcimer ostinatos, deep bowed cello and resonant sparse drums, luminous subterranean mystery. Grounded cello ostinatos, resonant low drums, bronze bells, sparse dulcimer and broad horn intervals. Around 114 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "zgTm9veaK4jsw0RlH4MJ",
+      "source_sha256": "9b3611a9e6e908b2d76a71e3db018d2d69b154ac6e397ff0b20a05bd9916e12e",
+      "path": "art/bgm/theme_crystal_cavern.ogg",
+      "sha256": "9b9e51d9d00faefe1257f02d94e17bf40ca538a55654fa9d71979cceb3d5bbfa",
+      "seconds": 58.029,
+      "peak": 0.4524,
+      "rms": 0.0799,
+      "loop_seam": 0.002858406398445368
+    },
+    {
+      "id": "theme_desert_mesa",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. Isolated rock mesas rise from a hot desert. Modal plucked-string melody, dry hand drums, distant low flute and sustained open cello fifths, spacious and watchful. Grounded cello ostinatos, resonant low drums, bronze bells, sparse dulcimer and broad horn intervals. Around 119 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "12S68NIFXZsyvJSpGRSx",
+      "source_sha256": "0d49da571786600d63a28b8eb14e6a881067e77567dde429d2428260a146db5e",
+      "path": "art/bgm/theme_desert_mesa.ogg",
+      "sha256": "fae9c79e412c7a3d3a7ea5cfdb1845d8e1be3f60902806c4820c482fc1287857",
+      "seconds": 58.029,
+      "peak": 0.5611,
+      "rms": 0.0798,
+      "loop_seam": 0.0017382449004799128
+    },
+    {
+      "id": "theme_iron_mine",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A dark iron mine descending below the mountains. Muted metallic rhythmic ticks, deep cello ostinatos and heavy low drums, determined mechanical momentum. Grounded cello ostinatos, resonant low drums, bronze bells, sparse dulcimer and broad horn intervals. Around 119 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "fa9T34GpNQpvIcC31oh4",
+      "source_sha256": "fb9be2cb572749fe03db2f837ddf83080134e25ecc676270d981a50c25715f8d",
+      "path": "art/bgm/theme_iron_mine.ogg",
+      "sha256": "a3fe536e0fa1b5bfc31d243594a9602033628a8e4cb2db6a7dcef8292a1be813",
+      "seconds": 58.029,
+      "peak": 0.6167,
+      "rms": 0.0798,
+      "loop_seam": 0.0010148318251594901
+    },
+    {
+      "id": "theme_peak_cliffs",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. Sheer cliffs at a windswept mountain summit. Soaring horn phrases above low steady strings and spacious deep drums, height, endurance and hard-earned resolve. Grounded cello ostinatos, resonant low drums, bronze bells, sparse dulcimer and broad horn intervals. Around 124 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "V2beFt9mFOmt1i0Hdic9",
+      "source_sha256": "66dc0bc9e519fdc058e6725670e25603c7f33a6ab2de678194e50a370c5c6a8f",
+      "path": "art/bgm/theme_peak_cliffs.ogg",
+      "sha256": "95736f930a21d36dde3c1c93adb7cf4bdaa7b20cae8f90045b0d4d7a26fee7cf",
+      "seconds": 58.029,
+      "peak": 0.544,
+      "rms": 0.0796,
+      "loop_seam": 0.0009872120572254062
+    },
+    {
+      "id": "theme_rift_chasm",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A vast earthquake fissure opens through ancient stone. Forceful uneven drum accents, grinding low-string rhythmic tension and broad dark horn calls, monumental pressure. Grounded cello ostinatos, resonant low drums, bronze bells, sparse dulcimer and broad horn intervals. Around 124 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "ODPyPxiQpfmTgL3akQU8",
+      "source_sha256": "8e7d818418a1a296c0ed8bf877ed22ed482dc8a54cdc62620bb316d6c00a51f8",
+      "path": "art/bgm/theme_rift_chasm.ogg",
+      "sha256": "7e9a9130b441c259aebd3a66505afe0714cc088a0715af575e1f0784f65e46f0",
+      "seconds": 58.029,
+      "peak": 0.4587,
+      "rms": 0.0795,
+      "loop_seam": 0.0015000458806753159
+    },
+    {
+      "id": "theme_first_snow_hills",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. The first snow settles on gentle hills. Light celesta melody, warm muted strings and a soft steady drum pulse, fresh wonder with quiet courage. Clear celesta, glassy bell tones, delicate high string pulses, cool airy woodwinds and muffled low drums. Around 104 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "VS393g5CRqtBhalODSgk",
+      "source_sha256": "a1f0d606f18aeb70a7e3860a7bf21e93d683e0df7ae1582168a6330bb2531b04",
+      "path": "art/bgm/theme_first_snow_hills.ogg",
+      "sha256": "82d70359ac5c115bfad247838c60c3dd1d13983120ed26540c69774dc94ae5f7",
+      "seconds": 58.029,
+      "peak": 0.6348,
+      "rms": 0.0674,
+      "loop_seam": 0.00020295163267292082
+    },
+    {
+      "id": "theme_frozen_pond",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A frozen village pond sparkles beneath pale moonlight. Tiny bell figures and delicate harp notes circle a lyrical flute theme, clear intimate rhythmic motion. Clear celesta, glassy bell tones, delicate high string pulses, cool airy woodwinds and muffled low drums. Around 104 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "zKt7gZMVbH1SMDeEWAxQ",
+      "source_sha256": "1cd671419627aee554412db45e369cb9851d2305daa988aa2402f232d56a512f",
+      "path": "art/bgm/theme_frozen_pond.ogg",
+      "sha256": "86dcf803f0432e3b492aca41273db69aaecf361a9247accd5ab39e1dc0ad303d",
+      "seconds": 58.029,
+      "peak": 0.6414,
+      "rms": 0.0661,
+      "loop_seam": 0.00047225586604326963
+    },
+    {
+      "id": "theme_snowed_village",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. Snow covers an abandoned mountain village. A wistful oboe melody and soft felted piano with pizzicato strings, determined footsteps in a quiet winter setting. Clear celesta, glassy bell tones, delicate high string pulses, cool airy woodwinds and muffled low drums. Around 109 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "ajyphS1OtSEQGJrPXtcb",
+      "source_sha256": "88301028fa3233c43e85c31937d92b87ec5dd7e4872abe889847347108448bee",
+      "path": "art/bgm/theme_snowed_village.ogg",
+      "sha256": "e34c70a79426b42e010cacb26fbc02dc9cbc12c5ad98e1e8bff0db1304a14eae",
+      "seconds": 58.029,
+      "peak": 0.6315,
+      "rms": 0.0637,
+      "loop_seam": 0.00045630394015461206
+    },
+    {
+      "id": "theme_frost_gorge",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A narrow gorge lined with hard blue frost. Crisp descending celesta patterns, agile high-string ostinatos and firm muted drums, sharp and focused. Clear celesta, glassy bell tones, delicate high string pulses, cool airy woodwinds and muffled low drums. Around 109 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "skfMqayN45I0Dn7VI075",
+      "source_sha256": "337c4eb3b1889d5acda8d76b77502e562e93980f8bafd35404c71f9039f12e14",
+      "path": "art/bgm/theme_frost_gorge.ogg",
+      "sha256": "e6d85d76368d89f850cebc6d92436d8764fec8a6ce9942cc22c3de7b0864fdc9",
+      "seconds": 58.029,
+      "peak": 0.6621,
+      "rms": 0.0743,
+      "loop_seam": 0.0004129082371946424
+    },
+    {
+      "id": "theme_drift_ice_sea",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. Floating ice crosses a cold northern sea. Swaying low strings and a broad lonely horn melody, sparse crystal bells and rolling restrained drums. Clear celesta, glassy bell tones, delicate high string pulses, cool airy woodwinds and muffled low drums. Around 114 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "OEbWmgRcv2vQbYjSZAfE",
+      "source_sha256": "7a9898223481ebd0f888e73e24fc80038d5bfdbb37aab6676e2ff9e99df57b9c",
+      "path": "art/bgm/theme_drift_ice_sea.ogg",
+      "sha256": "7883fa9e91ebd8aafda180acd00585ab372e4128fc93c9302990d8c7bd752bd7",
+      "seconds": 58.029,
+      "peak": 0.5357,
+      "rms": 0.0797,
+      "loop_seam": 0.0006540612666867673
+    },
+    {
+      "id": "theme_icicle_cave",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. Long icicles hang over a hidden cave. Closely interlocking glass-bell and celesta phrases over a dark bassoon line and hollow muffled percussion. Clear celesta, glassy bell tones, delicate high string pulses, cool airy woodwinds and muffled low drums. Around 114 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "cmQdriHpnHSYE6uZ8zkh",
+      "source_sha256": "b162b2100fdef4b7ffbd9682eed6f10d8ff3e5291d607f44f35a84a59a4f5135",
+      "path": "art/bgm/theme_icicle_cave.ogg",
+      "sha256": "4b150f65ebdb2efabc9eb524952a85b9077327692c4fe684995c967984d0d962",
+      "seconds": 58.029,
+      "peak": 0.643,
+      "rms": 0.0676,
+      "loop_seam": 0.00046695437049493194
+    },
+    {
+      "id": "theme_blizzard_plateau",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A relentless blizzard sweeps a high plateau. Rapid circling high strings and celesta fragments above driving low drums, urgent endurance and controlled cold intensity. Clear celesta, glassy bell tones, delicate high string pulses, cool airy woodwinds and muffled low drums. Around 119 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "816MjNokmWfOYWDPFZ8D",
+      "source_sha256": "8294a87d3f0d8b1938b619f96a28f26f4bc095668334d19387b4bd84abff6fb4",
+      "path": "art/bgm/theme_blizzard_plateau.ogg",
+      "sha256": "ca0a7062cc78f733648b61071425092acd50dd71c510f912da84fba09560d58c",
+      "seconds": 58.029,
+      "peak": 0.4578,
+      "rms": 0.0798,
+      "loop_seam": 0.0026901306118816137
+    },
+    {
+      "id": "theme_glacier_crevasse",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A luminous blue crevasse cuts deep into a glacier. Descending crystal arpeggios, low cello pulses and spacious isolated horn intervals, immense frozen depth. Clear celesta, glassy bell tones, delicate high string pulses, cool airy woodwinds and muffled low drums. Around 119 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "If6VXMd5q0xE9nXsmieJ",
+      "source_sha256": "67f72ebc530ab0340a40e9d7d79e9b8a08b2d9924f4b7b9ae28a7502b3d322ed",
+      "path": "art/bgm/theme_glacier_crevasse.ogg",
+      "sha256": "306e63ad50d1e7d4bf2f2d2fd7c0e4725621e251bc6962d279c8c517b70426fa",
+      "seconds": 58.029,
+      "peak": 0.4354,
+      "rms": 0.08,
+      "loop_seam": 0.0030901250429451466
+    },
+    {
+      "id": "theme_ice_spire_field",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. Towering ice spires catch the last cold light. Brilliant angular celesta motifs, ascending violins and firm deep drum accents, majestic crystalline geometry. Clear celesta, glassy bell tones, delicate high string pulses, cool airy woodwinds and muffled low drums. Around 124 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "sd1iCMogYKDvewuLNELI",
+      "source_sha256": "17aeab50431e3a6fe2821741c706b5b529ffe93086a2c0e618bdd0b5beb1df13",
+      "path": "art/bgm/theme_ice_spire_field.ogg",
+      "sha256": "6be54807a220673003b95d649df4e87c42e87ab891fd71be5ebceaeea0e7ae08",
+      "seconds": 58.029,
+      "peak": 0.5763,
+      "rms": 0.0798,
+      "loop_seam": 0.002261911053210497
+    },
+    {
+      "id": "theme_polar_night",
+      "provider": "ElevenLabs",
+      "endpoint": "music",
+      "request": {
+        "prompt": "Original fantasy tactical tower defense game soundtrack, intimate orchestral and acoustic palette, a memorable motif unique to this location. A vast polar icefield beneath a star-filled endless night. A slow noble bassoon melody over quick restrained string pulses, distant glistening celesta and deep steady drums. Clear celesta, glassy bell tones, delicate high string pulses, cool airy woodwinds and muffled low drums. Around 124 BPM. Sustainable energetic gameplay underscore, clear space for combat effects and mobile speakers. Continuous even-volume instrumental loop, established rhythm from the first beat, no silent intro, no ending fade, no dramatic final cadence, no abrupt breakdown, no vocals, no choir, no speech, no environmental sound effects, no harsh cymbals.",
+        "music_length_ms": 60000,
+        "force_instrumental": true,
+        "model_id": "music_v2"
+      },
+      "character_cost": null,
+      "song_id": "si0GgExFHwYxoapZiZUj",
+      "source_sha256": "c264bfc052d3ab9740cc9746391ce57bd90b68b1505f511d615d5e308a265e41",
+      "path": "art/bgm/theme_polar_night.ogg",
+      "sha256": "a02717efa30404bfda54504b530009b347f531dfb701a8d9be807259b3523324",
+      "seconds": 58.029,
+      "peak": 0.4975,
+      "rms": 0.0801,
+      "loop_seam": 0.0019231074256822467
+    },
+    {
+      "id": "shot_none",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One tight wooden crossbow twang and dry card projectile snap, tactile fantasy weapon, short tail.",
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "6",
+      "song_id": null,
+      "source_sha256": "0f74d7f8ee2626dec56580deaa43c4a039c7ca260f4efc955cef958356866be2",
+      "path": "art/sfx/shot_none.wav",
+      "sha256": "61ffb9fa51e99199b254abf06a009064fc1ae785aadaa0e1fbcd198471bd1ee3",
+      "seconds": 0.331,
+      "peak": 0.1838,
+      "rms": 0.0216,
+      "loop_seam": null
+    },
+    {
+      "id": "shot_fire",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One compact fire projectile launch, fast hot air whoosh with a crisp flame crack, no rumbling tail.",
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "6",
+      "song_id": null,
+      "source_sha256": "b343a44f8aee699b5c8c83d57d071b0b1767a2b931af11f9126b51c1c16924ce",
+      "path": "art/sfx/shot_fire.wav",
+      "sha256": "a78405892ca081a6b3af107953472b0a7ac353348811aa065ce56c6054889e3b",
+      "seconds": 0.48,
+      "peak": 0.1838,
+      "rms": 0.0403,
+      "loop_seam": null
+    },
+    {
+      "id": "shot_ice",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One crisp ice shard launch, brittle crystal tick and tiny icy air swish, clean short tail.",
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "6",
+      "song_id": null,
+      "source_sha256": "0ed5b92aeb3a1fa05b35d6cedaead8d2537653d93200ea02467dfded2086b67b",
+      "path": "art/sfx/shot_ice.wav",
+      "sha256": "51df20a0dd667ae31b0fb50a96089098de5361beb46e7535492bc5ea796763d1",
+      "seconds": 0.395,
+      "peak": 0.1838,
+      "rms": 0.0215,
+      "loop_seam": null
+    },
+    {
+      "id": "shot_elec",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One compact lightning projectile zap, sharp electrical snap with a brief electric fizz, no sustained buzz.",
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "6",
+      "song_id": null,
+      "source_sha256": "638bf22501576a4cadfe15706e4485acddbe8f14415a1ef19bae4728c434b49b",
+      "path": "art/sfx/shot_elec.wav",
+      "sha256": "34607a5f62c2f778213e80afa323e23174e46db9d999ae8150610360630f043a",
+      "seconds": 0.48,
+      "peak": 0.1838,
+      "rms": 0.0574,
+      "loop_seam": null
+    },
+    {
+      "id": "shot_water",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One pressurized water bolt launch, rounded liquid plop and a quick fluid swish.",
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "6",
+      "song_id": null,
+      "source_sha256": "d91f17911b5edae864aeaf98f97c1fa9f279c74131e2a6a795dcb032f2b3f405",
+      "path": "art/sfx/shot_water.wav",
+      "sha256": "dd1914bc5b2fda324a9548b7cc84e3fda5e2fdd56c22f91d43c74c27db295fb4",
+      "seconds": 0.48,
+      "peak": 0.1838,
+      "rms": 0.0419,
+      "loop_seam": null
+    },
+    {
+      "id": "shot_beam",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One narrow magical laser beam firing, focused rising shimmer and firm clean energy snap.",
+        "duration_seconds": 0.7,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "8",
+      "song_id": null,
+      "source_sha256": "1d6a7f375555d747bc82bd91121c286adfcbaab26a314bf1adb41b1df43d52c2",
+      "path": "art/sfx/shot_beam.wav",
+      "sha256": "6e3971fbe35f6dd3835000e752d63aaee331c3b1e08e945b97f45d6dfb936468",
+      "seconds": 0.68,
+      "peak": 0.1838,
+      "rms": 0.0304,
+      "loop_seam": null
+    },
+    {
+      "id": "shot_zone",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One magic area spell landing on stone, soft descending energy sweep then a contained bass thump.",
+        "duration_seconds": 0.9,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "10",
+      "song_id": null,
+      "source_sha256": "1dc01335b6c471b1cead5fa4be428c72f75d6dc326f265eb94eb6b839345b84e",
+      "path": "art/sfx/shot_zone.wav",
+      "sha256": "8011f999e96025e1557d0e2532e8b514ac8ba9f75fe85162e171b71e7162f309",
+      "seconds": 0.43,
+      "peak": 0.1838,
+      "rms": 0.0566,
+      "loop_seam": null
+    },
+    {
+      "id": "ric",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One light metal projectile ricochet, bright quick ting with a directional swish, no long ringing.",
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "6",
+      "song_id": null,
+      "source_sha256": "cca226b2bfca7fa52a53f12dac24215839e9f2801fc47784cded06b63676d624",
+      "path": "art/sfx/ric.wav",
+      "sha256": "8c0dfbc5ed4ccc5d8c08a075c7736c4c15dd35e0b2e48974083d5ac773c75933",
+      "seconds": 0.48,
+      "peak": 0.1838,
+      "rms": 0.0278,
+      "loop_seam": null
+    },
+    {
+      "id": "hit",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One small dry fantasy combat impact, firm leather and wood thwack, immediate transient, brief tail.",
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "6",
+      "song_id": null,
+      "source_sha256": "70dcb6068c487a7509555f762899220f39768a7b6060e1a8c151d4567a34ea89",
+      "path": "art/sfx/hit.wav",
+      "sha256": "27008668ee36e2c0c3e3973e8fc9233674e516bbf739609339d936b0d27b60ea",
+      "seconds": 0.48,
+      "peak": 0.1495,
+      "rms": 0.039,
+      "loop_seam": null
+    },
+    {
+      "id": "hit_weak",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One effective magical weak-point hit, firm punch and bright crystalline accent, satisfying and very short.",
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "6",
+      "song_id": null,
+      "source_sha256": "e5a2800e6ecdc13c1f930fa20583a2fcae8c77221caa4c083f1ec2b1b4d1fb5a",
+      "path": "art/sfx/hit_weak.wav",
+      "sha256": "e8fcf65243f0a0b1b6167bfb433ab23ed685dd1a05a96e158df11b5366d874fb",
+      "seconds": 0.336,
+      "peak": 0.3394,
+      "rms": 0.0398,
+      "loop_seam": null
+    },
+    {
+      "id": "hit_resist",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One muffled armored impact, dull compact wooden knock and light metallic rattle.",
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "6",
+      "song_id": null,
+      "source_sha256": "85c4bad584b58d4fcfe84aeee5e191c3a9fce951e051151b30a4500f0a0b610b",
+      "path": "art/sfx/hit_resist.wav",
+      "sha256": "223f63136f0c203680f55967c8447d0f19099f5a9b92c4d60d0948f425096b95",
+      "seconds": 0.366,
+      "peak": 0.1626,
+      "rms": 0.0197,
+      "loop_seam": null
+    },
+    {
+      "id": "hit_immune",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One deflected spell off solid stone armor, short dry metallic clink with no damage explosion.",
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "6",
+      "song_id": null,
+      "source_sha256": "fef016d1b6b9ccaf47572eb64f615f7dbb8fc1d6f1aca0d6f1125d2e22225246",
+      "path": "art/sfx/hit_immune.wav",
+      "sha256": "08b8087290fddf448985bca88a705a46ae08bff3db05bab97bef2a621cd80877",
+      "seconds": 0.328,
+      "peak": 0.1626,
+      "rms": 0.0321,
+      "loop_seam": null
+    },
+    {
+      "id": "crit",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One critical strike impact, sharp bright metal crack layered with a compact deep punch.",
+        "duration_seconds": 0.6,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "7",
+      "song_id": null,
+      "source_sha256": "89098e26e33334265a85abd816d501223bea2f679f8cc55cfa7b700a6455cc9f",
+      "path": "art/sfx/crit.wav",
+      "sha256": "67dcfc3afc041cdd72b65d53f84b512286221add186242c2421bd4982a0c7b34",
+      "seconds": 0.6,
+      "peak": 0.3394,
+      "rms": 0.0765,
+      "loop_seam": null
+    },
+    {
+      "id": "splash",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One controlled fantasy blast, immediate punchy low impact and tiny debris scattering, fast decay.",
+        "duration_seconds": 0.8,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "9",
+      "song_id": null,
+      "source_sha256": "7b543a8653254278e7595eb4f8a780f73b48204488653748e6b3a7a2d64b445b",
+      "path": "art/sfx/splash.wav",
+      "sha256": "1d961101cb9228ab464034fbbff9d0e3ac2c52cb5dae1a50c6aac95de25fa645",
+      "seconds": 0.672,
+      "peak": 0.3394,
+      "rms": 0.1595,
+      "loop_seam": null
+    },
+    {
+      "id": "chain",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. A single quick electric arc jumping across three targets, three connected tight zaps, clear brief tail.",
+        "duration_seconds": 0.6,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "7",
+      "song_id": null,
+      "source_sha256": "866d5f1b7f09f156b094e6ab82a88d2cdd6eb609376384d58da8ba3280599b1a",
+      "path": "art/sfx/chain.wav",
+      "sha256": "5fd2d8e5b07d57216e2486f0f9b2812c20debeb365528ce3503966eb647ab3c7",
+      "seconds": 0.555,
+      "peak": 0.1838,
+      "rms": 0.0389,
+      "loop_seam": null
+    },
+    {
+      "id": "die",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One small fantasy creature dissolving into magical dust, soft compact puff and fading grains, no voice.",
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "6",
+      "song_id": null,
+      "source_sha256": "cb418771e1c18d920a59d316bc0e7d858b406f17944189f7e18ea9c0e0374770",
+      "path": "art/sfx/die.wav",
+      "sha256": "b4d0b8f0f3229993c09664d02f9344b3f4ba864ce596b3fe9a007e8926a74002",
+      "seconds": 0.48,
+      "peak": 0.1838,
+      "rms": 0.015,
+      "loop_seam": null
+    },
+    {
+      "id": "die_big",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One large stone monster collapsing, weighty impact with crumbling rock and a short deep magical release.",
+        "duration_seconds": 1.4,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "15",
+      "song_id": null,
+      "source_sha256": "604805ffbfd8207480fc87a261d325f315923df229c11ac91fabc23123cdb083",
+      "path": "art/sfx/die_big.wav",
+      "sha256": "892a78a384b84bbdf3b807e9806b4640778ff574f792beff70441e57352daff2",
+      "seconds": 1.36,
+      "peak": 0.3394,
+      "rms": 0.0678,
+      "loop_seam": null
+    },
+    {
+      "id": "leak",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One precious crystal shattering, distinct glass crack, falling bright shards, soft low impact underneath.",
+        "duration_seconds": 1.1,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "12",
+      "song_id": null,
+      "source_sha256": "214db40b54e0b5ab118d7492772ce4e75cabaad32307e7ee4b36e23626c25350",
+      "path": "art/sfx/leak.wav",
+      "sha256": "e5634c6767d3982f5a68f7ecd4050e32959fedc37d72d443c6065e56271eefea",
+      "seconds": 1.08,
+      "peak": 0.3394,
+      "rms": 0.0374,
+      "loop_seam": null
+    },
+    {
+      "id": "block",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One magical crystal shield blocking an impact, warm rounded ping and a short protective energy ripple.",
+        "duration_seconds": 0.6,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "7",
+      "song_id": null,
+      "source_sha256": "6a72897334c96d89fb910d289d50009216c763b5e1e3c5c496c999360a949e84",
+      "path": "art/sfx/block.wav",
+      "sha256": "105299abfeeb085ae10defe283fc46602d8596bd3f44c114c8f894512de8257a",
+      "seconds": 0.6,
+      "peak": 0.3394,
+      "rms": 0.0531,
+      "loop_seam": null
+    },
+    {
+      "id": "stun",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One electrical stun activation, tight crackle and short wavering energy ring, no voice.",
+        "duration_seconds": 0.6,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "7",
+      "song_id": null,
+      "source_sha256": "bc2692556ee84a4f65ae459d74851773dfb60e0c1b9ade8597ad37fd06605c9e",
+      "path": "art/sfx/stun.wav",
+      "sha256": "f3a020eb8ef04728067429dbcc74cd06d533aa6813ad63260a207a6426457a37",
+      "seconds": 0.6,
+      "peak": 0.3394,
+      "rms": 0.057,
+      "loop_seam": null
+    },
+    {
+      "id": "frost",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One freeze effect forming, delicate ice crackle and sharp frost crystals spreading outward.",
+        "duration_seconds": 0.7,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "8",
+      "song_id": null,
+      "source_sha256": "6def7843e11871f257242a4c68a78a9ea7debfd3ad3e3f702f3d2d1486b1296f",
+      "path": "art/sfx/frost.wav",
+      "sha256": "d0362fdc489bf081ad13ae562b9adb9629b04ddd4dfa9cd0012350f445294b3f",
+      "seconds": 0.577,
+      "peak": 0.3394,
+      "rms": 0.0362,
+      "loop_seam": null
+    },
+    {
+      "id": "wave",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. A short fantasy battle start signal, one warm frame drum and two restrained low horn notes, confident.",
+        "duration_seconds": 1.6,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "18",
+      "song_id": null,
+      "source_sha256": "b46d4a013ac0f4dd4184249186284049a06452ccf280a07bf8d3669fe9f2365a",
+      "path": "art/sfx/wave.wav",
+      "sha256": "932e9840f8904eb9894160e412410f9458ab8eba467defc552b3cd7a6fc736d2",
+      "seconds": 0.576,
+      "peak": 0.3394,
+      "rms": 0.0822,
+      "loop_seam": null
+    },
+    {
+      "id": "boss",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. A short ominous boss arrival sting, deep cinematic drum, bowed metal swell, dark low brass impact.",
+        "duration_seconds": 2.4,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "26",
+      "song_id": null,
+      "source_sha256": "6d4008ec17396a3a0e7e32f6d9560ff73a26b25b4ebaf39329f14519ceff9f1e",
+      "path": "art/sfx/boss.wav",
+      "sha256": "eaf1813bec57d9b71f5a0e552a286f8bf1c4fdba945d283cb8f1ad93f2ae43d5",
+      "seconds": 1.758,
+      "peak": 0.3394,
+      "rms": 0.0859,
+      "loop_seam": null
+    },
+    {
+      "id": "victory",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. A tasteful short victory sting, warm chamber strings and celesta ascending to a resolved chord, mature fantasy.",
+        "duration_seconds": 2.6,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "29",
+      "song_id": null,
+      "source_sha256": "d8224b6383d4af0ea250ce40900e65582ba2783c3be26311dc2cdc81e05bb1ff",
+      "path": "art/sfx/victory.wav",
+      "sha256": "1a0805e031593e2de965e6e7c19003308eb6f440baaf0bdc6104217c1fb19fba",
+      "seconds": 1.571,
+      "peak": 0.3394,
+      "rms": 0.0583,
+      "loop_seam": null
+    },
+    {
+      "id": "defeat",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. A restrained short defeat sting, soft descending low strings and two dark piano notes, dignified, no voice.",
+        "duration_seconds": 2.6,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "29",
+      "song_id": null,
+      "source_sha256": "958f237fe3480dad50836327fae7221a610c31e7019a013de603b2a85d44ffef",
+      "path": "art/sfx/defeat.wav",
+      "sha256": "adb7152b11aff973f0dfaadbf70fa17a020bb54ba3d15c0daa08b393400a64c6",
+      "seconds": 1.974,
+      "peak": 0.3394,
+      "rms": 0.0899,
+      "loop_seam": null
+    },
+    {
+      "id": "button",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One premium game interface click, tiny tactile wood tap with a subtle glass tick, immediate and very short.",
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "6",
+      "song_id": null,
+      "source_sha256": "1d2f19e7870bc103af8153317fc134021f49fd6bc5ceb23b7dc46b9bea46e8de",
+      "path": "art/sfx/button.wav",
+      "sha256": "92566c19a1b4e369f5b04db28e28581d2287c5c5f958b708e3d2362ab087e2cb",
+      "seconds": 0.307,
+      "peak": 0.1626,
+      "rms": 0.0051,
+      "loop_seam": null
+    },
+    {
+      "id": "buy",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One fantasy purchase confirmation, two little gold coin clinks and a restrained warm chime.",
+        "duration_seconds": 0.7,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "8",
+      "song_id": null,
+      "source_sha256": "0f716b0fca047222a87c0e9818fa25b4f8d10d2195981b27f75fd3d1470acaf6",
+      "path": "art/sfx/buy.wav",
+      "sha256": "9da8c06df4bf96fa9b91764e68641b020b890c4be79eeacb1ebb2ef9e6febed7",
+      "seconds": 0.68,
+      "peak": 0.3394,
+      "rms": 0.0572,
+      "loop_seam": null
+    },
+    {
+      "id": "deal",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One playing card dealt quickly onto felt, crisp paper flick and soft tap, close dry foley.",
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "6",
+      "song_id": null,
+      "source_sha256": "5eec47d235f6f0fb1be9dd5a72df1cf4fdfa06a1f3bb107ab51069cd4d7dea4c",
+      "path": "art/sfx/deal.wav",
+      "sha256": "00663b9e65d2b10573254a15a364eb0a4e51822b37ab8aed3dc7593c7734eba8",
+      "seconds": 0.28,
+      "peak": 0.1626,
+      "rms": 0.0214,
+      "loop_seam": null
+    },
+    {
+      "id": "flip",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One playing card flipping between fingers, clean papery swish and a delicate snap, close dry foley.",
+        "duration_seconds": 0.5,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "6",
+      "song_id": null,
+      "source_sha256": "6b1bd4b2113803e0480d868a471e18d465a3c07c383fcfb8ab8a4325f570ecc6",
+      "path": "art/sfx/flip.wav",
+      "sha256": "665f0aec073cfcb1295009af99a612170a60a50f86554482b37e4391f1348b96",
+      "seconds": 0.298,
+      "peak": 0.1626,
+      "rms": 0.0218,
+      "loop_seam": null
+    },
+    {
+      "id": "gain",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One hero joining the party confirmation, restrained warm magical bell chord with a soft grounded impact.",
+        "duration_seconds": 1.3,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "14",
+      "song_id": null,
+      "source_sha256": "8ff7b7f3cfc224950ba28548de15cc3cdfdb8d7c7210f79047b5a6260e8954a9",
+      "path": "art/sfx/gain.wav",
+      "sha256": "19ea664dbe407dad91373bcd676049ae63f08aaa3237317e42bec2929b767ba3",
+      "seconds": 0.916,
+      "peak": 0.2987,
+      "rms": 0.0426,
+      "loop_seam": null
+    },
+    {
+      "id": "stack",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One pair of enchanted cards stacked together, tactile card clap and soft resonant gold chime.",
+        "duration_seconds": 0.7,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "8",
+      "song_id": null,
+      "source_sha256": "39ea366eaba18c56dfc04ae67b8d4df4d3e5a86eab8b7e1f87153e39128482e7",
+      "path": "art/sfx/stack.wav",
+      "sha256": "46d0651201813dcb992575b9be78008523bc7bd7f5047df6e7f5169905d42bde",
+      "seconds": 0.403,
+      "peak": 0.3394,
+      "rms": 0.0385,
+      "loop_seam": null
+    },
+    {
+      "id": "theme",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. A short magical chapter transition, airy wind sweep and an elegant warm mystical bell swell.",
+        "duration_seconds": 1.8,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "20",
+      "song_id": null,
+      "source_sha256": "fa9d75ed08a50d930d7fb511c42b98b4c4022337bcc43b292e4ba62683d55be4",
+      "path": "art/sfx/theme.wav",
+      "sha256": "a5f2b57f449ab89f92754de5e575beb33928beddffe6534c971fed718b43b699",
+      "seconds": 1.447,
+      "peak": 0.3394,
+      "rms": 0.0527,
+      "loop_seam": null
+    },
+    {
+      "id": "card_collect",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. Five playing cards swept together over felt into one stack, quick smooth paper shuffle ending in a neat tap.",
+        "duration_seconds": 0.8,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "9",
+      "song_id": null,
+      "source_sha256": "fe2c1ac978e820f9108923e5fb0c3b3bb667972f456523572b8d4a02a61c103d",
+      "path": "art/sfx/card_collect.wav",
+      "sha256": "8cc0cd639ea456afd6b7ba8ab8d86958e85cc25aebc9c41611bb8b4f4b0af452",
+      "seconds": 0.541,
+      "peak": 0.3394,
+      "rms": 0.0338,
+      "loop_seam": null
+    },
+    {
+      "id": "summon_charge",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. Witch magic charging inside a stack of playing cards, swirling airy energy rising in pitch with tiny crystal sparks, no words.",
+        "duration_seconds": 1.3,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "14",
+      "song_id": null,
+      "source_sha256": "21ed354cc4c8644e1efb7c154e6340e56095326ced8d5d0c73a1e80adeb167c5",
+      "path": "art/sfx/summon_charge.wav",
+      "sha256": "88b2dbb21dcdd52e64284a635dca5a200c8bad7c585954b64acff175697a7b69",
+      "seconds": 1.223,
+      "peak": 0.3394,
+      "rms": 0.0551,
+      "loop_seam": null
+    },
+    {
+      "id": "summon_burst",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One satisfying magical hero summon explosion, strong clean bass punch, wide paper burst and brilliant crystal sparkle tail.",
+        "duration_seconds": 1.7,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "19",
+      "song_id": null,
+      "source_sha256": "daf0e2cefbe387b0a2bf54080c6d301e0e454e4539ed122768ed43a1744216cf",
+      "path": "art/sfx/summon_burst.wav",
+      "sha256": "b6e74a5f96a86c7f393fd20d61af542ac685a8eed1591b3402a7d42f29e39962",
+      "seconds": 0.922,
+      "peak": 0.3394,
+      "rms": 0.0954,
+      "loop_seam": null
+    },
+    {
+      "id": "fusion_charge",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. Five enchanted hero cards converging into a spinning magic seal, deep gathering energy with five delicate chimes, builds tension.",
+        "duration_seconds": 1.5,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "17",
+      "song_id": null,
+      "source_sha256": "6f54323c670238a3cedf4eb015f0155970f0ce511c3485baab7602c2c3f3ad28",
+      "path": "art/sfx/fusion_charge.wav",
+      "sha256": "728c9fcfa483b0b44259e87ed14a2557fa8c132dfe8fa9abd4504327e0ad1b48",
+      "seconds": 1.197,
+      "peak": 0.3394,
+      "rms": 0.0438,
+      "loop_seam": null
+    },
+    {
+      "id": "fusion_burst",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. One powerful hero fusion reveal, punchy full-bodied magical impact, radiant ascending crystal sparks and a rich short tail.",
+        "duration_seconds": 2.0,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "22",
+      "song_id": null,
+      "source_sha256": "518141e5e50b910b6cf7f68d89d0b75b3a09ef6830a369713536684f30a8483d",
+      "path": "art/sfx/fusion_burst.wav",
+      "sha256": "dbc23c71d9feace0ffde2ac77e7913d5c0aac04a0fc1b132bf9cebc02499411d",
+      "seconds": 2.0,
+      "peak": 0.3394,
+      "rms": 0.0568,
+      "loop_seam": null
+    },
+    {
+      "id": "reveal0",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. A single fantasy hero rarity reveal sting, rarity level 1 of 10. Subtle warm celesta notes and a small magical shimmer.",
+        "duration_seconds": 1.0,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "11",
+      "song_id": null,
+      "source_sha256": "4777e48938a20257be64953fd1435f6435db188daf748d9ca1d9991da969682a",
+      "path": "art/sfx/reveal0.wav",
+      "sha256": "c2ce184005e28a3b0a27b1b6e0f79d73aeafb4627c878d5ae0458afe420ccdf8",
+      "seconds": 1.0,
+      "peak": 0.3394,
+      "rms": 0.033,
+      "loop_seam": null
+    },
+    {
+      "id": "reveal1",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. A single fantasy hero rarity reveal sting, rarity level 2 of 10. Subtle warm celesta notes and a small magical shimmer.",
+        "duration_seconds": 1.12,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "12",
+      "song_id": null,
+      "source_sha256": "6bb917103d23fcd13d33f1f562eddfff8b51f6ae4ff77c8439ea9329a747adb9",
+      "path": "art/sfx/reveal1.wav",
+      "sha256": "76ac4a82cd5ee7f6eaf33dd5e9054ae9cd22450a204ed11dab5c414901c03a56",
+      "seconds": 1.12,
+      "peak": 0.3394,
+      "rms": 0.0422,
+      "loop_seam": null
+    },
+    {
+      "id": "reveal2",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. A single fantasy hero rarity reveal sting, rarity level 3 of 10. Subtle warm celesta notes and a small magical shimmer.",
+        "duration_seconds": 1.24,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "14",
+      "song_id": null,
+      "source_sha256": "b64e8b2a7d794b266718b01ab8b87f58530670adfa45ceb6f5485965cbad55e0",
+      "path": "art/sfx/reveal2.wav",
+      "sha256": "a9b8e68554ba28f1d1c6ee78654559a1348d49b3dfb6ddd12a3c75fe408d7bc1",
+      "seconds": 0.761,
+      "peak": 0.3394,
+      "rms": 0.0288,
+      "loop_seam": null
+    },
+    {
+      "id": "reveal3",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. A single fantasy hero rarity reveal sting, rarity level 4 of 10. Subtle warm celesta notes and a small magical shimmer.",
+        "duration_seconds": 1.3599999999999999,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "15",
+      "song_id": null,
+      "source_sha256": "6e9e482b8ede3c96015107cf8df01c061dc6d7b3334aed428ce318d817c9b86a",
+      "path": "art/sfx/reveal3.wav",
+      "sha256": "5a54f8bb2aed4c07a253b57cd7e3d88935713efbf35618d6ddb5d1a1ad194560",
+      "seconds": 1.36,
+      "peak": 0.3394,
+      "rms": 0.0317,
+      "loop_seam": null
+    },
+    {
+      "id": "reveal4",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. A single fantasy hero rarity reveal sting, rarity level 5 of 10. Rich ascending celesta and chamber strings, sparkling magical resolution, increasingly grand but tasteful.",
+        "duration_seconds": 1.48,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "16",
+      "song_id": null,
+      "source_sha256": "ec52d0832e535f41f5574ea3aa5e41798874214160f8ad406269342db0fed333",
+      "path": "art/sfx/reveal4.wav",
+      "sha256": "960275ea04b0767b4cc760b90d6fdebc1676b6b6bdce161cbb2b49efe79a67ff",
+      "seconds": 1.283,
+      "peak": 0.3394,
+      "rms": 0.0435,
+      "loop_seam": null
+    },
+    {
+      "id": "reveal5",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. A single fantasy hero rarity reveal sting, rarity level 6 of 10. Rich ascending celesta and chamber strings, sparkling magical resolution, increasingly grand but tasteful.",
+        "duration_seconds": 1.6,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "18",
+      "song_id": null,
+      "source_sha256": "dbb48234883e19535900a71723ce395ef9b761bab7b9837f2f904f02f8ef448b",
+      "path": "art/sfx/reveal5.wav",
+      "sha256": "bb7f8025f7e9f6a03510374e285b4b9e57c6f6901519e4793b80b0f9dbf4c25e",
+      "seconds": 1.131,
+      "peak": 0.3394,
+      "rms": 0.0372,
+      "loop_seam": null
+    },
+    {
+      "id": "reveal6",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. A single fantasy hero rarity reveal sting, rarity level 7 of 10. Rich ascending celesta and chamber strings, sparkling magical resolution, increasingly grand but tasteful.",
+        "duration_seconds": 1.72,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "19",
+      "song_id": null,
+      "source_sha256": "aba1623952bbdb52a8705374091a1e1a2d5b6ff5577e6718018204d44faa9412",
+      "path": "art/sfx/reveal6.wav",
+      "sha256": "55f97031d060328d980b2cf9eadbd2135c962168c64fae6ddf63a1becc9dde40",
+      "seconds": 1.076,
+      "peak": 0.3394,
+      "rms": 0.0399,
+      "loop_seam": null
+    },
+    {
+      "id": "reveal7",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. A single fantasy hero rarity reveal sting, rarity level 8 of 10. Rich ascending celesta and chamber strings, sparkling magical resolution, increasingly grand but tasteful.",
+        "duration_seconds": 1.8399999999999999,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "20",
+      "song_id": null,
+      "source_sha256": "7a6e4a0c7343ecef47b9060e93511ee6cd8e4abac1a07bc1db915db8c8c5572d",
+      "path": "art/sfx/reveal7.wav",
+      "sha256": "141023b0b629a2a1d12838783217c27e281bdf43bba31c5ed783297371fbecf6",
+      "seconds": 1.402,
+      "peak": 0.3394,
+      "rms": 0.0654,
+      "loop_seam": null
+    },
+    {
+      "id": "reveal8",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. A single fantasy hero rarity reveal sting, rarity level 9 of 10. Rich ascending celesta and chamber strings, sparkling magical resolution, increasingly grand but tasteful.",
+        "duration_seconds": 1.96,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "22",
+      "song_id": null,
+      "source_sha256": "acbd1b72ccec4964ff404e714deedbc1533b2856c55aa6c46f51c87a839469ed",
+      "path": "art/sfx/reveal8.wav",
+      "sha256": "b8bb4b49c80eb7e25d8210775b43bf2c903f816e5d101f3aa51bfe15a717c1a0",
+      "seconds": 1.354,
+      "peak": 0.3394,
+      "rms": 0.0416,
+      "loop_seam": null
+    },
+    {
+      "id": "reveal9",
+      "provider": "ElevenLabs",
+      "endpoint": "sound-generation",
+      "request": {
+        "text": "Isolated professional game audio asset. No speech, no background ambience. A single fantasy hero rarity reveal sting, rarity level 10 of 10. Rich ascending celesta and chamber strings, sparkling magical resolution, increasingly grand but tasteful.",
+        "duration_seconds": 2.08,
+        "prompt_influence": 0.5,
+        "model_id": "eleven_text_to_sound_v2"
+      },
+      "character_cost": "23",
+      "song_id": null,
+      "source_sha256": "856a9ae7e4fe1f62017385727522b7ac8750a1169b5fd607e1649301af3c6a4f",
+      "path": "art/sfx/reveal9.wav",
+      "sha256": "a7b0c326ae1b146a9f188943928ea5512dcfc912a687fc7055eee5b252edd4ea",
+      "seconds": 2.04,
+      "peak": 0.3394,
+      "rms": 0.0511,
+      "loop_seam": null
+    }
+  ]
+}

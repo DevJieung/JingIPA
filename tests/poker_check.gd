@@ -27,7 +27,7 @@ const TOTAL := 2598960
 
 
 func _ready() -> void:
-	var quick := "--quick" in OS.get_cmdline_user_args()
+	var quick := Harness.has_arg("--quick")
 	var fail := 0
 	fail += _check_basics()
 	if quick:

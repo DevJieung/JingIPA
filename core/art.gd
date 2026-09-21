@@ -8,6 +8,7 @@ class_name Art
 ##   없으면 null 을 주고, 화면 쪽이 색 도형으로 대신 그린다.
 
 static var _cache: Dictionary = {}
+static var _previews: Dictionary = {}
 
 
 static func tex(path: String) -> Texture2D:
@@ -24,6 +25,22 @@ static func tex(path: String) -> Texture2D:
 
 static func has(path: String) -> bool:
 	return tex(path) != null
+
+
+## 앞머리가 같은 그림을 캐시에서 통째로 잊는다.
+##
+## ★ 왜 필요한가: 테마 그림이 백 장(배경 1280x800 · 바닥 720x720)이고 캐시는 **한 번 읽은
+##   것을 영영 들고 있다.** 한 판은 테마를 열 곳만 쓰지만, 앱을 안 끄고 판을 여러 번 하면
+##   쉰 곳이 다 쌓여서 그림만 300MB 를 먹는다 — 폰에서 그대로 죽는다.
+##   판이 시작될 때 한 번 잊어 주면 언제나 열 곳(약 60MB) 안쪽이다.
+## ★ 캐릭터·몬스터·UI 는 **안 잊는다.** 그쪽은 63장이고 늘 쓰는 것이라, 잊으면 탄마다
+##   디스크에서 다시 읽느라 전투 첫 프레임이 튄다.
+static func forget(prefix: String) -> void:
+	var keep: Dictionary = {}
+	for k in _cache:
+		if not String(k).begins_with(prefix):
+			keep[k] = _cache[k]
+	_cache = keep
 
 
 ## 그림을 (cx, by) — 가로 가운데, 세로 **발밑** — 에 놓고 그린다.
@@ -59,6 +76,9 @@ static func draw_fill(ci: CanvasItem, path: String, rect: Rect2,
 ##   영웅 편성)이 같은 크기로 그린다. 손으로 세 번 곱하면 반드시 한 곳을 빠뜨린다.
 static func draw_unit(ci: CanvasItem, u: Dictionary, cx: float, by: float,
 		sc: float = 1.0, mod: Color = Color.WHITE) -> void:
+	# 같은 시트와 발 원점을 써야 편성 화면에서 전투로 넘어갈 때 몸이 이동하지 않는다.
+	if Anim.draw_unit(ci, u, "idle", 0.0, cx, by, sc, mod):
+		return
 	draw_actor(ci, String(u.get("art", "")), Color(String(u.get("color", "#ffffff"))),
 			float(u.get("h", 100)), cx, by, sc * float(u.get("sc", 1.0)), mod)
 
@@ -66,6 +86,85 @@ static func draw_unit(ci: CanvasItem, u: Dictionary, cx: float, by: float,
 ## 그 캐릭터를 그렸을 때의 실제 높이(px). 그림자·이름표 자리를 잡는 데 쓴다.
 static func unit_h(u: Dictionary, sc: float = 1.0) -> float:
 	return float(u.get("h", 100)) * float(u.get("sc", 1.0)) * sc
+
+
+## 목록/상세창은 전용 원화의 불투명 영역을 가로·세로 모두 맞춘다.
+## 작은 전투 프레임을 확대하면 얼굴과 외곽이 깨지므로 원본에서 따로 만든다.
+## 전용 원화가 없는 개발 환경에서는 idle 첫 프레임과 정지 그림을 차례로 쓴다.
+static func unit_preview(u: Dictionary) -> Dictionary:
+	var t := tex("res://art/portraits/%s.png" % String(u.get("id", "")))
+	var portrait := t != null
+	var c: Dictionary = {}
+	if t == null:
+		c = Anim.clip(u, "idle")
+		t = c["tex"] if not c.is_empty() else tex(String(u.get("art", "")))
+	if t == null:
+		return {}
+	var key := t.resource_path
+	if _previews.has(key):
+		return _previews[key]
+	var img := t.get_image()
+	if img.is_compressed():
+		img.decompress()
+	if not c.is_empty():
+		img = img.get_region(Rect2i(0, 0, int(c["w"]), int(c["h"])))
+	var used := img.get_used_rect()
+	if portrait:
+		# 생성 PNG의 거의 투명한 외곽 점이 브라사만 작게 축소시키지 않도록,
+		# 검수한 실루엣 경계 + 선형 필터 안전 여백 4px를 원화 표시 영역으로 쓴다.
+		# 원본 픽셀/다른 원화는 보존한다. 근거: art/portraits/sources/brasa-head-repair/manifest.json.
+		if String(u.get("id", "")) == "brasa" and img.get_size() == Vector2i(1029, 1528):
+			used = Rect2i(109, 183, 759, 1124)
+		# 원화는 작은 목록에도 축소된다. 이 텍스처만 선형 샘플링해서 얇은 선이
+		# 빠지는 것을 줄이고, 전투 도트와 UI 전체의 Nearest 설정은 유지한다.
+		var filtered := CanvasTexture.new()
+		filtered.diffuse_texture = t
+		filtered.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+		t = filtered
+	var out: Dictionary = {} if not used.has_area() else {"tex": t, "src": Rect2(used)}
+	_previews[key] = out
+	return out
+
+
+static func fit_rect(source: Vector2, box: Rect2) -> Rect2:
+	if source.x <= 0 or source.y <= 0 or not box.has_area():
+		return Rect2(box.position, Vector2.ZERO)
+	var sc := minf(box.size.x / source.x, box.size.y / source.y)
+	var drawn := source * sc
+	return Rect2(box.position + Vector2((box.size.x - drawn.x) * 0.5, box.size.y - drawn.y), drawn)
+
+
+static func draw_unit_fit(ci: CanvasItem, u: Dictionary, box: Rect2,
+		mod: Color = Color.WHITE) -> void:
+	if not box.has_area():
+		return
+	var preview := unit_preview(u)
+	if not preview.is_empty():
+		var src: Rect2 = preview["src"]
+		ci.draw_texture_rect_region(preview["tex"], fit_rect(src.size, box), src, mod)
+		return
+	# 그림이 없는 개발 환경도 같은 경계를 지킨다(외곽선 여백 포함).
+	var target := fit_rect(Vector2(66, 104), box)
+	draw_actor(ci, "", Color(String(u.get("color", "#ffffff"))), 100,
+			target.get_center().x, target.end.y - target.size.y * 2.0 / 104.0,
+			target.size.y / 104.0, mod)
+
+
+## 배치 지도는 실제 전투의 굵은 실루엣을 사용한다. 원화는 목록·상세창에 유지한다.
+static func draw_deployed_fit(ci: CanvasItem, u: Dictionary, box: Rect2) -> void:
+	var clip := Anim.clip(u, "idle")
+	if clip.is_empty():
+		draw_unit_fit(ci, u, box)
+		return
+	var key := "deployment:" + String(u.get("id", ""))
+	if not _previews.has(key):
+		var img: Image = clip["tex"].get_image()
+		if img.is_compressed():
+			img.decompress()
+		var frame := img.get_region(Rect2i(0, 0, int(clip["w"]), int(clip["h"])))
+		_previews[key] = {"src": Rect2(frame.get_used_rect())}
+	var src: Rect2 = _previews[key]["src"]
+	ci.draw_texture_rect_region(clip["tex"], fit_rect(src.size, box), src)
 
 
 ## 캐릭터/몬스터 한 마리. 그림이 아직 없으면 **색 도형**으로 대신 그린다.

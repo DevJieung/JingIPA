@@ -7,7 +7,7 @@ allow_system_fallback 이 켜져 있으면 **실기기에서는 OS 폰트가 메
 개발자 눈에는 절대 안 잡히고, 폰트 없는 기기에서만 깨진다.
 
 이 게임은 카드 무늬(♠♥♦♣)와 별표(★)를 화면에 그리므로 특히 중요하다.
-DinoKR(=Noto Sans CJK KR Bold) 에 그 글자들이 없으면 카드가 통째로 못 읽게 된다.
+번들 UI 폰트에 그 글자들이 없으면 카드가 통째로 못 읽게 된다.
 
     python3 tools/check_font.py
 
@@ -16,6 +16,7 @@ DinoKR(=Noto Sans CJK KR Bold) 에 그 글자들이 없으면 카드가 통째�
 from __future__ import annotations
 
 import glob
+import json
 import os
 import re
 import sys
@@ -23,21 +24,31 @@ import sys
 from fontTools.ttLib import TTFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-FONT = os.path.join(ROOT, "core", "fonts", "DinoKR.ttf")
-SCAN_GLOBS = ["core/**/*.gd", "game/**/*.gd"]
+FONTS = [os.path.join(ROOT, "core", "fonts", name) for name in
+         ("RefugeSans-Bold.otf",)]
+SCAN_GLOBS = ["core/**/*.gd", "game/**/*.gd", "core/locales/*.json"]
 
 IGNORE_PREFIXES = ("res://", "user://", "uid://")
 # 화면에 안 나가는 이름들(딕셔너리 키·id·색 문자열 등)은 검사에서 뺀다.
 IGNORE_EXACT = {
     "atk", "rate", "rng", "crit", "critx", "gold", "life", "reroll", "time",
     "balance", "rapid", "heavy", "sniper", "guard",
-    "shot", "pierce", "splash", "chain", "beam", "slow", "burn", "aura",
+    "shot", "pierce", "splash", "chain", "beam", "slow", "burn", "zone", "ricochet",
     "swarm", "fast", "tank", "caster", "boss", "early", "mid", "late",
 }
 
 
 def literals_of(path: str) -> list[tuple[int, str]]:
     """주석을 제외한 문자열 리터럴을 (줄번호, 내용) 으로 뽑는다."""
+    if path.endswith(".json"):
+        def strings(value):
+            if isinstance(value, str):
+                yield value
+            elif isinstance(value, dict):
+                for child in value.values():
+                    yield from strings(child)
+        with open(path, encoding="utf-8") as source:
+            return [(1, text) for text in strings(json.load(source))]
     out: list[tuple[int, str]] = []
     for lineno, line in enumerate(open(path, encoding="utf-8"), 1):
         if line.lstrip().startswith("#"):
@@ -52,10 +63,11 @@ def literals_of(path: str) -> list[tuple[int, str]]:
 
 
 def main() -> int:
-    if not os.path.exists(FONT):
-        print(f"폰트를 찾을 수 없습니다: {FONT}", file=sys.stderr)
-        return 1
-    cmap = set(TTFont(FONT).getBestCmap())
+    for font in FONTS:
+        if not os.path.exists(font):
+            print(f"폰트를 찾을 수 없습니다: {font}", file=sys.stderr)
+            return 1
+    cmap = set.intersection(*(set(TTFont(font).getBestCmap()) for font in FONTS))
 
     missing: dict[str, list[str]] = {}
     paths: list[str] = []

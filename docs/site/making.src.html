@@ -1,0 +1,437 @@
+<title>올인 디펜스 제작기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@700&display=swap">
+<style>
+{{CSS:_base}}
+
+/* ── 제작기만의 것 ─────────────────────────────────────────────── */
+.mk-head { padding: 52px 0 34px; border-bottom: 2px solid var(--ink); }
+.mk-head h1 { font-size: clamp(30px, 5.2vw, 48px); letter-spacing: -.03em; margin: 0 0 12px; }
+.mk-head .sub { font-size: 18.5px; color: var(--ink-2); max-width: 56ch; margin: 0; }
+
+.big { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 26px 30px; }
+.big .stat b { font-size: 34px; }
+
+/* 문제 → 한 일 → 결과 */
+.case { border-top: 2px solid var(--ink); padding-top: 22px; }
+/* ★ 한글이 섞이므로 자간을 주지 않는다 — 모노에 한글이 없어 대체 폰트로 떨어지는데
+   거기에 자간을 얹으면 「감 으 로 못 잡 는 다」처럼 낱자가 벌어진다. */
+.case > .tag {
+	font-size: 12.5px; font-weight: 700; letter-spacing: .02em;
+	color: var(--gold); margin-bottom: 8px;
+}
+.case > .tag .n { font-family: "IBM Plex Mono", monospace; letter-spacing: .08em; }
+.case h2 { font-size: clamp(22px, 3.2vw, 29px); margin-bottom: 16px; }
+.case .prob {
+	font-size: 17px; color: var(--ink); line-height: 1.7; margin: 0 0 22px;
+	max-width: 62ch;
+}
+.case .prob b { box-shadow: inset 0 -.55em 0 var(--gold-wash); }
+
+.steps { display: grid; gap: 0; margin: 22px 0; }
+.steps .st { display: grid; grid-template-columns: 30px 1fr; gap: 0 16px; padding: 13px 0; border-top: 1px solid var(--edge-soft); }
+.steps .st:first-child { border-top: 0; }
+.steps .st > .k {
+	font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--ink-dim);
+	padding-top: 4px; font-weight: 600;
+}
+.steps .st .t { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
+.steps .st p { margin: 0; font-size: 14.5px; color: var(--ink-2); }
+.steps .st code {
+	font-family: "IBM Plex Mono", monospace; font-size: 12.5px;
+	background: var(--surface-2); border: 1px solid var(--edge-soft);
+	border-radius: 3px; padding: 1px 5px;
+}
+
+.out {
+	border-left: 3px solid var(--good); padding: 2px 0 2px 16px; font-size: 14.5px;
+	color: var(--ink-2);
+}
+.out b { color: var(--ink); }
+
+/* 파이프라인 띠 */
+.pipe { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.pipe .st {
+	border: var(--rule); border-radius: 4px; padding: 14px 16px; background: var(--surface);
+	position: relative;
+}
+.pipe .st .n {
+	font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--gold);
+	font-weight: 600; letter-spacing: .08em;
+}
+.pipe .st .t { font-weight: 700; font-size: 14.5px; margin: 4px 0 4px; }
+.pipe .st p { margin: 0; font-size: 13px; color: var(--ink-dim); line-height: 1.6; }
+
+.trap {
+	background: var(--surface-2); border: var(--rule); border-radius: 4px;
+	padding: 16px 20px; font-size: 14px;
+}
+.trap .h {
+	font-weight: 700; font-size: 14px; margin-bottom: 6px; display: flex; gap: 9px;
+	align-items: baseline;
+}
+.trap .h i {
+	font-style: normal; font-size: 12px; font-weight: 700;
+	color: var(--red); flex: none; letter-spacing: .01em;
+}
+.trap p { margin: 0; color: var(--ink-2); }
+.trap p + p { margin-top: 8px; }
+
+.sheetfig img { image-rendering: pixelated; }
+
+.stack { display: grid; gap: 3px 16px; grid-template-columns: max-content 1fr; font-size: 14px; }
+.stack dt { color: var(--ink-dim); }
+.stack dd { margin: 0; }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<symbol id="pip-spade" viewBox="0 0 24 24"><path d="M12 2.2C12 2.2 3.6 9.1 3.6 14.1a4.1 4.1 0 0 0 7.2 2.7l-1.1 5h4.6l-1.1-5a4.1 4.1 0 0 0 7.2-2.7C20.4 9.1 12 2.2 12 2.2Z" fill="currentColor"/></symbol>
+<symbol id="pip-star" viewBox="0 0 24 24"><path d="m12 1.9 3.1 6.6 7.1.9-5.2 4.9 1.3 7.1-6.3-3.5-6.3 3.5 1.3-7.1L1.8 9.4l7.1-.9Z" fill="currentColor"/></symbol>
+</defs></svg>
+
+<div class="wrap">
+
+<header class="mk-head">
+	<p class="eyebrow ko" style="letter-spacing:.06em">MAKING OF · 1인 개발</p>
+	<h1>화면 없는 기계에서 게임 하나를 만들었다</h1>
+	<p class="sub">올인 디펜스 — Godot 4.7 · 안드로이드 · 12일. 이 문서는 무엇을 만들었는지가 아니라
+	<b>어떻게 만들 수 있었는지</b>에 대한 기록이다.</p>
+</header>
+
+<section class="sec" style="padding-top:36px">
+	<div class="big">
+		<div class="stat"><b>16.9k</b><span>GDScript 줄 · 34 파일</span></div>
+		<div class="stat"><b>8.5k</b><span>Python 줄 · 35 도구</span></div>
+		<div class="stat"><b>322</b><span>그림 · 전부 생성</span></div>
+		<div class="stat"><b>1,000</b><span>스프라이트 프레임</span></div>
+		<div class="stat"><b>42</b><span>효과음 · 코드 합성</span></div>
+		<div class="stat"><b>9</b><span>단계 자동 검증</span></div>
+	</div>
+	<div class="grid g2" style="gap:40px;margin-top:44px;align-items:start">
+		<div class="read">
+			<p class="lede">개발 머신에는 <b>디스플레이가 없다.</b> aarch64 서버 한 대뿐이고,
+			모니터도 키보드도 붙어 있지 않다. 그런데 만들려는 것은 도트 그림이 화면을 가득 채우는
+			모바일 게임이었다.</p>
+			<p class="lede">「배치가 어긋났다」 「이펙트가 안 보인다」 「글자가 두부로 나온다」는
+			<b>테스트로 안 잡히는</b> 문제다. 눈으로 봐야 한다. 그런데 볼 눈이 없었다.</p>
+			<p class="lede">이 제약이 결국 프로젝트 전체의 구조를 정했다 — 아래 네 가지가 그 결과다.</p>
+		</div>
+		<dl class="stack">
+			<dt>엔진</dt><dd>Godot 4.7.1 · GDScript · GL Compatibility</dd>
+			<dt>대상</dt><dd>안드로이드 (가로 1280×800)</dd>
+			<dt>기간</dt><dd>2026-08-22 ~ 09-02 (12일)</dd>
+			<dt>인원</dt><dd>1인 — 기획 · 프로그래밍 · 아트 파이프라인 · QA</dd>
+			<dt>원화</dt><dd>Krea 2 Turbo (로컬)</dd>
+			<dt>동작</dt><dd>Wan 2.2 I2V-A14B + 픽셀 LoRA (로컬)</dd>
+			<dt>도구</dt><dd>Python · Pillow · numpy · ComfyUI · Xvfb · ffmpeg</dd>
+			<dt>외부 에셋</dt><dd>없음 — 그림·소리 전부 이 저장소에서 생성</dd>
+		</dl>
+	</div>
+</section>
+
+<!-- ── 1 ─────────────────────────────────────────────────────────── -->
+<section class="sec case">
+	<p class="tag"><span class="n">문제 01</span> — 볼 수 없다</p>
+	<h2>화면이 없는 기계에서 화면을 본다</h2>
+	<p class="prob">배치가 어긋나거나 무언가가 가려지는 문제는 <b>테스트로 안 잡힌다.</b>
+	실제로 얼음 기둥을 몬스터 몸 한가운데에 세웠더니 스프라이트에 통째로 가려져 한 조각도 안 보였고,
+	앞에 다 그렸더니 이번에는 얼굴이 지워졌다. 둘 다 검사기는 통과했다.</p>
+
+	<div class="grid g2" style="gap:40px;align-items:start">
+		<div>
+			<div class="steps">
+				<div class="st"><span class="k">01</span><div>
+					<span class="t">가상 프레임버퍼를 sudo 없이 깐다</span>
+					<p>Xvfb 를 <code>apt-get download</code> + <code>dpkg-deb -x</code> 로
+					홈 아래에 <b>풀어만</b> 둔다. 설치가 아니라 풀기라 권한이 필요 없다.</p></div></div>
+				<div class="st"><span class="k">02</span><div>
+					<span class="t">게임을 실제로 그리게 한다</span>
+					<p>그 위에서 Godot 이 소프트웨어 OpenGL(llvmpipe)로 <b>진짜로 렌더링</b>한다.
+					헤드리스가 아니라 화면이 있는 것과 같은 경로다.</p></div></div>
+				<div class="st"><span class="k">03</span><div>
+					<span class="t">보고 싶은 순간을 코드로 기다린다</span>
+					<p>시간만 재고 찍으면 하필 아무도 안 맞은 프레임이 걸린다. 얼음 사진은
+					<b>얼어붙은 놈이 셋 이상인 순간</b>, 전투 사진은 <b>길에 몬스터가 가장 많이 깔린
+					순간</b>을 기다렸다가 찍는다.</p></div></div>
+				<div class="st"><span class="k">04</span><div>
+					<span class="t">같은 길로 영상까지 뽑는다</span>
+					<p>소프트웨어 렌더링은 실시간으로 5~10fps 밖에 못 그린다. 그대로 녹화하면
+					영상이 뚝뚝 끊긴다. 그래서 <b>화면 녹화를 안 한다</b> —
+					<code>--fixed-fps 30</code> 을 걸면 한 프레임을 정확히 1/30초로 <b>치고</b>
+					다 그린 뒤 다음으로 넘어가므로, 그리는 데 아무리 오래 걸려도 결과는 매끈한 30fps 다.</p></div></div>
+			</div>
+			<p class="out"><b>결과.</b> 스크린샷 20종을 명령 한 줄로 찍는다. 소개 영상
+			<b>1분 34초 · 1280×800 · 소리 포함</b>도 같은 길로 나왔다 — 대본이 게임 화면을 실제로
+			눌러서 돌리고, 자막은 게임과 같은 폰트로 그 위에 그린다. 편집기를 한 번도 안 열었다.</p>
+		</div>
+		<div>
+			<figure>
+				<img src="{{IMG:frost12:620}}" alt="얼음 상태이상이 여럿 걸린 순간을 골라 찍은 전투 스크린샷">
+				<figcaption><b>「기다렸다가 찍기」의 결과.</b> 얼음은 발밑 고리 위에 세우고 뒤쪽은
+				스프라이트 앞에, 앞쪽은 뒤에 그려 <b>다리만 가린다</b> — 이 깊이 구분은 사진으로
+				보기 전까지 세 번을 틀렸다.</figcaption>
+			</figure>
+			<div class="trap" style="margin-top:24px">
+				<div class="h"><i>함정</i>영상이 1000×625 로 녹화됐다</div>
+				<p>Godot 의 무비 라이터는 <b>뷰포트가 아니라 창 크기</b>로 받아 낸다.
+				프로젝트에 개발 편의용 <code>window_width_override</code> 가 걸려 있어서
+				1280×800 도트 화면이 1000×625 로 줄어 들어왔고, 높이 625는 <b>홀수라 x264 가
+				인코딩을 아예 거절했다.</b></p>
+				<p>고친 방법: 촬영하는 동안만 <code>override.cfg</code> 를 깔고 끝나면 지운다.
+				저장소에 남기면 게임이 늘 그 크기로 뜬다.</p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- ── 2 ─────────────────────────────────────────────────────────── -->
+<section class="sec case">
+	<p class="tag"><span class="n">문제 02</span> — 그릴 사람이 없다</p>
+	<h2>그림 322장과 애니메이션 1,000프레임</h2>
+	<p class="prob">캐릭터 50명에게 대기·공격 두 클립씩 필요했다. 손으로 찍으면 <b>1,000프레임</b>이고,
+	외부 에셋을 사 오면 라이선스가 따라다니는 데다 「등급마다 다섯 · 속성 다섯 · 무기 다섯」이라는
+	배치 행렬을 맞출 수가 없다. 그래서 <b>파이프라인을 먼저 만들었다.</b></p>
+
+	<div class="pipe" style="margin-bottom:26px">
+		<div class="st"><div class="n">STEP 1</div><div class="t">원화</div>
+			<p>Krea 2 Turbo 로 캐릭터 한 장. 화풍 앵커는 <b>코드 한 곳</b>에만 둔다.</p></div>
+		<div class="st"><div class="n">STEP 2</div><div class="t">동작</div>
+			<p>Wan 2.2 I2V 로 그 한 장에서 움직임을 만든다. <b>동영상을 안 거치고</b>
+			프레임 PNG 로 직접 받는다.</p></div>
+		<div class="st"><div class="n">STEP 3</div><div class="t">도트화 · 검사</div>
+			<p>15색으로 줄이고 1도트 테두리를 되살린 뒤 96×96 시트로 굽는다.
+			품질 검사 <b>여덟 가지</b>.</p></div>
+		<div class="st"><div class="n">STEP 4</div><div class="t">엔진 반입</div>
+			<p>기준점 · 배율 · 총구 · 놓는 칸을 재서 게임 데이터로 적는다.</p></div>
+	</div>
+
+	<figure class="sheetfig">
+		<img src="{{IMG:sheets:1080:88}}" alt="실제 스프라이트 시트 세 줄 — 브라사의 두 팔 들기, 네레아의 검 베기, 림네의 대기 동작">
+		<figcaption><b>실제로 나온 시트.</b> 위부터 브라사(광역 — 두 팔을 든다) ·
+		네레아(검 — 벤 궤적이 그대로 날아간다) · 림네(대기 8칸 반복). 96×96 · 12fps ·
+		15색. 자세 무리는 <b>무기가 정한다</b> — 로스터를 고치면 그림도 따라 바뀐다.</figcaption>
+	</figure>
+
+	<div class="grid g2" style="gap:36px;margin-top:34px;align-items:start">
+		<div>
+			<h3 style="margin-top:0">세 가지를 실측으로 알아냈다</h3>
+			<div class="steps">
+				<div class="st"><span class="k">A</span><div>
+					<span class="t">공격 LoRA 세기는 <b>자세 무리마다 달라야 한다</b></span>
+					<p>세기 1.0에서는 <b>모두가 칼을 휘둘렀다</b> — 활잡이도, 오브를 든 왕도.
+					겨눔·채찍·시전은 <b>0.5</b>, 두 팔 들기는 <b>0</b>(0.5에서 지팡이를 창처럼 내려쳤다),
+					<b>검만 1.0</b> — 검에게는 그 흰 초승달 궤적이 정확히 주문한 그림이기 때문이다.</p></div></div>
+				<div class="st"><span class="k">B</span><div>
+					<span class="t">팔레트가 캐릭터를 <b>회색으로 빨아들이고</b> 있었다</span>
+					<p>램프 5 + 공용 12였는데 공용 열둘 중 다섯이 순회색이라, 양자화가 넓은 쪽으로
+					끌어당겨 <b>채도의 배수구</b>가 됐다. 원화 채도 중앙 0.711 → 마스터 <b>0.000</b>.
+					속성 램프 7 + 공용 8로 뒤집고, 램프에 <b>가문 색 둘을 다</b> 담고 나서
+					0.581로 돌아왔다.</p></div></div>
+				<div class="st"><span class="k">C</span><div>
+					<span class="t">클립 둘이 <b>같은 크롭 상자</b>를 써야 한다</span>
+					<p>클립마다 제 상자로 자르면 팔을 뻗는 공격 쪽 상자가 더 넓어서, 같은 96칸에
+					눌러 담으면서 <b>사람이 작아진다</b> — 화면에서는 영웅이 쏠 때마다
+					쪼그라들었다 커지는 것으로 보였다.</p></div></div>
+			</div>
+		</div>
+		<div>
+			<div class="trap">
+				<div class="h"><i>가장 비쌌던 한 줄</i>화풍 앵커는 「몸통 묘사」를 못 이긴다</div>
+				<p>화풍을 밝게 바꾸려고 앵커의 색 줄을 통째로 뒤집었다. <b>그것만으로는 한 장도
+				안 밝아졌다.</b></p>
+				<p>캐릭터 묘사 105줄에 <code>dark</code> 206번 · <code>dull</code> 77번 ·
+				<code>tarnished</code> 33번이 박혀 있었기 때문이다. 그 낱말을 걷어낸 뒤에야
+				밝기 중앙값이 <b>0.121 → 0.264</b>, 채도가 <b>0.180 → 0.471</b>로 올라갔다.</p>
+				<p>비율도 같았다. 앵커에 「다섯 등신 어른」을 못 박아 두어도 묘사에
+				「헐렁한」 「웅크린」 「작은」이 들어 있으면 <b>모델은 묘사를 따른다</b> —
+				실제로 네 명이 3등신에 얼굴 없이 나왔다. <b>시드를 바꿔서는 안 고쳐진다.
+				말을 바꿔야 그림이 바뀐다.</b></p>
+			</div>
+			<div class="trap" style="margin-top:18px">
+				<div class="h"><i>함정</i>부정 프롬프트가 조용히 버려졌다</div>
+				<p>쓰던 모델은 CFG 증류라 guidance 가 0 이고 <code>negative_prompt</code> 를
+				<b>말없이 무시한다.</b> 「어둡게 하지 마라」가 한 번도 전달된 적이 없었다 —
+				그래서 「밝게」를 <b>긍정문으로만</b> 걸 수 있다는 걸 늦게 알았다.</p>
+			</div>
+		</div>
+	</div>
+	<p class="out" style="margin-top:26px"><b>결과.</b> 캐릭터 50명 × 클립 2종 =
+	<b>1,000프레임</b>을 명령 한 줄(<code>run50.sh</code>)로 원화부터 엔진 반입까지 굽는다.
+	품질 검사 여덟 가지(색 수 · 팔레트 이탈 · 반투명 · 발 높이 · 빈 칸 · 테두리 · 루프 이음매 ·
+	잔여 키 색)를 전부 통과했고, 효과음 42개도 외부 음원 없이 <b>numpy 로 합성</b>했다.</p>
+</section>
+
+<!-- ── 3 ─────────────────────────────────────────────────────────── -->
+<section class="sec case">
+	<p class="tag"><span class="n">문제 03</span> — 감으로 못 잡는다</p>
+	<h2>100탄짜리 게임의 밸런스를 사람이 다 못 돌아 본다</h2>
+	<p class="prob">한 판이 100탄이고 60~90분이다. 숫자 하나를 만질 때마다 사람이 돌면
+	하루에 몇 판을 못 본다. 그런데 이 게임에서 <b>체력 지수는 셋째 자리만 만져도 클리어율이
+	몇 배로 뛴다</b> — 1.1130이면 24판 중 8판, 1.1150이면 6판이다.</p>
+
+	<div class="grid g2" style="gap:40px;align-items:start">
+		<div>
+			<div class="steps">
+				<div class="st"><span class="k">01</span><div>
+					<span class="t">전투 계산을 그리기에서 <b>완전히</b> 떼어 냈다</span>
+					<p>시뮬레이터는 화면을 전혀 모른다. 화면에 붙일 것은 <b>사건 배열</b>로만
+					흘린다. 그래서 헤드리스로 100탄을 몇백 번 돌려 볼 수 있다 —
+					이 머신에 화면이 없다는 제약이 오히려 이 구조를 강제했다.</p></div></div>
+				<div class="st"><span class="k">02</span><div>
+					<span class="t">「기준 실력」을 코드로 적었다</span>
+					<p>자동 플레이 정책이 사람 대신 판단한다 — 성역 여섯을 어떻게 짜고,
+					상점에서 무엇을 사고, 리롤을 언제 할지. 이 정책이 <b>고정</b>이라
+					게임 숫자만 바뀌었을 때의 차이를 잰다.</p></div></div>
+				<div class="st"><span class="k">03</span><div>
+					<span class="t">기대 범위를 벗어나면 <b>검증이 실패로 친다</b></span>
+					<p>클리어 1~6판 · 도달 중간값 92~98탄 · 1~6탄 크리스탈 손실 0 ·
+					<b>다섯 속성이 저마다 10% 이상</b>.</p></div></div>
+			</div>
+			<div class="trap" style="margin-top:22px">
+				<div class="h"><i>이 검사가 아니었으면 못 잡았을 것</i>조용히 죽은 속성</div>
+				<p>나무·바위 몸이 전기를 <b>면역(0배)</b>으로 받게 바꿨을 때, 전기의 기대 배수
+				<b>평균은 한 톨도 안 변했다</b>(나무가 0.5→0으로 잃은 몫을 얼음이 0.5→1.0으로
+				그대로 받았다). 그런데 성역에 선 비율은 <b>11.6% → 9.6%</b>로 떨어졌다.</p>
+				<p>평균으로는 안 보이는 것이 있었다. 디펜스에서 <b>못 잡는 놈 하나</b>는 평균의
+				문제가 아니라서, 그 탄에 면역인 놈이 섞이면 그 영웅은 통째로 안 쓰인다.
+				면역인 몸이 하나에서 둘이 되면서 그 벌칙이 걸리는 탄이 두 배가 됐다.
+				<b>클리어율로는 이것이 절대 안 보인다</b> — 24판 중 5~6판으로 그대로였다.</p>
+			</div>
+		</div>
+		<div>
+			<figure>
+				<img src="{{IMG:result12:620}}" alt="라운드 전과 판 — 영웅마다 2배·보통·반감으로 나뉜 피해량">
+				<figcaption><b>같은 통계를 게임 안에서도 보여 준다.</b> 전투 중 오른쪽 정보판이
+				영웅마다 준 피해를 <b>2배 · 보통 · 반감</b> 세 토막으로 이어 쌓고, 그 자는
+				「이번 탄 몬스터 체력의 합」이다 — 막대 길이가 곧 <b>이 영웅이 이 탄의 몇 할을
+				깎았나</b>다.</figcaption>
+			</figure>
+			<div class="trap" style="margin-top:24px">
+				<div class="h"><i>먼저 봐야 했던 것</i>체력 곡선이 아니라 지갑이었다</div>
+				<p>크리스탈 수리가 <b>값이 고정인 아이템</b>이던 시절, 처치 골드는 탄에 비례해
+				늘어서 후반에 <b>한 탄 벌이로 수리를 열 개</b> 살 수 있었다. 자동 플레이 12판이
+				전부 클리어하면서 크리스탈이 20 → <b>31로 늘어</b> 있었다.</p>
+				<p>체력 곡선을 아무리 만져도 안 고쳐질 문제였다.
+				<b>「골드로 살 수 있는 것」부터 봐야 한다.</b></p>
+			</div>
+		</div>
+	</div>
+	<p class="out" style="margin-top:26px"><b>결과.</b> 자동 플레이 12판 —
+	도달 중간값 <b>97탄</b> · 클리어 <b>4판</b> · 1~6탄 크리스탈 손실 <b>0</b> ·
+	다섯 속성이 전부 10% 이상(최저 전기 10.9%). 「데미지가 왜 이 숫자인가」를 곱셈 사슬로
+	따라가는 별도 도구도 붙였다 — 산수와 실제 전투가 같은 값을 내는지 자기 검사까지 한다.</p>
+</section>
+
+<!-- ── 4 ─────────────────────────────────────────────────────────── -->
+<section class="sec case">
+	<p class="tag"><span class="n">문제 04</span> — 혼자 만든다</p>
+	<h2>규칙은 코드가 아니라 <b>표 사이</b>에서 깨진다</h2>
+	<p class="prob">혼자 만들면 리뷰가 없다. 그런데 이 게임에서 실제로 난 버그의 대부분은
+	코드가 아니라 <b>표 두 개가 조용히 어긋난 것</b>이었다 — 캐릭터 표와 그림 파일, 무늬 번호와
+	색 규칙, 상점 설명과 실제 함수. 컴파일러가 잡아 줄 수 있는 종류가 하나도 없다.</p>
+
+	<div class="grid g2" style="gap:40px;align-items:start">
+		<div>
+			<h3 style="margin-top:0">원본은 하나, 나머지는 생성물</h3>
+			<p class="small" style="color:var(--ink-2)">캐릭터·몬스터·테마의 원본은 JSON 한 파일이고,
+			게임이 읽는 GDScript 표는 거기서 <b>찍어 낸다.</b> 검증 1단계가 다시 찍어 보고
+			달라지면 실패로 친다. 자세도 같은 함수 하나가 정한다 — 두 곳에서 지어내면
+			정지 그림과 애니메이션이 <b>다른 사람</b>이 된다.</p>
+			<p class="small" style="color:var(--ink-2)">이 문서의 배치 행렬과 상성표, 체력 곡선도
+			<b>같은 원본에서 찍어 낸 것</b>이다. 손으로 옮겨 적으면 밸런스를 만진 날
+			문서만 옛 숫자로 남는다.</p>
+
+			<h3>「모양으로」 재는 검사</h3>
+			<p class="small" style="color:var(--ink-2)">번들 폰트에 ♠ ♦ ♣ 가 없어서 글자로 쓰면
+			실기기에서 두부(□)가 되는데, <b>개발 머신의 OS 폰트가 그것을 메워 줘서 눈으로는 절대
+			안 잡힌다.</b> 그래서 무늬를 전부 도형으로 그리고, 검사기가 <b>모양으로</b> 확인한다 —
+			스페이드는 맨 아랫줄에 자루가 있고 하트는 맨 윗줄에 봉우리가 둘이다.</p>
+			<p class="small" style="color:var(--ink-2)">한 번은 무늬 표의 열쇠가 <b>0, 1</b> 같은
+			맨숫자로 적혀 있어서 스페이드 자리에 하트가 들어가 있었다. 색은 무늬 번호로 정하므로
+			화면에 <b>검은 하트와 빨간 스페이드</b>가 찍혔다.</p>
+		</div>
+		<div>
+			<div class="panel">
+				<p class="eyebrow ko" style="margin-bottom:14px">정합성 검사가 재는 것 (21가지)</p>
+				<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:7px 16px;font-size:13px;color:var(--ink-2)">
+					<span>로스터 5×5×10</span><span>속성·상성</span><span>테마 50</span>
+					<span>탄 편성</span><span>밸런스 상수</span><span>투기장 기하</span>
+					<span>총구 좌표</span><span>사거리 없음</span><span>영웅 자리</span>
+					<span>전투 사건</span><span>피해 세 토막</span><span>상점 표시값</span>
+					<span>카드 더미</span><span>저장·복원</span><span>이름 길이</span>
+					<span>효과음 이름</span><span>그림 존재</span><span>자동 저장 위치</span>
+					<span>무늬 모양</span><span>스크립트 로드</span><span>발사 타이밍</span>
+				</div>
+			</div>
+			<div class="trap" style="margin-top:20px">
+				<div class="h"><i>사용자가 찾아낸 버그</i>앱을 껐다 켜면 리롤이 되살아났다</div>
+				<p>자동 저장을 「단계가 바뀔 때」만 걸었더니 <b>뽑기 화면 전체가 저장 밖</b>이었다 —
+				리롤도 확정도 편성도 단계를 안 바꾸기 때문이다. 앱을 껐다 켜는 것만으로
+				공짜 리롤과 쓴 골드가 환불됐고, 홈 버튼을 누르면 「영웅은 이미 받았는데 단계는
+				뽑기」인 판이 담겨서 이어하기로 <b>영웅이 복제</b>됐다.</p>
+				<p>고친 뒤: 저장을 거는 자리를 <b>두 종류로 못 박고</b>(단계 전환 · 되돌릴 수 없는
+				획득), 검사기가 「저장을 부르는 곳」을 소스에서 <b>긁어서</b> 그 규칙 밖에 있으면
+				실패로 친다.</p>
+			</div>
+			<p class="out" style="margin-top:22px"><b>결과.</b> 검증 아홉 단계가 약 8분에 돌고
+			APK 까지 굽는다. 마지막 실행에서 <b>전부 통과</b>했다.</p>
+		</div>
+	</div>
+</section>
+
+<!-- ── 마무리 ────────────────────────────────────────────────────── -->
+<section class="sec">
+	<div class="sec-head">
+		<svg class="pip" style="color:var(--gold)"><use href="#pip-star"/></svg>
+		<h2>배운 것</h2>
+	</div>
+	<div class="grid g3">
+		<div class="panel">
+			<h3 style="margin-top:0;font-size:17px">제약이 구조를 준다</h3>
+			<p class="small" style="color:var(--ink-2);margin:0">화면이 없어서 전투 계산을 그리기에서
+			떼어 낼 수밖에 없었고, 그 덕에 100탄을 몇백 번 돌리는 밸런싱이 가능해졌다.
+			화면이 있었다면 아마 <b>화면 안에서 계산하고 끝났을 것</b>이다.</p>
+		</div>
+		<div class="panel">
+			<h3 style="margin-top:0;font-size:17px">평균은 죽은 것을 못 보여 준다</h3>
+			<p class="small" style="color:var(--ink-2);margin:0">전기의 기대 배수 평균이 그대로인데
+			실제 사용률은 20%가 빠졌다. <b>클리어율 같은 요약 지표 하나만 보면</b>
+			「무엇이 안 쓰이는가」는 영영 안 보인다. 재고 싶은 것을 따로 재야 한다.</p>
+		</div>
+		<div class="panel">
+			<h3 style="margin-top:0;font-size:17px">생성 모델은 말을 따르지 시드를 안 따른다</h3>
+			<p class="small" style="color:var(--ink-2);margin:0">그림이 마음에 안 들 때 시드부터
+			돌리는 것은 거의 언제나 틀린 수였다. <b>묘사를 고쳐야 그림이 바뀐다.</b>
+			게다가 부정 프롬프트가 조용히 버려지는 모델이라, 「하지 마라」는 한 번도
+			전달된 적이 없었다.</p>
+		</div>
+		<div class="panel">
+			<h3 style="margin-top:0;font-size:17px">「왜」를 코드 옆에 남긴다</h3>
+			<p class="small" style="color:var(--ink-2);margin:0">되돌리기 쉬운 결정마다 근거를 적어 뒀다 —
+			<b>절대 깨면 안 되는 것 1,500줄</b>이 그렇게 쌓였다. 대부분은 「최적화하다가 되돌리기
+			쉬운 것」들이다. 마비에 재우는 시간이 왜 있어야 하는지를 안 적어 두면 반드시 지워진다.</p>
+		</div>
+		<div class="panel">
+			<h3 style="margin-top:0;font-size:17px">화면이 규칙을 가르쳐야 한다</h3>
+			<p class="small" style="color:var(--ink-2);margin:0">상태이상을 「탄 방식」이 아니라
+			<b>속성</b>이 정하게 바꾼 것이 이 게임 최대의 규칙 개선이었다. 예외가 없어야
+			플레이어가 설명서 없이 배운다 — 발사음이 속성마다, 명중음이 상성마다 다른 것도
+			같은 이유다.</p>
+		</div>
+		<div class="panel">
+			<h3 style="margin-top:0;font-size:17px">고르는 것은 곧 버리는 것</h3>
+			<p class="small" style="color:var(--ink-2);margin:0">무기 상점과 아이템을 통째로 지웠다.
+			무기는 「제일 센 셋을 사면 끝」이라 고를 것이 없었고, 아이템은 값만 내면 그 탄을
+			사 버렸다. <b>남긴 선택지가 적을수록 판단이 늘었다.</b></p>
+		</div>
+	</div>
+</section>
+
+</div>
+
+<footer class="wrap" style="padding:34px 28px 56px;border-top:2px solid var(--ink)">
+	<p class="small muted" style="margin:0">
+		올인 디펜스 제작기 — 2026-09-02 기준. 이 문서의 숫자는 저장소에서 직접 센 것이다.
+	</p>
+</footer>

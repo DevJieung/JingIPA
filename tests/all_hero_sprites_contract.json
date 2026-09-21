@@ -1,0 +1,802 @@
+{
+  "limne": {
+    "elem": "water",
+    "bullet": "zone",
+    "weapon": "deck",
+    "hit_ms": 500.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.49740932642487046,
+    "muzzle_at": {
+      "x": 19,
+      "y": -120
+    }
+  },
+  "chispa": {
+    "elem": "fire",
+    "bullet": "shot",
+    "weapon": "gun",
+    "hit_ms": 500.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.5106382978723404,
+    "muzzle_at": {
+      "x": 43,
+      "y": -68
+    }
+  },
+  "lind": {
+    "elem": "ice",
+    "bullet": "ricochet",
+    "weapon": "whip",
+    "hit_ms": 500.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.5217391304347826,
+    "muzzle_at": {
+      "x": 36,
+      "y": -121
+    }
+  },
+  "brigid": {
+    "elem": "elec",
+    "bullet": "ricochet",
+    "weapon": "bow",
+    "hit_ms": 500.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.7804878048780488,
+    "muzzle_at": {
+      "x": 119,
+      "y": -76
+    }
+  },
+  "pip": {
+    "elem": "none",
+    "bullet": "shot",
+    "weapon": "sword",
+    "hit_ms": 583.3333333333333,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.6666666666666666,
+    "muzzle_at": {
+      "x": 38,
+      "y": -57
+    }
+  },
+  "phorkys": {
+    "elem": "water",
+    "bullet": "shot",
+    "weapon": "gun",
+    "hit_ms": 416.66666666666663,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.5233160621761658,
+    "muzzle_at": {
+      "x": 97,
+      "y": -149
+    }
+  },
+  "solana": {
+    "elem": "fire",
+    "bullet": "shot",
+    "weapon": "bow",
+    "hit_ms": 500.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.7481481481481481,
+    "muzzle_at": {
+      "x": 116,
+      "y": -64
+    }
+  },
+  "jokull": {
+    "elem": "ice",
+    "bullet": "pierce",
+    "weapon": "sword",
+    "hit_ms": 750.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.6558441558441559,
+    "muzzle_at": {
+      "x": 55,
+      "y": -182
+    }
+  },
+  "rhiannon": {
+    "elem": "elec",
+    "bullet": "chain",
+    "weapon": "whip",
+    "hit_ms": 500.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.5804597701149425,
+    "muzzle_at": {
+      "x": 100,
+      "y": -80
+    }
+  },
+  "mimic": {
+    "elem": "none",
+    "bullet": "zone",
+    "weapon": "deck",
+    "hit_ms": 500.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.5260416666666666,
+    "muzzle_at": {
+      "x": 19,
+      "y": -119
+    }
+  },
+  "protea": {
+    "elem": "water",
+    "bullet": "ricochet",
+    "weapon": "bow",
+    "hit_ms": 500.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.6198830409356725,
+    "muzzle_at": {
+      "x": 116,
+      "y": -93
+    }
+  },
+  "ceniza": {
+    "elem": "fire",
+    "bullet": "splash",
+    "weapon": "whip",
+    "hit_ms": 666.6666666666666,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.6127167630057804,
+    "muzzle_at": {
+      "x": 26,
+      "y": -86
+    }
+  },
+  "vidarr": {
+    "elem": "ice",
+    "bullet": "zone",
+    "weapon": "deck",
+    "hit_ms": 583.3333333333333,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.5463917525773195,
+    "muzzle_at": {
+      "x": 19,
+      "y": -120
+    }
+  },
+  "finn": {
+    "elem": "elec",
+    "bullet": "shot",
+    "weapon": "sword",
+    "hit_ms": 416.66666666666663,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.5520833333333334,
+    "muzzle_at": {
+      "x": 103,
+      "y": -141
+    }
+  },
+  "dummy": {
+    "elem": "none",
+    "bullet": "shot",
+    "weapon": "gun",
+    "hit_ms": 416.66666666666663,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.5638297872340425,
+    "muzzle_at": {
+      "x": 107,
+      "y": -158
+    }
+  },
+  "marea": {
+    "elem": "water",
+    "bullet": "splash",
+    "weapon": "whip",
+    "hit_ms": 583.3333333333333,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.5751295336787565,
+    "muzzle_at": {
+      "x": 21,
+      "y": -67
+    }
+  },
+  "igni": {
+    "elem": "fire",
+    "bullet": "pierce",
+    "weapon": "sword",
+    "hit_ms": 666.6666666666666,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.7161290322580646,
+    "muzzle_at": {
+      "x": 25,
+      "y": -80
+    }
+  },
+  "kari": {
+    "elem": "ice",
+    "bullet": "splash",
+    "weapon": "gun",
+    "hit_ms": 666.6666666666666,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.7302631578947368,
+    "muzzle_at": {
+      "x": 85,
+      "y": -84
+    }
+  },
+  "donn": {
+    "elem": "elec",
+    "bullet": "zone",
+    "weapon": "deck",
+    "hit_ms": 583.3333333333333,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.5692307692307692,
+    "muzzle_at": {
+      "x": 20,
+      "y": -121
+    }
+  },
+  "echo": {
+    "elem": "none",
+    "bullet": "shot",
+    "weapon": "bow",
+    "hit_ms": 500.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.7449664429530202,
+    "muzzle_at": {
+      "x": 103,
+      "y": -118
+    }
+  },
+  "glaukos": {
+    "elem": "water",
+    "bullet": "pierce",
+    "weapon": "sword",
+    "hit_ms": 833.3333333333333,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.7682119205298014,
+    "muzzle_at": {
+      "x": 80,
+      "y": -53
+    }
+  },
+  "volcan": {
+    "elem": "fire",
+    "bullet": "zone",
+    "weapon": "deck",
+    "hit_ms": 666.6666666666666,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.6105263157894737,
+    "muzzle_at": {
+      "x": 19,
+      "y": -118
+    }
+  },
+  "eira": {
+    "elem": "ice",
+    "bullet": "shot",
+    "weapon": "bow",
+    "hit_ms": 500.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.6666666666666666,
+    "muzzle_at": {
+      "x": 115,
+      "y": -108
+    }
+  },
+  "conor": {
+    "elem": "elec",
+    "bullet": "shot",
+    "weapon": "gun",
+    "hit_ms": 416.66666666666663,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.5948717948717949,
+    "muzzle_at": {
+      "x": 81,
+      "y": -161
+    }
+  },
+  "shift": {
+    "elem": "none",
+    "bullet": "ricochet",
+    "weapon": "whip",
+    "hit_ms": 500.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.7631578947368421,
+    "muzzle_at": {
+      "x": 66,
+      "y": -118
+    }
+  },
+  "thalassa": {
+    "elem": "water",
+    "bullet": "zone",
+    "weapon": "deck",
+    "hit_ms": 583.3333333333333,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.7202380952380952,
+    "muzzle_at": {
+      "x": 17,
+      "y": -104
+    },
+    "approved_hashes": {
+      "thalassa_aoe_v1_attack.png": "fa6bd77525f77f190fe71d0e4a7ad62e69290724223902d2dc441842c0d891c5",
+      "thalassa_aoe_v1_idle.png": "24762e4198e652ef62808ef001db904ea4596d32298c2a2d62855a1614a96d68",
+      "thalassa_idle.png": "748795eb78129d2a39d967541e2e599569f98af17991e92a823dff59efc23afe",
+      "thalassa_effect.png": "0c4c216042483688a0f8a4735c5418feab6ae950f1f6564fb2f4a96ddf3d1038",
+      "thalassa_aoe_v1_shot.png": "28c074a92eb9580257585491ce11a5c8e2fa95497a747b93f2e8b3ab78283a4f",
+      "anim.json": "1dc214dec42b8756edc940b328e7a3aec13b7742709a270fc81ed915260f7531",
+      "thalassa_attack.png": "50ce3e468061a387854575d9f611a876eefcf6065b5ab76a71315f516c994c8b",
+      "thalassa_aoe_v1_effect.png": "0c4c216042483688a0f8a4735c5418feab6ae950f1f6564fb2f4a96ddf3d1038"
+    }
+  },
+  "carmen": {
+    "elem": "fire",
+    "bullet": "shot",
+    "weapon": "gun",
+    "hit_ms": 583.3333333333333,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.7707006369426752,
+    "muzzle_at": {
+      "x": 62,
+      "y": -82
+    }
+  },
+  "snorri": {
+    "elem": "ice",
+    "bullet": "splash",
+    "weapon": "whip",
+    "hit_ms": 583.3333333333333,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.6237113402061856,
+    "muzzle_at": {
+      "x": 44,
+      "y": -84
+    }
+  },
+  "niamh": {
+    "elem": "elec",
+    "bullet": "chain",
+    "weapon": "bow",
+    "hit_ms": 500.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.9758064516129032,
+    "muzzle_at": {
+      "x": 118,
+      "y": -104
+    }
+  },
+  "phantom": {
+    "elem": "none",
+    "bullet": "pierce",
+    "weapon": "sword",
+    "hit_ms": 666.6666666666666,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.852112676056338,
+    "muzzle_at": {
+      "x": 55,
+      "y": -118
+    }
+  },
+  "triton": {
+    "elem": "water",
+    "bullet": "pierce",
+    "weapon": "gun",
+    "hit_ms": 416.66666666666663,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.6331658291457286,
+    "muzzle_at": {
+      "x": 49,
+      "y": -142
+    }
+  },
+  "saeta": {
+    "elem": "fire",
+    "bullet": "splash",
+    "weapon": "bow",
+    "hit_ms": 500.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.7777777777777778,
+    "muzzle_at": {
+      "x": 111,
+      "y": -97
+    }
+  },
+  "helga": {
+    "elem": "ice",
+    "bullet": "splash",
+    "weapon": "sword",
+    "hit_ms": 500.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.7636363636363637,
+    "muzzle_at": {
+      "x": 34,
+      "y": -143
+    }
+  },
+  "morrigan": {
+    "elem": "elec",
+    "bullet": "chain",
+    "weapon": "whip",
+    "hit_ms": 500.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.7159090909090909,
+    "muzzle_at": {
+      "x": 44,
+      "y": -153
+    }
+  },
+  "blank": {
+    "elem": "none",
+    "bullet": "zone",
+    "weapon": "deck",
+    "hit_ms": 500.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.65625,
+    "muzzle_at": {
+      "x": 19,
+      "y": -119
+    },
+    "approved_hashes": {
+      "blank_aoe_v1_effect.png": "931b28d2e63c9a5d6c0ba2bc8f778237b4bf8d021e5e091eac306f9e8767f00a",
+      "blank_aoe_v1_shot.png": "969c2432c7751559014518ab24bcba5159c7b85f5341903cf6e320737c12e7b2",
+      "blank_effect.png": "931b28d2e63c9a5d6c0ba2bc8f778237b4bf8d021e5e091eac306f9e8767f00a",
+      "blank_attack.png": "cc38b4d39d1abd6fde811b11ce384a7ce13aaadc9fcbad7d7a1f004367f4e612",
+      "blank_idle.png": "8f6e3a7e32023602680cb7fc6c76024ec29015bbea557e9c5e30ffe1c1c696ef",
+      "anim.json": "fc9aa737abf1e877923693c66ad3a97249eec72bfda166ea1099ad2cca2fb706",
+      "blank_aoe_v1_idle.png": "2e8782f194777e27d2a0bdddbbaf98da926ba90943ea77642802a327ecd5c705",
+      "blank_aoe_v1_attack.png": "5c4749e12b806cc9eb56d823c105ab265cc730536b852384251ff25e053e90cb"
+    }
+  },
+  "keto": {
+    "elem": "water",
+    "bullet": "pierce",
+    "weapon": "bow",
+    "hit_ms": 500.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.8238993710691824,
+    "muzzle_at": {
+      "x": 119,
+      "y": -124
+    }
+  },
+  "candela": {
+    "elem": "fire",
+    "bullet": "splash",
+    "weapon": "whip",
+    "hit_ms": 666.6666666666666,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.7043010752688172,
+    "muzzle_at": {
+      "x": 51,
+      "y": -93
+    }
+  },
+  "sigrid": {
+    "elem": "ice",
+    "bullet": "zone",
+    "weapon": "deck",
+    "hit_ms": 583.3333333333333,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.6822916666666666,
+    "muzzle_at": {
+      "x": 19,
+      "y": -119
+    },
+    "approved_hashes": {
+      "sigrid_aoe_v1_effect.png": "23e5ebc8ac7d8cc022395a952298413d14430451f24e3e205c73ce3edb263385",
+      "sigrid_aoe_v1_shot.png": "169dd609974b86b770193060cf963944b869b9b705d09ae189a297769896cc16",
+      "sigrid_aoe_v1_idle.png": "de43b3e668b1c49b486fd0dcec547770a4119e629f3525409edba3a3b7b3df39",
+      "sigrid_idle.png": "bf9c124c8dac110bcdc6a4ec8b1c64376cdbe7440af5292b6b865d9cde163bb2",
+      "sigrid_effect.png": "23e5ebc8ac7d8cc022395a952298413d14430451f24e3e205c73ce3edb263385",
+      "sigrid_aoe_v1_attack.png": "fa3b386214a13dd36432fffc26e76ae84d15e4eeac57af31e14d1574314a3acf",
+      "anim.json": "0094f3739dd208fee67debc5b2289b832f7a032adaa4cbeb5e963427adf50ef4",
+      "sigrid_attack.png": "223bf68b37bcdccb775389329e2f5188d0ef7d6790e034f5d426c778c06cd067"
+    }
+  },
+  "caden": {
+    "elem": "elec",
+    "bullet": "chain",
+    "weapon": "sword",
+    "hit_ms": 666.6666666666666,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.9097222222222222,
+    "muzzle_at": {
+      "x": 33,
+      "y": -127
+    }
+  },
+  "grey": {
+    "elem": "none",
+    "bullet": "shot",
+    "weapon": "gun",
+    "hit_ms": 416.66666666666663,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.6822916666666666,
+    "muzzle_at": {
+      "x": 116,
+      "y": -151
+    }
+  },
+  "galene": {
+    "elem": "water",
+    "bullet": "splash",
+    "weapon": "whip",
+    "hit_ms": 583.3333333333333,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.6903553299492385,
+    "muzzle_at": {
+      "x": 24,
+      "y": -68
+    }
+  },
+  "estoque": {
+    "elem": "fire",
+    "bullet": "pierce",
+    "weapon": "sword",
+    "hit_ms": 583.3333333333333,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 1.0,
+    "muzzle_at": {
+      "x": 87,
+      "y": -140
+    }
+  },
+  "frosti": {
+    "elem": "ice",
+    "bullet": "beam",
+    "weapon": "gun",
+    "hit_ms": 416.66666666666663,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.9006622516556292,
+    "muzzle_at": {
+      "x": 119,
+      "y": -121
+    }
+  },
+  "lugh": {
+    "elem": "elec",
+    "bullet": "zone",
+    "weapon": "deck",
+    "hit_ms": 500.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.7010309278350515,
+    "muzzle_at": {
+      "x": 19,
+      "y": -120
+    },
+    "approved_hashes": {
+      "lugh_aoe_v1_idle.png": "15b8fa8513486af574986af330ea4998eefaf12148e89e6575039d70efbfd4f5",
+      "lugh_idle.png": "d319b521ca58a7f6fa4973f626120fc698e6f8f46f13655560eee9877dba9394",
+      "lugh_aoe_v1_attack.png": "59e3438c95c922ab355364c7c9e0cd650b9b6277c72688f6bec220c34a1bd1bc",
+      "lugh_aoe_v1_shot.png": "3118b67316a3b04bfd1431826c9d387092077a43588cd74964434d48fcee78e3",
+      "lugh_effect.png": "b882fdc8f25a8b4f7183aa4e70197eb196e63affbf37fed7141dad45a03867b0",
+      "lugh_aoe_v1_effect.png": "b882fdc8f25a8b4f7183aa4e70197eb196e63affbf37fed7141dad45a03867b0",
+      "anim.json": "e9c1f0048f38f7fb22a274cac50e7350122ef9481c9c62578dbb47671ee7a2bc",
+      "lugh_attack.png": "54d6abb6a0c5673e3b2c063a6cd3dc4a993a0676716d5c4ac1b301614c6faef7"
+    }
+  },
+  "null": {
+    "elem": "none",
+    "bullet": "pierce",
+    "weapon": "bow",
+    "hit_ms": 500.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.9006622516556292,
+    "muzzle_at": {
+      "x": 119,
+      "y": -100
+    }
+  },
+  "nerea": {
+    "elem": "water",
+    "bullet": "pierce",
+    "weapon": "sword",
+    "hit_ms": 750.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.8392857142857143,
+    "muzzle_at": {
+      "x": 112,
+      "y": -195
+    }
+  },
+  "brasa": {
+    "elem": "fire",
+    "bullet": "zone",
+    "weapon": "deck",
+    "hit_ms": 583.3333333333333,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.7121212121212122,
+    "muzzle_at": {
+      "x": 20,
+      "y": -123
+    },
+    "approved_hashes": {
+      "brasa_aoe_v1_effect.png": "099ec18b46a5a84e9e00b38881c51325acf836741f25e43a4f690bbce17843ed",
+      "brasa_attack.png": "babda3e2951f9bac6bb98cd2b34ec79b5afc9c8b0b97f41cff4258918a6a4bbd",
+      "brasa_aoe_v1_shot.png": "b59d57294ed8293e0a7a78968529d9081e2cab8151f5e10434919230fa85a374",
+      "brasa_aoe_v1_attack.png": "3a6dd6b52bb2c69008703119c775d21d5a00c7926117e7748045b8acd4bfbc28",
+      "brasa_effect.png": "099ec18b46a5a84e9e00b38881c51325acf836741f25e43a4f690bbce17843ed",
+      "brasa_idle.png": "089a75e4775dab04dc03f25a930f16cdebe4a65b35d0104cc64e0d4824bc12db",
+      "anim.json": "0f118132b4069b1e0e602930089cc5ebc04db302ebbee3c7076f57ef49984ce6",
+      "brasa_aoe_v1_idle.png": "f91a67fb4dd04d14a33da0d611632770c69beb62c06c4d4a5005f4abadd1692b"
+    }
+  },
+  "isa": {
+    "elem": "ice",
+    "bullet": "pierce",
+    "weapon": "bow",
+    "hit_ms": 500.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 1.0291970802919708,
+    "muzzle_at": {
+      "x": 119,
+      "y": -88
+    }
+  },
+  "brian": {
+    "elem": "elec",
+    "bullet": "beam",
+    "weapon": "gun",
+    "hit_ms": 500.0,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.734375,
+    "muzzle_at": {
+      "x": 66,
+      "y": -126
+    }
+  },
+  "zero": {
+    "elem": "none",
+    "bullet": "splash",
+    "weapon": "whip",
+    "hit_ms": 583.3333333333333,
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "scale": 0.7157360406091371,
+    "muzzle_at": {
+      "x": 35,
+      "y": -70
+    }
+  }
+}

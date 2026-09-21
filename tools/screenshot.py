@@ -6,7 +6,7 @@
 테스트로 안 잡힌다 — 눈으로 봐야 한다.**
 
     python3 tools/screenshot.py                       # 기본 한 벌
-    python3 tools/screenshot.py title draw:5 reveal:9 swap:14 shoph:14
+    python3 tools/screenshot.py title theme:11 draw:5 reveal:9 swap:24 shopp:14
     python3 tools/screenshot.py battle:12 frost:12 shop:8 over
     python3 tools/screenshot.py --portrait battle:12  # 세로 화면으로
     python3 tools/screenshot.py --setup               # Xvfb 만 준비
@@ -16,40 +16,22 @@
 from __future__ import annotations
 
 import argparse
-import os
 import subprocess
 import sys
-import tempfile
-import time
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-GODOT = Path.home() / ".local/bin/godot"
-XVFB_HOME = Path.home() / ".local/opt/xvfb"
-# 구글이 아니라 우분투 저장소에서 받는다 — 이 머신은 aarch64 다.
-XVFB_PACKAGES = ["xvfb", "x11-common", "xauth", "libxfont2", "libfontenc1", "xserver-common"]
+# ★ 다른 도구들이 예전부터 `from screenshot import ROOT, GODOT, XVFB_HOME, ensure_xvfb` 로
+#   가져다 쓴다. 본체는 godot_env 로 옮겼고 여기서는 그대로 내보낸다.
+from godot_env import ROOT, GODOT, XVFB_HOME, ensure_xvfb, xvfb  # noqa: F401
+
 DISPLAY_NUM = 93
 
 DEFAULT = ["title", "draw:6", "reveal:1", "reveal:6", "reveal:9",
-           "battle:1", "battle:14", "frost:12", "battle:25",
-           "swap:14", "shop:9", "shoph:14", "over"]
-
-
-def ensure_xvfb() -> Path:
-    """Xvfb 를 ~/.local/opt 에 풀어 둔다 (설치가 아니라 풀기라서 sudo 가 필요 없다)."""
-    exe = XVFB_HOME / "usr/bin/Xvfb"
-    if exe.exists():
-        return exe
-    print("Xvfb 가 없어서 받아서 풀어 둡니다 (sudo 불필요)...")
-    with tempfile.TemporaryDirectory(prefix="xvfb-") as tmp:
-        subprocess.run(["apt-get", "download", *XVFB_PACKAGES], cwd=tmp, check=True,
-                       capture_output=True, text=True)
-        XVFB_HOME.mkdir(parents=True, exist_ok=True)
-        for deb in sorted(Path(tmp).glob("*.deb")):
-            subprocess.run(["dpkg-deb", "-x", str(deb), str(XVFB_HOME)], check=True)
-    if not exe.exists():
-        raise SystemExit("Xvfb 를 풀지 못했습니다.")
-    return exe
+           "battle:1", "battle:14", "frost:12", "stun:12", "battle:30",
+           # 장판은 사거리 상한(6단계)에 닿는 40탄에서야 원반이 제일 커진다.
+           "zone:16", "zone:40",
+           "team:7", "swap:24", "hall:24", "shop:9", "shopp:14", "shopc:14", "theme:11",
+           "result:12", "over"]
 
 
 def main() -> int:
@@ -62,7 +44,7 @@ def main() -> int:
     ap.add_argument("--setup", action="store_true")
     args = ap.parse_args()
 
-    exe = ensure_xvfb()
+    ensure_xvfb()
     if args.setup:
         return 0
     shots = args.shots or DEFAULT
@@ -70,30 +52,16 @@ def main() -> int:
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
 
-    env = dict(os.environ)
-    env["DISPLAY"] = f":{DISPLAY_NUM}"
-    env["LD_LIBRARY_PATH"] = str(XVFB_HOME / "usr/lib/aarch64-linux-gnu") + ":" + \
-        env.get("LD_LIBRARY_PATH", "")
-    # ★ 검사·촬영이 아이의 저장 파일을 덮어쓰지 않게.
-    env["POCKER_NO_SAVE"] = "1"
-
-    w, h = res.split("x")
-    xv = subprocess.Popen([str(exe), f":{DISPLAY_NUM}", "-screen", "0", f"{w}x{h}x24",
-                           "-nolisten", "tcp"], env=env,
-                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    try:
-        time.sleep(1.5)
+    with xvfb(DISPLAY_NUM, res) as env:
         cmd = [str(GODOT), "--path", str(ROOT), "--resolution", res,
                "res://tests/shot.tscn", "--", "--shots", ",".join(shots),
                "--out", str(out)]
         p = subprocess.run(cmd, env=env, text=True, capture_output=True, timeout=600)
         sys.stdout.write(p.stdout)
+        sys.stderr.write(p.stderr)
         if p.returncode != 0:
-            sys.stderr.write(p.stderr)
             print(f"!! Godot 이 {p.returncode} 로 끝났습니다")
             return 1
-    finally:
-        xv.terminate()
     made = sorted(out.glob("*.png"))
     print(f"\n{len(made)}장: " + ", ".join(m.name for m in made))
     return 0

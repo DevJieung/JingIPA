@@ -1,0 +1,46 @@
+{
+  "assets": [
+    {
+      "path": "art/ui/dealer/witch.png",
+      "prompt": "Use case: stylized-concept. Asset type: transparent-background NPC portrait for a 2D pixel art fantasy poker defense mobile game. Create ONE waist-up friendly mysterious adult witch card dealer, front view, large crooked dark-plum pointed hat with a warm gold moon pin, dark teal coat with purple lining, silver shoulder-length hair, calm clever smile. Both forearms visible reaching slightly forwards, one palm open under a small floating fan of cream playing cards, the other hand poised to cast a spell. Tight clean hand-crafted pixel-art clusters, crisp dark outlines, 3-tone shading, warm face, readable silhouette when displayed only 170 pixels high. Consistent 2D retro RPG illustration; not glossy, not 3D, no gradients. Composition: centered entire hat and both hands fully visible with generous transparent margin around silhouette. No text, no speech bubble, no background, no platform, no table, no particles around the character. Actual transparent alpha background, not a checkerboard. 1024x1024 square.",
+      "generator": "built-in image_gen",
+      "source": "/home/dgxmaruta/.codex/generated_images/01a0a044-3dc3-7ba3-b971-23c54c8d2ac9/exec-6ae0f3ae-8dfc-4b2f-9f17-042ae9f250cf.png",
+      "sha256": "3bff466f1ad92b827752a9ad7e4f188ed40f08f0b903b7559be8285705ac1ede",
+      "postprocessing": "None. Original RGBA preserved. Godot draws source regions with portrait-only linear sampling."
+    },
+    {
+      "path": "art/ui/dealer/card_courts.png",
+      "prompt": "Use case: stylized-concept. Production game asset: THREE separate playing-card court character busts arranged in one precise THREE COLUMNS BY ONE ROW sprite atlas. Transparent alpha background. Canvas wide 1536 by 1024. Each equal-width cell contains one centered full upper-body bust with all headgear, shoulders and arms completely inside that cell with 12 percent margin; no overlap between cells. LEFT cell JACK: young medieval male knight, wavy chestnut hair, feathered cap, crimson/navy tunic, holds a slim sword vertically beside face. CENTER cell QUEEN: elegant adult medieval woman, golden crown, silver hair, ivory collar, purple and deep red robes, holds a rose upright beside face. RIGHT cell KING: mature dignified king with short silver beard, large golden crown, dark teal and scarlet robes, holds golden scepter upright beside face. All front-facing classical European playing-card illustration poses, equal head size and bust height, refined clean 2D pixel-art illustration with small deliberate pixel clusters, handsome clear faces, readable crowns and clothing, strong gold/crimson/navy contrast on an ivory playing-card interior. 16-bit fantasy game portrait art, NOT primitive geometric icons, NOT 3D. Each bust is drawn ONE WAY UP ONLY, ending in clean flat waist level; no mirrored double-ended figures (the game will mirror them), no cards, no frames, NO LETTERS NUMBERS SYMBOLS OR TEXT, no labels, no borders, no speech bubbles. Genuine transparent alpha, no checkerboard. Preserve distinct silhouettes and weapons within their own columns.",
+      "generator": "built-in image_gen",
+      "source": "/home/dgxmaruta/.codex/generated_images/01a0a044-3dc3-7ba3-b971-23c54c8d2ac9/exec-a32eaa7b-182b-4175-b8b5-ffe6f58eb24c.png",
+      "sha256": "348c66681b6df792f5bb2a7c487ede07997ec14188336c8d7ed443b3ace8f89c",
+      "postprocessing": "None. Original RGBA preserved. Godot draws source regions with portrait-only linear sampling."
+    }
+  ],
+  "card_regions": {
+    "J": [
+      4,
+      88,
+      504,
+      848
+    ],
+    "Q": [
+      516,
+      88,
+      504,
+      848
+    ],
+    "K": [
+      1028,
+      88,
+      504,
+      848
+    ]
+  },
+  "rejected": [
+    {
+      "source": "exec-48f375d7-05d2-464e-96c6-2580de43a7ef.png",
+      "reason": "RGB checkerboard is not alpha transparency; never shipped."
+    }
+  ]
+}

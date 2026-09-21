@@ -1,0 +1,202 @@
+{
+  "limne": {
+    "ko": "마지막 물 한 방울까지 지키는 물지기.",
+    "en": "A water keeper who guards every last drop."
+  },
+  "chispa": {
+    "ko": "꺼져가는 불씨를 되살리는 견습공.",
+    "en": "An apprentice who rekindles fading embers."
+  },
+  "lind": {
+    "ko": "서리 사슬로 길목을 지키는 창고지기.",
+    "en": "A storekeeper guarding the road with frost chains."
+  },
+  "brigid": {
+    "ko": "끊어진 길을 번개로 잇는 수습 기사.",
+    "en": "An apprentice who reconnects paths with lightning."
+  },
+  "pip": {
+    "ko": "작은 톱검으로 대피소를 지키는 나무 인형.",
+    "en": "A wooden guardian with a little sawblade."
+  },
+  "phorkys": {
+    "ko": "물총을 든 든든한 항만 정비반장.",
+    "en": "A steadfast harbor foreman armed with a water revolver."
+  },
+  "solana": {
+    "ko": "밤길을 밝히는 불화살의 길잡이.",
+    "en": "A guide whose fire arrows light the night."
+  },
+  "jokull": {
+    "ko": "빙검으로 얼어붙은 길을 여는 검사.",
+    "en": "A swordsman carving a path with an ice blade."
+  },
+  "rhiannon": {
+    "ko": "번개 사슬로 동료를 지키는 전선 기사.",
+    "en": "A line engineer guarding allies with lightning chains."
+  },
+  "mimic": {
+    "ko": "빌린 힘으로 싸우는 신비로운 흉내쟁이.",
+    "en": "A mysterious mimic who fights with borrowed power."
+  },
+  "protea": {
+    "ko": "물의 흐름을 읽는 세 갈래의 명사수.",
+    "en": "A sharpshooter who reads the currents."
+  },
+  "ceniza": {
+    "ko": "재와 불씨를 다루는 고요한 수호자.",
+    "en": "A quiet guardian of ash and embers."
+  },
+  "vidarr": {
+    "ko": "묵직한 발걸음으로 냉기를 깨우는 전사.",
+    "en": "A warrior whose heavy steps stir the frost."
+  },
+  "finn": {
+    "ko": "짧은 뇌검으로 빈틈을 파고드는 검사.",
+    "en": "A swordsman striking openings with a lightning blade."
+  },
+  "dummy": {
+    "ko": "흔들림 없이 임무를 수행하는 훈련 인형.",
+    "en": "A training dummy unwavering in its duty."
+  },
+  "marea": {
+    "ko": "밀려오는 파도를 칼날에 담은 검사.",
+    "en": "A swordswoman carrying the tide in her blade."
+  },
+  "igni": {
+    "ko": "불꽃의 궤적을 그리는 화염 검사.",
+    "en": "A swordsman tracing arcs of flame."
+  },
+  "kari": {
+    "ko": "차가운 숨결을 겨누는 서리 사수.",
+    "en": "A frost gunner taking aim with winter's breath."
+  },
+  "donn": {
+    "ko": "폭풍의 흐름을 좇는 번개 사냥꾼.",
+    "en": "A lightning hunter following the storm."
+  },
+  "echo": {
+    "ko": "고요한 잔상 속에서 활을 드는 수호자.",
+    "en": "A guardian drawing a bow amid silent afterimages."
+  },
+  "glaukos": {
+    "ko": "솟구치는 물살을 다스리는 항구의 검.",
+    "en": "The harbor's blade, commanding surging waters."
+  },
+  "volcan": {
+    "ko": "대지 깊은 불길을 깨우는 망치 전사.",
+    "en": "A hammer warrior awakening fires beneath the earth."
+  },
+  "eira": {
+    "ko": "작은 눈보라를 품은 겨울의 수호자.",
+    "en": "A winter guardian carrying a small blizzard."
+  },
+  "conor": {
+    "ko": "한곳에 번개를 모으는 집념의 사수.",
+    "en": "A determined marksman who focuses lightning."
+  },
+  "shift": {
+    "ko": "공간의 틈을 누비는 무명의 파수꾼.",
+    "en": "A nameless sentinel moving through gaps in space."
+  },
+  "thalassa": {
+    "ko": "카드에 바다의 힘을 담는 물의 마녀.",
+    "en": "A water witch whose cards hold the sea's power."
+  },
+  "carmen": {
+    "ko": "쌍권총으로 불꽃의 춤을 추는 총잡이.",
+    "en": "A gunslinger dancing with twin pistols and flame."
+  },
+  "snorri": {
+    "ko": "서리의 파동을 엮는 겨울 현자.",
+    "en": "A winter sage weaving waves of frost."
+  },
+  "niamh": {
+    "ko": "번개의 길을 꿰뚫어 보는 궁수.",
+    "en": "An archer who sees the paths of lightning."
+  },
+  "phantom": {
+    "ko": "형체 없는 검을 휘두르는 그림자.",
+    "en": "A shadow wielding a formless blade."
+  },
+  "triton": {
+    "ko": "격류의 포효를 쏘아내는 바다의 포수.",
+    "en": "A sea gunner unleashing the roar of the rapids."
+  },
+  "saeta": {
+    "ko": "불타는 궤적을 남기는 화염 궁수.",
+    "en": "A fire archer leaving blazing trails."
+  },
+  "helga": {
+    "ko": "교차하는 빙검으로 겨울을 새기는 검사.",
+    "en": "A swordswoman carving winter with crossed ice blades."
+  },
+  "morrigan": {
+    "ko": "머리 위에 뇌우를 펼치는 폭풍의 무녀.",
+    "en": "A storm shaman raising thunderclouds overhead."
+  },
+  "blank": {
+    "ko": "자신만의 빛을 찾는 무색의 마법사.",
+    "en": "A colorless mage searching for a light of their own."
+  },
+  "keto": {
+    "ko": "깊은 물살을 가르는 심해의 사냥꾼.",
+    "en": "A deep-sea hunter cutting through hidden currents."
+  },
+  "candela": {
+    "ko": "불채찍으로 어둠을 걷어내는 수호자.",
+    "en": "A guardian driving back darkness with a flame whip."
+  },
+  "sigrid": {
+    "ko": "눈보라를 부르는 북방의 주술사.",
+    "en": "A northern shaman calling the blizzard."
+  },
+  "caden": {
+    "ko": "번개의 박자를 새기는 쌍검의 전사.",
+    "en": "A twin-blade warrior keeping the rhythm of lightning."
+  },
+  "grey": {
+    "ko": "한순간의 빈틈을 놓치지 않는 명사수.",
+    "en": "A sharpshooter who never misses an opening."
+  },
+  "galene": {
+    "ko": "고요한 바다를 칼끝에 담은 검사.",
+    "en": "A swordswoman holding a tranquil sea at her blade's tip."
+  },
+  "estoque": {
+    "ko": "불꽃의 직선을 그리는 화염 검객.",
+    "en": "A fencer tracing straight lines of fire."
+  },
+  "frosti": {
+    "ko": "겨울의 끝에서 활을 당기는 저격수.",
+    "en": "A sniper drawing a bow at winter's edge."
+  },
+  "lugh": {
+    "ko": "전장을 뒤덮는 뇌운의 지배자.",
+    "en": "A master of thunderclouds over the battlefield."
+  },
+  "null": {
+    "ko": "존재의 경계를 겨누는 공허의 궁수.",
+    "en": "A void archer aiming at the edge of existence."
+  },
+  "nerea": {
+    "ko": "물기둥을 세우는 바다의 검무가.",
+    "en": "A sea blade dancer raising pillars of water."
+  },
+  "brasa": {
+    "ko": "마지막 패에 모든 불꽃을 거는 마녀.",
+    "en": "A witch staking every flame on her final hand."
+  },
+  "isa": {
+    "ko": "얼음의 정적을 꿰뚫는 북방의 궁수.",
+    "en": "A northern archer piercing the silence of ice."
+  },
+  "brian": {
+    "ko": "응축한 뇌격을 쏘는 최후의 포수.",
+    "en": "The last gunner, firing condensed thunderbolts."
+  },
+  "zero": {
+    "ko": "무채색의 가능성을 품은 미완의 수호자.",
+    "en": "An unfinished guardian of colorless possibilities."
+  }
+}

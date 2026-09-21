@@ -1,0 +1,31 @@
+{
+  "generator": "built-in image_gen",
+  "date": "2026-09-15",
+  "assets": [
+    {
+      "path": "art/ui/launcher_main.png",
+      "sha256": "c0850554db5df2ec55a4d05f56cd918bc39c605642f8b03b43e6a24f55c0b0c2",
+      "source": "/home/dgxmaruta/.codex/generated_images/01a0a3a2-f165-7f80-b74f-117b2c97ace9/exec-8e242865-886c-4a15-954b-8336e301f022.png",
+      "prompt": "Use case: stylized-concept.\nAsset type: final Android launcher icon for a 2D pixel-art poker tower-defense fantasy game, one square 1024x1024 image.\nPrimary request: an attractive, immediately readable original Poker Defense icon that combines playing cards and defense. A bold ivory-faced medieval shield with a thick warm gold beveled rim and one huge black spade emblem is the central hero. Two ivory playing cards fan out behind the shield, showing a red heart and a black club respectively, their shapes clearly distinct. The shield occupies the central 55 percent of the canvas, with the entire card-and-shield silhouette safely within the central 66 percent. The top of the shield has a subtle three-block castle battlement shape, integrated into the gold rim, not a separate object.\nStyle/medium: polished handcrafted chunky pixel-art illustration, confident dark outlines, clean clusters, restrained three-tone material shading, tactile ivory cards and gold metal, charming fantasy camp aesthetic. High contrast, simple strong silhouette that still reads at 48px.\nScene/backdrop: opaque deep dark teal full-bleed background with a small warm amber glow behind the emblem and a few deliberate tiny square glints. Background reaches all four edges. Bright ivory and golden center, tiny restrained crimson accents, dark teal shadows.\nComposition/framing: a single centered icon artwork, front view with slight depth, balanced and bold, ample mask-safe margin around the motif. No mockup, no surrounding frame, no rounded corners baked in.\nConstraints: no crystals, no gems, no letters, no numbers, no words, no title, no watermark, no brand logos, no coins or casino chips, no extra weapons or characters, no photorealism, no soft airbrushed edges, no visual clutter. Suit symbols are graphical marks only.",
+      "use": "Project icon and Android legacy launcher; exported to launcher sizes by Godot."
+    },
+    {
+      "path": "art/ui/launcher_adaptive.png",
+      "sha256": "aae877049189444ead955afa1fb7111a1764b266d5c2dcfcab78f0089504ca94",
+      "source": "/home/dgxmaruta/.codex/generated_images/01a0a3a2-f165-7f80-b74f-117b2c97ace9/exec-0ebf901c-dab7-4784-9b72-8ef4e815ceb2.png",
+      "prompt": "Use case: precise-object-edit. Edit the existing Poker Defense app icon artwork. Preserve the exact gold battlement shield, black spade, two playing cards, colors and pixel-art style. Change only composition and background: zoom out so the COMPLETE card-and-shield motif fits inside the central 62 percent of the square canvas, including both side cards and the shield tip. Center it. Extend the same perfectly opaque deep dark teal background to all four edges, with a restrained amber glow confined near the motif. The central subject should occupy about 62 percent of the total image width and 55 percent of total image height, leaving large uniform dark teal mask-safe margins. No extra symbols, letters, border, rounded corners, transparent areas, black patches, or added details. Output one square icon; this is the mask-safe Android adaptive foreground source.",
+      "use": "Android adaptive icon foreground; original generated opaque pixels and mask-safe margins preserved."
+    },
+    {
+      "path": "art/ui/launcher_background.svg",
+      "generator": "native SVG flat color",
+      "use": "Android adaptive icon background, #003640."
+    },
+    {
+      "path": "art/ui/launcher_monochrome.svg",
+      "generator": "native SVG path",
+      "sha256": "72fe72c6d383283caa360bc3c1599ff00332ee121d006dabdeda8d906598570e",
+      "use": "Android themed launcher icon; white castle shield and side cards with a transparent spade cutout."
+    }
+  ]
+}

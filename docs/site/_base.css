@@ -1,0 +1,223 @@
+/* 올인 디펜스 제출 문서 세 장이 나눠 쓰는 뼈대.
+   ★ 색은 게임이 실제로 쓰는 팔레트(core/look.gd)에서 그대로 가져왔다 —
+     밤의 도박장(#0d0a14) · 카드 테이블의 초록 천(#123527) · 금(#f6c445).
+   ★ 등급 열 칸의 색도 게임 데이터다(Look.TIER_COLOR). 장식이 아니라 자료라서
+     문서 어디에 쓰든 게임 화면의 그 색과 같은 뜻이다. */
+
+:root {
+	color-scheme: light dark;
+
+	--ground: #edeaf2;
+	--surface: #ffffff;
+	--surface-2: #f6f3fa;
+	--edge: #d8d0e4;
+	--edge-soft: #e7e1ef;
+	--felt: #16513c;
+	--felt-2: #10402f;
+	--felt-ink: #e8f2ec;
+	--ink: #191322;
+	--ink-2: #443c56;
+	--ink-dim: #6f6686;
+	--gold: #8f6708;
+	--gold-hi: #f6c445;
+	--gold-wash: #f6ecd0;
+	--red: #c62a44;
+	--good: #1d7a45;
+	--warn: #b4550c;
+	--shadow: 0 1px 2px rgba(25, 19, 34, .05), 0 10px 28px -16px rgba(25, 19, 34, .28);
+	--rule: 1px solid var(--edge);
+
+	/* 등급 열 칸 — Look.TIER_COLOR 그대로 */
+	--t0: #8b8b98; --t1: #79c07a; --t2: #5aa9d8; --t3: #4a7fe0; --t4: #8a6ae8;
+	--t5: #c15ce0; --t6: #ff7ac0; --t7: #ff9a3c; --t8: #ffd24a; --t9: #fff0b8;
+
+	/* 속성 다섯 — Balance.ELEM 그대로 */
+	--e-none: #D8DEE6; --e-fire: #FF6A2A; --e-ice: #7BDCFF;
+	--e-elec: #FFD84D; --e-water: #3B8CFF;
+
+	--w-page: 1120px;
+	--w-read: 68ch;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) {
+		--ground: #0d0a14;
+		--surface: #171122;
+		--surface-2: #1e1730;
+		--edge: #362c4c;
+		--edge-soft: #271f3a;
+		--felt: #123527;
+		--felt-2: #0c2519;
+		--felt-ink: #dceee5;
+		--ink: #f4efe4;
+		--ink-2: #cdc4dc;
+		--ink-dim: #9c93ac;
+		--gold: #f6c445;
+		--gold-hi: #ffdc83;
+		--gold-wash: #3b2d0d;
+		--red: #e2415a;
+		--good: #5ad07a;
+		--warn: #ff9a3c;
+		--shadow: 0 1px 0 rgba(255, 255, 255, .03), 0 18px 40px -22px rgba(0, 0, 0, .92);
+	}
+}
+
+:root[data-theme="dark"] {
+	--ground: #0d0a14;
+	--surface: #171122;
+	--surface-2: #1e1730;
+	--edge: #362c4c;
+	--edge-soft: #271f3a;
+	--felt: #123527;
+	--felt-2: #0c2519;
+	--felt-ink: #dceee5;
+	--ink: #f4efe4;
+	--ink-2: #cdc4dc;
+	--ink-dim: #9c93ac;
+	--gold: #f6c445;
+	--gold-hi: #ffdc83;
+	--gold-wash: #3b2d0d;
+	--red: #e2415a;
+	--good: #5ad07a;
+	--warn: #ff9a3c;
+	--shadow: 0 1px 0 rgba(255, 255, 255, .03), 0 18px 40px -22px rgba(0, 0, 0, .92);
+}
+
+* { box-sizing: border-box; }
+
+body {
+	background: var(--ground);
+	color: var(--ink);
+	font-family: "Noto Sans KR", system-ui, -apple-system, "Malgun Gothic", sans-serif;
+	font-size: 16px;
+	line-height: 1.75;
+	-webkit-font-smoothing: antialiased;
+	word-break: keep-all;
+	overflow-wrap: anywhere;
+}
+
+h1, h2, h3, h4 {
+	font-family: "Noto Serif KR", "Noto Sans KR", Georgia, serif;
+	font-weight: 700;
+	line-height: 1.28;
+	text-wrap: balance;
+	margin: 0;
+	letter-spacing: -.01em;
+}
+
+p { margin: 0 0 1em; }
+a { color: var(--gold); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible {
+	outline: 2px solid var(--gold-hi); outline-offset: 3px; border-radius: 3px;
+}
+img { display: block; max-width: 100%; }
+hr { border: 0; border-top: var(--rule); margin: 0; }
+
+.mono, td.n, th.n {
+	font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+	font-variant-numeric: tabular-nums;
+	font-feature-settings: "tnum";
+}
+
+/* ── 뼈대 ─────────────────────────────────────────────────────────── */
+.wrap { max-width: var(--w-page); margin: 0 auto; padding: 0 28px; }
+.read { max-width: var(--w-read); }
+.sec { padding: 60px 0; border-top: var(--rule); }
+.sec:first-of-type { border-top: 0; }
+
+.eyebrow {
+	font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+	color: var(--ink-dim); margin: 0 0 10px;
+	font-family: "IBM Plex Mono", monospace;
+}
+/* ★ 한글이 섞인 눈썹 글자에는 자간을 주지 마라. IBM Plex Mono 에 한글이 없어서
+   대체 폰트로 떨어지는데, 거기에 .16em 을 얹으면 「한 줄 로」처럼 낱자가 벌어진다. */
+.eyebrow.ko {
+	letter-spacing: .02em; text-transform: none;
+	font-family: "Noto Sans KR", system-ui, sans-serif;
+}
+
+.lede { font-size: 19px; color: var(--ink-2); line-height: 1.72; }
+
+/* 무늬 표식 — ★ 게임의 규칙과 같다: 무늬는 글자가 아니라 **도형**으로 그린다
+   (번들 폰트에 ♠♦♣ 가 없어서 글자로 쓰면 두부가 된다 — CLAUDE.md 6). */
+.pip { width: 1em; height: 1em; flex: none; }
+.sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 26px; }
+.sec-head .pip { width: 22px; height: 22px; align-self: center; }
+.sec-head h2 { font-size: clamp(24px, 3.4vw, 33px); }
+.sec-head .no {
+	font-family: "IBM Plex Mono", monospace; font-size: 13px; color: var(--ink-dim);
+	letter-spacing: .08em; margin-left: auto; flex: none;
+}
+
+/* ── 조각들 ───────────────────────────────────────────────────────── */
+.panel {
+	background: var(--surface); border: var(--rule); border-radius: 4px;
+	padding: 24px 26px;
+}
+.felt {
+	background: linear-gradient(160deg, var(--felt) 0%, var(--felt-2) 100%);
+	color: var(--felt-ink); border: 1px solid rgba(0, 0, 0, .35);
+}
+.felt .eyebrow, .felt .muted { color: rgba(232, 242, 236, .62); }
+
+.grid { display: grid; gap: 18px; }
+.g2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.g3 { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+.g4 { grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); }
+
+.stat { border-left: 3px solid var(--gold); padding: 2px 0 2px 14px; }
+.stat b {
+	display: block; font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums;
+	font-size: 30px; font-weight: 600; line-height: 1.1; letter-spacing: -.02em;
+}
+.stat span { font-size: 13px; color: var(--ink-dim); }
+
+figure { margin: 0; }
+figure img { border: var(--rule); border-radius: 3px; background: #0d0a14; }
+/* ★ 그림 설명은 한글이 본문이라 본문 폰트로 둔다. 모노로 두면 한글만 대체 폰트로
+   떨어져서 숫자와 한글의 굵기·자폭이 한 줄 안에서 어긋난다. */
+figcaption {
+	font-size: 13.5px; color: var(--ink-dim); margin-top: 10px; line-height: 1.65;
+}
+figcaption b { color: var(--ink-2); font-weight: 600; }
+
+/* 표 */
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--edge-soft); }
+thead th {
+	font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+	color: var(--ink-dim); font-weight: 700; border-bottom: 2px solid var(--edge);
+	white-space: nowrap;
+}
+td.n, th.n { text-align: right; }
+tbody tr:last-child td { border-bottom: 0; }
+
+/* 등급 · 속성 칩 */
+.chip {
+	display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px;
+	border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap;
+	background: #171122; color: #f4efe4; border: 1px solid rgba(255, 255, 255, .12);
+}
+.dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 20px; font-size: 14px; }
+.kv dt { color: var(--ink-dim); }
+.kv dd { margin: 0; }
+
+.note {
+	border-left: 3px solid var(--edge); padding-left: 16px; color: var(--ink-2);
+	font-size: 14.5px;
+}
+.note b { color: var(--ink); }
+
+ul.tight { margin: 0; padding-left: 1.1em; }
+ul.tight li { margin-bottom: .45em; }
+
+.muted { color: var(--ink-dim); }
+.small { font-size: 13.5px; }
+
+@media (prefers-reduced-motion: reduce) {
+	* { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}

@@ -1,0 +1,7 @@
+# Remove /bin folder line if you want to commit
+/bin
+!/bin/
+/bin/*
+!/bin/package.gd
+!/bin/package.gd.uid
+!/bin/ads/

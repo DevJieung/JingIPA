@@ -1,0 +1,4 @@
+# Project-scoped delegation. Model, reasoning, permissions, and tools inherit
+# from the current Codex session.
+[agents]
+enabled = true

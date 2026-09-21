@@ -1,0 +1,33 @@
+{
+ "_note": "★ **사람이 손으로 찍은 리그 점.** autorig.py 가 틀리게 잡은 것만 여기에 적는다 — build/ 는 gitignore 라 rig.json 이 저장소에 안 남으므로, 여기 안 적으면 autorig.py --all 을 다시 돌리는 순간 그 캐릭터의 애니메이션이 조용히 망가진다 (CLAUDE.md 18-5-1). 형식: \"<id>\": {\"shoulder\": \"x,y\", \"tip\": \"x,y\"}  (★ 문자열이다, 배열이 아니다). ☆ 자동이 틀리는 까닭은 늘 같다: 「제일 바깥 점 = 손끝」이라는 가정이 **칼끝·창끝·지팡이 머리**를 집는다. 자세에 결이 생기면서(CLAUDE.md 4-1-1) 소품이 뻗는 방향이 캐릭터마다 달라져서 더 자주 난다. 고를 때는 build/<id>/master_body.png 에 격자를 그려 놓고 **어깨(팔이 몸통에 붙는 자리)와 손(소품을 쥔 자리)**을 찍는다 — 소품 끝이 아니다.",
+ "bolt_lantern": {
+  "shoulder": "48,35",
+  "tip": "34,47",
+  "cut_side": "left",
+  "yrange": "30,54"
+ },
+ "sleet_edge": {
+  "shoulder": "58,36",
+  "tip": "76,44"
+ },
+ "icicle_herald": {
+  "shoulder": "70,40",
+  "tip": "50,42",
+  "cut_side": "left"
+ },
+ "fire_gong": {
+  "shoulder": "36,33",
+  "tip": "45,21",
+  "cut_side": "right"
+ },
+ "chime_walker": {
+  "shoulder": "60,38",
+  "tip": "72,24",
+  "cut_side": "right"
+ },
+ "coal_colossus": {
+  "shoulder": "80,46",
+  "tip": "100,22",
+  "cut_side": "right"
+ }
+}
