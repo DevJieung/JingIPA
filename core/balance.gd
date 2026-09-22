@@ -701,9 +701,9 @@ static func reroll_cost(paid_times: int) -> int:
 ## slow 이동속도 계수. 상점에서는 횟수를 제외한 모든 값을 x 표기로 통일한다.
 const UPGRADES := [
 	{"id": "atk",    "ko": "공격력",     "desc": "모든 영웅의 공격력",        "show": "mult",  "base": 40,  "grow": 1.34, "cap": 0},
-	{"id": "rate",   "ko": "공격속도",   "desc": "모든 영웅의 공격속도",      "show": "mult",  "base": 45,  "grow": 1.37, "cap": 0},
-	{"id": "crit",   "ko": "치명타 확률", "desc": "치명타 발생 확률",        "show": "pct",   "base": 60,  "grow": 1.40, "cap": 11},
-	{"id": "critx",  "ko": "치명타 배율", "desc": "치명타 피해 배율",       "show": "x",     "base": 70,  "grow": 1.42, "cap": 0},
+	{"id": "rate",   "ko": "공격속도",   "desc": "모든 영웅의 공격속도",      "show": "mult",  "base": 45,  "grow": 1.37, "cap": 23},
+	{"id": "crit",   "ko": "치명타 확률", "desc": "치명타 발생 확률",        "show": "pct",   "base": 60,  "grow": 1.40, "cap": 15},
+	{"id": "critx",  "ko": "치명타 배율", "desc": "치명타 피해 배율",       "show": "x",     "base": 70,  "grow": 1.42, "cap": 10},
 	{"id": "gold",   "ko": "골드 획득량",   "desc": "몬스터 처치 골드",   "show": "mult",  "base": 55,  "grow": 1.45, "cap": 0},
 	{"id": "reroll", "ko": "카드 무료 교체 횟수",   "desc": "카드마다 무료 교체",        "show": "count", "base": 100, "grow": 1.65, "cap": 4},
 	# ★ 제한 시간이 없어졌으므로(크리스탈이 곧 목숨이다) 그 자리에 「길」을 산다.
@@ -874,14 +874,15 @@ const CRIT_BASE_MULT := 2.0
 static func atk_mult(lv: int) -> float:
 	return pow(1.15, float(lv))
 
+## 상점 강화 상한. 패시브와 영웅 고유 효과는 이 값 뒤에 별도로 적용한다.
 static func rate_mult(lv: int) -> float:
-	return pow(1.09, float(lv))
+	return minf(3.0, pow(1.05, float(clampi(lv, 0, 23))))
 
 static func crit_chance(lv: int) -> float:
-	return min(0.60, 0.05 * float(lv))
+	return minf(0.30, 0.02 * float(maxi(0, lv)))
 
 static func crit_mult(lv: int) -> float:
-	return CRIT_BASE_MULT + 0.35 * float(lv)
+	return minf(3.0, CRIT_BASE_MULT + 0.10 * float(maxi(0, lv)))
 
 static func gold_mult(lv: int) -> float:
 	return pow(1.12, float(lv))

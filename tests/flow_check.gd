@@ -10,6 +10,7 @@ func _ready() -> void:
 		return
 	_test_restore()
 	_test_transactions()
+	_test_upgrade_limits()
 	_test_storage()
 	_test_ui_layers()
 	_test_matchups()
@@ -110,6 +111,58 @@ func _test_transactions() -> void:
 	check(Save.cur_run == saved, "저장 데이터와 실행 배열 분리")
 	Run.phase = Run.Phase.BATTLE
 	check(not Run.toggle_passive("deal"), "전투 도중 활성 변경 금지")
+
+
+func _test_upgrade_limits() -> void:
+	# 구매 경로, 표시값, 전투값 모두 같은 상한을 적용해야 한다.
+	var limits := {"crit": [15, 0.30, 0.02], "critx": [10, 3.0, 2.10], "rate": [23, 3.0, 1.05]}
+	for id in limits:
+		_fresh()
+		Run.gold = 1000000
+		var cap := int(limits[id][0])
+		var top := float(limits[id][1])
+		check(is_equal_approx(Run.up_at(id, 1), float(limits[id][2])), id + " 단계당 증가량 축소")
+		for level in range(cap):
+			check(not Balance.upgrade_maxed(id, level) and Run.up_at(id, level) < top,
+					id + " 상한 전 강화 가능")
+			check(Run.buy_upgrade(id), id + " 상한까지 구매 성공")
+		check(Balance.upgrade_maxed(id, Run.lv(id)), id + " 최대 단계 도달")
+		check(is_equal_approx(Run.up_at(id, cap), top), id + " 최대 표시값")
+		check(is_equal_approx(Run.up_at(id, cap + 1), top) and is_equal_approx(Run.up_at(id, 999), top),
+				id + " 초과 단계도 수치 상한 유지")
+		var before := Run.snapshot().duplicate(true)
+		check(not Run.buy_upgrade(id) and Run.snapshot() == before, id + " 최대 단계 구매 시 골드·상태 보존")
+
+	_fresh()
+	Run.confirm_hand()
+	Run.levels = {"crit": 15, "critx": 10, "rate": 23}
+	for with_passives in [false, true]:
+		Run.passives.assign(["scope", "headsman", "repeater"] if with_passives else [])
+		var chance := 0.40 if with_passives else 0.30
+		var critx := 4.0 if with_passives else 3.0
+		var rate := 3.6 if with_passives else 3.0
+		check(is_equal_approx(Run.stat_now("crit"), chance), "치명타 확률: 강화 상한 후 패시브 별도 적용")
+		check(is_equal_approx(Run.stat_now("critx"), critx), "치명타 배율: 강화 상한 후 패시브 별도 적용")
+		check(is_equal_approx(Run.stat_now("rate"), rate), "공격속도: 강화 상한 후 패시브 별도 적용")
+		for unit in Roster.UNITS:
+			var tier := int(unit["tier"])
+			var stats := Run.hero_stats({"unit": unit, "tier": tier, "n": 1})
+			var bonus := Balance.RIDER_CRIT if unit["role"] == "rider" and unit["elem"] == "none" else 0.0
+			var base_rate: float = Balance.TIER_RATE[tier] * float(Balance.PROFILE[unit["profile"]]["rate"])
+			check(is_equal_approx(float(stats["crit"]), chance + bonus), "전투 치명타 확률과 영웅 고유 효과")
+			check(is_equal_approx(float(stats["critx"]), critx), "전투 치명타 배율 상한")
+			check(is_equal_approx(float(stats["rate"]), base_rate * rate), "전투 공격속도 강화 배수 상한")
+
+	Run.passives.clear()
+	var legacy := Run.snapshot().duplicate(true)
+	legacy["levels"] = {"crit": 11, "critx": 20, "rate": 40}
+	var original := legacy.duplicate(true)
+	check(Run.restore(legacy), "기존 무제한 강화 저장 이어하기")
+	check(Run.lv("critx") == 10 and Run.lv("rate") == 23 and Run.lv("crit") == 11,
+			"기존 저장의 초과 단계만 새 상한으로 보정")
+	check(legacy == original, "저장 보정 시 원본 데이터 보존")
+	check(Run.restore(Run.snapshot()) and Run.lv("critx") == 10 and Run.lv("rate") == 23,
+			"보정된 저장 재복구")
 
 
 func _test_storage() -> void:

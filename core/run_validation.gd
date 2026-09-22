@@ -63,7 +63,10 @@ static func valid(d: Dictionary, version: int) -> bool:
 			return false
 		var u := Balance.upgrade_by_id(id)
 		var lv: int = d["levels"][id]
-		if u.is_empty() or lv < 0 or (int(u.get("cap", 0)) > 0 and lv > int(u["cap"])):
+		# 공격속도·치명타 배율은 이전 버전에 상한이 없었다. 초과 단계가 있는
+		# 정상 저장도 이어 갈 수 있게 허용하고, Run.restore()에서 새 상한으로 맞춘다.
+		var capped: bool = int(u.get("cap", 0)) > 0 and id not in ["rate", "critx"]
+		if u.is_empty() or lv < 0 or (capped and lv > int(u["cap"])):
 			return false
 	for group in ["passives", "offer"]:
 		seen.clear()

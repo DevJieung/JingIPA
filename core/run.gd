@@ -1260,6 +1260,11 @@ func restore(d: Dictionary) -> bool:
 					bench.append(item)
 	ensure_posts()
 	levels = (d.get("levels", {}) as Dictionary).duplicate()
+	# 예전에 무제한으로 구매한 강화가 있어도 판을 버리지 않고 새 상한을 적용한다.
+	for id in levels:
+		var cap := int(Balance.upgrade_by_id(String(id)).get("cap", 0))
+		if cap > 0:
+			levels[id] = mini(int(levels[id]), cap)
 	passives.clear()
 	for pid in (d.get("passives", []) as Array):
 		if not Balance.passive_by_id(String(pid)).is_empty() and passives.size() < Balance.PASSIVE_SLOTS:
