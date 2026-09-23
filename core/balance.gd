@@ -93,6 +93,7 @@ static func stack_atk(n: int) -> float:
 const START_LIVES := 20
 const MAX_LIVES := 20
 const START_GOLD := 60
+const REVIVE_GOLD := 1_000_000
 ## 몇 탄마다 보스가 나오는가. **한 테마 블록이 열 탄이고 그 마지막이 보스맵이다** —
 ## 그래서 이 값과 THEME_BLOCK 은 언제나 같아야 한다.
 const BOSS_EVERY := 10
@@ -703,7 +704,7 @@ const UPGRADES := [
 	{"id": "atk",    "ko": "공격력",     "desc": "모든 영웅의 공격력",        "show": "mult",  "base": 40,  "grow": 1.34, "cap": 0},
 	{"id": "rate",   "ko": "공격속도",   "desc": "모든 영웅의 공격속도",      "show": "mult",  "base": 45,  "grow": 1.37, "cap": 23},
 	{"id": "crit",   "ko": "치명타 확률", "desc": "치명타 발생 확률",        "show": "pct",   "base": 60,  "grow": 1.40, "cap": 15},
-	{"id": "critx",  "ko": "치명타 배율", "desc": "치명타 피해 배율",       "show": "x",     "base": 70,  "grow": 1.42, "cap": 10},
+	{"id": "critx",  "ko": "치명타 배율", "desc": "치명타 피해 배율",       "show": "x",     "base": 70,  "grow": 1.42, "cap": 20},
 	{"id": "gold",   "ko": "골드 획득량",   "desc": "몬스터 처치 골드",   "show": "mult",  "base": 55,  "grow": 1.45, "cap": 0},
 	{"id": "reroll", "ko": "카드 무료 교체 횟수",   "desc": "카드마다 무료 교체",        "show": "count", "base": 100, "grow": 1.65, "cap": 4},
 	# ★ 제한 시간이 없어졌으므로(크리스탈이 곧 목숨이다) 그 자리에 「길」을 산다.
@@ -879,10 +880,10 @@ static func rate_mult(lv: int) -> float:
 	return minf(3.0, pow(1.05, float(clampi(lv, 0, 23))))
 
 static func crit_chance(lv: int) -> float:
-	return minf(0.30, 0.02 * float(maxi(0, lv)))
+	return minf(0.60, 0.04 * float(maxi(0, lv)))
 
 static func crit_mult(lv: int) -> float:
-	return minf(3.0, CRIT_BASE_MULT + 0.10 * float(maxi(0, lv)))
+	return minf(6.0, CRIT_BASE_MULT + 0.20 * float(maxi(0, lv)))
 
 static func gold_mult(lv: int) -> float:
 	return pow(1.12, float(lv))

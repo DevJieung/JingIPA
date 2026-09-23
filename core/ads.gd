@@ -358,7 +358,9 @@ func _finish(rewarded: bool, text: String) -> void:
 	notify(text)
 	_reward_notice = rewarded
 	if rewarded:
-		_message_left = 3.0
+		# 카드 복구·부활은 전용 획득 연출이 완료 사실을 안내한다.
+		_reward_notice = kind not in ["continue", "fusion_undo"]
+		_message_left = 3.0 if _reward_notice else 0.0
 	completed.emit(kind, rewarded)
 
 

@@ -150,11 +150,11 @@ func _ready() -> void:
 	check(RunValidation.valid(defeat, Run.SAVE_VERSION) and Run.restore(defeat), "defeat and checkpoint survive restart")
 	check(Run.apply_ad_reward("continue", {}), "reward revives the failed wave")
 	check(Run.wave == checkpoint["wave"] and Run.lives == Run.max_lives() and Run.running, "same wave returns with full crystals")
-	check(Run.kills == 17 and Run.gold == checkpoint["gold"], "failed-wave gold and kills are rolled back")
-	check(Run.continue_used and Run.phase == Run.Phase.SWAP and int(Run.last_result["hand"]) == 9 and unique_field(), "max-tier reward preserves a valid formation")
-	check(Run.snapshot()["heroes"] == checkpoint["heroes"] and Run.bench.size() == checkpoint["bench"].size() + 1,
-			"revive reserves the reward without replacing any deployed hero")
-	check(Run.last_result["where"] == "bench" and Run.last_result["reward_pending"], "reward identity and unconfirmed reveal are saved")
+	check(Run.kills == 17 and Run.gold == checkpoint["gold"] + 1_000_000, "failed-wave gold and kills are rolled back before the million-gold reward")
+	check(Run.continue_used and Run.phase == Run.Phase.SWAP and Run.last_result["gold_only"] and unique_field(), "gold reward preserves a valid formation")
+	check(Run.snapshot()["heroes"] == checkpoint["heroes"] and Run.snapshot()["bench"] == checkpoint["bench"],
+			"revive never changes any field or reserve hero")
+	check(Run.last_result["unit"].is_empty() and Run.last_result["gold"] == 1_000_000 and Run.last_result["reward_pending"], "reward identity and unconfirmed reveal are saved")
 	check(RunValidation.valid(Run.snapshot(), Run.SAVE_VERSION), "revived formation is persistable")
 	check(Run.acknowledge_revive_reward(), "reward can be acknowledged before deploying")
 	Run.prepare_battle()
@@ -434,10 +434,10 @@ func check_repeated_revives() -> void:
 			break
 		check(Run.wave == before["wave"] and Run.lives == Run.max_lives() and Run.running,
 				"every revival returns to the failed wave with full crystals")
-		check(Run.gold == before["gold"] and Run.kills == before["kills"],
+		check(Run.gold == before["gold"] + 1_000_000 and Run.kills == before["kills"],
 				"each revival rolls back only the current failed battle")
-		check(Run.snapshot()["heroes"] == before["heroes"] and Run.bench.size() == before["bench"].size() + 1,
-				"repeated revival preserves earlier heroes and adds one reserve reward")
+		check(Run.snapshot()["heroes"] == before["heroes"] and Run.bench.size() == before["bench"].size(),
+				"repeated revival preserves all heroes and grants gold")
 		var pending := Run.snapshot()
 		check(RunValidation.valid(pending, Run.SAVE_VERSION) and Run.restore(pending),
 				"each repeated revival reward survives restart")
@@ -449,38 +449,63 @@ func check_repeated_revives() -> void:
 			Run.settle_wave(false)
 			Run.begin_draw()
 			Run.confirm_hand()
-	check(Run.bench.size() >= 12, "all repeated revival rewards are retained")
+	check(Run.hero_total() == 13 and Run.gold >= 12_000_060, "all earlier revival rewards are retained")
 	Run.phase = Run.Phase.OVER
 	Run.battle_checkpoint = {}
 	check(not Run.reward_allowed("continue") and not Run.revive_wave(), "defeat without a checkpoint cannot revive")
 
 
 func check_revive_reserve() -> void:
-	for count in [1, 12, 50, -1]:
+	for count in [1, 12, 50, -1, -2]:
 		fresh(9212026 + count, maxi(count, 0))
-		if count == -1:
+		if count < 0:
 			# All highest-tier heroes are already deployed, plus same-wave duplicates.
+			if count == -2:
+				Run.gain_hero(Roster.UNITS[0], 0, false)
 			for unit in Roster.units_of_tier(Poker.Hand.ROYAL):
-				Run.gain_hero(unit, Poker.Hand.ROYAL, false)
-				Run.gain_hero(unit, Poker.Hand.ROYAL, false)
+				Run.gain_hero(unit, Poker.Hand.ROYAL, false, count == -1)
+				Run.gain_hero(unit, Poker.Hand.ROYAL, false, count == -1)
 		Run.phase = Run.Phase.SWAP
 		Run.prepare_battle()
 		var before := Run.snapshot()
 		Run.add_lives(-Run.max_lives())
-		check(Run.revive_wave(), "revive supports empty posts, full field and duplicate royals")
-		var reward: Dictionary = Run.last_result["unit"]
-		var slot := int(Run.last_result["slot"])
-		check(Run.snapshot()["heroes"] == before["heroes"], "every original field hero keeps its post")
-		check(Run.bench.size() == before["bench"].size() + 1 and slot == before["bench"].size(), "exactly one reward is appended to reserve")
-		check(Run.bench[slot]["unit"]["id"] == reward["id"] and int(Run.bench[slot]["tier"]) == Poker.Hand.ROYAL,
-				"revealed hero exactly matches the granted highest-tier card")
+		check(Run.revive_wave(), "revive supports every royal ownership and formation state")
+		check(Run.snapshot()["heroes"] == before["heroes"] and Run.snapshot()["bench"] == before["bench"], "revive never grants or moves heroes")
+		check(Run.last_result["unit"].is_empty() and Run.last_result["slot"] == -1 and Run.last_result["gold_only"], "revive result contains gold without a hero")
+		check(Run.gold == before["gold"] + 1_000_000 and Run.last_result["gold"] == 1_000_000, "every revival gets exactly one million gold")
+		var location := ["", -1]
 		var pending := Run.snapshot()
 		check(Run.restore(pending) and bool(Run.last_result["reward_pending"]), "restart preserves an unseen reward reveal")
-		check(Run.latest_draw_location() == ["bench", slot], "same-wave duplicate heroes do not steal reward focus")
+		check(Run.latest_draw_location() == location, "reward focus matches the granted card or gold")
 		check(not Run.apply_ad_reward("continue", {}) and Run.snapshot() == pending, "a repeated reward callback cannot duplicate the hero")
 		check(Run.acknowledge_revive_reward(), "explicit reward acknowledgement succeeds once")
-		check(Run.latest_draw_location() == ["bench", slot], "confirmed reward keeps focus on its exact reserve card")
+		check(Run.latest_draw_location() == location and Run.phase == Run.Phase.SHOP and Run.retry_wave,
+				"confirmation opens the main camp with same-wave retry")
 		check(not Run.acknowledge_revive_reward() and not Run.last_result["reward_pending"], "repeated confirmation is inert")
 		var accepted := Run.snapshot()
 		check(Run.restore(accepted) and not Run.last_result["reward_pending"], "accepted reward does not replay on restart")
-		check(Run.hero_total() == before["heroes"].size() + before["bench"].size() + 1, "acknowledgement never grants another hero")
+		check(Run.hero_total() == before["heroes"].size() + before["bench"].size(), "acknowledgement never grants another hero")
+		check(Run.gold == before["gold"] + 1_000_000, "resume and confirmation never grant gold twice")
+		var malformed := accepted.duplicate(true)
+		malformed["last"]["gold"] = -1
+		check(not Run.restore(malformed) and Run.snapshot() == accepted, "invalid gold reward save is rejected without changing the run")
+		malformed = accepted.duplicate(true)
+		malformed["retry_wave"] = "true"
+		check(not Run.restore(malformed) and Run.snapshot() == accepted, "invalid retry flag is rejected without changing the run")
+	# Already granted hero rewards from older saves remain claimable, without
+	# exchanging the hero or granting the newly introduced gold again.
+	fresh(230926, 12)
+	var unit: Dictionary = Roster.units_of_tier(Poker.Hand.ROYAL)[0]
+	var got := Run.gain_hero(unit, Poker.Hand.ROYAL, false, false)
+	Run.phase = Run.Phase.SWAP
+	Run.continue_used = true
+	Run.last_result = {"hand": Poker.Hand.ROYAL, "cards": Array(Run.cards), "key": [],
+			"unit": unit, "where": got["where"], "slot": got["slot"],
+			"revived": true, "reward_pending": true}
+	var legacy := Run.snapshot()
+	legacy.erase("retry_wave")
+	check(Run.restore(legacy) and Run.last_result["unit"] == unit, "old unconfirmed hero reward remains readable")
+	check(Run.acknowledge_revive_reward() and Run.phase == Run.Phase.SHOP and Run.retry_wave,
+			"old reward also returns to the main camp")
+	check(Run.gold == legacy["gold"] and Run.snapshot()["bench"] == legacy["bench"],
+			"old reward acknowledgement neither exchanges heroes nor grants new gold")

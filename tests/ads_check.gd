@@ -152,10 +152,10 @@ func check_interstitial_rewards(service: FakeAds) -> void:
 	var ad := service.complete_load(service.loads.size() - 1)
 	check(ad is FakeInterstitial and ad.shown, "revive shows rewarded interstitial")
 	ad.listener.on_user_earned_reward.call(null)
-	check(Run.running and Run.lives == Run.max_lives() and int(Run.last_result["hand"]) == 9,
-			"interstitial earned callback restores all crystals and highest-tier hero")
-	check(Run.snapshot()["heroes"] == before_revive["heroes"] and Run.bench.size() == before_revive["bench"].size() + 1,
-			"earned reward is reserved without automatic formation changes")
+	check(Run.running and Run.lives == Run.max_lives() and Run.last_result["gold"] == 1_000_000,
+			"interstitial earned callback restores all crystals and grants one million gold")
+	check(Run.snapshot()["heroes"] == before_revive["heroes"] and Run.bench.size() == before_revive["bench"].size(),
+			"earned gold reward leaves all heroes untouched")
 	check(Run.last_result["reward_pending"], "earned reward waits for the player to see and confirm its identity")
 	var rewarded := Run.snapshot()
 	ad.listener.on_user_earned_reward.call(null)
@@ -231,12 +231,14 @@ func check_repeated_revive_ads(service: FakeAds) -> void:
 		ad.listener.on_user_earned_reward.call(null)
 		check(Run.phase == Run.Phase.SWAP and Run.lives == Run.max_lives() and Run.wave == before["wave"],
 				"each new ad completion revives the same wave")
-		check(Run.snapshot()["heroes"] == before["heroes"] and Run.bench.size() == before["bench"].size() + 1,
-				"each new ad preserves the formation and grants exactly one reserve hero")
+		check(Run.snapshot()["heroes"] == before["heroes"] and Run.bench.size() == before["bench"].size(),
+				"each new ad preserves all heroes")
+		check(Run.gold == before["gold"] + 1_000_000, "every ad grants exactly one million gold")
 		var rewarded := Run.snapshot()
 		ad.listener.on_user_earned_reward.call(null)
 		check(Run.snapshot() == rewarded, "duplicate completion cannot grant another revival reward")
 		ad.full_screen_content_callback.on_ad_dismissed_full_screen_content.call()
+		check(service._message_left == 0.0, "dedicated reveal replaces the generic success notice")
 		check(not service.busy and ad.destroyed and Run.acknowledge_revive_reward(),
 				"closing each ad unlocks confirmation and the next battle")
 		previous_ad = ad

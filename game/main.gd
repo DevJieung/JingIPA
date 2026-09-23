@@ -179,6 +179,9 @@ func go_draw() -> void:
 	if not Run.running:
 		show_title()
 		return
+	if Run.retry_wave:
+		go_battle()
+		return
 	if Run.wave >= Balance.LAST_WAVE:
 		Run.end_run(true)
 		go_over()

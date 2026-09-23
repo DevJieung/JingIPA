@@ -124,12 +124,17 @@ func _ready() -> void:
 					draw.revive_reward.update(0.02)
 			await capture(language + "_reward_" + String(unit["id"]))
 			check(tap(draw, "revive:confirm"), "explicit reward confirmation is reachable")
-			check(draw.state == DrawScreen.SWAP, "reward confirm opens formation")
+			check(await wait_screen(main, "shop_screen", 120), "reward confirm opens the main camp")
+			main._process(1.0)
+			shop = main.screen as ShopScreen
+			shop.set_process(false)
+			shop.tab = "f"
+			check(Run.phase == Run.Phase.SHOP and Run.retry_wave, "camp retains the revived stage")
 			check(not bool(Run.last_result.get("reward_pending", true)), "reward confirmation is persisted")
 			check(Run.heroes.size() + Run.bench.size() == initial_count, "confirmation never grants another hero")
-			check(draw.formation.selected == -1 and draw.formation.bench_selected == -1, "reward leaves placement to the player")
+			check(shop.formation.selected == -1 and shop.formation.bench_selected == -1, "reward leaves placement to the player")
 			await capture(language + "_reward_placed_" + String(unit["id"]))
-			check(draw.formation.is_new(Run.bench[slot]), "exact reward card highlighted in hall")
+			check(shop.formation.is_new(Run.bench[slot]), "exact reward card highlighted in hall")
 		check(I18n.missing.is_empty(), "all new copy translated")
 	Look.text_audit_enabled = false
 	var file := FileAccess.open(output + "/text-audit.json", FileAccess.WRITE)

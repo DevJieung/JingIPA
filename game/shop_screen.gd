@@ -151,9 +151,12 @@ func _draw() -> void:
 		_:
 			_draw_upgrades()
 
-	var last: bool = Run.wave >= Balance.LAST_WAVE
+	var last: bool = Run.wave >= Balance.LAST_WAVE and not Run.retry_wave
+	var next_label := "결과 보기" if last else "%d탄으로" % Run.next_battle_wave()
+	if Run.retry_wave:
+		next_label = "%d탄 다시 도전" % Run.next_battle_wave()
 	ui.button(self, Rect2(SIDE_X, 706, SIDE_W, 68),
-			"결과 보기" if last else "%d탄으로" % (Run.wave + 1), "next", true, Look.GOLD, 32)
+			next_label, "next", not Run.retry_wave or not Run.heroes.is_empty(), Look.GOLD, 32)
 	fx.draw(self)
 	fx.draw_flash(self, Look.SCREEN)
 	fusion.draw(self, ui)
@@ -163,7 +166,9 @@ func _draw() -> void:
 func _draw_topbar() -> void:
 	Hud.topbar(self, "야영지", Look.INK if Run.lives > 5 else Look.RED)
 	var nxt := "모든 탄 완료" if Run.wave >= Balance.LAST_WAVE \
-			else "다음 %d탄" % (Run.wave + 1)
+			else "다음 %d탄" % Run.next_battle_wave()
+	if Run.retry_wave:
+		nxt = "%d탄 다시 도전" % Run.next_battle_wave()
 	Look.text_box(self, Rect2(490, 12, Hud.MENU_RECT.position.x - 514, 44), nxt, Hud.INFO_SIZE, Look.INK_DIM, HORIZONTAL_ALIGNMENT_RIGHT)
 
 
@@ -179,7 +184,7 @@ func _draw_tabs() -> void:
 
 ## 다음 탄의 실제 몬스터와 각자의 속성.
 func _draw_next_monsters() -> void:
-	var w := mini(Run.wave + 1, Balance.LAST_WAVE)
+	var w := Run.next_battle_wave()
 	Hud.draw_lineup(self, Vector2(LIST_X, MON_Y + 17.0), "다음전투에 나올 몬스터",
 			Run.wave_lineup(w))
 

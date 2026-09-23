@@ -131,9 +131,10 @@ func _input(e: InputEvent) -> void:
 		if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT \
 				and ui.hit(e.position) == "revive:confirm" and revive_reward.ready():
 			if Run.acknowledge_revive_reward():
-				state = SWAP
-				_focus_latest()
 				Sfx.play("button")
+				if main != null:
+					_leaving = true
+					main.go(main.go_shop)
 		return
 	if card_choice.input(e, ui):
 		get_viewport().set_input_as_handled()

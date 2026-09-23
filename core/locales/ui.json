@@ -591,6 +591,24 @@
     "최고 등급 · 로열 플러시": "Top tier · Royal Flush",
     "전장 배치에서 직접 배치하세요.": "Choose a battlefield position to deploy your hero.",
     "크리스탈 전체 회복": "All crystals restored",
-    "영웅 배치": "Arrange heroes"
+    "영웅 배치": "Arrange heroes",
+    "평균 희귀도": "Avg. rarity",
+    "재료 카드 5장 복구!": "All 5 cards restored!",
+    "합성 전의 영웅들이 전당으로 돌아왔습니다": "Your original heroes have returned to the hall",
+    "결과 영웅을 회수하고 재료 5장을 되살렸습니다.": "The fusion result was returned and all 5 materials restored.",
+    "복구한 카드 확인": "View restored cards",
+    "부활 + Gold 획득!": "Revived + Gold earned!",
+    "대기실의 전장 배치에서 배치하세요.": "Deploy your hero from the camp.",
+    "이미 보유한 영웅입니다.\n추가 카드는 전당에 보관됩니다.": "You already own this hero.\nThe extra card stays in your hall.",
+    "같은 영웅을 다시 얻으면\n추가 카드는 전당에 보관됩니다.": "If you receive a duplicate hero,\nthe extra card stays in your hall.",
+    "크리스탈 전체 회복 + 1,000,000 G": "Crystal fully healed + 1,000,000 G",
+    "광고 보고 부활 + Gold": "Watch ad: Revive + Gold",
+    "%d탄 다시 도전": "Retry stage {0}",
+    "대기실에서 준비 후 같은 탄에 다시 도전합니다.": "Prepare in the camp, then retry the same stage.",
+    "부활 보상 골드": "Revival reward gold",
+    "부활 추가 보상": "Revival bonus",
+    "대기실에서 능력치를 강화하고\n같은 탄에 다시 도전하세요.": "Upgrade your stats in the camp,\nthen retry the same stage.",
+    "골드가 즉시 지급되었습니다.": "Gold has been added to your balance.",
+    "대기실로": "To camp"
   }
 }

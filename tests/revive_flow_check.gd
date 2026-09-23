@@ -7,9 +7,11 @@ func _ready() -> void:
 		return
 	main = load("res://game/main.gd").new()
 	add_child(main)
-	for locale in ["ko", "en"]:
-		I18n.set_locale(locale)
-		Fixture.fresh(92126, 12)
+	for scenario in ["ko", "en", "final_wave"]:
+		I18n.set_locale("en" if scenario == "en" else "ko")
+		Fixture.fresh(92126, 50 if scenario == "final_wave" else 12)
+		if scenario == "final_wave":
+			Run.wave = Balance.LAST_WAVE
 		for attempt in range(3):
 			Run.prepare_battle()
 			var before := Run.snapshot()
@@ -28,7 +30,7 @@ func _ready() -> void:
 			main.screen.set_process(false)
 			main.screen.revive_reward.age = 0.0
 			await paint(main.screen)
-			check(main.screen.revive_reward.result["unit"]["id"] == Run.bench[-1]["unit"]["id"], "displayed identity is the newly granted reserve hero")
+			check(main.screen.revive_reward.result["gold"] == 1_000_000, "displayed gold matches the revival reward")
 			check(not tap(main.screen, "revive:confirm"), "confirmation waits for the reveal to become visible")
 			mouse(main.screen, Vector2(650, 390), true)
 			check(main.screen.state == DrawScreen.REVIVE_REWARD and Run.last_result["reward_pending"], "background taps cannot dismiss the reward")
@@ -37,9 +39,11 @@ func _ready() -> void:
 			var pending := Run.snapshot()
 			main.screen.revive_reward.update(1.2)
 			await paint(main.screen)
-			check(tap(main.screen, "revive:confirm"), "explicit hero-placement confirmation is available")
-			check(main.screen.state == DrawScreen.SWAP and not Run.last_result["reward_pending"], "confirmation opens formation and saves acknowledgement")
-			check(Run.snapshot()["heroes"] == before["heroes"] and Run.bench.size() == before["bench"].size() + 1, "revealing and confirming never auto-deploy or duplicate the reward")
+			check(tap(main.screen, "revive:confirm"), "explicit main-camp confirmation is available")
+			main._process(1.0)
+			main._process(1.0)
+			check(main.screen is ShopScreen and Run.phase == Run.Phase.SHOP and not Run.last_result["reward_pending"], "confirmation opens the main camp and saves acknowledgement")
+			check(Run.snapshot()["heroes"] == before["heroes"] and Run.bench.size() == before["bench"].size(), "revealing and confirming never auto-deploy or duplicate the reward")
 			check(main.screen.formation.selected == -1 and main.screen.formation.bench_selected == -1, "placement remains the player's choice")
 			var accepted := Run.snapshot()
 			Save.cur_run = pending
@@ -47,12 +51,28 @@ func _ready() -> void:
 			main._process(1.0)
 			main._process(1.0)
 			check(main.screen.state == DrawScreen.REVIVE_REWARD, "resume returns to the unseen reward")
-			check(Run.bench.size() == before["bench"].size() + 1, "resuming reward reveal grants nothing again")
+			check(Run.bench.size() == before["bench"].size(), "resuming reward reveal grants nothing again")
 			Save.cur_run = accepted
 			check(main.resume_run(), "confirmed reward save can resume")
 			main._process(1.0)
 			main._process(1.0)
-			check(main.screen.state == DrawScreen.SWAP, "confirmed reward resumes at formation")
+			check(main.screen is ShopScreen and Run.retry_wave, "confirmed reward resumes in the main camp")
+			check(Run.next_battle_wave() == before["wave"], "camp previews the failed wave, including the final wave")
+			check(Run.gold == before["gold"] + 1_000_000 and Run.buy_upgrade("atk"), "revival gold is immediately usable for camp upgrades")
+			var prepared := Run.snapshot()
+			await paint(main.screen)
+			check(tap(main.screen, "next"), "camp can start the retry")
+			main._process(1.0)
+			main._process(1.0)
+			check(main.screen is BattleScreen and Run.wave == before["wave"] and not Run.retry_wave, "retry starts the same wave without dealing again or skipping the final wave")
+			main.screen.set_process(false)
+			check(Run.cards == prepared["cards"] and Run.gold == prepared["gold"] and Run.snapshot()["heroes"] == prepared["heroes"], "retry preserves cards, upgrades, gold and formation")
+			if attempt == 2:
+				Run.settle_wave(false)
+				if scenario == "final_wave":
+					check(Run.phase == Run.Phase.WIN, "winning the retried final wave completes the run")
+				else:
+					check(Run.phase == Run.Phase.SHOP and not Run.retry_wave and Run.next_battle_wave() == Run.wave + 1, "winning a retry restores normal next-wave progression")
 			await frames(2)
 	main.queue_free()
 	await frames(2)

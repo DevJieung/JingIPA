@@ -94,6 +94,11 @@ func check_result(language: String, material_tier: int, target_tier: int, label:
 				"earned reward returns all five original materials")
 		Ads._message_left = 0
 		Ads._reward_notice = false
+		draw.fusion.update(0.0)
+		check(draw.fusion.restore_age >= 0, "rewarded undo starts the five-card restoration animation")
+		draw.fusion.update(1.6)
+		await paint(draw)
+		check(tap(draw, "fusion:restored"), "restored cards wait for explicit confirmation")
 		await paint(draw)
 		check(zone_of(draw, "fusion:undo").is_empty(), "restored state returns to material selection")
 		check(draw.fusion.selected.is_empty(), "restored materials can be selected for another fusion")

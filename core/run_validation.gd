@@ -56,7 +56,8 @@ static func valid(d: Dictionary, version: int) -> bool:
 					return false
 			if h["t"] < 0 or h["t"] > 9 or h["n"] < 1 or h["n"] > 10000 or h["w"] < 1:
 				return false
-	if d["phase"] in [2, 3, 4] and d["heroes"].is_empty():
+	if d["phase"] in [2, 3, 4] and d["heroes"].is_empty() \
+			and not (d["phase"] == 3 and d.get("retry_wave", false) == true):
 		return false
 	for id in d["levels"]:
 		if not id is String or not d["levels"][id] is int:
@@ -106,7 +107,15 @@ static func valid(d: Dictionary, version: int) -> bool:
 		return false
 	var last: Dictionary = d.get("last", {})
 	if not last.is_empty():
-		if not last.get("unit") is String or Roster.unit_by_id(last["unit"]).is_empty():
+		var gold_only: bool = last.get("gold_only", false) == true
+		if not last.get("unit") is String:
+			return false
+		if gold_only:
+			if last["unit"] != "" or last.get("revived", false) != true or last.get("gold", 0) != Balance.REVIVE_GOLD:
+				return false
+		elif Roster.unit_by_id(last["unit"]).is_empty():
+			return false
+		if not last.get("gold", 0) is int or last.get("gold", 0) < 0:
 			return false
 		if not last.get("hand") is int or last["hand"] < 0 or last["hand"] > 9:
 			return false
@@ -115,7 +124,7 @@ static func valid(d: Dictionary, version: int) -> bool:
 		for key in ["joker", "slot", "n"]:
 			if not last.get(key, 0) is int:
 				return false
-		for key in ["revived", "reward_pending"]:
+		for key in ["revived", "reward_pending", "gold_only", "duplicate"]:
 			if not last.get(key, false) is bool:
 				return false
 	return true
@@ -172,7 +181,8 @@ static func piles_valid(d: Dictionary) -> bool:
 static func rewards_valid(d: Dictionary, version: int) -> bool:
 	if not d.get("rules_v", 0) is int or not d.get("rules_v", 0) in [0, 2]:
 		return false
-	if not d.get("continue_used", false) is bool or not d.get("fusion_serial", 0) is int:
+	if not d.get("continue_used", false) is bool or not d.get("fusion_serial", 0) is int \
+			or not d.get("retry_wave", false) is bool:
 		return false
 	var checkpoint: Variant = d.get("checkpoint", {})
 	if not checkpoint is Dictionary:
@@ -202,6 +212,14 @@ static func rewards_valid(d: Dictionary, version: int) -> bool:
 	before["checkpoint"] = {}
 	if not before["heroes"] is Array or not before["bench"] is Array:
 		return false
+	if fusion.has("material_codes"):
+		if not fusion["material_codes"] is Array or fusion["material_codes"].size() != 5:
+			return false
+		var selected := {}
+		for code in fusion["material_codes"]:
+			if not code is int or code < 100000 or code - 100000 >= before["bench"].size() or selected.has(code):
+				return false
+			selected[code] = true
 	if before["heroes"].size() + before["bench"].size() != d["heroes"].size() + d["bench"].size() + 4:
 		return false
 	return valid(before, version)

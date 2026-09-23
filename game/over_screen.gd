@@ -69,9 +69,10 @@ func _draw() -> void:
 	else:
 		Look.text_center(self, Vector2(640, 340), "-", 42, Look.INK_DIM)
 	if not won:
-		Look.text_center_fit(self, Vector2(640, 619), "크리스탈 전체 회복 + 최고 등급 영웅 1명 랜덤 획득", 27, Look.CRYSTAL, 1100, 23)
-		ui.reward_button(self, Rect2(340, 649, 600, 64), "광고 보고 다시 도전", "continue",
+		Look.text_center_fit(self, Vector2(640, 613), "크리스탈 전체 회복 + 1,000,000 G", 27, Look.CRYSTAL, 1100, 23)
+		ui.reward_button(self, Rect2(340, 641, 600, 64), "광고 보고 부활 + Gold", "continue",
 				Run.reward_allowed("continue"), Look.GOLD, 30)
+		Look.text_box(self, Rect2(280, 712, 720, 34), "대기실에서 준비 후 같은 탄에 다시 도전합니다.", 20, Look.INK_DIM)
 	ui.button(self, Rect2(1090, 740, 150, 36), "타이틀로", "again", true, Look.PANEL_EDGE, 18)
 	fx.draw_back(self)
 	fx.draw(self)

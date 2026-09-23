@@ -21,7 +21,7 @@ if grep -Eq 'SCRIPT ERROR|Parse Error|Compile Error' build/ci/import-bootstrap.l
 fi
 checked_godot build/ci/import.log --import
 export POCKER_NO_SAVE=1
-for scene in flow_check localization_check ads_check; do
+for scene in flow_check rules_check revive_flow_check localization_check ads_check; do
     checked_godot "build/ci/$scene.log" "res://tests/$scene.tscn"
     grep -q '판정: 정상' "build/ci/$scene.log"
 done

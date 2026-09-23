@@ -65,6 +65,7 @@ const FUSION_BENCH := 100000
 var fusion_pending: Dictionary = {}
 var fusion_serial: int = 0
 var continue_used: bool = false # 부활 이력/저장 호환용. 부활 횟수를 제한하지 않는다.
+var retry_wave: bool = false # 부활 대기실에서는 다음 탄 대신 현재 탄을 다시 시작한다.
 var battle_checkpoint: Dictionary = {}
 var rng := RandomNumberGenerator.new()
 
@@ -138,6 +139,7 @@ func start_run(seed_value: int = 0) -> void:
 	fusion_pending = {}
 	fusion_serial = 0
 	continue_used = false
+	retry_wave = false
 	battle_checkpoint = {}
 	repairs = 0
 	cards.clear()
@@ -427,6 +429,7 @@ func add_lives(n: int) -> void:
 ##   그래서 리롤을 몇 번을 하든 손패에 같은 카드가 두 장 설 수가 없다.
 func begin_draw() -> void:
 	wave += 1
+	retry_wave = false
 	phase = Phase.DRAW
 	last_result = {}
 	battle_checkpoint = {}
@@ -1151,6 +1154,7 @@ func snapshot(include_checkpoint: bool = true) -> Dictionary:
 		"last": _last_out(), "rng": rng.state,
 		"fusion": fusion_pending.duplicate(true), "fusion_serial": fusion_serial,
 		"continue_used": continue_used,
+		"retry_wave": retry_wave,
 		"checkpoint": battle_checkpoint.duplicate(true) if include_checkpoint else {},
 	}
 
@@ -1202,7 +1206,7 @@ func _last_in(d: Dictionary) -> Dictionary:
 	if d.is_empty():
 		return {}
 	var u := Roster.unit_by_id(String(d.get("unit", "")))
-	if u.is_empty():
+	if u.is_empty() and not (bool(d.get("revived", false)) and bool(d.get("gold_only", false))):
 		return {}
 	var r := d.duplicate()
 	r["unit"] = u
@@ -1306,6 +1310,7 @@ func restore(d: Dictionary) -> bool:
 	fusion_pending = d.get("fusion", {}).duplicate(true)
 	fusion_serial = int(d.get("fusion_serial", 0))
 	continue_used = bool(d.get("continue_used", false))
+	retry_wave = bool(d.get("retry_wave", false))
 	battle_checkpoint = d.get("checkpoint", {}).duplicate(true)
 	running = phase != Phase.OVER
 	gold_changed.emit(gold)
@@ -1404,6 +1409,7 @@ func fuse_heroes(codes: Array) -> Dictionary:
 	gain_hero(unit, tier, false)
 	fusion_serial += 1
 	fusion_pending = {"id": fusion_serial, "before_h": before_h, "before_b": before_b,
+			"material_codes": codes.duplicate(),
 			"unit": String(unit["id"]), "tier": tier, "score": score,
 			"failed": tier <= top and not (tier == 9 and top == 9)}
 	Save.seen_units[String(unit["id"])] = true
@@ -1433,6 +1439,7 @@ func undo_fusion() -> bool:
 
 func prepare_battle() -> void:
 	fusion_pending = {}
+	retry_wave = false
 	if phase != Phase.BATTLE or battle_checkpoint.is_empty():
 		phase = Phase.BATTLE
 		battle_checkpoint = snapshot(false)
@@ -1477,6 +1484,10 @@ func apply_ad_reward(kind: String, data: Dictionary) -> bool:
 	return true
 
 
+func next_battle_wave() -> int:
+	return wave if retry_wave else mini(wave + 1, Balance.LAST_WAVE)
+
+
 func revive_wave() -> bool:
 	if not reward_allowed("continue"):
 		return false
@@ -1485,21 +1496,14 @@ func revive_wave() -> bool:
 		return false
 	continue_used = true
 	lives = max_lives()
-	var pool: Array = []
-	for unit in Roster.units_of_tier(Poker.Hand.ROYAL):
-		if can_deploy(unit):
-			pool.append(unit)
-	if pool.is_empty():
-		pool = Roster.units_of_tier(Poker.Hand.ROYAL)
-	var unit: Dictionary = pool[rng.randi_range(0, pool.size() - 1)]
-	# 광고 보상은 전당에 보관한다. 전장의 누구를 교체할지는 사용자가 결정한다.
-	var got := gain_hero(unit, Poker.Hand.ROYAL, false, false)
+	add_gold(Balance.REVIVE_GOLD)
 	last_result = {"hand": Poker.Hand.ROYAL, "cards": Array(cards), "key": [],
-			"unit": unit, "bumped": false, "joker": -1, "showy": true,
-			"stacked": false, "where": got["where"], "slot": got["slot"],
-			"n": 1, "revived": true, "reward_pending": true}
-	Save.seen_units[String(unit["id"])] = true
+			"unit": {}, "bumped": false, "joker": -1, "showy": true,
+			"stacked": false, "where": "", "slot": -1,
+			"n": 1, "revived": true, "reward_pending": true,
+			"gold": Balance.REVIVE_GOLD, "gold_only": true, "duplicate": false}
 	battle_checkpoint = {}
+	retry_wave = true
 	phase = Phase.SWAP
 	running = true
 	lives_changed.emit(lives)
@@ -1514,5 +1518,9 @@ func acknowledge_revive_reward() -> bool:
 			or not bool(last_result.get("reward_pending", false)):
 		return false
 	last_result["reward_pending"] = false
+	phase = Phase.SHOP
+	retry_wave = true
+	if shop_offer.is_empty():
+		roll_shop()
 	autosave()
 	return true
