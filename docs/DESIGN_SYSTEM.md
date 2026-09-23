@@ -9,8 +9,9 @@
 
 - 앱을 켰을 때는 `docs/icon-business-v3-512.png` 원본을 중앙에서 페이드 인·아웃한다.
   로고 바탕과 화면 전체 여백은 정확히 `#235D48`(RGB 35, 93, 72)이며 엔진 기본
-  Godot 아이콘과 Android 시작 아이콘은 표시하지 않는다. 구현: `game/startup_splash.gd`,
-  `project.godot`, `export_presets.cfg`, `art/ui/startup_blank.xml`.
+  Godot 아이콘과 Android/iOS 기본 시작 아이콘은 표시하지 않는다. 구현:
+  `game/startup_splash.gd`, `project.godot`, `export_presets.cfg`,
+  `art/ui/startup_blank.xml`, `art/ui/startup_blank.png`.
 - Godot 2D 픽셀아트 게임이며 Android 가로 화면을 대상으로 한다. 기준 뷰포트는
   1280×800이고 작은 화면 검수는 1000×625로 한다. 근거: `project.godot`.
 - 현재 팔레트·카드·희귀도 표시는 `core/look.gd`, 공통 UI는 `core/ui.gd`를 기준으로 한다.
@@ -695,6 +696,25 @@ SDXL을 비교 기준으로 같이 시험하고, 외형·방향 수정에서 필
   육안 검수는 수행하지 않았다. 메인이 APK 빌드 후 실제 패키지의 startup 씬·스크립트·
   로고 texture 포함, 완전 투명 native drawable, 기본/v31 OS splash와 app window의
   `#FF235D48` 배경 및 `--disable_godot_splash` 옵션을 확인하고 고정 APK를 교체했다.
+
+## 2026-09-23 iPhone 시작 화면의 Godot 아이콘 제거
+
+- iOS 네이티브 시작 storyboard는 엔진의 `boot_splash/show_image=false`와 별개이며,
+  시작 이미지를 지정하지 않으면 Godot 기본 로고가 들어간다. `export_presets.cfg`의
+  `storyboard/custom_image@2x`와 `@3x`를 모두 `art/ui/startup_blank.png`로 지정한다.
+  6×6 RGBA8 완전 투명 PNG는 Godot `Image.create`와 `fill(Color(0, 0, 0, 0))`로 만든
+  기술용 자리표시자다. 배율은 Center(1), 배경은 기존 `#235D48`로 유지한다.
+- 실제 iOS 내보내기에서 `SplashImage.imageset/splash@2x.png`와 `splash@3x.png`의
+  전체 알파 0 및 `Launch Screen.storyboard`의 동일 배경색을 확인했다. 증거:
+  `build/ios-startup-review/{ios-export.log,launch-resource-report.json}`.
+- `python3 tools/startup_splash_review.py`로 실제 Godot 1280×800 / 1000×625 /
+  1280×720의 각 30프레임을 새로 촬영하고 기본·작은 화면 합본을 직접 확인했다.
+  기존 자체 로고 페이드·타이틀 진입·창 비율 복원은 모두 통과했고, 총 57,995,580개
+  여백 픽셀이 `#235D48`이다. 자료: `build/startup-splash/<해상도>/sequence.png`,
+  `build/startup-splash/report.json`.
+- Linux 환경이라 iPhone 네이티브 화면 실행은 검수하지 못했다. iOS는 Xcode 프로젝트
+  내보내기와 리소스 검증까지 수행했다. 촬영 중 가상 OpenGL V-Sync/MSAA 경고,
+  기본·작은 해상도 종료 때 기존 ObjectDB 4개/리소스 2개 정리 경고가 남았다.
 
 ## 2026-09-15 전장 배치의 중복 영웅 정보 제거
 
