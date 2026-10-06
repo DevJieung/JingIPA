@@ -85,7 +85,41 @@ static func unit_by_id(id: String) -> Dictionary:
 	for u in UNITS:
 		if u["id"] == id:
 			return u
+	if id.begins_with("awakened_"):
+		var parts := id.split("_")
+		if parts.size() == 3 and parts[2].is_valid_int():
+			var tier := int(parts[2])
+			if tier >= 0 and tier <= 9:
+				for u in fusion_units(tier):
+					if u["id"] == id:
+						return u
 	return {}
+
+
+## Separate identities; ordinary draws only use UNITS, never this pool.
+static func fusion_units(tier: int = 9) -> Array:
+	var names := {"water": ["파도의 수호자", "Tide Warden"],
+		"fire": ["화염의 군주", "Flame Sovereign"],
+		"ice": ["서리의 심판자", "Frost Arbiter"],
+		"elec": ["천둥의 사도", "Thunder Herald"],
+		"none": ["균열의 파수꾼", "Rift Sentinel"]}
+	var out: Array = []
+	for base in units_of_tier(clampi(tier, 0, 9)):
+		var u: Dictionary = base.duplicate(true)
+		var elem := String(u["elem"])
+		u["base_id"] = u["id"]
+		u["id"] = "awakened_%s_%d" % [elem, clampi(tier, 0, 9)]
+		u["ko"] = names[elem][0]
+		u["en"] = names[elem][1]
+		u["fusion_only"] = true
+		u["lore"] = "다섯 수호자의 문장을 이어받아 생명 수정을 지키는 각성 수호자. 합성으로만 소환할 수 있다."
+		out.append(u)
+	return out
+
+
+static func pick_fusion_unit(tier: int, rng: RandomNumberGenerator) -> Dictionary:
+	var pool := fusion_units(tier)
+	return pool[rng.randi_range(0, pool.size() - 1)]
 
 
 static func monster_by_id(id: String) -> Dictionary:

@@ -80,6 +80,9 @@ func _input(e: InputEvent) -> void:
 		Save.set_sfx(not Save.sfx)
 	elif id == "music":
 		Save.set_music(not Save.music)
+	elif id.begins_with("cards:"):
+		Save.set_card_mode(id.get_slice(":", 1))
+		main.screen.queue_redraw()
 	elif id.begins_with("page:"):
 		page = id.substr(5)
 	elif id == "title":
@@ -110,7 +113,7 @@ func _draw() -> void:
 	draw_rect(Look.SCREEN, Color(0.01, 0.02, 0.04, 0.85))
 	Look.material_panel(self, Rect2(220, 86, 840, 638), Look.PANEL, Look.CRYSTAL)
 	Look.text_center(self, Vector2(640, 136), "일시정지" if Run.running else "게임 안내", 38, Look.INK)
-	var tabs := [["menu", "메뉴"], ["rules", "플레이 방법"], ["hands", "족보"], ["elements", "속성 상성표"]]
+	var tabs := [["menu", "메뉴"], ["rules", "플레이 방법"], ["hands", "마법 조합" if Save.card_mode == "sigil" else "족보"], ["elements", "속성 상성표"]]
 	for i in range(tabs.size()):
 		ui.tab(self, Rect2(250 + i * 196, 176, 188, 44), tabs[i][1], "page:" + tabs[i][0], page == tabs[i][0], 21)
 	match page:
@@ -127,13 +130,17 @@ func _draw() -> void:
 
 
 func _draw_menu() -> void:
-	ui.button(self, Rect2(400, 262, 480, 56), "효과음  " + ("켜짐" if Save.sfx else "꺼짐"), "sound", true, Look.PANEL_EDGE, 25)
-	ui.button(self, Rect2(400, 334, 480, 56), "배경음악  " + ("켜짐" if Save.music else "꺼짐"), "music", true, Look.PANEL_EDGE, 25)
+	ui.button(self, Rect2(400, 242, 480, 50), "효과음  " + ("켜짐" if Save.sfx else "꺼짐"), "sound", true, Look.PANEL_EDGE, 24)
+	ui.button(self, Rect2(400, 302, 480, 50), "배경음악  " + ("켜짐" if Save.music else "꺼짐"), "music", true, Look.PANEL_EDGE, 24)
+	Look.text_box(self, Rect2(400, 363, 480, 28), "카드 표현", 19, Look.INK_DIM, HORIZONTAL_ALIGNMENT_LEFT)
+	ui.tab(self, Rect2(400, 397, 234, 48), "판타지 문장", "cards:sigil", Save.card_mode == "sigil", 22)
+	ui.tab(self, Rect2(646, 397, 234, 48), "포커 카드", "cards:poker", Save.card_mode == "poker", 22)
+	Look.text_box(self, Rect2(290, 454, 700, 28), "숲 · 태양 · 파도 · 달  |  조합 규칙과 능력은 동일합니다", 18, Look.INK_DIM)
 	if Run.running:
-		ui.button(self, Rect2(400, 410, 480, 56), "저장하고 타이틀로", "title", true, Look.CRYSTAL, 25)
+		ui.button(self, Rect2(400, 490, 480, 50), "저장하고 타이틀로", "title", true, Look.CRYSTAL, 24)
 		var hint := "전투 중 종료 시 이번 탄부터 다시 시작합니다." if Run.phase == Run.Phase.BATTLE else "카드와 구매 내역이 저장됩니다."
-		Look.text_center(self, Vector2(640, 486), hint, 23, Look.INK_DIM)
-	Look.text_center(self, Vector2(640, 538), "Esc  메뉴 열기 / 닫기   ·   Space  전투 일시정지", 21, Look.INK_DIM)
+		Look.text_box(self, Rect2(290, 549, 700, 28), hint, 19, Look.INK_DIM)
+	Look.text_center(self, Vector2(640, 602), "Esc  메뉴 열기 / 닫기   ·   Space  전투 일시정지", 18, Look.INK_DIM)
 	if Save.last_error != OK:
 		Look.text_center(self, Vector2(640, 588), "저장하지 못했습니다. 저장 공간을 확인하고 다시 눌러 주세요.", 20, Look.RED)
 	elif Save.recovered_backup:
@@ -143,9 +150,9 @@ func _draw_menu() -> void:
 func _draw_rules() -> void:
 	var rows := [
 		["01  카드 선택", "카드별 무료 교체 가능 · 금색 테두리: 족보에 포함된 카드"],
-		["02  족보 확정", "영웅 1장 획득 · 같은 캐릭터는 전장에 1명만 출전"],
-		["03  편성과 합성", "발판 12곳 모두 출전 · 영웅 카드 5장을 합쳐 새 영웅 획득"],
-		["04  방어와 성장", "사거리 안의 가까운 적부터 공격 · 상점에서 강화와 패시브 구매"],
+		["02  조합 확정", "같은 조합도 높은 숫자와 보조 숫자가 강한 문장 영웅을 만듭니다"],
+		["03  편성과 합성", "5장 합성: 최고 재료보다 +0.5성 보장 · 합성 전용 각성 수호자"],
+		["04  방어와 성장", "생명 수정 방어 · 전투 중간에 무료 소환 또는 영웅 승급 선택"],
 	]
 	for i in range(rows.size()):
 		var y := 263.0 + i * 76.0
@@ -156,14 +163,15 @@ func _draw_rules() -> void:
 
 
 func _draw_hands() -> void:
-	var examples := ["다른 족보가 없는 패", "같은 숫자 2장", "같은 숫자 2장씩 두 쌍", "같은 숫자 3장", "연속 5장 · A는 1 또는 14", "같은 무늬 5장", "같은 숫자 3장 + 2장", "같은 숫자 4장", "연속 숫자 + 같은 무늬", "10 · J · Q · K · A + 같은 무늬"]
+	var examples := ["단일 최고 숫자", "같은 숫자 2장", "같은 숫자 2장씩 두 쌍", "같은 숫자 3장", "연속 5장 · 14는 1도 가능", "같은 문장 5장", "같은 숫자 3장 + 2장", "같은 숫자 4장", "연속 숫자 + 같은 문장", "10~14 연속 + 같은 문장"]
 	for i in range(10):
 		var tier := 9 - i
 		var x := 264.0 + (i / 5) * 388.0
-		var y := 265.0 + (i % 5) * 69.0
+		var y := 252.0 + (i % 5) * 66.0
 		Look.draw_rarity(self, Vector2(x + 30, y), tier, 4.5)
-		Look.text_box(self, Rect2(x + 72, y - 16, 300, 32), Poker.HAND_KO[tier], 22, Look.tier_color(tier), HORIZONTAL_ALIGNMENT_LEFT)
+		Look.text_box(self, Rect2(x + 72, y - 16, 300, 32), Look.hand_name(tier), 22, Look.tier_color(tier), HORIZONTAL_ALIGNMENT_LEFT)
 		Look.text_box(self, Rect2(x, y + 13, 372, 30), examples[tier], 18, Look.INK_DIM, HORIZONTAL_ALIGNMENT_LEFT)
+	Look.text_box(self, Rect2(260, 594, 760, 30), "같은 조합: 핵심 숫자 > 보조 숫자 순서로 비교 · 높은 문장은 최대 x1.30", 18, Look.CRYSTAL)
 
 
 func _draw_elements() -> void:

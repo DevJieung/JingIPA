@@ -16,16 +16,17 @@ const ARENA_CENTER := Vector2(416, 420)
 const MAP_RECT := Rect2(20, 112, 792, 620)
 const ROUTE_POINTS := [Vector2(24, 150), Vector2(156, 150), Vector2(156, 690),
 	Vector2(606, 690), Vector2(606, 210), Vector2(296, 210),
-	Vector2(296, 520), Vector2(476, 520), Vector2(476, 420), Vector2(474, 420)]
+	Vector2(296, 520), Vector2(536, 520), Vector2(536, 340), Vector2(326, 340),
+	Vector2(326, 480), Vector2(474, 480), Vector2(474, 420)]
 const POST_POINTS := [Vector2(74, 260), Vector2(74, 380), Vector2(74, 500), Vector2(74, 620),
 	Vector2(380, 282), Vector2(452, 282), Vector2(380, 568), Vector2(452, 568),
 	Vector2(758, 260), Vector2(758, 380), Vector2(758, 500), Vector2(758, 620)]
 const POST_ORDER := [4, 0, 8, 5, 1, 9, 6, 2, 10, 7, 3, 11]
-## Keep walking speed unchanged: the extra inner turn extends the base walk to 30.5s.
+## The shrine detour adds travel time without changing walking animations/speed.
 const PATH_SPEED := 82.0
 const LANE_JITTER := 10.0
 const GATE_NARROW := 28.0
-const ROAD_WIDTH := 46.0
+const ROAD_WIDTH := 36.0
 
 ## 크리스탈 제단. 길의 끝이 여기다.
 ## ★ 74 에서 58 로 좁혔다. 크리스탈이 **무더기**로 모이면서(아래) 제단이 감쌀 것이
@@ -101,10 +102,11 @@ const BOSS_EVERY := 10
 const THEME_BLOCK := 10
 ## 마지막 탄. 여기를 넘기면 이긴 것이다. 100탄 = 테마 블록 열 개.
 const LAST_WAVE := 100
-## 그 탄의 몬스터가 전부 나오는 데 걸리는 시간(초).
-## ★ 길게 잡으면 마지막 놈이 나올 때 앞엣놈은 벌써 크리스탈에 닿아 있다 — 한 번에
-##   두어 마리씩만 상대하게 되어 광역·장판이 통째로 무의미해진다.
-const SPAWN_WINDOW := 9.0
+## Two sustained assaults with a growth choice between them (simulation seconds).
+const SPAWN_WINDOW := 60.0
+
+static func spawn_window(w: int) -> float:
+	return 72.0 if is_boss_wave(w) else SPAWN_WINDOW
 
 # --------------------------------------------------------------------------- #
 # 족보 등급별 기본 능력치 — 인덱스가 Poker.Hand 값과 같다
@@ -577,18 +579,14 @@ const MONSTER_COUNT_CAP_WAVE := 30
 const MAX_ON_FIELD := 41
 const MAX_BOSS_ESCORT := 19
 
-## w 탄의 몬스터 수(보스 제외).
-##
-## ★ **첫 두 탄만 따로 얇게 잡는다.** 1탄에는 영웅이 **하나**뿐인데, 하필 그 하나가
-##   일격형(공격속도 0.5)이고 상대가 저항까지 걸면 초당 피해가 2 남짓이다. 그때 여섯
-##   마리면 25초 안에 못 잡아서 크리스탈이 깨진다 — 게임을 켠 사람이 처음 보는 장면에서
-##   벌을 주는 셈이다. 실측으로 24판 중 1판이 1탄에 하나를 잃었다(평균 -0.04).
+## Total enemies over both assaults (boss excluded). The live cap is separate.
+## Early enemies arrive slowly enough for a single starting hero and midpoint growth.
 static func wave_count(w: int) -> int:
 	if is_boss_wave(w):
-		return mini(MAX_BOSS_ESCORT, 4 + int(floor(float(w) * 0.5)))
+		return mini(MAX_BOSS_ESCORT * 2, 12 + int(floor(float(w))))
 	if w <= 2:
-		return 3 + w
-	return mini(MAX_ON_FIELD, 5 + int(floor(float(w) * 1.2)))
+		return 8 + w * 2
+	return mini(MAX_ON_FIELD * 2, 12 + int(floor(float(w) * 1.8)))
 
 static func is_boss_wave(w: int) -> bool:
 	return w % BOSS_EVERY == 0
@@ -933,13 +931,14 @@ static func hero_scale(_n: int) -> float:
 	return 0.70
 
 
-## Higher total rarity shifts every upper-tail probability upward.
-static func fusion_probabilities(score: int) -> Array[float]:
+## Higher rarity raises the upper tail; results below the promotion floor are impossible.
+static func fusion_probabilities(score: int, minimum_tier: int = -1) -> Array[float]:
 	var center := float(clampi(score, 5, 50)) / 5.0 - 0.35
+	var floor_tier := clampi(minimum_tier if minimum_tier >= 0 else ceili(float(clampi(score, 5, 50)) / 5.0), 1, 9)
 	var weights: Array[float] = []
 	var total := 0.0
 	for tier in range(10):
-		var weight := exp(-0.5 * pow((float(tier) - center) / 1.6, 2.0))
+		var weight := exp(-0.5 * pow((float(tier) - center) / 1.6, 2.0)) if tier >= floor_tier else 0.0
 		weights.append(weight)
 		total += weight
 	for i in range(weights.size()):

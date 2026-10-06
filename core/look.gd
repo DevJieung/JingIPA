@@ -582,6 +582,9 @@ static func text_width(s: String, size: int) -> float:
 ##     3. J·Q·K 는 **반쪽 그림을 위아래로 마주 붙인** 틀 그림이다(COURT_PX).
 static func draw_card(ci: CanvasItem, pos: Vector2, code: int, sc: float = 1.0,
 		hi: bool = false, dim: bool = false) -> void:
+	if Save.card_mode == "sigil":
+		_draw_sigil_card(ci, pos, code, sc, hi, dim)
+		return
 	var w := roundf(CARD_W * sc)
 	var h := roundf(CARD_H * sc)
 	var p := pos.round()
@@ -920,10 +923,95 @@ static func draw_suit_px(ci: CanvasItem, c: Vector2, blk: float, suit: int,
 ## ★ 실루엣의 원본은 SUIT_PX **한 곳뿐이다.** 예전에는 여기가 원과 삼각형으로 따로
 ##   그려서, 같은 스페이드가 자리에 따라 다른 모양으로 나왔다.
 static func draw_suit(ci: CanvasItem, c: Vector2, r: float, suit: int, col: Color) -> void:
+	if Save.card_mode == "sigil":
+		draw_sigil(ci, c, r, suit, col)
+		return
 	draw_suit_px(ci, c, maxf(1.0, floor(r * 2.0 / 12.0)), suit, col)
+
+
+## A mode changes the whole visual vocabulary while keeping the same combinations.
+const SIGIL_HANDS := ["단일 문장", "쌍의 결속", "이중 결속", "삼중 공명", "연속 공명", "문장 통일", "완전 결속", "사중 공명", "연속 문장", "왕관의 문장"]
+const SIGIL_COLORS := [Color("#75c790"), Color("#ffc86c"), Color("#68d7f0"), Color("#baaff2")]
+
+static func hand_name(tier: int) -> String:
+	return SIGIL_HANDS[clampi(tier, 0, 9)] if Save.card_mode == "sigil" else String(Poker.HAND_KO.get(tier, "?"))
+
+static func rank_name(rank: int) -> String:
+	return str(rank) if Save.card_mode == "sigil" else String(Poker.RANK_CHAR[clampi(rank - 2, 0, 12)])
+
+static func draw_sigil(ci: CanvasItem, c: Vector2, r: float, suit: int, col: Color) -> void:
+	match suit:
+		0: # Forest: a three-tier pine with a visible trunk.
+			for i in range(3):
+				var y := -r + i * r * 0.43
+				var width := r * (0.50 + i * 0.19)
+				ci.draw_colored_polygon(PackedVector2Array([c + Vector2(0, y), c + Vector2(width, y + r * 0.78), c + Vector2(-width, y + r * 0.78)]), col)
+			ci.draw_rect(Rect2(c + Vector2(-r * 0.12, r * 0.6), Vector2(r * 0.24, r * 0.43)), col)
+		1: # Sun: separate rays remain legible on tiny picker cards.
+			ci.draw_circle(c, r * 0.48, col)
+			for i in range(8):
+				var d := Vector2.from_angle(i * TAU / 8)
+				ci.draw_line(c + d * r * 0.68, c + d * r, col, maxf(1, r * 0.14))
+		2: # Wave: three broken crests rather than a card suit.
+			for row in range(3):
+				var points := PackedVector2Array()
+				for i in range(9):
+					points.append(c + Vector2((i / 8.0 - 0.5) * r * 1.8, (row - 1) * r * 0.55 + sin(i * PI / 4) * r * 0.2))
+				ci.draw_polyline(points, col, maxf(1, r * 0.16), false)
+		_: # Crescent: polygon avoids erasing the card's decorative background.
+			var points := PackedVector2Array()
+			for i in range(17):
+				var a := PI * 0.30 + i * PI * 1.40 / 16
+				points.append(c + Vector2.from_angle(a) * r)
+			for i in range(17):
+				var a := -PI * 0.65 - i * PI * 0.70 / 16
+				points.append(c + Vector2(r * 0.44, 0) + Vector2.from_angle(a) * r * 0.88)
+			ci.draw_colored_polygon(points, col)
+
+static func _draw_sigil_card(ci: CanvasItem, pos: Vector2, code: int, sc: float, hi: bool, dim: bool) -> void:
+	var rect := Rect2(pos.round(), Vector2(roundf(CARD_W * sc), roundf(CARD_H * sc)))
+	var suit := Poker.suit_of(code)
+	var tone: Color = SIGIL_COLORS[suit]
+	var ink := tone.lerp(INK_DIM, 0.58) if dim else tone
+	fill_round(ci, Rect2(rect.position + Vector2(2, 5), rect.size), 5, Color(0, 0, 0, 0.42))
+	px_panel(ci, rect, Color("#142a31").lerp(tone, 0.10), GOLD if hi else tone.darkened(0.30), 0.12)
+	ci.draw_rect(rect.grow(-6 * sc), Color(ink, 0.40), false, maxf(1, sc))
+	var rank := str(Poker.rank_of(code))
+	text_box(ci, Rect2(rect.position + Vector2(8, 4) * sc, Vector2(rect.size.x * 0.34, 29 * sc)), rank, int(24 * sc), ink)
+	text_box(ci, Rect2(rect.end - Vector2(rect.size.x * 0.34 + 8 * sc, 32 * sc), Vector2(rect.size.x * 0.34, 28 * sc)), rank, int(24 * sc), ink)
+	var center := rect.get_center()
+	ci.draw_colored_polygon(PackedVector2Array([center + Vector2(0, -43) * sc, center + Vector2(35, 0) * sc, center + Vector2(0, 43) * sc, center - Vector2(35, 0) * sc]), Color(ink, 0.12))
+	draw_sigil(ci, center, 25 * sc, suit, ink)
+	for sign in [-1, 1]:
+		ci.draw_line(center + Vector2(-18, sign * 55) * sc, center + Vector2(18, sign * 55) * sc, Color(ink, 0.55), maxf(1, sc))
+
+## The numeric crest encodes every value variant without changing its hero identity.
+static func draw_value_crest(ci: CanvasItem, center: Vector2, hero: Dictionary, radius: float = 14) -> void:
+	var value: Dictionary = hero.get("value", {})
+	var awakened := bool(hero.get("awakened", false)) or bool((hero.get("unit", {}) as Dictionary).get("fusion_only", false))
+	if value.is_empty() and not awakened:
+		return
+	var tone := GOLD if awakened else CRYSTAL
+	var points := PackedVector2Array([center + Vector2(0, -radius), center + Vector2(radius, -radius * 0.35), center + Vector2(radius * 0.72, radius * 0.67), center + Vector2(0, radius), center + Vector2(-radius * 0.72, radius * 0.67), center + Vector2(-radius, -radius * 0.35)])
+	ci.draw_colored_polygon(points, BG_DEEP)
+	points.append(points[0])
+	ci.draw_polyline(points, tone, 2, false)
+	var ranks: Array = value.get("ranks", [])
+	text_box(ci, Rect2(center - Vector2(radius * 0.80, radius * 0.65), Vector2(radius * 1.6, radius * 1.3)), str(ranks[0]) if not ranks.is_empty() else "+", int(radius * 1.05), tone)
+	if awakened:
+		ci.draw_colored_polygon(star_points(center - Vector2(0, radius + 4), radius * 0.32), GOLD)
 
 ## 카드 뒷면. 리롤 연출에서 뒤집을 때 쓴다.
 static func draw_card_back(ci: CanvasItem, pos: Vector2, sc: float = 1.0) -> void:
+	if Save.card_mode == "sigil":
+		var box := Rect2(pos.round(), Vector2(CARD_W, CARD_H) * sc)
+		px_panel(ci, box, Color("#1d3640"), GOLD_DEEP, 0.14)
+		ci.draw_rect(box.grow(-7 * sc), Color(CRYSTAL, 0.42), false, maxf(1, sc))
+		for suit in range(4):
+			var point := box.get_center() + Vector2.from_angle(-PI * 0.5 + suit * TAU / 4) * 31 * sc
+			draw_sigil(ci, point, 10 * sc, suit, SIGIL_COLORS[suit])
+		ci.draw_colored_polygon(star_points(box.get_center(), 13 * sc, 0.32), GOLD)
+		return
 	var g: float = maxf(2.0, snap(PX * sc, 1.0))
 	var w := snap(CARD_W * sc, g)
 	var h := snap(CARD_H * sc, g)

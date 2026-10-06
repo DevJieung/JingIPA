@@ -42,8 +42,9 @@ static func draw_map(ci: CanvasItem, time: float = 0.0, tint: Color = Color.WHIT
 	_tile_rect(ci, ground, Balance.MAP_RECT, Color(tint, 0.42 if floor_drawn else 1.0))
 	# Quiet terrain under the road so all five biomes retain the same route contrast.
 	ci.draw_rect(Balance.MAP_RECT, Color(0.025, 0.055, 0.065, 0.38))
+	Scenery.draw_map_detail(ci, theme, Balance.MAP_RECT, time)
 	var edge := Color("#d1cdb7").lerp(Color(String(theme.get("floor", "#39464b"))), 0.18)
-	var paving := Color(String(theme.get("floor", "#39464b"))).lerp(Color("#84918b"), 0.64)
+	var paving := Color(String(theme.get("floor", "#39464b"))).lerp(Color("#b2a789"), 0.64)
 	for route in range(2):
 		var pts := Balance.route_points(route)
 		var col := edge.lightened(0.3)

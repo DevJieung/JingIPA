@@ -110,14 +110,16 @@ func _hand_summary(ci: CanvasItem, box: Rect2, cards: Array[int], after: bool) -
 		else:
 			Look.draw_card(ci, pos, cards[index], HAND_SCALE, index == slot)
 	var text_at := box.position + Vector2(284, 24)
-	Look.text_left(ci, text_at, "교체 후 족보" if after else "현재 족보", 19, Look.INK_DIM)
+	Look.text_left(ci, text_at, ("교체 후 조합" if after else "현재 조합") if Save.card_mode == "sigil" else ("교체 후 족보" if after else "현재 족보"), 19, Look.INK_DIM)
 	var tier := Poker.evaluate(cards)
 	var waiting := after and desired < 0
-	Look.text_center_fit(ci, Vector2(box.end.x - 136, box.position.y + 55),
-		"카드를 선택하세요" if waiting else Poker.HAND_KO.get(tier, "?"),
+	Look.text_center_fit(ci, Vector2(box.end.x - 136, box.position.y + 52),
+		"카드를 선택하세요" if waiting else Look.hand_name(tier),
 		25, Look.INK_DIM if waiting else Look.tier_color(tier).lightened(0.2), 248, 17)
 	if not waiting:
-		Look.draw_rarity_fit(ci, Rect2(box.end.x - 246, box.position.y + 79, 220, 15), tier, 4.2)
+		Look.draw_rarity_fit(ci, Rect2(box.end.x - 246, box.position.y + 70, 220, 12), tier, 4.2)
+
+		Look.text_box(ci, Rect2(box.end.x - 256, box.position.y + 84, 246, 16), Poker.detail_label(Poker.detail(cards)), 12, Look.CRYSTAL)
 
 
 func draw(ci: CanvasItem, ui: Ui) -> void:
@@ -133,7 +135,7 @@ func draw(ci: CanvasItem, ui: Ui) -> void:
 	_hand_summary(ci, Rect2(88, 174, 544, 100), Run.cards, false)
 	_hand_summary(ci, Rect2(648, 174, 544, 100), preview_cards(), true)
 	for rank in range(13):
-		Look.text_center(ci, Vector2(card_rect(rank).get_center().x, 284), Poker.RANK_CHAR[rank], 18, Look.INK_DIM)
+		Look.text_center(ci, Vector2(card_rect(rank).get_center().x, 284), Look.rank_name(rank + 2), 18, Look.INK_DIM)
 	for s in range(4):
 		var col := Look.CARD_RED.lightened(0.35) if s in [1, 2] else Look.INK
 		Look.draw_suit(ci, Vector2(105, card_rect(s * 13).get_center().y), 14, s, col)

@@ -108,8 +108,8 @@ func _ready() -> void:
 				new_tail += odds[tier]
 			check(new_tail >= old_tail - 0.000001, "rarer materials raise upper-tier probability")
 		previous_odds = odds
-	var found_failure := false
-	for attempt in range(32):
+	var checked_maximum := false
+	for attempt in range(1):
 		fresh(708 + attempt, 1)
 		var rare: Dictionary = Roster.units_of_tier(9)[0]
 		for i in range(7):
@@ -126,16 +126,18 @@ func _ready() -> void:
 		check(unique_field(), "fusion respects one character per battlefield")
 		var pending := Run.snapshot()
 		check(RunValidation.valid(pending, Run.SAVE_VERSION) and Run.restore(pending), "pending fusion survives restart")
-		if bool(result["failed"]):
-			found_failure = true
+		if not bool(result["failed"]):
+			checked_maximum = true
+			check(int(result["tier"]) == 9 and float(result["awakening_mult"]) >= 1.35,
+				"maximum rarity fusion guarantees an awakened exclusive hero")
 			var undo := {"fusion_id": result["id"], "seed": Run.run_seed, "wave": Run.wave}
-			check(Run.apply_ad_reward("fusion_undo", undo), "failed fusion can be undone by reward")
+			check(Run.apply_ad_reward("fusion_undo", undo), "guaranteed fusion can be undone by reward")
 			var restored := Run.snapshot()
 			check(restored["heroes"] == before["heroes"] and restored["bench"] == before["bench"], "undo removes result and restores exact materials and posts")
 			check(not Run.apply_ad_reward("fusion_undo", undo), "fusion refund cannot be claimed twice")
 			break
 		Run.accept_fusion()
-	check(found_failure, "failure path exercised")
+	check(checked_maximum, "maximum-rarity guaranteed fusion and undo exercised")
 
 	fresh(816, 12)
 	Run.phase = Run.Phase.SWAP
@@ -241,8 +243,8 @@ func check_repeated_fusion_undo() -> void:
 			Run.accept_fusion()
 			check(not Run.apply_ad_reward("fusion_undo", {"fusion_id": accepted.get("id", -1)}),
 					"accepting a hero closes that fusion's undo window")
-	check(outcomes.has("upgrade") and outcomes.has("equal") and outcomes.has("downgrade")
-			and bool(outcomes.get("royal", false)), "repeated refunds cover higher, equal, lower, and highest-tier results")
+	check(outcomes.has("upgrade") and outcomes.has("equal") and not outcomes.has("downgrade")
+			and bool(outcomes.get("royal", false)), "repeated refunds cover guaranteed upgrades and highest-tier awakening")
 
 
 func check_fusion_duplicates() -> void:

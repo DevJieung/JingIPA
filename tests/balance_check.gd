@@ -109,9 +109,13 @@ func _one_run(seed_value: int, verbose: bool) -> Dictionary:
 			elems[he] = int(elems.get(he, 0)) + 1
 
 		var sim := BattleSim.new()
+		Run.prepare_battle()
 		sim.setup(Run, Run.wave, seed_value + Run.wave)
+		sim.support_enabled = true
 		var guard := 0
 		while not sim.done and guard < 40000:
+			if sim.support_pending:
+				sim.resolve_support("summon" if Run.heroes.size() < 6 else "promote", 0)
 			sim.step(DT)
 			sim.events.clear()
 			guard += 1
@@ -132,6 +136,7 @@ func _one_run(seed_value: int, verbose: bool) -> Dictionary:
 		#   검사기는 화면을 안 타므로 여기서 같은 일을 해 준다 — 안 하면 첫 진열이
 		#   판이 끝날 때까지 그대로라, 정책이 살 수 있는 패시브가 셋으로 굳는다.
 		Run.shop_offer.clear()
+		Run.phase = Run.Phase.SHOP
 		Run.roll_shop()
 		PlayPolicy.shop(Run)
 		gold[Run.wave] = Run.gold

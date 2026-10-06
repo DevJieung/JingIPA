@@ -93,6 +93,8 @@ static func unit_h(u: Dictionary, sc: float = 1.0) -> float:
 ## 전용 원화가 없는 개발 환경에서는 idle 첫 프레임과 정지 그림을 차례로 쓴다.
 static func unit_preview(u: Dictionary) -> Dictionary:
 	var t := tex("res://art/portraits/%s.png" % String(u.get("id", "")))
+	if t == null and u.has("base_id"):
+		t = tex("res://art/portraits/%s.png" % String(u["base_id"]))
 	var portrait := t != null
 	var c: Dictionary = {}
 	if t == null:
@@ -113,7 +115,7 @@ static func unit_preview(u: Dictionary) -> Dictionary:
 		# 생성 PNG의 거의 투명한 외곽 점이 브라사만 작게 축소시키지 않도록,
 		# 검수한 실루엣 경계 + 선형 필터 안전 여백 4px를 원화 표시 영역으로 쓴다.
 		# 원본 픽셀/다른 원화는 보존한다. 근거: art/portraits/sources/brasa-head-repair/manifest.json.
-		if String(u.get("id", "")) == "brasa" and img.get_size() == Vector2i(1029, 1528):
+		if String(u.get("base_id", u.get("id", ""))) == "brasa" and img.get_size() == Vector2i(1029, 1528):
 			used = Rect2i(109, 183, 759, 1124)
 		# 원화는 작은 목록에도 축소된다. 이 텍스처만 선형 샘플링해서 얇은 선이
 		# 빠지는 것을 줄이고, 전투 도트와 UI 전체의 Nearest 설정은 유지한다.

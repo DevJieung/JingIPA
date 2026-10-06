@@ -209,6 +209,8 @@ func _step_battle(_w: int) -> void:
 	#   달라서, 프레임으로 세면 빠른 기계에서 전투가 끝나기도 전에 실패로 친다.
 	var t0 := Time.get_ticks_msec()
 	while not b.sim.done and Time.get_ticks_msec() - t0 < 60000:
+		if b.sim.support_pending:
+			b.sim.resolve_support("promote", 0)
 		await get_tree().process_frame
 		b.queue_redraw()
 		await frames(1)
@@ -472,6 +474,8 @@ func _step_leak() -> void:
 	Run.gain_hero(Roster.UNITS[0], int(Roster.UNITS[0]["tier"]))
 	Run.wave = 12
 	Run.lives = Run.max_lives()
+	Run.phase = Run.Phase.SWAP
+	Run.prepare_battle()
 	var before: int = Run.lives
 	var b := BattleScreen.new()
 	main._swap(b)
@@ -479,6 +483,8 @@ func _step_leak() -> void:
 	b.speed = 3.0
 	var t0 := Time.get_ticks_msec()
 	while not b.sim.done and Time.get_ticks_msec() - t0 < 90000:
+		if b.sim.support_pending:
+			b.sim.resolve_support("promote", 0)
 		await get_tree().process_frame
 	if not b.sim.done:
 		_bad("일부러 어려운 탄을 세웠는데 전투가 안 끝난다")

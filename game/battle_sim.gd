@@ -71,11 +71,16 @@ var _path_len: float = 1.0
 var _rank: int = 1           ## 이 탄이 걸린 테마의 험한 정도(1~5)
 ## Run 오토로드 대신 아무 상태 덩어리나 받을 수 있게 해 둔다(검사기가 가짜 Run 을 넣는다).
 var run = null
+var support_enabled: bool = false
+var support_pending: bool = false
+var support_used: bool = false
 
 
 func setup(run_state, wave_no: int, seed_value: int = 0) -> void:
 	run = run_state
 	wave = wave_no
+	support_pending = false
+	support_used = run.get("support_wave") == wave if run is Node else false
 	if seed_value != 0:
 		_rng.seed = seed_value
 	elif run != null and run.has_method("wave_seed"):
@@ -155,9 +160,8 @@ func setup(run_state, wave_no: int, seed_value: int = 0) -> void:
 	total_hp = 0.0
 	for q in _queue:
 		total_hp += hp1 * float(Balance.MKIND[String(q["kind"])]["hp"])
-	# ★ 몬스터가 찔끔찔끔 나오면 한 번에 두어 마리씩만 상대하게 되어 광역·장판이
-	#   통째로 무의미해진다. 정해진 시간 안에 전부 내보낸다.
-	_spawn_gap = Balance.SPAWN_WINDOW / float(maxi(1, _queue.size()))
+	# Sustain pressure over both assaults, with a separate live-population cap.
+	_spawn_gap = Balance.spawn_window(wave) / float(maxi(1, _queue.size()))
 	_spawn_t = 0.0
 
 
@@ -262,7 +266,13 @@ static func hit_radius(mo: Dictionary) -> float:
 # 한 걸음
 # --------------------------------------------------------------------------- #
 func step(dt: float) -> void:
-	if done:
+	if done or support_pending:
+		return
+	if support_enabled and not support_used and not _queue.is_empty() \
+			and elapsed >= Balance.spawn_window(wave) * 0.5:
+		support_pending = true
+		run.support_available = true
+		events.append({"t": "support"})
 		return
 	elapsed += dt
 	if curse_t > 0.0:
@@ -276,9 +286,11 @@ func step(dt: float) -> void:
 	# 1) 나오기
 	if not _queue.is_empty():
 		_spawn_t -= dt
-		while _spawn_t <= 0.0 and not _queue.is_empty():
+		while _spawn_t <= 0.0 and not _queue.is_empty() and monsters.size() < Balance.MAX_ON_FIELD:
 			_spawn(_queue.pop_front())
 			_spawn_t += _spawn_gap
+		if monsters.size() >= Balance.MAX_ON_FIELD:
+			_spawn_t = maxf(0.0, _spawn_t)
 
 	_move_monsters(dt)
 	_cache_positions()
@@ -296,6 +308,41 @@ func step(dt: float) -> void:
 		# 크리스탈이 다 깨졌다. 더 굴려 봐야 의미가 없다.
 		done = true
 		wiped = false
+
+
+func resolve_support(choice: String, field_index: int = 0) -> Dictionary:
+	if not support_pending or support_used:
+		return {}
+	var result: Dictionary = run.claim_midpoint_support(choice, field_index)
+	if result.is_empty():
+		return {}
+	support_used = true
+	support_pending = false
+	refresh_heroes()
+	return result
+
+
+## Keep shot targets, damage accounting and existing attack windups intact.
+func refresh_heroes() -> void:
+	run.ensure_posts()
+	var scale := Balance.hero_scale(run.heroes.size())
+	for i in range(run.heroes.size()):
+		var h: Dictionary = run.heroes[i]
+		var st: Dictionary = run.hero_stats(h)
+		var u: Dictionary = h["unit"]
+		if i >= heroes.size():
+			heroes.append({"h": h, "cool": 0.2, "acc": 0.0, "face": 1.0,
+				"dmg": 0.0, "kills": 0, "dw": 0.0, "dn": 0.0, "dr": 0.0})
+		var sh: Dictionary = heroes[i]
+		sh["h"] = h
+		sh["st"] = st
+		sh["pos"] = Balance.post_position(int(h["post"]))
+		sh["muz"] = Balance.muzzle_off(u, scale, 1.0)
+		sh["kind"] = String(st["bullet"])
+		sh["col"] = Color(String(u.get("color", "#ffffff")))
+		sh["wind"] = float(u.get("wind", Balance.WIND_FALLBACK))
+		for key in ["atk", "rate", "range", "shots", "role", "elem", "crit", "critx"]:
+			sh[key] = st[key]
 
 
 func _move_monsters(dt: float) -> void:

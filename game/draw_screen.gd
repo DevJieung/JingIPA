@@ -419,7 +419,7 @@ func _draw_pick() -> void:
 			if matched:
 				var ribbon := Rect2(at + Vector2(10, r.size.y - 28), Vector2(r.size.x - 62, 24))
 				Look.fill_round(self, ribbon, 3, Look.GOLD)
-				Look.text_center_fit(self, ribbon.get_center(), "족보 카드", 16, Look.BG_DEEP, ribbon.size.x - 8, 12)
+				Look.text_center_fit(self, ribbon.get_center(), "조합 문장" if Save.card_mode == "sigil" else "족보 카드", 16, Look.BG_DEEP, ribbon.size.x - 8, 12)
 		ui.zone(Rect2(at, r.size), "re%d" % i, Run.can_reroll(i))
 
 		# 조작명은 짧게 유지하고 실제 남은 횟수/가격은 별도 상태 칸에서 읽는다.
@@ -430,15 +430,17 @@ func _draw_pick() -> void:
 
 	# The hand summary occupies the empty felt to the dealer's left.
 	var hc := Look.tier_color(now)
-	var summary := Rect2(117, 129, 355, 124)
+	var summary := Rect2(117, 129, 355, 146)
 	Look.fill_round(self, summary, 5, Color("#172c2c"))
-	Look.text_left(self, Vector2(138, 154), "현재 족보", 18, Look.INK_DIM)
-	Look.text_center_fit(self, Vector2(summary.get_center().x + 2, 195), Poker.HAND_KO.get(now, "?"), 35, hc.lightened(0.2), 319, 22)
-	Look.draw_rarity_fit(self, Rect2(145, 224, 297, 20), now, 5.6)
+	Look.text_left(self, Vector2(138, 154), "현재 조합" if Save.card_mode == "sigil" else "현재 족보", 18, Look.INK_DIM)
+	Look.text_center_fit(self, Vector2(summary.get_center().x + 2, 188), Look.hand_name(now), 35, hc.lightened(0.2), 319, 22)
+	Look.draw_rarity_fit(self, Rect2(145, 212, 297, 20), now, 5.6)
+	var value := Poker.detail(Run.cards)
+	Look.text_box(self, Rect2(129, 240, 331, 28), "문장 x%.3f · %s" % [float(value.get("value_mult", 1.0)), Poker.detail_label(value)], 16, Look.CRYSTAL)
 	if Run.has("joker"):
 		Look.text_center(self, Vector2(640, 667), "조커 · 카드 1장 자동 교체", 22, Look.INK_DIM)
 
-	ui.button(self, Rect2(490, 700, 300, 76), "족보 확정", "go", true, Look.GOLD, 34)
+	ui.button(self, Rect2(490, 700, 300, 76), "문장 확정" if Save.card_mode == "sigil" else "족보 확정", "go", true, Look.GOLD, 34)
 
 
 func _draw_reroll(slot: int, quota: Rect2) -> Rect2:
@@ -482,13 +484,13 @@ func _draw_reveal() -> void:
 		return
 	var unit: Dictionary = result.get("unit", {})
 	var pop := clampf((rt - 1.65) / 0.3, 0, 1)
-	Look.text_center_out(self, Vector2(640, 180), Poker.HAND_KO[tier], 64 if showy else 54, col, Look.BG_DEEP, 3)
+	Look.text_center_out(self, Vector2(640, 180), Look.hand_name(tier), 64 if showy else 54, col, Look.BG_DEEP, 3)
 	var element := String(unit.get("elem", "none"))
 	SummonArt.seal(self, Vector2(417, 433), 142, rt * 0.35, Balance.elem_color(element), 0.40)
 	var portrait := Rect2(248, 264 + (1 - pop) * 48, 332, 300)
 	Art.draw_unit_fit(self, unit, portrait, Color(1, 1, 1, pop))
 	Look.draw_rarity(self, Vector2(414, 603), tier, 13)
-	SummonArt.hero_info(self, unit, tier, Rect2(622, 246, 432, 394))
+	SummonArt.hero_info(self, unit, tier, Rect2(622, 246, 432, 394), false, result.get("hero", {"value": Poker.detail(cards)}))
 	if String(result.get("where", "field")) == "bench":
 		Look.text_center(self, Vector2(640, 690), "영웅 전당에 보관되었습니다", 21, Look.CRYSTAL)
 	Look.text_center_out(self, Vector2(640, 748), "터치하여 배치하기", 24, Look.INK)

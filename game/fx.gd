@@ -81,6 +81,14 @@ func weak_impact(pos: Vector2, col: Color, tier: int, crit: bool = false) -> voi
 		"life": 0.42, "max": 0.42, "phase": _rng.randf() * TAU, "bk": false})
 
 
+## One short, bounded fracture mark gives powerful hits a crisp impact beat.
+func strike(pos: Vector2, col: Color, critical: bool = false) -> void:
+	if items.size() >= 900:
+		return
+	items.append({"t": "strike", "p": pos, "c": col, "r": 30.0 if critical else 21.0,
+		"life": 0.22, "max": 0.22, "phase": _rng.randf() * TAU, "bk": false})
+
+
 static func projectile_glow(ci: CanvasItem, p: Vector2, prev: Vector2, direction: Vector2,
 		col: Color, tier: int, time: float) -> void:
 	if tier < 2:
@@ -423,6 +431,15 @@ func _paint(ci: CanvasItem, back: bool) -> void:
 		var k: float = clampf(float(it["life"]) / max(0.001, float(it["max"])), 0.0, 1.0)
 		var col: Color = it["c"]
 		match String(it["t"]):
+			"strike":
+				var p: Vector2 = it["p"]
+				var radius := float(it["r"]) * (1.2 - k * 0.35)
+				for ray in range(4):
+					var direction := Vector2.from_angle(float(it["phase"]) + ray * TAU / 4)
+					var points := PackedVector2Array([p + direction * radius * 0.22, p + direction * radius * 0.62 + direction.orthogonal() * 4, p + direction * radius])
+					ci.draw_polyline(points, Color(col.lightened(0.5), k), 1 + k * 3, false)
+				if k > 0.6:
+					ci.draw_colored_polygon(Look.star_points(p, radius * k * 0.5, 0.22), Color(1, 0.98, 0.8, k * 0.80))
 			"weak":
 				var p: Vector2 = it["p"]
 				var progress := 1.0 - k

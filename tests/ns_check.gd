@@ -720,9 +720,9 @@ func _check_balance() -> void:
 
 func _check_geometry() -> void:
 	var walk := Balance.path_len() / Balance.PATH_SPEED
-	# voc2 adds an inner detour while keeping monster speed unchanged (about 30.5s).
-	if walk < 25.0 or walk > 35.0:
-		_bad("안쪽 우회 경로 보행 시간이 25~35초 밖이다: %.2f" % walk)
+	# The shrine detour provides more time to fight before reaching the crystal.
+	if walk < 36.0 or walk > 42.0:
+		_bad("안쪽 우회 경로 보행 시간이 36~42초 밖이다: %.2f" % walk)
 	var bounds := Rect2(10, 74, 816, 720)
 	for route in range(2):
 		var points := Balance.route_points(route)
@@ -746,8 +746,9 @@ func _check_geometry() -> void:
 					_bad("안쪽 우회 경로가 자기 자신과 교차한다")
 			var other := Balance.route_points(1 - route)
 			for j in range(other.size() - 1):
-				if Geometry2D.segment_intersects_segment(points[i], points[i + 1], other[j], other[j + 1]) != null:
-					_bad("두 진입 경로가 교차한다")
+				var crossing = Geometry2D.segment_intersects_segment(points[i], points[i + 1], other[j], other[j + 1])
+				if crossing != null and not Rect2(296, 320, 240, 200).grow(1).has_point(crossing):
+					_bad("두 진입 경로가 안쪽 공통 통로 밖에서 교차한다")
 	for post in range(Balance.POST_SLOTS):
 		var p := Balance.post_position(post)
 		if not bounds.has_point(p) or p.distance_to(Balance.ARENA_CENTER) < Balance.ALTAR_R + 24:

@@ -1,6 +1,6 @@
 extends Harness
 
-## 30탄 출현 수 상한, 후반 체력 성장/골드 보정, 실제 3배속 스폰 회귀 검사.
+## Two-assault budget, live population cap, health/rewards and 3x spawn accounting.
 
 func _ready() -> void:
 	if not require_no_save():
@@ -23,11 +23,9 @@ func check_curve_and_rewards() -> void:
 	for wave in range(1, Balance.LAST_WAVE + 1):
 		var count := Balance.wave_count(wave)
 		var boss_wave := Balance.is_boss_wave(wave)
-		check(count + int(boss_wave) <= 41, "every wave including its boss stays within 41 monsters")
-		if wave <= 30:
-			check(count == old_count(wave), "waves 1 through 30 retain their original population")
-		else:
-			check(count == (19 if boss_wave else 41), "late waves use the fixed normal or boss population")
+		check(count + int(boss_wave) <= 82, "two assaults keep the total population bounded")
+		check(count > mini(41, old_count(wave)) if not boss_wave else count > mini(19, old_count(wave)),
+			"every stage sustains more enemies than its previous short assault")
 		for rank in range(1, 6):
 			var hp := Balance.wave_hp(wave, rank)
 			check(is_finite(hp) and hp > 0.0, "all wave and theme health values remain valid")
@@ -68,7 +66,7 @@ func check_spawn_queues() -> void:
 		check(actual_ids == preview_ids, "theme preview exactly matches the capped battle queue")
 		check(boss_count == int(Balance.is_boss_wave(wave)), "boss waves still contain exactly one boss")
 		check(sim._queue.size() == Balance.wave_count(wave) + boss_count, "real queue uses the population cap")
-		check(sim._queue.size() <= 41, "no spawn path bypasses the cap")
+		check(sim._queue.size() <= 82, "no spawn path bypasses the two-assault budget")
 		check(is_equal_approx(sim.total_hp, actual_hp), "battle health budget uses current wave health")
 		check(Run.snapshot() == before, "preview and queue creation preserve saved state and gameplay RNG")
 
@@ -83,9 +81,13 @@ func check_triple_speed(wave: int) -> void:
 	var peak := 0
 	var started := Time.get_ticks_usec()
 	# Same substeps as BattleScreen: 60 display frames/sec at 3x, <= 0.02s per step.
-	for frame in range(240):
+	for frame in range(12000):
+		if sim._queue.is_empty():
+			break
 		var left := 3.0 / 60.0
 		while left > 0.0001 and not sim.done:
+			# Isolate population accounting from defeat: refund crystals between substeps.
+			Run.lives = Balance.MAX_LIVES
 			var dt := minf(0.02, left)
 			sim.step(dt)
 			sim.events.clear()
@@ -95,8 +97,8 @@ func check_triple_speed(wave: int) -> void:
 	check(sim._queue.is_empty() and sim._spawn_route == expected, "3x play spawns the full queue exactly once")
 	check(sim.kills + sim.leak_n + sim.monsters.size() == expected, "3x play loses or duplicates no monsters")
 	if not has_arg("--profile-only"):
-		check(peak <= (20 if Balance.is_boss_wave(wave) else 41), "live monsters stay capped at 3x")
+		check(peak <= Balance.MAX_ON_FIELD, "live monsters stay capped at 3x even with longer stages")
 	for monster in sim.monsters:
 		check(float(monster["motion_t"]) > 0.0 and is_finite(float(monster["hp"])),
 				"3x monsters retain progressing motion and valid health")
-	print("%d탄 · 총 %d · 동시 최대 %d · 3배속 240프레임 시뮬레이션 %.1fms" % [wave, expected, peak, elapsed_us / 1000.0])
+	print("%d탄 · 총 %d · 동시 최대 %d · 3배속 전체 생성 시뮬레이션 %.1fms" % [wave, expected, peak, elapsed_us / 1000.0])

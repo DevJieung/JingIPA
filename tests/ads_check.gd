@@ -161,29 +161,24 @@ func check_interstitial_rewards(service: FakeAds) -> void:
 	ad.listener.on_user_earned_reward.call(null)
 	check(Run.snapshot() == rewarded, "duplicate earned callback cannot grant a second hero")
 	ad.full_screen_content_callback.on_ad_dismissed_full_screen_content.call()
-	var exercised := false
-	for attempt in range(32):
-		Fixture.fresh(708 + attempt, 1)
-		var rare: Dictionary = Roster.units_of_tier(9)[0]
-		for i in range(7):
-			Run.gain_hero(rare, 9, false)
-		Run.phase = Run.Phase.SHOP
-		var before := Run.snapshot()
-		var result := Run.fuse_heroes([Run.FUSION_BENCH, Run.FUSION_BENCH + 1,
-				Run.FUSION_BENCH + 2, Run.FUSION_BENCH + 3, Run.FUSION_BENCH + 4])
-		if not bool(result.get("failed", false)):
-			continue
-		check(service.request_reward("fusion_undo", {"fusion_id": result["id"]}), "failed fusion starts merge restore placement")
-		ad = service.complete_load(service.loads.size() - 1)
-		check(ad is FakeInterstitial and ad.shown, "merge restore shows rewarded interstitial")
-		ad.listener.on_user_earned_reward.call(null)
-		var after := Run.snapshot()
-		check(after["heroes"] == before["heroes"] and after["bench"] == before["bench"],
-				"interstitial earned callback restores exact fusion materials")
-		ad.full_screen_content_callback.on_ad_dismissed_full_screen_content.call()
-		exercised = true
-		break
-	check(exercised, "merge restore callback exercised")
+	Fixture.fresh(708, 1)
+	var rare: Dictionary = Roster.units_of_tier(9)[0]
+	for i in range(7):
+		Run.gain_hero(rare, 9, false)
+	Run.phase = Run.Phase.SHOP
+	var before := Run.snapshot()
+	var result := Run.fuse_heroes([Run.FUSION_BENCH, Run.FUSION_BENCH + 1,
+			Run.FUSION_BENCH + 2, Run.FUSION_BENCH + 3, Run.FUSION_BENCH + 4])
+	check(not bool(result.get("failed", true)) and float(result.get("awakening_mult", 1.0)) > 1.0,
+			"highest-tier fusion guarantees an awakened result")
+	check(service.request_reward("fusion_undo", {"fusion_id": result["id"]}), "successful fusion starts merge restore placement")
+	ad = service.complete_load(service.loads.size() - 1)
+	check(ad is FakeInterstitial and ad.shown, "merge restore shows rewarded interstitial")
+	ad.listener.on_user_earned_reward.call(null)
+	var after := Run.snapshot()
+	check(after["heroes"] == before["heroes"] and after["bench"] == before["bench"],
+			"interstitial earned callback restores exact fusion materials")
+	ad.full_screen_content_callback.on_ad_dismissed_full_screen_content.call()
 
 
 func check_repeated_revive_ads(service: FakeAds) -> void:

@@ -34,6 +34,7 @@ var speed: float = 1.0
 var sfx: bool = true
 var music: bool = true
 var language: String = "ko"
+var card_mode: String = "sigil"
 
 var _readonly: bool = false
 ## ★ 자동 저장은 **탄마다** 불린다. 값이 하나도 안 바뀌었는데 파일을 다시 쓰면
@@ -99,6 +100,9 @@ func load_file() -> void:
 	sfx = bool(cf.get_value("opt", "sfx", true))
 	music = bool(cf.get_value("opt", "music", true))
 	language = String(cf.get_value("opt", "language", "ko"))
+	card_mode = String(cf.get_value("opt", "card_mode", "sigil"))
+	if card_mode not in ["sigil", "poker"]:
+		card_mode = "sigil"
 	if language not in ["ko", "en"]:
 		language = "ko"
 
@@ -119,6 +123,7 @@ func save_file() -> bool:
 	cf.set_value("opt", "sfx", sfx)
 	cf.set_value("opt", "music", music)
 	cf.set_value("opt", "language", language)
+	cf.set_value("opt", "card_mode", card_mode)
 	var text := cf.encode_to_text()
 	if text == _last_written and last_error == OK:
 		return true
@@ -206,6 +211,13 @@ func set_speed(v: float) -> void:
 	if is_equal_approx(v, speed):
 		return
 	speed = v
+	save_file()
+
+
+func set_card_mode(mode: String) -> void:
+	if mode not in ["sigil", "poker"] or card_mode == mode:
+		return
+	card_mode = mode
 	save_file()
 
 

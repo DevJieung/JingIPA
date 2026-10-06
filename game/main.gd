@@ -114,6 +114,8 @@ func screen_modal_open() -> bool:
 		return screen.state == DrawScreen.REVIVE_REWARD or screen.fusion.active() or screen.hv.info >= 0 or screen.card_choice.opened
 	if screen is ShopScreen:
 		return screen.fusion.active() or screen.hv.info >= 0
+	if screen is BattleScreen:
+		return screen.sim.support_pending or not screen.support_result.is_empty()
 	return false
 
 

@@ -17,7 +17,7 @@ const DIR := "res://art/sfx/"
 const MUSIC_DIR := "res://art/bgm/"
 const SCENE_MUSIC_IDS := ["camp", "ritual", "battle", "boss"]
 const MUSIC_FADE := 1.2
-const MUSIC_VOLUME := -3.0
+const MUSIC_VOLUME := -6.0
 
 ## 동시에 울릴 수 있는 수. 넘치면 **가장 오래된 것을 뺏어 쓴다** —
 ## 새 소리를 버리면 크리스탈이 깨지는 순간처럼 제일 중요한 소리가 조용해진다.
@@ -32,6 +32,7 @@ const GAP := {
 	"shot_water": 0.09, "shot_beam": 0.11, "shot_zone": 0.26,
 	"hit": 0.06, "hit_weak": 0.13, "hit_resist": 0.12, "hit_immune": 0.22,
 	"crit": 0.10, "splash": 0.09, "chain": 0.12,
+	"impact_weight": 0.18, "impact_critical": 0.25,
 	# 도탄은 한 발이 최대 세 번 튕기고 겹치면 다섯 발이라, 텀이 없으면 초당 수십 번이다.
 	"ric": 0.09,
 	"die": 0.05, "die_big": 0.40, "leak": 0.18, "block": 0.20,
@@ -166,6 +167,11 @@ func play(id: String, vol: float = 0.0, pitch: float = 1.0, jitter: float = 0.0)
 	p.volume_db = vol
 	p.pitch_scale = clampf(pitch + (randf() * 2.0 - 1.0) * jitter, 0.4, 2.4)
 	p.play()
+	# Original short layers use the same mute/pause gates and voice limits.
+	if id == "crit" or id == "die_big":
+		play("impact_critical", -5.0, pitch, 0.04)
+	elif id == "hit_weak" or id == "splash":
+		play("impact_weight", -8.0, pitch, 0.05)
 
 
 ## 간격을 무시하고 반드시 낸다. 크리스탈이 깨지는 순간처럼 **놓치면 안 되는** 것에만.

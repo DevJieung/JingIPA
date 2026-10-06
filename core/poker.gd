@@ -5,8 +5,9 @@ class_name Poker
 ##
 ## 이 파일이 게임 전체의 심장이다. 여기가 틀리면 "풀하우스인데 원페어 캐릭이 나오는"
 ## 종류의 버그가 나고, 그건 플레이어가 게임을 못 믿게 만든다.
-## 그래서 tests/poker_check.gd 가 **7,462,080가지 5장 조합을 전수로** 돌려
+## 그래서 tests/poker_check.gd 가 **2,598,960가지 5장 조합을 전수로** 돌려
 ## 각 족보의 개수가 수학적으로 알려진 값과 정확히 같은지 확인한다.
+## tests/progression_check.gd 는 동률을 제외한 7,462개 상세 가치도 전부 확인한다.
 
 ## 무늬. 순서는 화면 표시 순서일 뿐 세기와 무관하다(포커에는 무늬 우열이 없다).
 enum Suit { SPADE, HEART, DIAMOND, CLUB }
@@ -180,4 +181,77 @@ static func key_cards(cards: Array, hand: int) -> Array[int]:
 	for c in cards:
 		if int(counts[rank_of(int(c))]) >= 2:
 			out.append(int(c))
+	return out
+
+
+## Complete poker ordering. Suits never break a tie; the wheel is five-high.
+static func detail(cards: Array) -> Dictionary:
+	var hand := evaluate(cards)
+	if hand < 0:
+		return {}
+	var counts := {}
+	for c in cards:
+		var rank := rank_of(int(c))
+		counts[rank] = int(counts.get(rank, 0)) + 1
+	var ranks: Array[int] = []
+	if hand in [Hand.STRAIGHT, Hand.STRAIGHT_FLUSH, Hand.ROYAL]:
+		ranks.append(_straight_high(counts))
+	else:
+		# Groups first, then descending ranks: pair/trips/quads followed by kickers.
+		for count in [4, 3, 2, 1]:
+			var group: Array[int] = []
+			for rank in counts:
+				if int(counts[rank]) == count:
+					group.append(int(rank))
+			group.sort()
+			group.reverse()
+			ranks.append_array(group)
+	var encoded := 0
+	var parts := PackedStringArray()
+	for i in range(5):
+		encoded = encoded * 15 + (ranks[i] if i < ranks.size() else 0)
+	for rank in ranks:
+		parts.append(str(rank))
+	# Exact lexicographic ordering also gives every kicker a measurable contribution.
+	var strength := float(encoded) / 759374.0
+	return {"hand": hand, "ranks": ranks, "key": "%d:%s" % [hand, "-".join(parts)],
+		"value_mult": 1.0 + 0.30 * strength}
+
+
+static func compare(a: Array, b: Array) -> int:
+	var da := detail(a)
+	var db := detail(b)
+	if da.is_empty() or db.is_empty():
+		return 0 if da.is_empty() == db.is_empty() else (-1 if da.is_empty() else 1)
+	if da["hand"] != db["hand"]:
+		return 1 if int(da["hand"]) > int(db["hand"]) else -1
+	var ar: Array = da["ranks"]
+	var br: Array = db["ranks"]
+	for i in range(ar.size()):
+		if ar[i] != br[i]:
+			return 1 if int(ar[i]) > int(br[i]) else -1
+	return 0
+
+
+static func rank_label(rank: int) -> String:
+	return str(rank) if Save.card_mode == "sigil" else RANK_CHAR[clampi(rank - 2, 0, 12)]
+
+
+static func detail_label(value: Dictionary) -> String:
+	var parts := PackedStringArray()
+	for rank in value.get("ranks", []):
+		parts.append(rank_label(int(rank)))
+	return " / ".join(parts)
+
+
+## Save exact integer ranks, reconstruct the derived multiplier without text rounding.
+static func restore_detail(value: Dictionary) -> Dictionary:
+	if value.is_empty():
+		return {}
+	var out := value.duplicate(true)
+	var encoded := 0
+	var ranks: Array = out["ranks"]
+	for i in range(5):
+		encoded = encoded * 15 + (int(ranks[i]) if i < ranks.size() else 0)
+	out["value_mult"] = 1.0 + 0.30 * float(encoded) / 759374.0
 	return out

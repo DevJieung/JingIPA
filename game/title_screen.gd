@@ -90,7 +90,7 @@ func _draw() -> void:
 
 	var records := [
 		["최고 탄수", "%d" % Save.best_wave, Look.CRYSTAL],
-		["최고 족보", Poker.HAND_KO[Save.best_hand] if Save.best_hand >= 0 else "-", Look.GOLD],
+		["최고 조합" if Save.card_mode == "sigil" else "최고 족보", Look.hand_name(Save.best_hand) if Save.best_hand >= 0 else "-", Look.GOLD],
 		["만난 영웅", "%d / %d" % [Save.seen_count(), Roster.UNITS.size()], Look.GREEN],
 	]
 	for index in range(records.size()):
@@ -114,6 +114,8 @@ func _draw() -> void:
 		ui.button(self, Rect2(cx - 150.0, 626.0, 300.0, 76.0), "시작", "start", true,
 				Look.GOLD, 38)
 
+	Look.fill_round(self, Rect2(266, 745, 748, 40), 4, Color(Look.BG_DEEP, 0.85))
+	Look.text_box(self, Rect2(276, 748, 728, 34), "균열 군단이 생명 수정을 노린다. 문장으로 수호자를 불러 마을을 지켜라!", 20, Look.CRYSTAL)
 	collection.draw(self, ui)
 
 

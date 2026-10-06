@@ -56,6 +56,8 @@ static func valid(d: Dictionary, version: int) -> bool:
 					return false
 			if h["t"] < 0 or h["t"] > 9 or h["n"] < 1 or h["n"] > 10000 or h["w"] < 1:
 				return false
+			if not hero_value_valid(h):
+				return false
 	if d["phase"] in [2, 3, 4] and d["heroes"].is_empty() \
 			and not (d["phase"] == 3 and d.get("retry_wave", false) == true):
 		return false
@@ -107,6 +109,8 @@ static func valid(d: Dictionary, version: int) -> bool:
 		return false
 	var last: Dictionary = d.get("last", {})
 	if not last.is_empty():
+		if not hero_value_valid(last):
+			return false
 		var gold_only: bool = last.get("gold_only", false) == true
 		if not last.get("unit") is String:
 			return false
@@ -128,6 +132,35 @@ static func valid(d: Dictionary, version: int) -> bool:
 			if not last.get(key, false) is bool:
 				return false
 	return true
+
+
+static func hero_value_valid(h: Dictionary) -> bool:
+	if not h.get("variant", "") is String or not h.get("awakened", false) is bool:
+		return false
+	var power: Variant = h.get("awakening_mult", 1.0)
+	if not (power is float or power is int) or not is_finite(float(power)) or power < 1.0:
+		return false
+	var value: Variant = h.get("value", {})
+	if not value is Dictionary:
+		return false
+	if value.is_empty():
+		return true
+	if not value.get("hand") is int or value["hand"] < 0 or value["hand"] > 9 \
+			or not value.get("ranks") is Array or value["ranks"].is_empty() or value["ranks"].size() > 5 \
+			or not value.get("key") is String:
+		return false
+	var encoded := 0
+	var parts := PackedStringArray()
+	for rank in value["ranks"]:
+		if not rank is int or rank < 2 or rank > 14:
+			return false
+		parts.append(str(rank))
+	for i in range(5):
+		encoded = encoded * 15 + (int(value["ranks"][i]) if i < value["ranks"].size() else 0)
+	var mult: Variant = value.get("value_mult", 1.0 + 0.30 * float(encoded) / 759374.0)
+	return (mult is float or mult is int) and is_finite(float(mult)) \
+		and is_equal_approx(float(mult), 1.0 + 0.30 * float(encoded) / 759374.0) \
+		and value["key"] == "%d:%s" % [int(value["hand"]), "-".join(parts)]
 
 
 static func cards_valid(value: Variant, count: int = -1) -> bool:
@@ -184,6 +217,8 @@ static func rewards_valid(d: Dictionary, version: int) -> bool:
 	if not d.get("continue_used", false) is bool or not d.get("fusion_serial", 0) is int \
 			or not d.get("retry_wave", false) is bool:
 		return false
+	if not d.get("support_wave", -1) is int or d.get("support_wave", -1) < -1 or d.get("support_wave", -1) > d["wave"]:
+		return false
 	var checkpoint: Variant = d.get("checkpoint", {})
 	if not checkpoint is Dictionary:
 		return false
@@ -199,6 +234,8 @@ static func rewards_valid(d: Dictionary, version: int) -> bool:
 		return false
 	if fusion.is_empty():
 		return true
+	if not hero_value_valid(fusion):
+		return false
 	if not d["phase"] in [3, 6] or not fusion.get("id") is int or not fusion.get("failed") is bool:
 		return false
 	if not fusion.get("unit") is String or Roster.unit_by_id(fusion["unit"]).is_empty():

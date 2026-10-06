@@ -67,6 +67,8 @@ var fusion_serial: int = 0
 var continue_used: bool = false # 부활 이력/저장 호환용. 부활 횟수를 제한하지 않는다.
 var retry_wave: bool = false # 부활 대기실에서는 다음 탄 대신 현재 탄을 다시 시작한다.
 var battle_checkpoint: Dictionary = {}
+var support_wave: int = -1
+var support_available: bool = false
 var rng := RandomNumberGenerator.new()
 
 ## 이 판의 씨앗. **탄마다의 몬스터 편성이 여기서 나온다.**
@@ -141,6 +143,8 @@ func start_run(seed_value: int = 0) -> void:
 	continue_used = false
 	retry_wave = false
 	battle_checkpoint = {}
+	support_wave = -1
+	support_available = false
 	repairs = 0
 	cards.clear()
 	last_result = {}
@@ -429,6 +433,7 @@ func add_lives(n: int) -> void:
 ##   그래서 리롤을 몇 번을 하든 손패에 같은 카드가 두 장 설 수가 없다.
 func begin_draw() -> void:
 	wave += 1
+	support_available = false
 	retry_wave = false
 	phase = Phase.DRAW
 	last_result = {}
@@ -543,7 +548,7 @@ func confirm_hand() -> Dictionary:
 				var trial: Array[int] = use.duplicate()
 				trial[i] = c
 				var h := Poker.evaluate(trial)
-				if h > best:
+				if h > best or (h == best and Poker.compare(trial, use if best_i < 0 else _joker_trial(use, best_i, best_c)) > 0):
 					best = h
 					best_i = i
 					best_c = c
@@ -558,14 +563,15 @@ func confirm_hand() -> Dictionary:
 		last_bumped = true
 
 	var unit := Roster.pick_unit(hand, rng)
+	var value := Poker.detail(use)
 	last_hand = hand
 	best_hand = maxi(best_hand, hand)
 	last_cards = use.duplicate()
 	last_key = Poker.key_cards(use, hand) if not last_bumped else use.duplicate()
 	last_unit = unit
-	var got := gain_hero(unit, hand)
+	var got := gain_hero(unit, hand, true, true, {"value": value, "variant": value["key"]})
 	last_result = {"hand": hand, "cards": last_cards, "key": last_key, "unit": unit,
-			"bumped": last_bumped, "joker": last_joker,
+			"bumped": last_bumped, "joker": last_joker, "value": value, "variant": value["key"],
 			"showy": hand >= Poker.SHOWY,
 			"stacked": bool(got["stacked"]), "where": String(got["where"]),
 			"slot": int(got["slot"]), "n": int(got["n"])}
@@ -577,6 +583,12 @@ func confirm_hand() -> Dictionary:
 	Save.record_hand(hand, String(unit.get("id", "")), false)
 	autosave()
 	return last_result
+
+
+static func _joker_trial(use: Array[int], index: int, card: int) -> Array[int]:
+	var trial: Array[int] = use.duplicate()
+	trial[index] = card
+	return trial
 
 
 # --------------------------------------------------------------------------- #
@@ -637,9 +649,10 @@ func latest_draw_location() -> Array:
 ## 광고 부활처럼 사용자가 직접 배치할 보상은 auto_deploy=false로 지급한다.
 ##
 ## 돌려주는 것: {"stacked": 겹쳤는가, "where": "field"|"bench", "slot": 자리, "n": 겹친 수}
-func gain_hero(unit: Dictionary, tier: int, allow_echo: bool = true, auto_deploy: bool = true) -> Dictionary:
+func gain_hero(unit: Dictionary, tier: int, allow_echo: bool = true, auto_deploy: bool = true, metadata: Dictionary = {}) -> Dictionary:
 	var duplicate := int(find_hero(String(unit.get("id", "")))[1]) >= 0
 	var h := {"unit": unit, "tier": tier, "wave": maxi(1, wave), "n": 1}
+	h.merge(metadata.duplicate(true))
 	var where := "bench"
 	var slot := bench.size()
 	if auto_deploy and not field_full() and can_deploy(unit):
@@ -990,6 +1003,7 @@ func hero_stats(h: Dictionary) -> Dictionary:
 			* float(rol["atk"]) \
 			* Balance.elem_dmg(el) * resonance_mult(el) \
 			* Balance.atk_mult(lv("atk")) * pas_mult("atk")
+	atk *= float(h.get("value", {}).get("value_mult", 1.0)) * float(h.get("awakening_mult", 1.0))
 	var rate: float = Balance.TIER_RATE[t] * float(prof["rate"]) \
 			* Balance.rate_mult(lv("rate")) * pas_mult("rate")
 	# 사거리는 배치 미리보기와 실제 겨냥이 같은 값을 사용한다.
@@ -1105,16 +1119,29 @@ const SAVE_VERSION := 7
 ## id 만 담고 되돌릴 때 표에서 다시 찾는다. 표를 담으면 캐릭터를 한 명 고치는 순간
 ## 저장 파일 안의 옛 캐릭터가 되살아난다.
 static func _hero_out(h: Dictionary) -> Dictionary:
-	return {"u": String(h["unit"].get("id", "")), "t": int(h.get("tier", 0)),
+	var out := {"u": String(h["unit"].get("id", "")), "t": int(h.get("tier", 0)),
 			"w": int(h.get("wave", 1)), "n": int(h.get("n", 1)), "post": int(h.get("post", -1))}
+	for key in ["value", "variant", "awakened", "awakening_mult"]:
+		if h.has(key):
+			out[key] = h[key]
+	if out.has("value"):
+		out["value"] = out["value"].duplicate(true)
+		out["value"].erase("value_mult")
+	return out.duplicate(true)
 
 
 static func _hero_in(d: Dictionary) -> Dictionary:
 	var u := Roster.unit_by_id(String(d.get("u", "")))
 	if u.is_empty():
 		return {}
-	return {"unit": u, "tier": int(d.get("t", 0)), "wave": int(d.get("w", 1)),
+	var out := {"unit": u, "tier": int(d.get("t", 0)), "wave": int(d.get("w", 1)),
 			"n": maxi(1, int(d.get("n", 1))), "post": int(d.get("post", -1))}
+	for key in ["value", "variant", "awakened", "awakening_mult"]:
+		if d.has(key):
+			out[key] = d[key]
+	if out.has("value"):
+		out["value"] = Poker.restore_detail(out["value"])
+	return out.duplicate(true)
 
 
 ## 영웅 목록(전장이든 전당이든)을 통째로 저장 꼴로.
@@ -1152,9 +1179,10 @@ func snapshot(include_checkpoint: bool = true) -> Dictionary:
 		"cards": Array(cards).duplicate(), "rerolled": Array(rerolled).duplicate(), "paid": Array(paid).duplicate(),
 		"piles": _piles.duplicate(true), "at": Array(_at).duplicate(),
 		"last": _last_out(), "rng": rng.state,
-		"fusion": fusion_pending.duplicate(true), "fusion_serial": fusion_serial,
+		"fusion": _fusion_out(), "fusion_serial": fusion_serial,
 		"continue_used": continue_used,
 		"retry_wave": retry_wave,
+		"support_wave": support_wave,
 		"checkpoint": battle_checkpoint.duplicate(true) if include_checkpoint else {},
 	}
 
@@ -1199,6 +1227,9 @@ func _last_out() -> Dictionary:
 	d["unit"] = String((last_result.get("unit", {}) as Dictionary).get("id", ""))
 	d["cards"] = Array(last_result.get("cards", []) as Array)
 	d["key"] = Array(last_result.get("key", []) as Array)
+	if d.has("value"):
+		d["value"] = d["value"].duplicate(true)
+		d["value"].erase("value_mult")
 	return d
 
 
@@ -1213,6 +1244,8 @@ func _last_in(d: Dictionary) -> Dictionary:
 	r["cards"] = _ints(d.get("cards", []) as Array)
 	r["key"] = _ints(d.get("key", []) as Array)
 	r["hand"] = int(d.get("hand", 0))
+	if r.has("value"):
+		r["value"] = Poker.restore_detail(r["value"])
 	return r
 
 
@@ -1308,9 +1341,13 @@ func restore(d: Dictionary) -> bool:
 	if phase == Phase.SWAP and last_result.is_empty():
 		phase = Phase.BATTLE
 	fusion_pending = d.get("fusion", {}).duplicate(true)
+	if fusion_pending.has("value"):
+		fusion_pending["value"] = Poker.restore_detail(fusion_pending["value"])
 	fusion_serial = int(d.get("fusion_serial", 0))
 	continue_used = bool(d.get("continue_used", false))
 	retry_wave = bool(d.get("retry_wave", false))
+	support_wave = int(d.get("support_wave", -1))
+	support_available = false
 	battle_checkpoint = d.get("checkpoint", {}).duplicate(true)
 	running = phase != Phase.OVER
 	gold_changed.emit(gold)
@@ -1327,6 +1364,12 @@ func autosave() -> void:
 
 
 # Five-card fusion keeps an undo snapshot until its result is accepted.
+
+func _fusion_out() -> Dictionary:
+	var out := fusion_pending.duplicate(true)
+	if out.has("value"):
+		out["value"].erase("value_mult")
+	return out
 ## 대기 카드만 낮은 별부터, 같은 별이면 물·불·얼음·전기·무상성 순으로 표시한다.
 const ELEMENT_ORDER := ["water", "fire", "ice", "elec", "none"]
 func fusion_candidates() -> Array[int]:
@@ -1377,7 +1420,14 @@ func fusion_probabilities(codes: Array) -> Array[float]:
 	var materials := fusion_materials(codes)
 	if materials.size() != 5:
 		return []
-	return Balance.fusion_probabilities(fusion_score(materials))
+	return Balance.fusion_probabilities(fusion_score(materials), fusion_min_tier(materials))
+
+
+static func fusion_min_tier(materials: Array) -> int:
+	var top := 0
+	for h in materials:
+		top = maxi(top, int(h["tier"]))
+	return mini(9, top + 1)
 
 
 func fuse_heroes(codes: Array) -> Dictionary:
@@ -1388,14 +1438,14 @@ func fuse_heroes(codes: Array) -> Dictionary:
 		return {}
 	var before_h := _heroes_out(heroes)
 	var before_b := _heroes_out(bench)
-	var top := 0
-	for h in materials:
-		top = maxi(top, int(h["tier"]))
 	var score := fusion_score(materials)
-	var probabilities := Balance.fusion_probabilities(score)
+	var minimum_tier := fusion_min_tier(materials)
+	var probabilities := Balance.fusion_probabilities(score, minimum_tier)
 	var roll := rng.randf()
 	var tier := 9
 	for i in range(probabilities.size()):
+		if probabilities[i] <= 0.0:
+			continue
 		roll -= probabilities[i]
 		if roll <= 0:
 			tier = i
@@ -1405,13 +1455,23 @@ func fuse_heroes(codes: Array) -> Dictionary:
 	descending.reverse()
 	for code in descending:
 		bench.remove_at(int(code) - FUSION_BENCH)
-	var unit := Roster.pick_unit(tier, rng)
-	gain_hero(unit, tier, false)
+	var awakening_mult := 1.35
+	var value: Dictionary = {}
+	for h in materials:
+		awakening_mult = maxf(awakening_mult, float(roundi(float(h.get("awakening_mult", 1.0)) * 100) + 15) / 100.0)
+		var candidate: Dictionary = h.get("value", {})
+		if float(candidate.get("value_mult", 1.0)) > float(value.get("value_mult", 1.0)):
+			value = candidate.duplicate(true)
+	var unit := Roster.pick_fusion_unit(tier, rng)
+	gain_hero(unit, tier, false, true, {"awakened": true, "awakening_mult": awakening_mult,
+		"value": value, "variant": String(value.get("key", "fusion"))})
 	fusion_serial += 1
 	fusion_pending = {"id": fusion_serial, "before_h": before_h, "before_b": before_b,
 			"material_codes": codes.duplicate(),
 			"unit": String(unit["id"]), "tier": tier, "score": score,
-			"failed": tier <= top and not (tier == 9 and top == 9)}
+			"min_tier": minimum_tier, "promoted": true, "awakening_mult": awakening_mult,
+			"value": value, "variant": String(value.get("key", "fusion")), "awakened": true,
+			"failed": false}
 	Save.seen_units[String(unit["id"])] = true
 	autosave()
 	return fusion_pending
@@ -1420,6 +1480,51 @@ func fuse_heroes(codes: Array) -> Dictionary:
 func accept_fusion() -> void:
 	fusion_pending = {}
 	autosave()
+
+
+## A battle can authorize one choice at the end of its first assault.
+func claim_midpoint_support(choice: String, field_index: int = 0) -> Dictionary:
+	if not running or phase != Phase.BATTLE or not support_available or support_wave == wave:
+		return {}
+	var result: Dictionary = {}
+	if choice == "summon":
+		var deck := Poker.full_deck()
+		_shuffle(deck)
+		var hand_cards: Array = deck.slice(0, 5)
+		var value := Poker.detail(hand_cards)
+		var tier := int(value["hand"])
+		var unit := Roster.pick_unit(tier, rng)
+		var got := gain_hero(unit, tier, false, true, {"value": value, "variant": value["key"]})
+		result = {"choice": choice, "unit": unit, "tier": tier, "cards": hand_cards, "value": value,
+			"where": got["where"], "slot": got["slot"]}
+		Save.seen_units[String(unit["id"])] = true
+	elif choice == "promote":
+		if field_index < 0 or field_index >= heroes.size():
+			return {}
+		var hero: Dictionary = heroes[field_index]
+		var before := int(hero["tier"])
+		if before < 9:
+			hero["tier"] = before + 1
+		else:
+			hero["awakening_mult"] = float(roundi(float(hero.get("awakening_mult", 1.0)) * 100) + 15) / 100.0
+		result = {"choice": choice, "unit": hero["unit"], "tier": hero["tier"],
+			"before_tier": before, "where": "field", "slot": field_index,
+			"awakening_mult": hero.get("awakening_mult", 1.0)}
+	else:
+		return {}
+	support_wave = wave
+	support_available = false
+	# Resume still starts the assault over, but keeps its single claimed growth reward.
+	# Only growth/RNG are committed; earned gold, kills and leaks stay at wave-start values.
+	if not battle_checkpoint.is_empty():
+		battle_checkpoint["heroes"] = _heroes_out(heroes)
+		battle_checkpoint["bench"] = _heroes_out(bench)
+		battle_checkpoint["rng"] = rng.state
+		battle_checkpoint["support_wave"] = support_wave
+		var saved := battle_checkpoint.duplicate(true)
+		saved["checkpoint"] = battle_checkpoint.duplicate(true)
+		Save.store_run(saved)
+	return result
 
 
 func undo_fusion() -> bool:

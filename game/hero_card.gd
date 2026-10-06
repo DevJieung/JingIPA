@@ -48,6 +48,8 @@ static func draw(ci: CanvasItem, rect: Rect2, hero: Dictionary, selected: bool =
 		Look.fill_round(ci, badge, 3, Look.GOLD)
 		ci.draw_line(badge.position + Vector2(5, 11), badge.position + Vector2(10, 16), Look.BG_DEEP, 3)
 		ci.draw_line(badge.position + Vector2(10, 16), badge.position + Vector2(19, 6), Look.BG_DEEP, 3)
+	var crest_at := rect.position + Vector2(26, 46) if rect.size.x > rect.size.y * 1.7 else Vector2(rect.end.x - 21, rect.position.y + minf(67, rect.size.y * 0.42))
+	Look.draw_value_crest(ci, crest_at, hero, 12 if rect.size.x > rect.size.y * 1.7 else 14)
 
 
 static func _draw_locked(ci: CanvasItem, rect: Rect2, caption: String) -> void:

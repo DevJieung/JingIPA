@@ -67,6 +67,9 @@ var selected_hero: int = -1
 var _post_press: int = -1
 var _post_press_at := Vector2.ZERO
 var _move_note := ""
+var support_result: Dictionary = {}
+var support_age := 0.0
+var _support_index := 0
 
 
 
@@ -80,6 +83,7 @@ func _ready() -> void:
 	# 지난 탄의 줄이 남아 있으면 「지금 무슨 일이 일어나는가」를 못 읽는다.
 	Dbg.reset()
 	sim.setup(Run, Run.wave)
+	sim.support_enabled = true
 	_dps = Run.total_dps()
 	Sfx.play("wave")
 	if Balance.is_boss_wave(Run.wave):
@@ -91,6 +95,11 @@ func _process(dt: float) -> void:
 	if Ads.busy:
 		return
 	t += dt
+	if sim.support_pending or not support_result.is_empty():
+		support_age += dt
+		fx.update(dt)
+		queue_redraw()
+		return
 	_dps_t -= dt
 	if _dps_t <= 0.0:
 		_dps_t = 0.5
@@ -121,7 +130,7 @@ func _process(dt: float) -> void:
 		#   한 프레임에 0.05초를 넘게 굴리면 빠른 탄이 몬스터를 통과해 버린다.
 		var left := sdt
 		var guard := 0
-		while left > 0.0001 and guard < 16 and not sim.done:
+		while left > 0.0001 and guard < 16 and not sim.done and not sim.support_pending:
 			var step: float = min(0.02, left)
 			# 모션도 같은 걸음으로 진행하고 사건을 즉시 반영한다. 프레임 끝에
 			# aim을 몰아서 받으면 배속·프레임 지연 때 모션만 늦게 시작한다.
@@ -145,6 +154,10 @@ func _process(dt: float) -> void:
 
 func _input(e: InputEvent) -> void:
 	if Ads.busy:
+		return
+	if sim.support_pending or not support_result.is_empty():
+		_support_input(e)
+		get_viewport().set_input_as_handled()
 		return
 	# 디버그 오버레이의 자판. **에디터에서 직접 플레이하며 볼 때만** 쓰는 것이라
 	# 손가락(터치)에는 아무 자리도 안 내준다 — 안드로이드에서는 F3 을 누를 길이 없으므로
@@ -293,6 +306,11 @@ func _drain() -> void:
 	for e in sim.events:
 		var p: Vector2 = e.get("p", Vector2.ZERO)
 		match String(e["t"]):
+			"support":
+				support_age = 0.0
+				_support_index = 0
+				selected_hero = -1
+				Sfx.force("wave", -1.0, 1.12)
 			"aim":
 				# 팔을 뻗기 시작했다. **탄은 아직 안 나갔다** — 이 사건과 「fire」 사이가
 				# 그 캐릭터가 팔을 뻗는 시간이다(BattleSim._aim).
@@ -520,6 +538,10 @@ func _on_hit(p: Vector2, e: Dictionary) -> void:
 	var ec := Balance.elem_color(el)
 	var n: float = float(e.get("n", 0.0))
 	var tier := _source_tier(int(e.get("src", -1)))
+	if em > 0.99 and (big or tier >= 6):
+		fx.strike(p, ec if el != "none" else hc, big)
+		if big:
+			fx.do_shake(2.6)
 	if em > 0.001:
 		fx.rarity_impact(p, hc, tier, 1.20 if em > 1.01 else (0.55 if em < 0.99 else 1.0))
 	if em > 1.01:
@@ -638,6 +660,8 @@ func _draw() -> void:
 		ui.button(self, Rect2(708, 748, 80, 30), "취소", "post:cancel", true, Look.PANEL_EDGE, 16)
 	if ended:
 		_draw_result()
+	if sim.support_pending or not support_result.is_empty():
+		_draw_support()
 	# ★ 맨 마지막이다. 화면 섬광(draw_flash)보다도 위라야 로열 연출이나 큰 폭발이
 	#   터지는 순간에도 숫자가 안 씻긴다. 이 시점에는 draw_set_transform 이 이미
 	#   단위 변환으로 되돌아와 있으므로(위의 _draw_panel 앞) 흔들림도 안 탄다.
@@ -1735,3 +1759,62 @@ func _draw_result() -> void:
 			Look.text_left(self, r.position + Vector2(18, 30), "최종 획득 Gold", 21, Look.INK_DIM)
 			Look.text_right(self, Vector2(r.end.x - 18, r.get_center().y), str(sim.gold + _bonus), 29, Look.GOLD)
 	Look.text_center(self, Vector2(640, box.end.y - 24), "화면을 터치하여 계속", 20, Look.INK_DIM)
+
+
+## The intermission owns input until its reward is explicitly acknowledged.
+func _support_input(event: InputEvent) -> void:
+	if not event is InputEventMouseButton or not event.pressed or event.button_index != MOUSE_BUTTON_LEFT:
+		return
+	var id := ui.hit(event.position)
+	if not support_result.is_empty():
+		if id == "support:continue" and support_age >= 0.65:
+			support_result.clear()
+			Sfx.play("wave")
+		return
+	if id.begins_with("support:hero:"):
+		_support_index = int(id.get_slice(":", 2))
+		Sfx.play("button", -14.0)
+	elif id in ["support:summon", "support:promote"]:
+		support_result = sim.resolve_support(id.get_slice(":", 1), _support_index)
+		if not support_result.is_empty():
+			support_age = 0
+			fx.ring(Vector2(640, 380), Look.GOLD, 30, 200, 0.7, 5)
+			Sfx.play("summon_burst")
+
+
+func _draw_support() -> void:
+	ui.begin()
+	ui.zone(Look.SCREEN, "support:block")
+	draw_rect(Look.SCREEN, Color(0.015, 0.025, 0.035, 0.89))
+	Look.material_panel(self, Rect2(120, 98, 1040, 634), Look.PANEL, Look.GOLD_DEEP)
+	Look.text_box(self, Rect2(152, 126, 976, 54), "수정의 축복 · 중간 지원", 36, Look.GOLD)
+	Look.text_box(self, Rect2(152, 184, 976, 36), "잠시 숨을 고르고 한 가지 지원을 선택하세요. 후반 공세가 이어집니다.", 22, Look.INK_DIM)
+	if not support_result.is_empty():
+		var unit: Dictionary = support_result.get("unit", {})
+		var tier := int(support_result.get("tier", 0))
+		Look.hero_card_panel(self, Rect2(172, 242, 338, 360), String(unit.get("elem", "none")))
+		Art.draw_unit_fit(self, unit, Rect2(202, 262, 278, 276))
+		Look.draw_rarity(self, Vector2(340, 570), tier, 11)
+		SummonArt.hero_info(self, unit, tier, Rect2(558, 250, 548, 330), false, support_result)
+		var note := "무료 소환 · 전당에 보관되었습니다" if String(support_result.get("where", "field")) == "bench" else "무료 소환 · 전장에 합류했습니다"
+		if String(support_result.get("choice", "")) == "promote":
+			note = "5성 유지 · 각성 위력 상승" if int(support_result.get("before_tier", 0)) == 9 else "승급 완료 · +0.5성"
+		Look.text_box(self, Rect2(558, 546, 548, 50), note, 26, Look.CRYSTAL)
+		ui.button(self, Rect2(392, 648, 496, 54), "후반 공세 시작", "support:continue", support_age >= 0.65, Look.GOLD, 28)
+		return
+	Look.material_panel(self, Rect2(152, 236, 326, 389), Look.BG_DEEP, Look.CRYSTAL)
+	SummonArt.seal(self, Vector2(315, 375), 94, support_age * 0.5, Look.CRYSTAL, 0.6)
+	for index in range(3):
+		var at := Vector2(232 + index * 46, 306 + abs(index - 1) * 15)
+		Look.draw_card(self, at, Poker.code(10 + index, index), 0.60, true)
+	Look.text_box(self, Rect2(168, 454, 294, 42), "무료 영웅 소환", 27, Look.CRYSTAL)
+	Look.wrap_text(self, "새로운 5장 조합으로 영웅 한 명을 부릅니다. 전장이 가득 차면 전당에 보관합니다.", Rect2(176, 510, 278, 84), 20, Look.INK_DIM, true)
+	Look.text_box(self, Rect2(506, 236, 620, 38), "승급할 전장 영웅 선택", 25, Look.GOLD)
+	_support_index = clampi(_support_index, 0, maxi(0, Run.heroes.size() - 1))
+	for index in range(Run.heroes.size()):
+		var rect := Rect2(508 + (index % 4) * 154, 284 + (index / 4) * 107, 146, 98)
+		HeroCard.draw(self, rect, Run.heroes[index], index == _support_index)
+		ui.zone(rect, "support:hero:%d" % index)
+	ui.button(self, Rect2(152, 648, 326, 54), "무료 소환 받기", "support:summon", true, Look.CRYSTAL, 25)
+	var max_tier := not Run.heroes.is_empty() and int(Run.heroes[_support_index]["tier"]) == 9
+	ui.button(self, Rect2(508, 648, 620, 54), "선택 영웅 각성 위력 상승" if max_tier else "선택 영웅 +0.5성 승급", "support:promote", not Run.heroes.is_empty(), Look.GOLD, 26)

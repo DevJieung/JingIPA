@@ -162,6 +162,8 @@ godot_run 120 "$TMP/run-stats.log" res://tests/run_stats_check.tscn
 expect "누적 전과와 패시브" "판정: 정상" "$TMP/run-stats.log"
 godot_run 120 "$TMP/rules.log" res://tests/rules_check.tscn
 expect "합성과 보상 규칙" "판정: 정상" "$TMP/rules.log"
+godot_run 120 "$TMP/progression.log" res://tests/progression_check.tscn
+expect "상세 가치·합성 승급·중간 성장" "판정: 정상" "$TMP/progression.log"
 godot_run 120 "$TMP/wave-scaling.log" res://tests/wave_scaling_check.tscn
 expect "후반 몬스터 수와 체력" "판정: 정상" "$TMP/wave-scaling.log"
 godot_run 120 "$TMP/revive-flow.log" res://tests/revive_flow_check.tscn

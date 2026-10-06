@@ -58,7 +58,15 @@ static func hero_info(ci: CanvasItem, unit: Dictionary, tier: int, box: Rect2,
 	var element_x := x + minf(name_w, Look.text_width(Look.unit_name(unit), name_size)) + 22
 	Look.draw_elem(ci, Vector2(element_x + 10, y + 28), 12, element)
 	Look.text_left(ci, Vector2(element_x + 30, y + 28), element_label, 22, Balance.elem_color(element))
-	Look.wrap_text(ci, I18n.hero_concept(String(unit.get("id", ""))), Rect2(x, y + 69, box.size.x, 82), 22, Look.INK_DIM, true)
+	var concept := I18n.hero_concept(String(unit.get("base_id", unit.get("id", ""))))
+	Look.wrap_text(ci, concept, Rect2(x, y + 69, box.size.x, 68), 22, Look.INK_DIM, true)
+	var value: Dictionary = hero.get("value", {})
+	if not value.is_empty():
+		Look.text_box(ci, Rect2(x, y + 129, box.size.x, 30), Poker.detail_label(value), 18, Look.CRYSTAL, HORIZONTAL_ALIGNMENT_LEFT)
+	if bool(unit.get("fusion_only", false)):
+		Look.text_box(ci, Rect2(x, y + 210, box.size.x, 30), "합성 전용 · 각성 수호자", 20, Look.GOLD, HORIZONTAL_ALIGNMENT_LEFT)
+	elif not value.is_empty():
+		Look.text_box(ci, Rect2(x, y + 210, box.size.x, 30), "문장 위력 x%.3f" % float(value.get("value_mult", 1.0)), 20, Look.CRYSTAL, HORIZONTAL_ALIGNMENT_LEFT)
 	var chips := trait_labels(unit)
 	var chip_x := x
 	var chip_y := y + 166
