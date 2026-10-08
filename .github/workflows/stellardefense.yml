@@ -100,7 +100,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: stellardefense-apk
-          path: build/apk/stellardefense-test.apk
+          path: build/apk/sd-tst.apk
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
@@ -179,10 +179,10 @@ jobs:
         env:
           REVISION: ${{ needs.export.outputs.revision }}
         run: |
-          test -s dist/stellardefense-test.apk
+          test -s dist/sd-tst.apk
           test -s dist/stellardefense.ipa
           printf '%s\n' "$REVISION" > dist/commit.txt
-          (cd dist && sha256sum stellardefense-test.apk stellardefense.ipa > SHA256SUMS.txt)
+          (cd dist && sha256sum sd-tst.apk stellardefense.ipa > SHA256SUMS.txt)
           echo '### APK와 IPA 준비 완료' >> "$GITHUB_STEP_SUMMARY"
           echo 'Artifacts의 **stellardefense-apk-ipa**를 다운로드하면 두 파일이 함께 들어 있습니다.' >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
