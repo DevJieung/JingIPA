@@ -1,4 +1,4 @@
-name: 올인 디펜스 APK + IPA
+name: 스텔라 디펜스 APK + IPA
 
 on:
   push:
@@ -15,7 +15,7 @@ concurrency:
 
 env:
   GODOT_VERSION: '4.7.1'
-  IOS_BUNDLE_ID: ${{ vars.POKERDEFENSE_IOS_BUNDLE_ID || 'com.devjieung.pokerdefense' }}
+  IOS_BUNDLE_ID: ${{ vars.STELLARDEFENSE_IOS_BUNDLE_ID || 'com.devjieung.stellardefense' }}
 
 jobs:
   export:
@@ -203,6 +203,6 @@ jobs:
             gh release upload "$GITHUB_REF_NAME" dist/* --clobber
           else
             gh release create "$GITHUB_REF_NAME" dist/* --target "$GITHUB_SHA" \
-              --title "올인 디펜스 $GITHUB_REF_NAME" \
+              --title "스텔라 디펜스 $GITHUB_REF_NAME" \
               --notes '동일 커밋의 Android APK와 iOS IPA. IPA 서명 상태는 Actions 실행 요약을 확인하세요.'
           fi
