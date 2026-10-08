@@ -7,6 +7,7 @@ static var _profiles: Dictionary = {}
 static var _mesh: Dictionary = {}
 static var _materials: Dictionary = {}
 static var _rigs: Dictionary = {}
+static var _contacts: Dictionary = {}
 
 static func profiles() -> Dictionary:
 	if _profiles.is_empty():
@@ -36,6 +37,10 @@ static func primitive(kind: String) -> Mesh:
 	var mesh: PrimitiveMesh
 	match kind:
 		"box": mesh = BoxMesh.new()
+		"stone":
+			var beveled := _beveled_stone()
+			_mesh[kind] = beveled
+			return beveled
 		"cylinder", "cone", "pentagon":
 			var cylinder := CylinderMesh.new()
 			cylinder.top_radius = 0.0 if kind == "cone" else 0.5
@@ -59,6 +64,76 @@ static func primitive(kind: String) -> Mesh:
 			mesh = sphere
 	_mesh[kind] = mesh
 	return mesh
+
+## A shared bevel catches the key light without textures or extra material draws.
+## Used by terrain only; hero silhouettes and their existing portraits stay consistent.
+static func _beveled_stone() -> ArrayMesh:
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var inset := 0.43
+	for axis in range(3):
+		var u := (axis + 1) % 3
+		var v := (axis + 2) % 3
+		for sign_value in [-1.0, 1.0]:
+			var corners: Array[Vector3] = []
+			for pair in [Vector2(-1,-1), Vector2(1,-1), Vector2(1,1), Vector2(-1,1)]:
+				var point := Vector3.ZERO
+				point[axis] = sign_value * 0.5
+				point[u] = pair.x * inset
+				point[v] = pair.y * inset
+				corners.append(point)
+			var normal := Vector3.ZERO
+			normal[axis] = sign_value
+			_stone_face(surface, corners, normal)
+	# Twelve edge strips and eight triangular corners close the mesh.
+	for axis in range(3):
+		var u := (axis + 1) % 3
+		var v := (axis + 2) % 3
+		for a in [-1.0,1.0]:
+			for b in [-1.0,1.0]:
+				var corners: Array[Vector3] = []
+				for pair in [Vector2(-inset,0),Vector2(inset,0),Vector2(inset,1),Vector2(-inset,1)]:
+					var point := Vector3.ZERO
+					point[axis] = pair.x
+					point[u] = a * (0.5 if pair.y == 0 else inset)
+					point[v] = b * (inset if pair.y == 0 else 0.5)
+					corners.append(point)
+				var normal := Vector3.ZERO
+				normal[u] = a
+				normal[v] = b
+				_stone_face(surface,corners,normal.normalized())
+	for x in [-1.0,1.0]:
+		for y in [-1.0,1.0]:
+			for z in [-1.0,1.0]:
+				_stone_face(surface,[Vector3(x*0.5,y*inset,z*inset),Vector3(x*inset,y*0.5,z*inset),Vector3(x*inset,y*inset,z*0.5)],Vector3(x,y,z).normalized())
+	return surface.commit()
+
+static func _stone_face(surface: SurfaceTool, corners: Array, normal: Vector3) -> void:
+	for index in range(1,corners.size()-1):
+		var triangle: Array = [corners[0],corners[index],corners[index+1]]
+		# Godot triangle front faces use clockwise winding.
+		if (triangle[1]-triangle[0]).cross(triangle[2]-triangle[0]).dot(normal)>0:
+			triangle.reverse()
+		for point in triangle:
+			surface.set_normal(normal)
+			surface.set_uv(Vector2(point.x,point.z)+Vector2.ONE*0.5)
+			surface.add_vertex(point)
+
+static func contact(parent: Node3D, at: Vector3, size: Vector2, opacity: float = 0.4) -> MeshInstance3D:
+	var plane := PlaneMesh.new()
+	plane.size = size
+	var node := MeshInstance3D.new()
+	node.mesh = plane
+	node.position = at
+	if not _contacts.has(opacity):
+		var mat := ShaderMaterial.new()
+		mat.shader = preload("res://art/models/contact_shadow.gdshader")
+		mat.set_shader_parameter("opacity",opacity)
+		_contacts[opacity] = mat
+	node.material_override = _contacts[opacity]
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(node)
+	return node
 
 static func part(parent: Node3D, kind: String, at: Vector3, dimensions: Vector3,
 		color: Color, metal: float = 0.0, glow: float = 0.0, angles := Vector3.ZERO) -> MeshInstance3D:

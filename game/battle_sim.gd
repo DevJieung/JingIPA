@@ -122,7 +122,7 @@ func setup(run_state, wave_no: int, seed_value: int = 0) -> void:
 		var u: Dictionary = h["unit"]
 		heroes.append({
 			"h": h, "st": st,
-			"pos": Balance.post_position(int(h["post"])),
+			"pos": HeroPlacement.position(h),
 			"cool": _rng.randf() * 0.4, "acc": 0.0,
 			# 바라보는 쪽. **시뮬레이터가 들고 있는다** — 총구 자리가 여기에 달려 있고,
 			# 화면이 따로 굴리면 그림은 왼쪽을 보는데 탄은 오른쪽에서 나가게 된다.
@@ -205,7 +205,14 @@ func move_hero(index: int, post: int) -> bool:
 	if not run.move_hero(index, post):
 		return false
 	for hero in heroes:
-		hero["pos"] = Balance.post_position(int(hero["h"]["post"]))
+		hero["pos"] = HeroPlacement.position(hero["h"])
+	return true
+
+func move_hero_to(index: int, point: Vector2) -> bool:
+	if done or index < 0 or index >= heroes.size() or not run.move_hero_to(index, point):
+		return false
+	for hero in heroes:
+		hero["pos"] = HeroPlacement.position(hero["h"])
 	return true
 
 var _spawn_route: int = 0
@@ -336,7 +343,7 @@ func refresh_heroes() -> void:
 		var sh: Dictionary = heroes[i]
 		sh["h"] = h
 		sh["st"] = st
-		sh["pos"] = Balance.post_position(int(h["post"]))
+		sh["pos"] = HeroPlacement.position(h)
 		sh["muz"] = Balance.muzzle_off(u, scale, 1.0)
 		sh["kind"] = String(st["bullet"])
 		sh["col"] = Color(String(u.get("color", "#ffffff")))

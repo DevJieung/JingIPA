@@ -198,9 +198,11 @@ step "4-2c. 테마 BGM 전환·반복·독립 음량 설정"
 STELLARDEFENSE_AUDIO_TEST=1 godot_run 120 "$TMP/audio-runtime.log" res://tests/audio_check.tscn
 expect "음악 재생" "판정: 정상" "$TMP/audio-runtime.log"
 
-step "4-3. 두 입구 · 12자리 · 실시간 재배치"
+step "4-3. 두 입구 · 12명 · 자유 배치 · 실시간 재배치"
 godot_run 120 "$TMP/formation.log" res://tests/formation_check.tscn
 expect "배치 검사" "판정: 정상" "$TMP/formation.log"
+godot_run 120 "$TMP/free-placement.log" res://tests/free_placement_check.tscn
+expect "자유 배치·저장·카메라" "판정: 정상" "$TMP/free-placement.log"
 godot_run 120 "$TMP/course.log" res://tests/course_check.tscn
 expect "전체 테마 코어 우회 경로" "판정: 정상" "$TMP/course.log"
 
@@ -302,7 +304,7 @@ if [ $QUICK -eq 0 ]; then
 	#   내보내면 Gradle 이 「JVM 11 이상」이라며 거절한다. 여기서 export 를 또 적으면
 	#   그 어긋남이 언젠가 되살아나므로, 서명·플러그인 매니페스트 검사까지 하는 그 대본에
 	#   통째로 맡기고 성공한 새 파일로만 기존 APK 를 교체한다.
-	APK="$HOME/stellardefense-test.apk"
+	APK="$HOME/sd-tst.apk"
 	if timeout --signal=TERM --kill-after=15 900 tools/build_apk.sh > "$TMP/apk.log" 2>&1 \
 			&& [ -s "$APK" ]; then
 		echo "   ok: APK $APK ($(du -h "$APK" | cut -f1))"

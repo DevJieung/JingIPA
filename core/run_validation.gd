@@ -30,7 +30,8 @@ static func valid(d: Dictionary, version: int) -> bool:
 		return false
 	var seen := {}
 	var posts := {}
-	if d.has("formation_v") and (not d["formation_v"] is int or d["formation_v"] != 2):
+	var occupied: Array[Vector2] = []
+	if d.has("formation_v") and (not d["formation_v"] is int or d["formation_v"] not in [2, 3]):
 		return false
 	var field_limit := Balance.HERO_SLOTS if d.has("formation_v") else Balance.POST_SLOTS
 	if d["bench"].size() + maxi(0, d["heroes"].size() - Balance.HERO_SLOTS) > Balance.BENCH_SLOTS:
@@ -51,12 +52,30 @@ static func valid(d: Dictionary, version: int) -> bool:
 					if posts.has(h["post"]):
 						return false
 					posts[h["post"]] = true
+			if h.has("pos"):
+				if group != "heroes" or not h["pos"] is Array or h["pos"].size() != 2:
+					return false
+				for value in h["pos"]:
+					if not (value is float or value is int) or not is_finite(float(value)):
+						return false
+				var point := Vector2(float(h["pos"][0]), float(h["pos"][1]))
+				if not HeroPlacement.error(point, occupied).is_empty():
+					return false
+				occupied.append(point)
+			elif group == "heroes" and int(h.get("post", -1)) >= 0:
+				occupied.append(Balance.post_position(int(h["post"])))
 			for key in ["t", "w", "n"]:
 				if not h.get(key) is int:
 					return false
 			if h["t"] < 0 or h["t"] > Balance.TIER_MAX or h["n"] < 1 or h["n"] > 10000 or h["w"] < 1:
 				return false
 			if not hero_value_valid(h):
+				return false
+	for i in range(occupied.size()):
+		if not HeroPlacement.ground_error(occupied[i]).is_empty():
+			return false
+		for j in range(i):
+			if occupied[i].distance_to(occupied[j]) < Balance.ROAD_WIDTH * 1.5:
 				return false
 	if d["phase"] in [2, 3, 4] and d["heroes"].is_empty() \
 			and not (d["phase"] == 3 and d.get("retry_wave", false) == true):

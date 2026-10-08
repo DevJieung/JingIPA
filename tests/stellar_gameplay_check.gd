@@ -40,8 +40,9 @@ func _ready() -> void:
 		view.world.yaw = settings.x
 		view.world.zoom = settings.y
 		view.world.camera_update()
-		for post in range(Balance.POST_SLOTS):
-			var at := Balance.post_position(post)
+		for hero in Run.heroes:
+			var post := int(hero["post"])
+			var at := Run.hero_position(hero)
 			var pixel := view.world.screen(at)
 			check(view.world.ground_at(pixel).distance_to(at) < 0.01, "카메라 변경 뒤 논리좌표 역투영 %d" % post)
 			var hit := view.project(at, 0.3)

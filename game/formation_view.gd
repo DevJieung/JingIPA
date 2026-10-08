@@ -13,6 +13,7 @@ var note: String = ""
 var post_rects: Array[Rect2] = []
 var _pressed_post: int = -1
 var _press_at := Vector2.ZERO
+var _ground_pressed := false
 var _new_hero: Dictionary = {}
 var _focused := false
 var _side := Rect2()
@@ -63,25 +64,41 @@ func draw(ci: CanvasItem, ui: Ui, box: Rect2, time: float) -> void:
 		bench_selected = -1
 	var map_box := Rect2(box.position, Vector2(box.size.x - 342, box.size.y - 16))
 	view_3d.draw(ci, map_box, time, Run.heroes, selected, selected >= 0 or bench_selected >= 0)
-	post_rects.clear()
+	post_rects.resize(Balance.POST_SLOTS)
 	for post in range(Balance.POST_SLOTS):
-		var p := view_3d.project(Balance.post_position(post), 0.26)
-		var head := view_3d.project(Balance.post_position(post), 2.02)
 		var index := Run.hero_at_post(post)
+		post_rects[post] = Rect2()
+		if index < 0:
+			continue
+		var point := Run.hero_position(Run.heroes[index])
+		var p := view_3d.project(point, 0.10)
+		var head := view_3d.project(point, 2.13 if int(Run.heroes[index]["tier"]) >= 7 else 1.87)
 		var hit := Rect2(Vector2(p.x - 26, head.y - 9), Vector2(52, maxf(52, p.y - head.y + 26)))
-		post_rects.append(hit)
+		post_rects[post] = hit
 		ui.zone(hit, "post:%d" % post)
 		if index >= 0:
 			var hero: Dictionary = Run.heroes[index]
 			Look.draw_rarity_fit(ci, Rect2(head - Vector2(29, 10), Vector2(58, 14)), int(hero["tier"]), 3.6)
-			Look.fill_round(ci, Rect2(p + Vector2(-35, 4), Vector2(70, 20)), 3, Color(0.03, 0.07, 0.09, 0.94))
-			Look.text_center_fit(ci, p + Vector2(0, 14), Look.unit_name(hero["unit"]), 15, Look.INK, 67, 11)
+			# Outer columns use the empty inward side, so names cannot cover the next
+			# hero's star badge when free positions are closer along camera depth.
+			var label_offset := Vector2(0,14)
+			if point.x < Balance.ARENA_CENTER.x-220: label_offset=Vector2(63,-14)
+			elif point.x > Balance.ARENA_CENTER.x+220: label_offset=Vector2(-63,-14)
+			var label_at := p+label_offset
+			label_at.x=clampf(label_at.x,map_box.position.x+38,map_box.end.x-38)
+			label_at.y=clampf(label_at.y,map_box.position.y+14,map_box.end.y-47)
+			Look.fill_round(ci, Rect2(label_at - Vector2(35,10), Vector2(70,20)), 3, Color(0.03, 0.07, 0.09, 0.94))
+			Look.text_center_fit(ci,label_at,Look.unit_name(hero["unit"]),15,Look.INK,67,11)
 			if is_new(hero):
 				Look.fill_round(ci, Rect2(p + Vector2(8, -17), Vector2(29, 15)), 3, Look.GOLD)
 				Look.text_center(ci, p + Vector2(22, -10), "NEW", 10, Look.BG_DEEP)
 			if index == selected:
 				Look.draw_brackets(ci, hit.grow(2), 12, Look.GOLD, 3)
 	view_3d.controls(ci, ui, Vector2(map_box.position.x + 8, map_box.end.y - 29))
+	var hint := "터치하여 배치하기" if selected >= 0 or bench_selected >= 0 else "전장 배치에서 직접 배치하세요."
+	var hint_box := Rect2(map_box.position.x + 183, map_box.end.y - 30, map_box.size.x - 197, 29)
+	Look.fill_round(ci,hint_box,4,Color(0.04,0.09,0.11,0.93))
+	Look.text_center_fit(ci,hint_box.get_center(),hint,16,Look.GOLD if selected >= 0 or bench_selected >= 0 else Look.INK_DIM,hint_box.size.x-16,12)
 
 	_side = Rect2(box.end.x - 326, box.position.y, 326, box.size.y)
 	Look.material_panel(ci, _side, Look.PANEL, Look.PANEL_EDGE)
@@ -135,7 +152,21 @@ func post_at(p: Vector2) -> int:
 func input(e: InputEvent, ui: Ui) -> bool:
 	if view_3d.camera_input(e):
 		_pressed_post = -1
+		_ground_pressed = false
+		view_3d.placement_preview(Vector2.INF, false)
 		return true
+	if e is InputEventMouseMotion:
+		var moving := Run.hero_at_post(_pressed_post) if _pressed_post >= 0 else selected
+		if _ground_pressed and moving >= 0 and _press_at.distance_to(e.position) > 8.0:
+			var point := view_3d.ground_at(e.position)
+			view_3d.placement_preview(point, Run.placement_error(point, moving).is_empty())
+			return true
+		if (selected >= 0 or bench_selected >= 0) and view_3d.box.has_point(e.position):
+			var point := view_3d.ground_at(e.position)
+			view_3d.placement_preview(point, Run.placement_error(point, selected).is_empty())
+		else:
+			view_3d.placement_preview(Vector2.INF, false)
+		return false
 	if not e is InputEventMouseButton:
 		return false
 	if e.pressed and _side.has_point(e.position) and e.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
@@ -143,26 +174,59 @@ func input(e: InputEvent, ui: Ui) -> bool:
 	if e.button_index != MOUSE_BUTTON_LEFT:
 		return false
 	if e.pressed:
+		# Camera controls and reserve cards take priority over the ground underneath.
+		var id := ui.hit(e.position)
+		if not id.is_empty() and not id.begins_with("post:"):
+			return tap(id)
 		_pressed_post = post_at(e.position)
 		_press_at = e.position
-		if _pressed_post >= 0:
+		_ground_pressed = view_3d.box.has_point(e.position)
+		if _ground_pressed:
 			return true
-		return tap(ui.hit(e.position))
-	if _pressed_post >= 0:
-		var target := post_at(e.position)
-		var start := _pressed_post
-		_pressed_post = -1
-		if target < 0:
-			return true
-		if start != target and _press_at.distance_to(e.position) > 8.0:
-			selected = Run.hero_at_post(start)
-			bench_selected = -1
-			if selected >= 0:
-				_place(target)
-		else:
-			tap("post:%d" % target)
+		return tap(id)
+	if not _ground_pressed:
+		return false
+	_ground_pressed = false
+	var start := _pressed_post
+	_pressed_post = -1
+	view_3d.placement_preview(Vector2.INF, false)
+	if not view_3d.box.has_point(e.position):
 		return true
-	return false
+	var target := post_at(e.position)
+	if start >= 0 and _press_at.distance_to(e.position) > 8.0:
+		selected = Run.hero_at_post(start)
+		bench_selected = -1
+		if target >= 0 and target != start:
+			_place(target)
+		else:
+			_place_at(view_3d.ground_at(e.position))
+	elif target >= 0:
+		tap("post:%d" % target)
+	elif selected >= 0 or bench_selected >= 0:
+		_place_at(view_3d.ground_at(e.position))
+	return true
+
+func _place_at(point: Vector2) -> void:
+	if not Run.placement_error(point, selected).is_empty():
+		view_3d.placement_preview(point, false)
+		return
+	var changed := false
+	if bench_selected >= 0 and bench_selected < Run.bench.size():
+		if Run.field_full():
+			note = "교체할 전장 영웅을 누르세요."
+			return
+		if not Run.can_deploy(Run.bench[bench_selected]["unit"]):
+			note = "같은 캐릭터가 이미 출전 중입니다."
+			return
+		changed = Run.bench_to_position(bench_selected, point)
+	elif selected >= 0:
+		changed = Run.move_hero_to(selected, point)
+	if changed:
+		note = ""
+		Sfx.play("button")
+		selected = -1
+		bench_selected = -1
+		view_3d.placement_preview(Vector2.INF, false)
 
 func _place(post: int) -> void:
 	var changed := false

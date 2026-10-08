@@ -67,6 +67,7 @@ var _crystal_order: Array = []
 var selected_hero: int = -1
 var _post_press: int = -1
 var _post_press_at := Vector2.ZERO
+var _ground_pressed := false
 var _move_note := ""
 var support_result: Dictionary = {}
 var support_age := 0.0
@@ -156,6 +157,8 @@ func _process(dt: float) -> void:
 func _input(e: InputEvent) -> void:
 	if not Ads.busy and not sim.support_pending and support_result.is_empty() and view_3d.camera_input(e):
 		_post_press = -1
+		_ground_pressed = false
+		view_3d.placement_preview(Vector2.INF, false)
 		get_viewport().set_input_as_handled()
 		return
 	if Ads.busy:
@@ -206,38 +209,64 @@ func _post_at(p: Vector2) -> int:
 func _formation_input(e: InputEvent) -> bool:
 	if e is InputEventKey and e.pressed and e.keycode == KEY_ESCAPE and selected_hero >= 0:
 		selected_hero = -1
+		view_3d.placement_preview(Vector2.INF, false)
 		return true
+	if e is InputEventMouseMotion:
+		var moving := Run.hero_at_post(_post_press) if _post_press >= 0 else selected_hero
+		if moving >= 0 and view_3d.box.has_point(e.position):
+			var point := view_3d.ground_at(e.position)
+			view_3d.placement_preview(point, Run.placement_error(point, moving).is_empty())
+		else:
+			view_3d.placement_preview(Vector2.INF, false)
+		return _ground_pressed
 	if not e is InputEventMouseButton or e.button_index != MOUSE_BUTTON_LEFT:
 		return false
 	if e.pressed:
 		var id := ui.hit(e.position)
 		if id == "post:cancel":
 			selected_hero = -1
+			view_3d.placement_preview(Vector2.INF, false)
 			return true
 		if id.begins_with("hero:"):
 			selected_hero = int(id.get_slice(":", 1))
 			return true
+		if not id.is_empty():
+			return false
 		_post_press = _post_at(e.position)
 		_post_press_at = e.position
-		return _post_press >= 0
-	if _post_press < 0:
+		_ground_pressed = view_3d.box.has_point(e.position)
+		return _ground_pressed
+	if not _ground_pressed:
 		return false
+	_ground_pressed = false
 	var start := _post_press
 	_post_press = -1
-	var target := _post_at(e.position)
-	if target < 0:
+	view_3d.placement_preview(Vector2.INF, false)
+	if not view_3d.box.has_point(e.position):
 		return true
-	if target != start and e.position.distance_to(_post_press_at) > 8.0:
+	var target := _post_at(e.position)
+	var dragged: bool = start >= 0 and e.position.distance_to(_post_press_at) > 8.0
+	if dragged:
 		selected_hero = Run.hero_at_post(start)
-	if selected_hero < 0:
+	elif target >= 0 and selected_hero < 0:
 		selected_hero = Run.hero_at_post(target)
-	elif sim.move_hero(selected_hero, target):
+		return true
+	if selected_hero < 0:
+		return true
+	if target >= 0 and not dragged:
+		if Run.hero_at_post(target) == selected_hero:
+			selected_hero = -1
+		else:
+			selected_hero = Run.hero_at_post(target)
+		return true
+	var point := view_3d.ground_at(e.position)
+	if sim.move_hero_to(selected_hero, point):
 		_move_note = "이동 완료"
-		fx.ring(Balance.post_position(target), Look.CRYSTAL, 8, 42, 0.35, 3)
+		fx.ring(point, Look.CRYSTAL, 8, 42, 0.35, 3)
 		Sfx.play("button")
 		selected_hero = -1
 	else:
-		selected_hero = -1
+		view_3d.placement_preview(point, false)
 	return true
 
 ## 디버그 오버레이의 자판. 먹었으면 true.
@@ -649,6 +678,9 @@ func _draw() -> void:
 	_draw_hp_bars()
 	_draw_hero_tags()
 	view_3d.controls(self, ui, Vector2(22, 748))
+	if not ended and selected_hero >= 0:
+		Look.fill_round(self,Rect2(210,748,478,30),4,Look.BG_DEEP)
+		Look.text_center_fit(self,Vector2(449,763),"터치하여 배치하기",17,Look.GOLD,454,13)
 	_draw_panel()
 	_draw_topbar()
 	_draw_boss_bar()

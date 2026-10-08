@@ -11,6 +11,7 @@ var _centroid := Vector2.INF
 var _last := Vector2.ZERO
 var _touches: Dictionary = {}
 var _pinch := -1.0
+var _hero_hits: Array[Dictionary] = []
 
 func attach(parent: CanvasItem, rect: Rect2) -> void:
 	box = rect
@@ -37,13 +38,18 @@ func draw(ci: CanvasItem, rect: Rect2, time: float, heroes: Array, selected: int
 		for i in range(world.crystals.size()): world.crystals[i].visible=i<Run.lives
 	else:
 		world.sync_battle(sim, time, Run.lives, 0.0 if paused else 0.016)
-	var post := -1
+	var selected_at := Vector2.INF
 	var radius := 0.0
 	if selected>=0 and selected<heroes.size():
 		var hero: Dictionary = heroes[selected]["h"] if sim!=null else heroes[selected]
-		post = int(hero.get("post",selected))
+		selected_at = Vector2(heroes[selected]["pos"]) if sim!=null else Run.hero_position(hero)
 		radius=float(heroes[selected]["range"]) if sim!=null else float(Run.hero_stats(hero)["range"])
-	world.set_selection(post,available,radius)
+	world.set_selection(selected_at,available,radius)
+	_hero_hits.clear()
+	for index in range(heroes.size()):
+		var hero: Dictionary=heroes[index]["h"] if sim!=null else heroes[index]
+		var at: Vector2=heroes[index]["pos"] if sim!=null else Run.hero_position(hero)
+		_hero_hits.append({"index":index,"post":int(hero.get("post",index)),"at":at})
 	ci.draw_texture_rect(viewport.get_texture(),rect,false)
 	for item in world.texts:
 		var at := project(item["p"],0.98)+Vector2(0,-float(item["age"])*30)
@@ -55,26 +61,36 @@ func draw(ci: CanvasItem, rect: Rect2, time: float, heroes: Array, selected: int
 func project(p: Vector2, height: float = 0) -> Vector2:
 	return box.position+world.screen(p,height)
 
-func post_at(p: Vector2) -> int:
-	if world==null or not box.has_point(p): return -1
-	# Screen rectangles follow model heads, including camera orbit and zoom.
+func ground_at(pixel: Vector2) -> Vector2:
+	if world==null or not box.has_point(pixel): return Vector2.INF
+	return world.ground_at(pixel-box.position)
+
+func hero_at(pixel: Vector2) -> int:
+	if world==null or not box.has_point(pixel): return -1
 	var best := -1
 	var distance := INF
-	for post in range(Balance.POST_SLOTS):
-		var at := project(Balance.post_position(post),0.30)
-		var head := project(Balance.post_position(post),1.85)
-		var rect := Rect2(Vector2(at.x-24,head.y-8),Vector2(48,maxf(48,at.y-head.y+25)))
-		if rect.has_point(p) and p.distance_squared_to(at)<distance:
-			best=post
-			distance=p.distance_squared_to(at)
-	if best>=0: return best
-	var logical := world.ground_at(p-box.position)
-	for post in range(Balance.POST_SLOTS):
-		var value := logical.distance_to(Balance.post_position(post))
-		if value<35 and value<distance:
-			best=post
-			distance=value
+	var hit_data := _hero_hits
+	if hit_data.is_empty():
+		for index in range(Run.heroes.size()):
+			hit_data.append({"index":index,"post":int(Run.heroes[index].get("post",index)),"at":Run.hero_position(Run.heroes[index])})
+	for hit in hit_data:
+		var p: Vector2=hit["at"]
+		var foot := project(p,0.09)
+		var head := project(p,2.08)
+		var rect := Rect2(Vector2(foot.x-27,head.y-10),Vector2(54,maxf(50,foot.y-head.y+28)))
+		if rect.has_point(pixel) and pixel.distance_squared_to(foot)<distance:
+			best=int(hit["index"])
+			distance=pixel.distance_squared_to(foot)
 	return best
+
+func post_at(pixel: Vector2) -> int:
+	var index := hero_at(pixel)
+	for hit in _hero_hits:
+		if int(hit["index"])==index: return int(hit["post"])
+	return -1
+
+func placement_preview(at: Vector2, valid: bool) -> void:
+	if world!=null: world.set_placement_preview(at,valid)
 
 func camera_input(e: InputEvent) -> bool:
 	if world==null: return false

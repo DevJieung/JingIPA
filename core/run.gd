@@ -659,6 +659,7 @@ func gain_hero(unit: Dictionary, tier: int, allow_echo: bool = true, auto_deploy
 	if duplicate and allow_echo and has("echo"):
 		bench.append(h.duplicate(true))
 		bench[-1].erase("post")
+		bench[-1].erase("position")
 	return {"stacked": false, "duplicate": duplicate, "where": where, "slot": slot, "n": 1}
 
 
@@ -679,6 +680,7 @@ func swap_field_bench(f: int, b: int) -> bool:
 		if heroes.size() <= 1:
 			return false
 		heroes[f].erase("post")
+		heroes[f].erase("position")
 		bench.append(heroes[f])
 		heroes.remove_at(f)
 		autosave()
@@ -688,7 +690,9 @@ func swap_field_bench(f: int, b: int) -> bool:
 	ensure_posts()
 	var t = heroes[f]
 	bench[b]["post"] = int(t["post"])
+	bench[b]["position"] = hero_position(t)
 	t.erase("post")
+	t.erase("position")
 	heroes[f] = bench[b]
 	bench[b] = t
 	autosave()
@@ -715,6 +719,9 @@ func swap_field(a: int, b: int) -> bool:
 		return false
 	ensure_posts()
 	var post_a: int = heroes[a]["post"]
+	var position_a := hero_position(heroes[a])
+	heroes[a]["position"] = hero_position(heroes[b])
+	heroes[b]["position"] = position_a
 	heroes[a]["post"] = heroes[b]["post"]
 	heroes[b]["post"] = post_a
 	var t = heroes[a]
@@ -741,6 +748,50 @@ func ensure_posts() -> void:
 				h["post"] = post
 				used[post] = true
 				break
+	# Internal slots remain stable; physical placement is independent of them.
+	var occupied: Array[Vector2] = []
+	for h in heroes:
+		if h.has("position"):
+			occupied.append(hero_position(h))
+	for h in heroes:
+		if not h.has("position"):
+			var point := HeroPlacement.first_free(Balance.post_position(int(h["post"])), occupied)
+			h["position"] = point
+			occupied.append(point)
+
+func hero_position(hero: Dictionary) -> Vector2:
+	return HeroPlacement.position(hero)
+
+func placement_error(point: Vector2, ignore_index: int = -1) -> String:
+	var occupied: Array[Vector2] = []
+	for i in range(heroes.size()):
+		if i != ignore_index:
+			occupied.append(hero_position(heroes[i]))
+	return HeroPlacement.error(point, occupied)
+
+func move_hero_to(index: int, point: Vector2) -> bool:
+	if not fusion_pending.is_empty() or index < 0 or index >= heroes.size():
+		return false
+	if not placement_error(point, index).is_empty():
+		return false
+	if hero_position(heroes[index]).is_equal_approx(point):
+		return false
+	heroes[index]["position"] = point
+	_save_placement()
+	return true
+
+func bench_to_position(index: int, point: Vector2) -> bool:
+	if not fusion_pending.is_empty() or index < 0 or index >= bench.size() or field_full():
+		return false
+	if not can_deploy(bench[index]["unit"]) or not placement_error(point).is_empty():
+		return false
+	var hero: Dictionary = bench[index]
+	hero["position"] = point
+	heroes.append(hero)
+	bench.remove_at(index)
+	ensure_posts()
+	autosave()
+	return true
 
 func hero_at_post(post: int) -> int:
 	for i in range(heroes.size()):
@@ -757,23 +808,34 @@ func move_hero(index: int, post: int) -> bool:
 	if previous == post:
 		return false
 	var other := hero_at_post(post)
+	var previous_position := hero_position(heroes[index])
+	var target_position := hero_position(heroes[other]) if other >= 0 else Balance.post_position(post)
+	if other < 0 and not placement_error(target_position, index).is_empty():
+		return false
 	if other >= 0:
 		heroes[other]["post"] = previous
+		heroes[other]["position"] = previous_position
 	heroes[index]["post"] = post
+	heroes[index]["position"] = target_position
+	_save_placement()
+	return true
+
+func _save_placement() -> void:
 	if phase == Phase.BATTLE:
 		# Combat resumes at wave start. Persist placement only, not earned gold/leaks.
 		var saved := Save.cur_run.duplicate(true)
 		if not saved.is_empty():
-			var posts := {}
+			var positions := {}
 			for h in heroes:
-				posts[String(h["unit"]["id"])] = int(h["post"])
-			for h in saved.get("heroes", []):
-				if posts.has(String(h["u"])):
-					h["post"] = posts[String(h["u"])]
+				positions[String(h["unit"]["id"])] = _hero_out(h)
+			for state in [saved, saved.get("checkpoint", {}), battle_checkpoint]:
+				for h in state.get("heroes", []):
+					if positions.has(String(h["u"])):
+						h["post"] = positions[String(h["u"])]["post"]
+						h["pos"] = positions[String(h["u"])]["pos"].duplicate()
 			Save.store_run(saved)
 	else:
 		autosave()
-	return true
 
 ## 전당 안에서 자리를 옮긴다. b 가 전당 크기를 넘으면 **맨 뒤로** 보낸다
 ## (빈 칸에 떨군 것이라, 화면이 금색으로 「여기로」라고 말해 놓고 아무 일도 안 하면 안 된다).
@@ -1120,6 +1182,9 @@ const SAVE_VERSION := 8
 static func _hero_out(h: Dictionary) -> Dictionary:
 	var out := {"u": String(h["unit"].get("id", "")), "t": int(h.get("tier", 0)),
 			"w": int(h.get("wave", 1)), "n": int(h.get("n", 1)), "post": int(h.get("post", -1))}
+	if h.has("position"):
+		var point: Vector2 = h["position"]
+		out["pos"] = [point.x, point.y]
 	for key in ["awakened", "awakening_mult"]:
 		if h.has(key):
 			out[key] = h[key]
@@ -1132,6 +1197,8 @@ static func _hero_in(d: Dictionary) -> Dictionary:
 		return {}
 	var out := {"unit": u, "tier": int(d.get("t", 0)), "wave": int(d.get("w", 1)),
 			"n": maxi(1, int(d.get("n", 1))), "post": int(d.get("post", -1))}
+	if d.has("pos"):
+		out["position"] = Vector2(float(d["pos"][0]), float(d["pos"][1]))
 	for key in ["awakened", "awakening_mult"]:
 		if d.has(key):
 			out[key] = d[key]
@@ -1161,7 +1228,7 @@ static func _ints(values: Array) -> Array[int]:
 func snapshot(include_checkpoint: bool = true) -> Dictionary:
 	ensure_posts()
 	return {
-		"v": SAVE_VERSION, "rules_v": 3, "formation_v": 2, "seed": run_seed, "themes": themes.duplicate(),
+		"v": SAVE_VERSION, "rules_v": 3, "formation_v": 3, "seed": run_seed, "themes": themes.duplicate(),
 		"phase": phase, "wave": wave, "lives": lives, "gold": gold, "kills": kills,
 		"best_tier": best_tier,
 		"heroes": _heroes_out(heroes), "bench": _heroes_out(bench),
@@ -1279,6 +1346,7 @@ func restore(d: Dictionary) -> bool:
 					heroes.append(item)
 				else:
 					item.erase("post")
+					item.erase("position")
 					bench.append(item)
 	ensure_posts()
 	levels = (d.get("levels", {}) as Dictionary).duplicate()

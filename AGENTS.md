@@ -1,10 +1,13 @@
 # APK 산출물
 
-- 사용자 지정: APK는 항상 `/home/dgxmaruta/stellardefense-test.apk`에 같은 이름으로 덮어쓴다.
+- 사용자 지정: APK는 항상 `/home/dgxmaruta/sd-tst.apk`에 같은 이름으로 덮어쓴다.
 - 기능명이나 날짜를 붙인 새 APK 이름을 만들지 않는다. 별도 요청이 없으면 번호도 붙이지 않는다.
 - 빌드가 성공한 새 파일로만 기존 APK를 교체하고, 사용자에게 이 고정 경로를 안내한다.
 - 2026-10-08 사용자 재지정: APK·IPA·Artifact·워크플로·전용 브랜치의 현재 이름은 모두
-  `stellardefense`로 통일한다. 이 지시가 이전 산출물 고정 이름보다 우선한다.
+  `stellardefense`로 통일한다.
+- 2026-10-08 최신 사용자 재지정: APK 파일명은 항상 `sd-tst.apk`로 짧게 고정하며,
+  로컬 경로는 `/home/dgxmaruta/sd-tst.apk`다. APK 이름에 기능·날짜·번호를 붙이지 않는다.
+  이 지시는 앞선 APK 명칭 통일 지시보다 우선하며 IPA·Artifact·워크플로·브랜치 이름은 유지한다.
 
 # GitHub 모바일 빌드
 

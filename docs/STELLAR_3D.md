@@ -10,7 +10,7 @@
 - 사용자 저장 폴더: `stellardefense`. 데스크톱에서는 접근 가능한 이전 저장을 읽으며,
   이후 변경을 새 경로에 저장한다. 이전 원본은 덮어쓰지 않는다. 새 저장과 그 백업이 우선이다.
 - 모바일은 기존 패키지와 별도로 설치된다. 다른 앱의 저장 샌드박스는 자동 이전하지 않는다.
-- APK는 지정된 `/home/dgxmaruta/stellardefense-test.apk`에 성공한 새 빌드로만 교체한다.
+- APK는 지정된 `/home/dgxmaruta/sd-tst.apk`에 성공한 새 빌드로만 교체한다.
 - GitHub 브랜치·워크플로·APK/IPA Artifact는 모두 `stellardefense` 이름을 사용한다.
   새 Secret도 `STELLARDEFENSE_`를 사용하며 이전 설정은 읽기 호환 별칭으로만 남긴다.
   Xcode 프로젝트·앱은 `StellarDefense`이며 iOS 번들 ID 변수는 `STELLARDEFENSE_IOS_BUNDLE_ID`다.
@@ -21,12 +21,12 @@
 `art/models/manifest.json`은 각 영웅의 머리·피부·체형·의복·고유 장비를 지정하는 시각 메타데이터다.
 50명 모두 기존 id와 무기를 유지하고, 합성 수호자는 `base_id`에 각성 장식을 더한다.
 
-`stellar_world.gd`는 입체 지형·도로·발판·수정·영웅·몬스터·투사체·효과·조명·안개를 관리한다.
+`stellar_world.gd`는 입체 지형·도로·수정·영웅·몬스터·투사체·효과·조명·안개를 관리한다.
 `stellar_view.gd`는 독립된 `SubViewport`의 실제 3D 렌더를 기존 읽기 쉬운 UI 아래에 합성한다.
 `stellar_backdrop.gd`는 같은 3D 전장을 타이틀·소환·상점·테마 화면의 배경으로 사용한다.
 
 전투 규칙은 `BattleSim`이 계속 관리한다. 논리 좌표를 XZ 평면으로 변환하며 시각 코드는
-진행 상태·피해·능력치·난수를 바꾸지 않는다. 발판 선택은 현재 카메라 투영과 역투영을 사용한다.
+진행 상태·피해·능력치·난수를 바꾸지 않는다. 영웅 선택과 자유 배치는 현재 카메라 투영과 지면 역투영을 사용한다.
 게임 데이터 원본은 계속 `data/game.db`다. 승인된 명칭 문구 2건과 타이틀 에셋 경로 1건을
 내렸으며, 밸런스 값은 변경하지 않았다.
 
@@ -51,7 +51,7 @@
 ## 검증과 모바일 패키징
 
 - `tests/stellar_identity_check.tscn`: 이름·저장 이전·기존 원본 보존·새 저장/백업 우선.
-- `tests/stellar_gameplay_check.tscn`: 3D 연동·카메라별 발판 판정·시뮬 좌표/타이머/난수 불변.
+- `tests/stellar_gameplay_check.tscn`: 3D 연동·카메라별 영웅 선택·시뮬 좌표/타이머/난수 불변.
 - `tests/3d/stellar_render_check.tscn`: 전체 3D 모델·랭크·렌더링 계약.
 - `bash tools/verify.sh quick --skip-sprites`: 현재 3D 및 기존 게임 규칙·광고·저장·흐름 검사.
 - `tools/ci/check_stellar_assets.py`: APK의 50개 모델 프로필과 3D 런타임 모듈 확인.
@@ -67,3 +67,30 @@ Android/iOS 모두 `art/models/*.json`을 포함한다. 생성용 대용량 원�
 Android APK는 서명·광고·음원·550개 실제 변환 텍스처·DB 제외 검사를 통과한 파일로
 고정 경로에 교체했다. iOS는 Xcode 프로젝트 내보내기와 실제 PCK 검사를 로컬에서 수행한다.
 IPA 컴파일은 GitHub의 macOS 작업에서 진행한다. 실제 모바일 기기 설치·프레임률은 측정하지 않았다.
+
+## 2026-10-08 자유 배치와 짧은 APK 이름
+
+APK 파일명은 최신 사용자 요청에 따라 항상 `sd-tst.apk`로 고정한다. 로컬 산출물은
+`/home/dgxmaruta/sd-tst.apk`이고 GitHub 통합 Artifact에도 같은 APK 이름을 사용한다.
+IPA·Artifact·워크플로·전용 브랜치의 기존 이름은 유지한다.
+
+정비·소환 후 편성·전투에서 영웅을 선택하고 지면을 누르거나 드래그하면 자유롭게 배치한다.
+영웅 수는 12명이며, 도로·생명 수정·지도 밖·다른 영웅과 겹치는 위치는 허용하지 않는다.
+실제 발판과 빈 발판 선택 표시는 제거했다. 출전 영웅과 전당 영웅을 맞바꾸면 선택한 영웅의
+좌표를 새 영웅이 이어받는다. 자동 소환은 비어 있는 유효 지면을 찾아 겹침을 피한다.
+
+`HeroPlacement`가 경로와 발자국의 간격을 검사하고 `Run.hero_position`이 실제 좌표를 제공한다.
+내부 `post`는 기존 영웅 식별·교체 호환 슬롯이며 더 이상 자유 배치 위치를 제한하지 않는다.
+새 저장은 `formation_v=3`, `pos=[x,y]`를 쓴다. 과거 좌표 없는 저장은 원래 위치로 이관한다.
+전투 중 재배치는 사거리·총구·효과의 원점을 함께 바꾸고 공격 대기시간·누적 피해·비행 중인
+탄을 보존한다. 자동 저장과 부활 체크포인트에는 좌표만 갱신하여 탄 시작 골드·목숨을 유지한다.
+게임 데이터 DB 및 수치·문구표는 이번 변경에서 수정하지 않았다.
+
+`tests/free_placement_check.tscn`은 자유 좌표 저장·기존 저장 이관·배치 금지·교체·자동 소환·
+전투 상태 유지·카메라 회전과 확대 후 실제 입력·두 손가락 제스처 중 배치 취소를 검사한다.
+기존 `formation_check`와 새 검사 모두 로컬 검증 및 APK+IPA CI 선행 검사에 포함한다.
+
+검증: 전체 `bash tools/verify.sh quick --skip-sprites` 통과. 최종 시각 보정 후 자유 배치49건과
+기존 배치101건을 다시 실행해 모두 실패0건을 확인했다. APK 서명·광고·음원·3D 에셋·DB 제외
+검사를 통과한 새 파일로 `/home/dgxmaruta/sd-tst.apk`를 교체했다. 실제 Android/iOS 기기의
+설치와 프레임률은 측정하지 않았다.

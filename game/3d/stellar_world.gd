@@ -8,6 +8,7 @@ var terrain := Node3D.new()
 var actors := Node3D.new()
 var projectiles := Node3D.new()
 var selection := Node3D.new()
+var placement := Node3D.new()
 var weather: MultiMeshInstance3D
 var zone_nodes: Array[Node3D] = []
 var texts: Array[Dictionary] = []
@@ -21,10 +22,12 @@ var theme_id := ""
 var yaw := -0.12
 var zoom := 1.0
 var camera_target := Vector3.ZERO
-var _selected := -2
+var _selected := Vector2.INF
 var _available := false
 var _range := -1.0
 var _occupied := ""
+var _preview_at := Vector2.INF
+var _preview_valid := false
 
 static func world(p: Vector2, height: float = 0.0) -> Vector3:
 	return Vector3((p.x - Balance.ARENA_CENTER.x) / UNIT, height, (p.y - Balance.ARENA_CENTER.y) / UNIT)
@@ -37,6 +40,7 @@ func _ready() -> void:
 	add_child(actors)
 	add_child(projectiles)
 	add_child(selection)
+	add_child(placement)
 	add_child(camera)
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
 	camera.keep_aspect = Camera3D.KEEP_WIDTH
@@ -47,34 +51,41 @@ func _ready() -> void:
 	var environment := WorldEnvironment.new()
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color("#101e2c")
+	env.background_color = Color("#142535")
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color("#acb6c1")
-	env.ambient_light_energy = 0.26
+	env.ambient_light_color = Color("#a9c2d5")
+	env.ambient_light_energy = 0.23
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.fog_enabled = true
 	env.fog_light_color = Color("#263a51")
-	env.fog_density = 0.007
+	env.fog_density = 0.004
 	env.fog_sky_affect = 0
+	# Compatibility supports this inexpensive bloom implementation. Its intensity is
+	# restrained so crystals and lanterns glow while equipment remains legible.
+	env.glow_enabled = true
+	env.glow_intensity = 0.16
+	env.glow_hdr_threshold = 0.93
 	environment.environment = env
 	add_child(environment)
 	var moon := DirectionalLight3D.new()
-	moon.light_color = Color("#c3ccda")
-	moon.light_energy = 0.64
-	moon.rotation_degrees = Vector3(-58,-28,0)
+	moon.light_color = Color("#c3dcf1")
+	moon.light_energy = 0.88
+	moon.rotation_degrees = Vector3(-46,-38,0)
 	moon.shadow_enabled = true
 	moon.directional_shadow_max_distance = 40
 	moon.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+	moon.shadow_bias = 0.025
+	moon.shadow_normal_bias = 0.7
 	add_child(moon)
 	var fill := DirectionalLight3D.new()
-	fill.light_color = Color("#ffcd8f")
-	fill.light_energy = 0.18
-	fill.rotation_degrees = Vector3(-25,140,0)
+	fill.light_color = Color("#ffd7a1")
+	fill.light_energy = 0.30
+	fill.rotation_degrees = Vector3(-30,145,0)
 	add_child(fill)
 
 func camera_update() -> void:
 	camera.size = 18.5 / zoom
-	camera.position = camera_target + Vector3(sin(yaw)*14.0,16.5,cos(yaw)*14.0)
+	camera.position = camera_target + Vector3(sin(yaw)*16.0,15.0,cos(yaw)*16.0)
 	camera.look_at(camera_target, Vector3.UP)
 
 func screen(p: Vector2, height: float = 0.0) -> Vector2:
@@ -99,7 +110,7 @@ func build_map(theme: Dictionary) -> void:
 	var motif := String(Scenery.MAP_MOTIFS.get(id,"gravel"))
 	var palette := {"aqua":"#253e46","flame":"#3e3239","wood":"#263d35","rock":"#424041","frost":"#5b6d7b"}
 	var ground := Color(String(palette.get(body,"#263d35"))).lerp(Color(String(theme.get("floor","#324d42"))),0.14)
-	var moss := Color("#365950")
+	var moss := Color("#496953")
 	if body == "flame": moss = Color("#653d33")
 	elif body == "frost": moss = Color("#a4baca")
 	elif body == "rock": moss = Color("#6b7375")
@@ -112,61 +123,41 @@ func build_map(theme: Dictionary) -> void:
 	soil_material.set_shader_parameter("moss_color",moss)
 	soil_material.set_shader_parameter("motif_seed",float(absi(id.hash())%1000))
 	soil.material_override=soil_material
-	# Paths follow exactly both Balance polylines; raised curbs and slabs catch real light.
+	# Separate beveled pavers keep the exact gameplay route, with broken stone edges.
 	for route in range(2):
 		var points := Balance.route_points(route)
 		for i in range(points.size()-1):
-			var a := world(points[i],0.074)
-			var b := world(points[i+1],0.074)
-			var length := a.distance_to(b)
-			var center := (a+b)*0.5
-			var along_x := absf(a.x-b.x)>0.01
-			StellarModels.part(terrain,"box",center,Vector3(length+0.70,0.095,0.83) if along_x else Vector3(0.83,0.095,length+0.70),Color("#506476"))
-			StellarModels.part(terrain,"box",center+Vector3(0,0.048,0),Vector3(length+0.65,0.04,0.69) if along_x else Vector3(0.69,0.04,length+0.65),Color("#6f7e85").lerp(ground,0.20))
-			for n in range(int(length/0.45)):
-				var p := a.lerp(b,(n+0.5)/maxf(1,int(length/0.45)))+Vector3(0,0.08,0)
-				StellarModels.part(terrain,"box",p,Vector3(0.025,0.012,0.65) if along_x else Vector3(0.65,0.012,0.025),Color("#677680"))
-		# Entrance beacon, clear warm landmark against cold terrain.
+			_path(terrain,world(points[i]),world(points[i+1]),ground,route*17+i)
 		var gate := world(points[0])
 		for side in [-1,1]:
-			StellarModels.part(terrain,"cylinder",gate+Vector3(0,0.35,side*0.54),Vector3(0.24,0.7,0.24),Color("#344456"))
-			StellarModels.part(terrain,"sphere",gate+Vector3(0,0.80,side*0.54),Vector3(0.19,0.26,0.19),Color("#ffb95f"),0,1.7)
+			_lantern(terrain,gate+Vector3(0,0,side*0.56),0.72)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = abs(id.hash())
-	for n in range(114):
+	for n in range(68):
 		var p := Vector2(rng.randf_range(5,827),rng.randf_range(100,745))
 		if _reserved(p,42): continue
 		var at := world(p)
 		var scale_value := rng.randf_range(0.65,1.3)
-		if n % 4 == 0 and body in ["wood","aqua","frost"]:
-			_tree(terrain,at,scale_value,moss,body=="frost")
-		else:
-			StellarModels.part(terrain,"sphere",at+Vector3(0,0.14,0),Vector3(0.52,0.30,0.40)*scale_value,Color("#637682").lerp(moss,0.35),0,0,Vector3(0,rng.randf()*TAU,0.12))
-			StellarModels.part(terrain,"sphere",at+Vector3(0,0.29,0),Vector3(0.40,0.11,0.34)*scale_value,moss)
-			if body in ["flame","frost"]:
-				StellarModels.part(terrain,"cone",at+Vector3(0,0.3,0),Vector3(0.24,0.54,0.23),Color("#fa9546") if body=="flame" else Color("#b8e1ef"),0.15,0.25)
+		# Free deployment owns the whole inner floor. Tall scenery belongs to the edge.
+		StellarModels.part(terrain,"stone",at+Vector3(0,0.088,0),Vector3(0.30,0.07,0.22)*scale_value,Color("#566467").lerp(moss,float(n%4)*0.12),0,0,Vector3(0,rng.randf()*TAU,0))
 	for n in range(135):
 		var p := Vector2(rng.randf_range(25,807),rng.randf_range(116,729))
 		if _reserved(p,25): continue
 		var at := world(p,0.09)
-		StellarModels.part(terrain,"sphere",at,Vector3(rng.randf_range(0.22,0.64),0.035,rng.randf_range(0.17,0.53)),moss.darkened(rng.randf_range(0.1,0.3)))
+		StellarModels.part(terrain,"sphere",at,Vector3(rng.randf_range(0.22,0.64),0.035,rng.randf_range(0.17,0.53)),moss.darkened(0.08+float(n%4)*0.045))
 		for stem in range(2): StellarModels.part(terrain,"cone",at+Vector3(stem*0.06,0.05,0),Vector3(0.035,0.11,0.035),moss.lightened(0.12))
-	# Night woodland border makes the scene a diorama rather than a flat rectangle.
-	for n in range(30):
+	# Layered woodland silhouettes frame the playable surface without blocking it.
+	for n in range(34):
 		var side := -1.0 if n%2 else 1.0
-		var at := Vector3(side*8.2,0,(n/2-7)*0.94)
-		_tree(terrain,at,0.69+rng.randf()*0.45,moss.darkened(0.30),body=="frost")
-	# A recognizable landmark determined by all 50 existing motif ids, without changing data.
+		var at := Vector3(side*(8.48+rng.randf()*0.16),0,(n/2-8)*0.82)
+		_tree(terrain,at,0.65+rng.randf()*0.49,moss.darkened(0.24),body=="frost")
+	for n in range(14):
+		var at := Vector3((n-6.5)*1.2,0,-6.83)
+		_tree(terrain,at,0.58+rng.randf()*0.38,moss.darkened(0.32),body=="frost")
+	# Old twelve stone plinths are deliberately absent: heroes stand on chosen ground.
 	_landmark(terrain,motif,body,moss,rng)
-	# Stone deployment plinths with small amber lanterns, preserving all twelve slots.
-	for post in range(Balance.POST_SLOTS):
-		var at := world(Balance.post_position(post))
-		StellarModels.part(terrain,"cylinder",at+Vector3(0,0.085,0),Vector3(1.12,0.22,1.12),Color("#536779"))
-		StellarModels.part(terrain,"cylinder",at+Vector3(0,0.195,0),Vector3(0.91,0.055,0.91),Color("#849492"))
-		StellarModels.part(terrain,"ring",at+Vector3(0,0.24,0),Vector3(0.94,0.045,0.94),Color("#a59a76"),0.5)
-		var lantern := at+Vector3(-0.45,0.42,0.36)
-		StellarModels.part(terrain,"box",lantern,Vector3(0.11,0.30,0.11),Color("#c99a4c"),0.6)
-		StellarModels.part(terrain,"sphere",lantern+Vector3(0,0.07,0),Vector3(0.13,0.13,0.13),Color("#ffbd65"),0,1.6)
+	for side in [-1,1]:
+		for z in [-3.6,3.6]: _lantern(terrain,Vector3(side*8.13,0,z),0.8)
 	# Central life shrine. Lives remain individually visible 3D crystals.
 	for ring in range(3):
 		StellarModels.part(terrain,"cylinder",Vector3(0,0.10+ring*0.085,0),Vector3(2.23-ring*0.29,0.15,2.23-ring*0.29),Color("#41576b").lightened(ring*0.05))
@@ -174,9 +165,9 @@ func build_map(theme: Dictionary) -> void:
 	StellarModels.compact(terrain)
 	var mist := MeshInstance3D.new()
 	var plane := PlaneMesh.new()
-	plane.size=Vector2(16.8,13.4)
+	plane.size=Vector2(18.3,14.8)
 	mist.mesh=plane
-	mist.position.y=0.30
+	mist.position.y=0.22
 	var mist_material := ShaderMaterial.new()
 	mist_material.shader=preload("res://art/models/mist.gdshader")
 	mist.material_override=mist_material
@@ -189,13 +180,14 @@ func build_map(theme: Dictionary) -> void:
 		StellarModels.part(gem,"cone",Vector3(0,0.06,0),Vector3(0.21,0.19,0.21),Color("#49b3d0"),0.35,0.3,Vector3(PI,0,0))
 		terrain.add_child(gem)
 		crystals.append(gem)
-	for post in [0,3,8,11]:
-		var lantern_light := OmniLight3D.new()
-		lantern_light.position=world(Balance.post_position(post),0.58)+Vector3(-0.4,0,0.32)
-		lantern_light.light_color=Color("#ffc875")
-		lantern_light.light_energy=0.80
-		lantern_light.omni_range=1.9
-		terrain.add_child(lantern_light)
+	for side in [-1,1]:
+		for z in [-3.6,3.6]:
+			var lantern_light := OmniLight3D.new()
+			lantern_light.position=Vector3(side*8.10,0.6,z)
+			lantern_light.light_color=Color("#ffc875")
+			lantern_light.light_energy=1.10
+			lantern_light.omni_range=2.8
+			terrain.add_child(lantern_light)
 	var crystal_light := OmniLight3D.new()
 	crystal_light.position = Vector3(0,1.0,0)
 	crystal_light.light_color = Color("#6bdcef")
@@ -212,7 +204,8 @@ func build_map(theme: Dictionary) -> void:
 	weather.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(weather)
 	weather_update(0.0)
-	_selected = -2
+	_selected = Vector2.INF
+	_occupied = ""
 
 func weather_update(time: float) -> void:
 	if not is_instance_valid(weather): return
@@ -227,22 +220,56 @@ func weather_update(time: float) -> void:
 
 func _reserved(p: Vector2, distance: float) -> bool:
 	if p.distance_to(Balance.ARENA_CENTER)<92: return true
-	for post in range(Balance.POST_SLOTS):
-		if p.distance_to(Balance.post_position(post))<distance: return true
 	for route in range(2):
 		var pts := Balance.route_points(route)
 		for n in range(pts.size()-1):
 			if Geometry2D.get_closest_point_to_segment(p,pts[n],pts[n+1]).distance_to(p)<distance: return true
 	return false
 
+func _path(root: Node3D, a: Vector3, b: Vector3, ground: Color, seed_value: int) -> void:
+	var length := a.distance_to(b)
+	var direction := (b-a).normalized()
+	var crossway := Vector3(-direction.z,0,direction.x)
+	var along_x := absf(direction.x)>0.1
+	var center := (a+b)*0.5
+	StellarModels.part(root,"box",center+Vector3(0,0.055,0),Vector3(length+0.68,0.06,0.78) if along_x else Vector3(0.78,0.06,length+0.68),ground.darkened(0.26))
+	var count := maxi(1,ceili((length+0.6)/0.55))
+	var step := (length+0.6)/float(count)
+	var tones := [Color("#737b75"),Color("#68756f"),Color("#7c8179"),Color("#5c6c67")]
+	for n in range(count):
+		for lane in [-1,1]:
+			var at: Vector3 = a-direction*0.30+direction*(n+0.5)*step+crossway*(float(lane)*0.166)
+			at.y=0.098+float((n+seed_value)%3)*0.004
+			var tone: Color=tones[(n*3+seed_value+lane+4)%tones.size()]
+			StellarModels.part(root,"stone",at,Vector3(step-0.018,0.072,0.321) if along_x else Vector3(0.321,0.072,step-0.018),tone.lerp(ground,0.12))
+		if (n+seed_value)%5==0:
+			var at := a+direction*(n+0.4)*length/count+crossway*0.29
+			StellarModels.part(root,"sphere",at+Vector3(0,0.14,0),Vector3(0.21,0.022,0.15),Color("#445c46"))
+
+func _lantern(root: Node3D, at: Vector3, height: float) -> void:
+	StellarModels.part(root,"stone",at+Vector3(0,0.10,0),Vector3(0.28,0.19,0.28),Color("#495c62"))
+	StellarModels.part(root,"cylinder",at+Vector3(0,height*0.44,0),Vector3(0.075,height*0.7,0.075),Color("#665b44"),0.4)
+	var cage := at+Vector3(0,height,0)
+	StellarModels.part(root,"sphere",cage,Vector3(0.15,0.22,0.15),Color("#ffcb76"),0,1.1)
+	for side in [-1,1]:
+		StellarModels.part(root,"box",cage+Vector3(side*0.11,0,0),Vector3(0.025,0.29,0.19),Color("#76674f"),0.5)
+	StellarModels.part(root,"cone",cage+Vector3(0,0.18,0),Vector3(0.36,0.17,0.32),Color("#506266"),0.4)
+
 func _tree(root: Node3D, at: Vector3, value: float, color: Color, snow: bool) -> void:
-	StellarModels.part(root,"cylinder",at+Vector3(0,0.40*value,0),Vector3(0.13,0.8,0.13)*value,Color("#4a4b49"))
+	StellarModels.part(root,"cylinder",at+Vector3(0,0.54*value,0),Vector3(0.14,1.04,0.14)*value,Color("#455449"))
+	for side in [-1,1]:
+		StellarModels.link(root,at+Vector3(0,0.50*value,0),at+Vector3(side*0.31,0.87,0.08)*value,0.055*value,Color("#455449"))
 	for level in range(3):
-		StellarModels.part(root,"cone",at+Vector3(0,(0.68+level*0.34)*value,0),Vector3(0.94-level*0.22,0.88,0.94-level*0.22)*value,color.lightened(level*0.035))
-		if snow: StellarModels.part(root,"cone",at+Vector3(0,(0.84+level*0.34)*value,0),Vector3(0.60-level*0.12,0.64,0.60-level*0.12)*value,Color("#c7d4db"))
+		var width := 0.99-float(level)*0.20
+		var angles := Vector3(0,at.z*0.30+float(level)*0.23,0)
+		StellarModels.part(root,"cone",at+Vector3(0,(0.89+level*0.34)*value,0),Vector3(width,0.83,width)*value,color.lightened(level*0.042),0,0,angles)
+		# Side boughs break the perfectly repeated cone silhouette.
+		for side in [-1,1]:
+			StellarModels.part(root,"cone",at+Vector3(side*width*0.25,(0.64+level*0.34)*value,0.11*value),Vector3(width*0.54,0.43,width*0.53)*value,color.lightened(level*0.022),0,0,Vector3(0,level*0.42,side*0.18))
+		if snow: StellarModels.part(root,"cone",at+Vector3(0,(1.02+level*0.34)*value,0),Vector3(width*0.65,0.58,width*0.65)*value,Color("#c7d4db"))
 
 func _landmark(root: Node3D, motif: String, body: String, moss: Color, rng: RandomNumberGenerator) -> void:
-	var at := world(Vector2(221,405))
+	var at := world(Vector2(-14,405))
 	var stone := Color("#5e7585")
 	var style: int = absi(motif.hash())%5
 	if body == "aqua":
@@ -310,7 +337,7 @@ func _landmark(root: Node3D, motif: String, body: String, moss: Color, rng: Rand
 			for n in range(4): StellarModels.part(root,"cone",detail+Vector3((n%2-0.5)*0.50,0.57+n%2*0.20,n/2*0.63-0.30),Vector3(0.31,1.14+n%2*0.4,0.30),Color("#a0c9dd") if body=="frost" else Color("#a18fc9"),0.25,0.15)
 	# Motif-specific count, footprint, geometry and insignia; not solely a recolor.
 	for n in range(style+1):
-		var p := world(Vector2(660,305+n*36))
+		var p := world(Vector2(835,305+n*36))
 		StellarModels.part(root,"box" if style%2 else "cylinder",p+Vector3(0,0.22+n*0.025,0),Vector3(0.39,0.44+n*0.05,0.39),stone.lerp(moss,0.25),0.1)
 		StellarModels.part(root,"sphere",p+Vector3(0,0.48+n*0.05,0),Vector3(0.24,0.18,0.24),Color("#ddbd74"),0.3,0.2)
 
@@ -325,11 +352,14 @@ func sync_heroes(heroes: Array, time: float, battle: bool = false) -> void:
 		keep[key] = true
 		if not hero_nodes.has(key):
 			var model := StellarModels.hero(hero["unit"],grade)
+			StellarModels.contact(model,Vector3(0,0.008,0),Vector2(0.96,0.68),0.40)
+			var team_ring := StellarModels.part(model,"ring",Vector3(0,0.019,0),Vector3(0.79,0.021,0.79),Color("#879e91"),0.1,0.04)
+			team_ring.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			actors.add_child(model)
 			hero_nodes[key] = model
 		var node: Node3D = hero_nodes[key]
-		var p: Vector2 = data["pos"] if battle else Balance.post_position(int(hero.get("post",i)))
-		node.position = world(p,0.23)
+		var p: Vector2 = data["pos"] if battle else Run.hero_position(hero)
+		node.position = world(p,0.07)
 		var direction: Vector2 = data.get("fx_d",Vector2(0,1)) if battle else Vector2(0,1)
 		if direction.length_squared()>0.001: node.rotation.y = atan2(-direction.x,-direction.y)
 		var ft := float(data.get("fx_t",9))
@@ -416,30 +446,51 @@ func sync_battle(sim, time: float, lives: int, dt: float = 0.016) -> void:
 		for child in node.get_children(): child.material_override=StellarModels.material(zone["c"],0.1,0.45)
 	update_effects(dt)
 
-func set_selection(post: int, available: bool, radius: float = 0.0) -> void:
+func set_selection(at: Vector2, available: bool, radius: float = 0.0) -> void:
 	var occupied := ""
-	for hero in Run.heroes: occupied += str(hero.get("post",-1))+","
-	if post==_selected and available==_available and is_equal_approx(radius,_range) and occupied==_occupied: return
-	_selected=post
+	for hero in Run.heroes: occupied += str(Run.hero_position(hero))+","
+	if at==_selected and available==_available and is_equal_approx(radius,_range) and occupied==_occupied: return
+	_selected=at
 	_available=available
 	_range=radius
 	_occupied=occupied
 	_clear(selection)
-	for i in range(Balance.POST_SLOTS):
-		var color := Color("#ffe0a1") if i==post else Color("#9ce9e4")
-		if i==post or available:
-			StellarModels.part(selection,"ring",world(Balance.post_position(i),0.265),Vector3(1.15,0.055,1.15),color,0.25,0.55)
-		if Run.hero_at_post(i)<0:
-			var p := world(Balance.post_position(i),0.27)
-			StellarModels.part(selection,"box",p,Vector3(0.34,0.025,0.065),Color("#c6cdb8"),0.25)
-			StellarModels.part(selection,"box",p,Vector3(0.065,0.025,0.34),Color("#c6cdb8"),0.25)
-	if post>=0 and radius>0:
-		var origin := Balance.post_position(post)
+	if available:
+		var area := Balance.MAP_RECT.grow(-Balance.ROAD_WIDTH*0.5)
+		var corners := [area.position,Vector2(area.end.x,area.position.y),area.end,Vector2(area.position.x,area.end.y)]
+		for edge in range(4):
+			var a: Vector2=corners[edge]
+			var b: Vector2=corners[(edge+1)%4]
+			for n in range(28):
+				StellarModels.link(selection,world(a.lerp(b,n/28.0),0.14),world(a.lerp(b,(n+0.45)/28.0),0.14),0.022,Color("#86b6a6"),0,0.14)
+	if at.is_finite():
+		StellarModels.part(selection,"ring",world(at,0.11),Vector3(1.0,0.032,1.0),Color("#ffe0a1"),0.25,0.35)
+		for side in [-1,1]:
+			StellarModels.part(selection,"cone",world(at,0.17)+Vector3(side*0.54,0,0),Vector3(0.10,0.16,0.10),Color("#ffe0a1"),0,0.3)
+	if at.is_finite() and radius>0:
 		for n in range(64):
-			var a := origin+Vector2.from_angle(TAU*n/64.0)*radius
-			var b := origin+Vector2.from_angle(TAU*(n+0.65)/64.0)*radius
-			if Balance.MAP_RECT.has_point(a) and Balance.MAP_RECT.has_point(b): StellarModels.link(selection,world(a,0.18),world(b,0.18),0.035,Color("#ebc77f"),0.2,0.5)
+			var a := at+Vector2.from_angle(TAU*n/64.0)*radius
+			var b := at+Vector2.from_angle(TAU*(n+0.65)/64.0)*radius
+			if Balance.MAP_RECT.has_point(a) and Balance.MAP_RECT.has_point(b): StellarModels.link(selection,world(a,0.15),world(b,0.15),0.026,Color("#ebc77f"),0.2,0.23)
 	StellarModels.compact(selection)
+
+func set_placement_preview(at: Vector2, valid: bool) -> void:
+	if at==_preview_at and valid==_preview_valid: return
+	_preview_at=at
+	_preview_valid=valid
+	_clear(placement)
+	if not at.is_finite(): return
+	var color := Color("#9ce9c4") if valid else Color("#ff8571")
+	# A forbidden candidate over the shrine must remain visible above its crystals.
+	var height := 0.98 if not valid and at.distance_to(Balance.ARENA_CENTER)<Balance.ALTAR_R+Balance.ROAD_WIDTH*0.5 else 0.17
+	StellarModels.part(placement,"ring",world(at,height),Vector3(1.02,0.04,1.02),color,0,0.45)
+	var center := world(at,height+0.02)
+	if valid:
+		StellarModels.link(placement,center+Vector3(-0.19,0,0),center+Vector3(-0.02,0,0.16),0.035,color,0,0.4)
+		StellarModels.link(placement,center+Vector3(-0.02,0,0.16),center+Vector3(0.26,0,-0.17),0.035,color,0,0.4)
+	else:
+		for sign_value in [-1,1]: StellarModels.link(placement,center+Vector3(-0.20,0,-0.20*sign_value),center+Vector3(0.20,0,0.20*sign_value),0.038,color,0,0.4)
+	StellarModels.compact(placement)
 
 func event(e: Dictionary) -> void:
 	var type := String(e.get("t",""))

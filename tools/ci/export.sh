@@ -21,7 +21,7 @@ if grep -Eq 'SCRIPT ERROR|Parse Error|Compile Error' build/ci/import-bootstrap.l
 fi
 checked_godot build/ci/import.log --import
 export STELLARDEFENSE_NO_SAVE=1
-for scene in stellar_identity_check stellar_gameplay_check 3d/stellar_render_check rite_check reroll_check flow_check rules_check progression_check wave_scaling_check course_check revive_flow_check localization_check ads_check; do
+for scene in stellar_identity_check stellar_gameplay_check 3d/stellar_render_check formation_check free_placement_check rite_check reroll_check flow_check rules_check progression_check wave_scaling_check course_check revive_flow_check localization_check ads_check; do
     log="build/ci/${scene//\//-}.log"
     checked_godot "$log" "res://tests/$scene.tscn"
     grep -q '판정: 정상' "$log"
@@ -36,8 +36,8 @@ checked_godot build/ci/stellar-pack.log --main-pack "$PWD/build/ios/StellarDefen
 checked_godot build/ci/stellar-packed-boot.log --main-pack "$PWD/build/ios/StellarDefense.pck" --quit-after 90
 tar -czf build/ci/ios-project.tar.gz -C build ios
 
-checked_godot build/ci/android-export.log --export-debug "Android Test APK" "$PWD/build/apk/stellardefense-test.apk"
-apk="$PWD/build/apk/stellardefense-test.apk"
+checked_godot build/ci/android-export.log --export-debug "Android Test APK" "$PWD/build/apk/sd-tst.apk"
+apk="$PWD/build/apk/sd-tst.apk"
 test -s "$apk"
 "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify "$apk"
 "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump xmltree --file AndroidManifest.xml "$apk" > build/ci/manifest.txt

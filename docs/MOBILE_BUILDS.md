@@ -15,7 +15,7 @@
 
 Actions 실행의 `stellardefense-apk-ipa` Artifact에 아래 파일이 함께 들어 있다(30일 보관).
 
-- `stellardefense-test.apk`: Android 테스트용 APK
+- `sd-tst.apk`: Android 테스트용 APK
 - `stellardefense.ipa`: iOS 기기용 Release IPA
 - `commit.txt`, `SHA256SUMS.txt`: 두 산출물의 소스 커밋과 체크섬
 
@@ -34,7 +34,7 @@ IPA에는 같은 커밋의 게임 데이터가 들어간다. Android 서명·광
 IPA의 실행 파일·번들 ID·게임 데이터도 검사한다.
 
 로컬 APK는 계속 `bash tools/build_apk.sh`로 생성하며, 검증에 성공한 파일만
-`/home/dgxmaruta/stellardefense-test.apk`에 덮어쓴다.
+`/home/dgxmaruta/sd-tst.apk`에 덮어쓴다.
 CI의 Android 디버그 키는 Actions 캐시에 보관한다. 로컬 키와는 다르며 캐시를
 삭제하면 CI 키가 바뀔 수 있다. 서로 다른 키로 서명한 APK끼리는 덮어 설치할 수 없다.
 
@@ -78,5 +78,6 @@ Apple ID로 서명하여 설치한다. 이 파일은 App Store/TestFlight 업로
 앱 표시 이름은 `스텔라 디펜스` / `Stellar Defense`, Android 패키지와 iOS 기본 번들 ID는
 `com.devjieung.stellardefense`, Xcode 프로젝트·앱은 `StellarDefense`다. 기존 패키지의
 앱과 별도로 설치된다. iOS 서명 프로파일은 새 번들 ID를 포함해야 한다.
-전용 브랜치·워크플로 경로·다운로드 파일도 `stellardefense`로 통일한다.
-로컬 고정 APK 경로는 `/home/dgxmaruta/stellardefense-test.apk`다.
+전용 브랜치·워크플로 경로·IPA와 Artifact 이름은 `stellardefense`를 유지한다.
+APK 다운로드 파일명은 최신 요청에 따라 짧은 `sd-tst.apk`로 고정한다.
+로컬 고정 APK 경로는 `/home/dgxmaruta/sd-tst.apk`다.

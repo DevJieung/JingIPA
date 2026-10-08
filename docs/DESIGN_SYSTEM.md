@@ -10,7 +10,7 @@
 - 사용자가 2D 픽셀 인게임을 실제 3D Tower Defense로 전환하도록 요청했다. 이 기준이 과거
   픽셀아트 유지 기준보다 우선한다. 참고 영상: https://www.youtube.com/watch?v=7gyIit5TtsI.
   영상의 차가운 밤 지형·이끼·굵은 모델·따뜻한 등불·실제 그림자와 사선 카메라를 따르며
-  우리 게임의 구조대원 영웅, 공업 판타지 장비, 두 길·12발판·생명수정과 게임 규칙을 유지한다.
+  우리 게임의 구조대원 영웅, 공업 판타지 장비, 두 길·최대 12명·생명수정과 게임 규칙을 유지한다.
 - `game/3d/stellar_world.gd`는 독립 `World3D` 안에 `Node3D`, 실제 메쉬, 카메라, 그림자,
   지면 안개·날씨와 공격 효과를 둔다. `stellar_view.gd`의 SubViewport를 기존 UI 아래에 합성한다.
   타이틀·의식·야영지·테마 배경은 같은 `stellar_backdrop.gd`를 사용한다. HUD와 의식판은
@@ -25,7 +25,7 @@
   메쉬 bounds에 맞춰 카메라를 조정하고 16% 안전 여백을 둔다. 25몬스터와 보스도 실제 3D
   모델이며 `art/models/monsters/`의 같은 모델 렌더를 테마 미리보기에 쓴다.
 - 50개 테마는 기존 `Scenery.MAP_MOTIFS`를 읽어 실제 3D 수도교·배·가마·버섯·대나무·광산·
-  빙주 등의 랜드마크와 지형을 만든다. 도로/배치/공격 범위는 기존 Balance 좌표와 반경을 그대로
+  빙주 등의 랜드마크와 지형을 만든다. 도로는 기존 Balance 좌표, 영웅 배치와 공격 범위는 Run.hero_position 및 기존 반경을 그대로
   3D 평면으로 옮기며 피해 계산을 바꾸지 않는다. 지면은 `art/models/terrain.gdshader`의
   경량 이끼·흙 노이즈, 안개는 `mist.gdshader`의 얇은 3D 평면과 환경 fog다.
 - 카메라는 줌·회전·원위치 5단추를 제공한다. PC는 휠 줌·오른쪽 드래그 회전·가운데/Shift
@@ -43,6 +43,44 @@
   4px 가장자리 여백 검사 실패 0건, 두 해상도 실제 렌더 오류 0건을 확인했다.
   검수 기록은 [3D 시각 검수](STELLAR_3D_VISUAL_REVIEW.md)를 따른다.
   Android 실기기 프레임률/육안 검수는 수행하지 않았다.
+
+## 2026-10-08 자유 배치·모바일 3D 렌더 보정
+
+- 사용자 요구에 따라 **고정 발판은 제거**했다. 전장 내부 슬롯 `post`는 최대 12명 관리와
+  이전 저장 호환에만 쓰며 실제 영웅과 선택·별·이름·사거리의 위치는
+  `Run.hero_position(hero)`/전투 `pos`를 투영한다. 지면 터치 역투영은
+  `StellarView.ground_at`, 실제 모델 선택은 `hero_at`/`post_at`을 공유한다.
+- 영웅은 지면에 직접 서고 발 아래 얇은 팀 링과 부드러운 접지 그림자로 위치를 읽는다.
+  선택은 금색 링·범위와 꺾쇠, 배치 후보는 초록 링+체크 또는 빨강 링+X다.
+  수정 위의 금지 후보는 제단과 수정에 가려지지 않도록 수정 상단에 표시한다.
+  배치 판정은 `Run.placement_error`만 사용하며 시각 높이가 규칙을 바꾸지 않는다.
+  선택 중 가능한 지면 외곽에 옅은 점선을 그리되 길·수정·다른 영웅과의 겹침은 허용하지 않는다.
+- 편성 이름 딱지는 외곽 영웅의 안쪽 여백, 중앙 영웅의 발 아래에 놓고 지도 상자 안으로
+  제한한다. 실제 카메라 투영을 따라가며 고정 발판의 빈 `+` 표시를 그리지 않는다.
+  도움말은 기존 지역화 문구 `전장 배치에서 직접 배치하세요.`/`터치하여 배치하기`를 재사용한다.
+- 기존 푸른 밤 숲 방향 안에서 길을 bevel 면이 빛을 받는 개별 석판으로 나누고,
+  이끼는 월드 좌표의 큰 색 패치·조용한 표면 요철로 표시한다. 지면 중앙에는 작은 돌과
+  풀만 두며 큰 랜드마크·계층 나무·따뜻한 등불은 외곽으로 옮겨 자유 배치 시 모델을 가리지 않는다.
+  차가운 주광과 따뜻한 보조광, 낮아진 사선 카메라, 약한 glow(0.16)로 형태와 수정빛을 읽는다.
+- **GL Compatibility와 MSAA 2×를 유지**한다. FXAA/SSAO/볼륨 안개는 사용하지 않는다.
+  정적 석판·나무·지면 장식은 공유 재질로 병합하며 그림자 조명 하나,
+  그림자 없는 등불 네 개와 수정 조명 하나를 쓴다. 새 고해상도 래스터/3D 본체는 제작하지 않았고
+  영웅·몬스터의 정체성, 550초상화와 별별 장비 구성은 유지했다.
+- 구현 근거: `game/3d/stellar_world.gd`, `stellar_models.gd`, `stellar_view.gd`,
+  `art/models/terrain.gdshader`, `contact_shadow.gdshader`, `game/formation_view.gd`,
+  `game/battle_screen.gd`. 렌더 기능 확인 근거:
+  [Godot 렌더러 표](https://docs.godotengine.org/en/stable/tutorials/rendering/renderers.html),
+  [Compatibility glow 설명](https://docs.godotengine.org/en/stable/classes/class_environment.html#class-environment-property-glow-enabled).
+- 재현: `python3 tools/3d/free_placement_review.py`. 자료는
+  `build/free-placement-render/<해상도>/`의 한영 편성·선택·허용/금지 후보·전투·회전 화면,
+  8연속 전투 프레임·GIF·합본과 `report.json`이다. 검수 결과와 제작 후속안은
+  [자유 배치·렌더 검수](FREE_PLACEMENT_RENDER_REVIEW.md)를 따른다.
+- 후속 **제안**(아직 구현하지 않음): 조명 설정만으로 현재 구/원뿔 조립 모델의 디테일 한계를
+  없앨 수는 없다. Limne의 저수탱크·호스, Brasa의 큰 꽃잎형 방열 장비,
+  Echo의 날씬한 체형·이중 활을 대표 GLB 3명으로 제작해 작은 화면 실루엣·공통 재질·팔 rig와
+  0/4/9등급 장비를 먼저 검수한다. 기준을 잡은 뒤 같은 모듈로 10등급과 50영웅을 확장하고,
+  몬스터는 슬라임→골렘→보스 순으로 정교하게 만든다. 엔진 전체 전환보다 실제 모델·재질을
+  개선하는 단계가 우선이며 Android 실기기 프레임률/발열 측정은 별도다.
 
 ## 현재 기준
 
