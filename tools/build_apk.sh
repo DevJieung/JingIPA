@@ -2,7 +2,7 @@
 set -euo pipefail
 
 stellar_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-stellar_output="/home/dgxmaruta/pokerdefense-test.apk"
+stellar_output="/home/dgxmaruta/stellardefense-test.apk"
 stellar_java="$stellar_root/build/toolchains/jdk17/bin/java"
 stellar_sdk="/home/dgxmaruta/Android/SdkFlutter"
 stellar_log="$stellar_root/build/android-admob.log"
@@ -20,7 +20,7 @@ cleanup() {
 trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
-stellar_apk="$stellar_stage/pokerdefense-test.apk"
+stellar_apk="$stellar_stage/stellardefense-test.apk"
 
 test -x "$stellar_java"
 test -f "$stellar_config/godot/editor_settings-4.7.tres"

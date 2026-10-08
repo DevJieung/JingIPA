@@ -28,7 +28,7 @@ tools/verify.sh
 | 6. 화면 한 바퀴 | `판정: 정상` (타이틀 → **테마 판** → 의식 → **편성 판** → 전투 → **전과 판** → 상점을 실제로 눌러서 돈다. **자동 저장이 판을 담고 되돌리는지**도 여기서 본다) |
 | 7. 자동 플레이 | `판정: 정상` · 12판이면 `클리어 1~6판`(기대 2판 안팎, 24판이면 3~6판) · 도달 중간값 **92~98탄** · **1~6탄은 크리스탈을 잃지 않는다** |
 | 8. 폰트 | `화면에 쓰는 모든 문자가 폰트에 있습니다` |
-| 9. APK | `ok: APK /home/…/pokerdefense-test.apk (약 85~90M)` — **홈 디렉터리에 굽는다**. 테마 그림 100장이 들어가면서 58M → 87M 이 됐다 |
+| 9. APK | `ok: APK /home/…/stellardefense-test.apk (약 85~90M)` — **홈 디렉터리에 굽는다**. 테마 그림 100장이 들어가면서 58M → 87M 이 됐다 |
 
 ⚠ **멈춤은 조용한 대기가 아니라 실패다.** `verify.sh` 의 모든 Godot 호출에는 `timeout`
 이 걸려 있고, 넘기면 출력 파일에 `!! 멈춤` 을 적는다. 실제로 스크립트 하나가 파스가 안 되면
@@ -176,7 +176,7 @@ python3 tools/anim/autorig.py ember_apprentice && python3 tools/anim/build_clips
 폰으로 옮길 때마다 경로를 찾아 들어가야 하고, 지운 줄 알았던 옛 APK 가 남는다.
 `tools/verify.sh` 9단계도 같은 자리에 굽는다.
 
-★ **사용자 지정: 파일명은 `pokerdefense-test.apk`로 고정하고 매번 덮어쓴다.**
+★ **사용자 지정: 파일명은 `stellardefense-test.apk`로 고정하고 매번 덮어쓴다.**
 기능명(`newmap`, `readability` 등)·날짜·번호를 붙인 새 이름을 만들지 않는다.
 새 빌드가 성공한 뒤에만 기존 파일을 교체하고, 답변에서도 이 고정 경로를 안내한다.
 
@@ -187,8 +187,8 @@ tools/build_apk.sh      # 임시 폴더에 굽고 서명·광고 플러그인 �
 답변 끝에 내려받는 방법까지 적을 것:
 
 ```bash
-scp dgxmaruta@<호스트>:~/pokerdefense-test.apk .
-adb install -r pokerdefense-test.apk
+scp dgxmaruta@<호스트>:~/stellardefense-test.apk .
+adb install -r stellardefense-test.apk
 ```
 
 - `cannot connect to daemon at tcp:5037` 은 폰이 안 붙어 있어서 나는 것이라 오류가 아니다.

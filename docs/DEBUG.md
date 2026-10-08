@@ -140,7 +140,7 @@ func _hurt(mi, dmg, _crit, _src, elem, rider, rider_dmg, rider_n, flash) -> floa
 알고 싶은 것은 그게 아니라 **이 한 대가 왜 이 숫자인가**다. `tests/dmg_check` 가 그 자리다.
 
 ```bash
-POCKER_NO_SAVE=1 stdbuf -oL ~/.local/bin/godot --headless --path . \
+STELLARDEFENSE_NO_SAVE=1 stdbuf -oL ~/.local/bin/godot --headless --path . \
     res://tests/dmg_check.tscn -- <모드> <옵션>
 ```
 
@@ -222,7 +222,7 @@ CLAUDE.md 14-5 는 「겹치면 단일 대상 피해가 정확히 n배」라고 
 ### 「이 캐릭터 한 대가 왜 이 숫자지」
 
 ```bash
-POCKER_NO_SAVE=1 ~/.local/bin/godot --headless --path . res://tests/dmg_check.tscn -- \
+STELLARDEFENSE_NO_SAVE=1 ~/.local/bin/godot --headless --path . res://tests/dmg_check.tscn -- \
     --calc --unit blaze_wizard --n 4 --wave 30 --rank 3 --mkind tank \
     --lv atk=6,crit=4,critx=3 --pas heavytip,keenedge --crit
 ```
@@ -237,7 +237,7 @@ POCKER_NO_SAVE=1 ~/.local/bin/godot --headless --path . res://tests/dmg_check.ts
 ### 「전투 중에 실제로 무슨 일이 있었나」
 
 ```bash
-POCKER_NO_SAVE=1 ~/.local/bin/godot --headless --path . res://tests/dmg_check.tscn -- \
+STELLARDEFENSE_NO_SAVE=1 ~/.local/bin/godot --headless --path . res://tests/dmg_check.tscn -- \
     --trace --wave 12 --team bell_shaman:2,ice_dagger:1 --max 80
 ```
 
@@ -259,7 +259,7 @@ POCKER_NO_SAVE=1 ~/.local/bin/godot --headless --path . res://tests/dmg_check.ts
 ### 「숫자를 고쳤는데 진짜 반영됐나」
 
 ```bash
-POCKER_NO_SAVE=1 ~/.local/bin/godot --headless --path . res://tests/dmg_check.tscn -- --selftest
+STELLARDEFENSE_NO_SAVE=1 ~/.local/bin/godot --headless --path . res://tests/dmg_check.tscn -- --selftest
 ```
 
 여덟 가지를 잰다:
@@ -329,7 +329,7 @@ expect "데미지 계산" "판정: 정상" "$TMP/dmg.log"
 
 ## 5. 함정
 
-- **`POCKER_NO_SAVE=1` 을 반드시 붙여라.** 안 붙이면 이 검사가 만든 판이 「하다 만 판」으로
+- **`STELLARDEFENSE_NO_SAVE=1` 을 반드시 붙여라.** 안 붙이면 이 검사가 만든 판이 「하다 만 판」으로
   남아서, 다음에 앱을 켠 사람이 그 판을 잇게 된다. 안 붙이면 검사기가 첫 줄에 경고한다.
 - **`--trace` 는 씨앗을 고정해야 두 번 같은 판이 나온다** (`--seed`). 몬스터 편성은
   `Run.kinds_for(w)` 라 판 씨앗에만 매여 있지만, 치명타·마비·스폰 순서는 `BattleSim._rng` 다.

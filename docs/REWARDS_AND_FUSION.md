@@ -115,7 +115,7 @@ SDK의 시청 완료 콜백으로만 보상을 지급한다.
 
 ### 기기에서 테스트
 
-1. `bash tools/build_apk.sh` 실행 후 `/home/dgxmaruta/pokerdefense-test.apk`를 설치한다. `.env`를 바꾸면 다시 빌드해야 한다.
+1. `bash tools/build_apk.sh` 실행 후 `/home/dgxmaruta/stellardefense-test.apk`를 설치한다. `.env`를 바꾸면 다시 빌드해야 한다.
 2. 자체 광고 단위 ID로 테스트할 때는 AdMob 콘솔에 기기를 테스트 기기로 등록하거나, SDK 로그에 나온 기기 ID를 `ADMOB_TEST_DEVICE_IDS`에 넣고 다시 빌드한다. Google 광고의 **Test Ad** 표시를 확인한다. [Google 테스트 광고 안내](https://developers.google.com/admob/android/test-ads)
 3. 별맞춤 의식의 별 끌어오기, 합성 결과의 재료 복구, 게임 종료 화면의 부활을 각각 실행한다. 시청 완료와 중간 종료를 구분해 보상을 확인한다. 합성은 재료 복구 후 다시 합성하고 새 광고를 완료해 여러 번 원복되는지 확인한다.
 4. 광고가 안 뜨면 `adb logcat -s godot Ads`로 `AdMob initialized`, `AdMob loading reward`, `AdMob reward ready`, `AdMob earned reward`를 확인한다. `AdMob load failed` JSON에는 `kind/format/code/domain/message`, 제공되는 경우 원인 오류·응답 ID·중개 광고망별 오류가 남는다. 화면에서도 네트워크 오류, 광고 재고 없음, 사용 불가, 시간초과를 구분한다. ID 형식 검증은 계정 승인·광고 단위 활성화·광고 재고까지 보장하지 않는다.
@@ -159,9 +159,9 @@ Google 오류 1은 잘못된 요청, 2는 네트워크 오류, 3은 광고 미�
 - tests/run_stats_check.tscn: 누적 실피해·과잉 피해 제외·Best Player·저장 이관·부활 롤백 및 전체 패시브 보유를 검사한다.
 - tests/camp_refresh_preview.tscn: 한영 대기실·합성·선택 상태·패시브·도감·Best Player 및 공통 언어 버튼의 실제 렌더링과 입력을 검사한다.
 - `python3 tools/rite_design_review.py`: 별맞춤 의식 화면(회전 · 다시 돌리기 · 별 끌어오기) · 확정 연출 · 지원 팝업 · 도움말 · 타이틀 · 도감을 1280×800 / 1000×625 한국어·영어로 촬영하고, 그린 문·별의 자리가 판정(`Rite.in_gate`)과 일치하는지 검사한다.
-- 개발 검사에서는 POCKER_NO_SAVE=1로 사용자 저장 파일을 보호한다.
+- 개발 검사에서는 STELLARDEFENSE_NO_SAVE=1로 사용자 저장 파일을 보호한다.
 - 실제 Android 기기의 광고 로드와 시청 완료는 별도 기기 확인이 필요하다.
-- APK 산출물은 항상 /home/dgxmaruta/pokerdefense-test.apk에 성공한 새 빌드로만 교체한다.
+- APK 산출물은 항상 /home/dgxmaruta/stellardefense-test.apk에 성공한 새 빌드로만 교체한다.
 - 이 머신의 Gradle 빌드는 build/toolchains/jdk17과 ARM용 aapt2 실행 래퍼를 사용한다.
 - 임시 Godot 설정은 build/godot-config에 두며 사용자 전역 Java/Android SDK 설정은 변경하지 않는다.
 - tools/build_apk.sh는 새 임시 폴더에서 빌드하고 스크립트 오류, APK 서명, AdMob 매니페스트를 확인한 뒤 고정 산출물을 교체한다.

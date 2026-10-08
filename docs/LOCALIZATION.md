@@ -28,7 +28,7 @@
 ```bash
 python3 tools/check_localization.py
 python3 tools/check_font.py
-POCKER_NO_SAVE=1 godot --headless --path . res://tests/localization_check.tscn
+STELLARDEFENSE_NO_SAVE=1 godot --headless --path . res://tests/localization_check.tscn
 python3 tools/ui_polish_review.py
 ```
 
@@ -38,4 +38,4 @@ python3 tools/ui_polish_review.py
 시각 검수는 실제 Godot에서 1280×800 / 1000×625 화면을 한영으로 촬영한다.
 `I18n.audit_enabled`를 켜면 영어 화면의 미번역 문자열이 `I18n.missing`에 기록된다.
 
-APK는 성공한 새 파일로만 `/home/dgxmaruta/pokerdefense-test.apk`를 교체한다.
+APK는 성공한 새 파일로만 `/home/dgxmaruta/stellardefense-test.apk`를 교체한다.

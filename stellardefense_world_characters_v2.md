@@ -157,7 +157,7 @@ T포즈는 형태를 확인하는 **원화용 자세**다. 전투 대기 자세�
 - 개별 원화: `art/concepts/last_refuge_v3/<id>.png`
 - 실제 프롬프트·시드·모델·생성 시간: 같은 폴더의 `<id>.json`과 PNG 메타데이터
 - 생성기: `tools/gen_world_concepts.py`
-- 이전 문서 보관본: `docs/archive/pokerdefense_world_characters_v2_before_20260909.md`
+- 이전 문서 보관본: `docs/archive/stellardefense_world_characters_v2_before_20260909.md`
 
 아래부터는 이름·등급·무기 배치를 유지한 50명 각각의 설계다.
 

@@ -1,14 +1,16 @@
 # APK 산출물
 
-- 사용자 지정: APK는 항상 `/home/dgxmaruta/pokerdefense-test.apk`에 같은 이름으로 덮어쓴다.
+- 사용자 지정: APK는 항상 `/home/dgxmaruta/stellardefense-test.apk`에 같은 이름으로 덮어쓴다.
 - 기능명이나 날짜를 붙인 새 APK 이름을 만들지 않는다. 별도 요청이 없으면 번호도 붙이지 않는다.
 - 빌드가 성공한 새 파일로만 기존 APK를 교체하고, 사용자에게 이 고정 경로를 안내한다.
+- 2026-10-08 사용자 재지정: APK·IPA·Artifact·워크플로·전용 브랜치의 현재 이름은 모두
+  `stellardefense`로 통일한다. 이 지시가 이전 산출물 고정 이름보다 우선한다.
 
 # GitHub 모바일 빌드
 
-- 사용자 지정: `DevJieung/JingIPA`의 `pokerdefense` 브랜치에 이 프로젝트를 올린다.
+- 사용자 지정: `DevJieung/JingIPA`의 `stellardefense` 브랜치에 이 프로젝트를 올린다.
   기존 `main` 프로젝트는 보존한다. 일반 `git push`도 이 전용 브랜치를 향하게 한다.
-- `.github/workflows/pokerdefense.yml`에서 매 푸시마다 APK와 IPA를 함께 만든다.
+- `.github/workflows/stellardefense.yml`에서 매 푸시마다 APK와 IPA를 함께 만든다.
   기능 변경 후 APK만 만드는 흐름으로 회귀시키지 않는다.
 - 워크플로 수정 시 수동 실행 등록용 `main`의 동일 파일도 동기화한다.
 - 산출물과 서명 설정은 `docs/MOBILE_BUILDS.md`를 따른다. `.env`, 인증서,

@@ -10,8 +10,9 @@
 - 사용자 저장 폴더: `stellardefense`. 데스크톱에서는 접근 가능한 이전 저장을 읽으며,
   이후 변경을 새 경로에 저장한다. 이전 원본은 덮어쓰지 않는다. 새 저장과 그 백업이 우선이다.
 - 모바일은 기존 패키지와 별도로 설치된다. 다른 앱의 저장 샌드박스는 자동 이전하지 않는다.
-- APK는 지정된 `/home/dgxmaruta/pokerdefense-test.apk`에 성공한 새 빌드로만 교체한다.
-- GitHub 브랜치·워크플로·APK/IPA Artifact·서명 Secret은 기존 지정 이름을 유지한다.
+- APK는 지정된 `/home/dgxmaruta/stellardefense-test.apk`에 성공한 새 빌드로만 교체한다.
+- GitHub 브랜치·워크플로·APK/IPA Artifact는 모두 `stellardefense` 이름을 사용한다.
+  새 Secret도 `STELLARDEFENSE_`를 사용하며 이전 설정은 읽기 호환 별칭으로만 남긴다.
   Xcode 프로젝트·앱은 `StellarDefense`이며 iOS 번들 ID 변수는 `STELLARDEFENSE_IOS_BUNDLE_ID`다.
 
 ## 실제 3D 렌더링

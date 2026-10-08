@@ -18,7 +18,7 @@
 검증:
 
 - `python3 tools/audio/check_audio.py`: BGM 4곡과 효과음 47개 전부 디코딩, 유효 신호, 클리핑, 시작/끝, 무음 구간, 루프 접점, 생성 소스 일치 확인.
-- `POCKER_NO_SAVE=1 POCKER_AUDIO_TEST=1 godot --headless --path . res://tests/audio_check.tscn`: 77건 통과. 실제 스트림 반복, 동일 곡 유지, 페이드, 설정 독립성, 광고·앱 전환 정지/재개, 효과음 로딩 확인.
+- `STELLARDEFENSE_NO_SAVE=1 STELLARDEFENSE_AUDIO_TEST=1 godot --headless --path . res://tests/audio_check.tscn`: 77건 통과. 실제 스트림 반복, 동일 곡 유지, 페이드, 설정 독립성, 광고·앱 전환 정지/재개, 효과음 로딩 확인.
 - `tests/flow_check.gd`: 음악 설정의 파일 저장·복원 포함.
 
 Android 기기 스피커에서의 청취 평가는 아직 수행하지 않았다.

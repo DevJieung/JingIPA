@@ -2,15 +2,15 @@ name: 스텔라 디펜스 APK + IPA
 
 on:
   push:
-    branches: [pokerdefense]
-    tags: ['pokerdefense-v*']
+    branches: [stellardefense]
+    tags: ['stellardefense-v*']
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: pokerdefense-mobile-${{ github.ref }}
+  group: stellardefense-mobile-${{ github.ref }}
   cancel-in-progress: false
 
 env:
@@ -25,14 +25,14 @@ jobs:
     outputs:
       revision: ${{ steps.source.outputs.revision }}
     env:
-      GODOT_ANDROID_KEYSTORE_DEBUG_PATH: /home/runner/.local/share/godot/keystores/pokerdefense-debug.keystore
+      GODOT_ANDROID_KEYSTORE_DEBUG_PATH: /home/runner/.local/share/godot/keystores/stellardefense-debug.keystore
       GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
       GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
     steps:
       - uses: actions/checkout@v4
         with:
           # The default branch holds another game; manual builds use this game's branch.
-          ref: ${{ github.event_name == 'workflow_dispatch' && 'pokerdefense' || github.sha }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && 'stellardefense' || github.sha }}
           persist-credentials: false
       - id: source
         run: echo "revision=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
@@ -50,16 +50,16 @@ jobs:
         id: engine
         with:
           path: |
-            ~/.local/share/pokerdefense-godot
+            ~/.local/share/stellardefense-godot
             ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
-          key: pokerdefense-godot-${{ runner.os }}-${{ runner.arch }}-${{ env.GODOT_VERSION }}-v1
+          key: stellardefense-godot-${{ runner.os }}-${{ runner.arch }}-${{ env.GODOT_VERSION }}-v1
       - name: Godot 및 모바일 템플릿 설치
         if: steps.engine.outputs.cache-hit != 'true'
         run: |
           set -euo pipefail
           base="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable"
           name="Godot_v${GODOT_VERSION}-stable"
-          engine_dir="$HOME/.local/share/pokerdefense-godot"
+          engine_dir="$HOME/.local/share/stellardefense-godot"
           template_dir="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
           mkdir -p "$engine_dir" "$template_dir" "$RUNNER_TEMP/godot-download"
           cd "$RUNNER_TEMP/godot-download"
@@ -74,7 +74,7 @@ jobs:
           mv extracted/templates/* "$template_dir/"
       - name: Godot 경로 설정
         run: |
-          binary="$HOME/.local/share/pokerdefense-godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64"
+          binary="$HOME/.local/share/stellardefense-godot/Godot_v${GODOT_VERSION}-stable_linux.x86_64"
           chmod +x "$binary"
           "$binary" --version
           echo "GODOT=$binary" >> "$GITHUB_ENV"
@@ -83,30 +83,30 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: pokerdefense-gradle-${{ runner.os }}-${{ env.GODOT_VERSION }}-${{ hashFiles('addons/admob/android/bin/**', 'tools/ci/prepare.py') }}
-          restore-keys: pokerdefense-gradle-${{ runner.os }}-${{ env.GODOT_VERSION }}-
+          key: stellardefense-gradle-${{ runner.os }}-${{ env.GODOT_VERSION }}-${{ hashFiles('addons/admob/android/bin/**', 'tools/ci/prepare.py') }}
+          restore-keys: stellardefense-gradle-${{ runner.os }}-${{ env.GODOT_VERSION }}-
       - name: 테스트 APK 서명 키 유지
         uses: actions/cache@v4
         with:
           path: ${{ env.GODOT_ANDROID_KEYSTORE_DEBUG_PATH }}
-          key: pokerdefense-android-debug-keystore-v1
+          key: stellardefense-android-debug-keystore-v1
       - name: 모바일 빌드 설정
         env:
-          IOS_TEAM_ID: ${{ secrets.POKERDEFENSE_IOS_TEAM_ID || secrets.IOS_TEAM_ID }}
-          POKERDEFENSE_ADMOB_ENV: ${{ secrets.POKERDEFENSE_ADMOB_ENV }}
+          IOS_TEAM_ID: ${{ secrets.STELLARDEFENSE_IOS_TEAM_ID || secrets.POKERDEFENSE_IOS_TEAM_ID || secrets.IOS_TEAM_ID }}
+          STELLARDEFENSE_ADMOB_ENV: ${{ secrets.STELLARDEFENSE_ADMOB_ENV || secrets.POKERDEFENSE_ADMOB_ENV }}
         run: python3 tools/ci/prepare.py
       - name: 게임 검사 및 APK / Xcode 프로젝트 빌드
         run: bash tools/ci/export.sh
       - uses: actions/upload-artifact@v4
         with:
-          name: pokerdefense-apk
-          path: build/apk/pokerdefense-test.apk
+          name: stellardefense-apk
+          path: build/apk/stellardefense-test.apk
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
       - uses: actions/upload-artifact@v4
         with:
-          name: pokerdefense-xcode-project
+          name: stellardefense-xcode-project
           path: build/ci/ios-project.tar.gz
           if-no-files-found: error
           compression-level: 0
@@ -114,7 +114,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: pokerdefense-export-logs
+          name: stellardefense-export-logs
           path: build/ci/*.log
           retention-days: 7
 
@@ -131,7 +131,7 @@ jobs:
           sparse-checkout: tools/ci
       - uses: actions/download-artifact@v4
         with:
-          name: pokerdefense-xcode-project
+          name: stellardefense-xcode-project
           path: ${{ runner.temp }}/ios-download
       - name: Xcode 프로젝트 풀기
         run: |
@@ -139,23 +139,23 @@ jobs:
           tar -xzf "$RUNNER_TEMP/ios-download/ios-project.tar.gz" -C build
       - name: IPA 빌드 및 패키지 검사
         env:
-          IOS_TEAM_ID: ${{ secrets.POKERDEFENSE_IOS_TEAM_ID || secrets.IOS_TEAM_ID }}
-          IOS_P12_BASE64: ${{ secrets.POKERDEFENSE_IOS_P12_BASE64 || secrets.IOS_P12_BASE64 }}
-          IOS_P12_PASSWORD: ${{ secrets.POKERDEFENSE_IOS_P12_PASSWORD || secrets.IOS_P12_PASSWORD }}
-          IOS_MOBILEPROVISION_BASE64: ${{ secrets.POKERDEFENSE_IOS_MOBILEPROVISION_BASE64 || secrets.IOS_MOBILEPROVISION_BASE64 }}
-          IOS_EXPORT_METHOD: ${{ vars.POKERDEFENSE_IOS_EXPORT_METHOD || 'debugging' }}
+          IOS_TEAM_ID: ${{ secrets.STELLARDEFENSE_IOS_TEAM_ID || secrets.POKERDEFENSE_IOS_TEAM_ID || secrets.IOS_TEAM_ID }}
+          IOS_P12_BASE64: ${{ secrets.STELLARDEFENSE_IOS_P12_BASE64 || secrets.POKERDEFENSE_IOS_P12_BASE64 || secrets.IOS_P12_BASE64 }}
+          IOS_P12_PASSWORD: ${{ secrets.STELLARDEFENSE_IOS_P12_PASSWORD || secrets.POKERDEFENSE_IOS_P12_PASSWORD || secrets.IOS_P12_PASSWORD }}
+          IOS_MOBILEPROVISION_BASE64: ${{ secrets.STELLARDEFENSE_IOS_MOBILEPROVISION_BASE64 || secrets.POKERDEFENSE_IOS_MOBILEPROVISION_BASE64 || secrets.IOS_MOBILEPROVISION_BASE64 }}
+          IOS_EXPORT_METHOD: ${{ vars.STELLARDEFENSE_IOS_EXPORT_METHOD || vars.POKERDEFENSE_IOS_EXPORT_METHOD || 'debugging' }}
         run: bash tools/ci/build_ipa.sh
       - uses: actions/upload-artifact@v4
         with:
-          name: pokerdefense-ipa
-          path: build/ipa/pokerdefense.ipa
+          name: stellardefense-ipa
+          path: build/ipa/stellardefense.ipa
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: pokerdefense-xcode-logs
+          name: stellardefense-xcode-logs
           path: build/ci/*.log
           retention-days: 7
 
@@ -169,31 +169,31 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: pokerdefense-apk
+          name: stellardefense-apk
           path: dist
       - uses: actions/download-artifact@v4
         with:
-          name: pokerdefense-ipa
+          name: stellardefense-ipa
           path: dist
       - name: 동일 커밋 산출물 확인
         env:
           REVISION: ${{ needs.export.outputs.revision }}
         run: |
-          test -s dist/pokerdefense-test.apk
-          test -s dist/pokerdefense.ipa
+          test -s dist/stellardefense-test.apk
+          test -s dist/stellardefense.ipa
           printf '%s\n' "$REVISION" > dist/commit.txt
-          (cd dist && sha256sum pokerdefense-test.apk pokerdefense.ipa > SHA256SUMS.txt)
+          (cd dist && sha256sum stellardefense-test.apk stellardefense.ipa > SHA256SUMS.txt)
           echo '### APK와 IPA 준비 완료' >> "$GITHUB_STEP_SUMMARY"
-          echo 'Artifacts의 **pokerdefense-apk-ipa**를 다운로드하면 두 파일이 함께 들어 있습니다.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Artifacts의 **stellardefense-apk-ipa**를 다운로드하면 두 파일이 함께 들어 있습니다.' >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
-          name: pokerdefense-apk-ipa
+          name: stellardefense-apk-ipa
           path: dist/*
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
       - name: 버전 태그는 GitHub Release에도 게시
-        if: startsWith(github.ref, 'refs/tags/pokerdefense-v')
+        if: startsWith(github.ref, 'refs/tags/stellardefense-v')
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}

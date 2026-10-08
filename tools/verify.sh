@@ -302,7 +302,7 @@ if [ $QUICK -eq 0 ]; then
 	#   내보내면 Gradle 이 「JVM 11 이상」이라며 거절한다. 여기서 export 를 또 적으면
 	#   그 어긋남이 언젠가 되살아나므로, 서명·플러그인 매니페스트 검사까지 하는 그 대본에
 	#   통째로 맡기고 성공한 새 파일로만 기존 APK 를 교체한다.
-	APK="$HOME/pokerdefense-test.apk"
+	APK="$HOME/stellardefense-test.apk"
 	if timeout --signal=TERM --kill-after=15 900 tools/build_apk.sh > "$TMP/apk.log" 2>&1 \
 			&& [ -s "$APK" ]; then
 		echo "   ok: APK $APK ($(du -h "$APK" | cut -f1))"

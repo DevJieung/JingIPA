@@ -57,10 +57,10 @@ stellardefense/
 | 파일 | 역할 |
 |---|---|
 | `project.godot` | Godot 설정. 앱 이름 「스텔라 디펜스」, 메인 씬 `game/boot.tscn`, 오토로드 **Save · I18n · Run · Sfx · Ads**, 뷰포트 1280x800 가로, GL Compatibility 렌더러, 기본 폰트 `core/fonts/RefugeSans-Bold.otf`, AdMob 플러그인 활성, 아이콘 `art/ui/crystal.png` |
-| `export_presets.cfg` | 프리셋 둘 — **Android Test APK** (`../../pokerdefense-test.apk` 로 굽는다, 패키지 `com.devjieung.stellardefense`) · **iOS**. `include_filter` 에 `art/anim/*/anim.json` 과 `core/locales/*.json` 을 넣고, `exclude_filter` 로 `tools/ build/ docs/ tests/ art/sprite/ art/concepts/ art/animation/ art/audio_sources/` 등을 뺀다. 머리말에 그 까닭이 적혀 있다 |
+| `export_presets.cfg` | 프리셋 둘 — **Android Test APK** (`../../stellardefense-test.apk` 로 굽는다, 패키지 `com.devjieung.stellardefense`) · **iOS**. `include_filter` 에 `art/anim/*/anim.json` 과 `core/locales/*.json` 을 넣고, `exclude_filter` 로 `tools/ build/ docs/ tests/ art/sprite/ art/concepts/ art/animation/ art/audio_sources/` 등을 뺀다. 머리말에 그 까닭이 적혀 있다 |
 | `README.md` | 게임이 무엇인지 전부 — 별맞춤 의식 → 영웅 → 전장 12자리 → 크리스탈 → 상점 → 100탄, 돌려 보는 법, 그림 만드는 법, 만듦새 |
 | `WRAPUP.md` | 작업을 마칠 때의 순서 — `tools/verify.sh` 검증, 스크린샷, 그림·스프라이트 다시 굽기, APK, 커밋. 끝에 「절대 잊으면 안 되는 것」 |
-| `AGENTS.md` | 에이전트 작업 규칙. APK 는 항상 `~/pokerdefense-test.apk` 에 덮어쓴다. 디자인 작업은 `graphic_design_manager` 서브에이전트에 위임한다 |
+| `AGENTS.md` | 에이전트 작업 규칙. APK 는 항상 `~/stellardefense-test.apk` 에 덮어쓴다. 디자인 작업은 `graphic_design_manager` 서브에이전트에 위임한다 |
 | `stellardefense_world_characters_v2.md` | 세계관 「마지막 불빛의 카지노」 와 50캐릭터(속성 5 x 등급 10) 설정서. 이름·외형·기믹·프롬프트의 근거 문서 |
 | `.gitignore` | `.godot/` · `build/*` · `__pycache__` · `.env` 제외. **`art/` 는 일부러 넣는다** (다시 만드는 데 GPU 로 한 시간) |
 | `.env` | `ELEVENLABS_API_KEY`. git 제외 |
@@ -78,7 +78,7 @@ stellardefense/
 | 파일 | 이름 | 역할 |
 |---|---|---|
 | `run.gd` | `Run` | **한 판(런)의 상태 전부** — 단계(phase), 탄, 크리스탈(목숨), 골드, 영웅 편성, 별맞춤 의식의 별 자리와 다시 돌린 횟수, 패시브. 되돌릴 수 없는 순간(다시 돌리기·확정·구매)의 자동 저장도 여기서 건다 |
-| `save.gd` | `Save` | 저장 파일 하나 `user://save.cfg`. `run`(평생 기록) · `cur`(하던 판 통째로 = 자동 저장) · `opt`(설정·언어). `POCKER_NO_SAVE=1` 이면 읽기만 한다 |
+| `save.gd` | `Save` | 저장 파일 하나 `user://save.cfg`. `run`(평생 기록) · `cur`(하던 판 통째로 = 자동 저장) · `opt`(설정·언어). `STELLARDEFENSE_NO_SAVE=1` 이면 읽기만 한다 |
 | `i18n.gd` | `I18n` | Kor / Eng 번역. `core/locales/*.json` 카탈로그를 읽고 `language_changed` 시그널을 낸다. 게임 ID·저장·전투 값은 언어와 무관하게 둔다 |
 | `sound.gd` | `Sfx` | 효과음·장면별 BGM 재생. 소리마다 최소 간격을 두어 겹침을 버린다. 파일이 없어도 조용히 넘어간다 |
 | `ads.gd` | `Ads` | 보상형 광고(AdMob) 래퍼. `completed(kind, rewarded)` 시그널. 테스트 유닛 ID 사용 |
@@ -229,7 +229,7 @@ stellardefense/
 |---|---|
 | `gamedb.py` | **게임 데이터 DB ↔ JSON · 게임 코드.** `status`(차이 보기) · `apply --approved`(승인된 값 내리기) · `pull`(파일을 직접 고친 값 들이기) · `check`(verify 용) · `log` · `init`. 코드 쪽은 리터럴을 읽어 바뀐 값의 글자만 갈아 끼운다 |
 | `verify.sh` | **검증 한 곳.** 0 커맨드라인 → 0-1 무늬 → 0-2 데이터 DB → 1 표 최신 → 1-1 음원 → 2 임포트 → 3 부팅 → 4 표 정합(4-1 시트 · 4-2 흐름 · 4-3 편성 · 4-4 피해 · 4-5 몬스터) → 5 별맞춤 의식 → 6 화면 한 바퀴 → 7 자동 플레이 → 8 폰트 → 8-1 한영 → 9 APK. `quick` · `--skip-sprites` |
-| `build_apk.sh` | JDK 17 로 APK 를 굽고 서명 · AdMob 플러그인을 확인한 뒤 `~/pokerdefense-test.apk` 를 교체 |
+| `build_apk.sh` | JDK 17 로 APK 를 굽고 서명 · AdMob 플러그인을 확인한 뒤 `~/stellardefense-test.apk` 를 교체 |
 | `roster.json` | **캐릭터 50 · 몬스터 25 · 테마 50 의 표.** id · 이름 · 역할 · 속성 · 무기 · 프롬프트 · 크기 보정(`sc`) · `holes` · `floor_prompt`. 원본은 `data/game.db` 이고 `gamedb.py` 가 여기로 내린다 — 캐릭터를 더하거나 고치려면 DB 에서. 그림 · 스프라이트 도구는 여전히 이 파일을 읽는다 |
 | `ci/check_no_db.py` | 구운 APK · IPA · PCK 에 게임 데이터 DB 가 실리지 않았는지 연다. `build_apk.sh` · `ci/export.sh` · `ci/build_ipa.sh` 가 부른다 |
 | `gen_roster.py` | `roster.json` → `core/roster.gd`. `art/anim/*/anim.json` 의 총구 · 시간도 함께 찍는다 |
@@ -394,7 +394,7 @@ Blender 로우폴리 → 리깅 → 직교 툰 렌더 → 팔레트 양자화 �
 | `world_v3_setting.md` | 세계관 · 50캐릭터 개정안 rev.3 |
 | `world_characters_v3.tsv` | 캐릭터 50명 표(외형 · 기믹 · 공격 · 이야기 · 영문 프롬프트). `build_world_design.py` 입력 |
 | `world_v3_art_refinements.json` | 캐릭터별 원화 프롬프트 보정 |
-| `archive/pokerdefense_world_characters_v2_before_20260909.md` | 개정 전 v2 설정서 |
+| `archive/stellardefense_world_characters_v2_before_20260909.md` | 개정 전 v2 설정서 |
 | `site/intro.src.html` · `design.src.html` · `making.src.html` | 제출용 웹 페이지 소스 — 소개 · 기획서 · 제작기. `embed_shots.py` 가 `build/site/` 로 굽는다 |
 | `site/_base.css` | 세 페이지 공통 뼈대(색은 `core/look.gd` 팔레트 그대로) |
 | `site/_data.html` · `_elem.html` · `_matrix.html` | `gen_docparts.py` 가 게임 상수에서 찍어 내는 데이터 · 상성표 · 배치 행렬 |

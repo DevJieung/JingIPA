@@ -36,8 +36,8 @@ checked_godot build/ci/stellar-pack.log --main-pack "$PWD/build/ios/StellarDefen
 checked_godot build/ci/stellar-packed-boot.log --main-pack "$PWD/build/ios/StellarDefense.pck" --quit-after 90
 tar -czf build/ci/ios-project.tar.gz -C build ios
 
-checked_godot build/ci/android-export.log --export-debug "Android Test APK" "$PWD/build/apk/pokerdefense-test.apk"
-apk="$PWD/build/apk/pokerdefense-test.apk"
+checked_godot build/ci/android-export.log --export-debug "Android Test APK" "$PWD/build/apk/stellardefense-test.apk"
+apk="$PWD/build/apk/stellardefense-test.apk"
 test -s "$apk"
 "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify "$apk"
 "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump xmltree --file AndroidManifest.xml "$apk" > build/ci/manifest.txt

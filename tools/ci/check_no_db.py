@@ -10,7 +10,7 @@
   첫 16바이트를 찾는다. 꾸러미 안의 .pck 는 통째로 훑는다 — PCK 는 파일을 그대로 이어
   붙인 것이라 DB 가 들었으면 그 머리글자가 그대로 보인다.
 ★ `tools/ci/` 에 두는 까닭: IPA 를 굽는 macOS 작업은 이 폴더만 내려받는다
-  (.github/workflows/pokerdefense.yml 의 sparse-checkout).
+  (.github/workflows/stellardefense.yml 의 sparse-checkout).
 """
 from __future__ import annotations
 

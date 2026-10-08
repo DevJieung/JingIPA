@@ -1,6 +1,6 @@
 # 스텔라 디펜스 (Stellar Defense)
 
-GitHub: [DevJieung/JingIPA · pokerdefense](https://github.com/DevJieung/JingIPA/tree/pokerdefense).
+GitHub: [DevJieung/JingIPA · stellardefense](https://github.com/DevJieung/JingIPA/tree/stellardefense).
 푸시할 때마다 Actions에서 **APK + IPA를 함께 빌드**한다.
 [자동 빌드·다운로드·서명 안내](docs/MOBILE_BUILDS.md).
 
@@ -504,12 +504,12 @@ python3 tools/screenshot.py           # 화면을 PNG 로 찍기 (build/shots/)
 
 안드로이드 APK:
 
-APK 는 **홈 디렉터리의 `pokerdefense-test.apk`에 항상 덮어쓴다**.
+APK 는 **홈 디렉터리의 `stellardefense-test.apk`에 항상 덮어쓴다**.
 기능명·날짜·번호를 붙여 파일명을 바꾸지 않는다. 새 빌드가 성공한 뒤 기존 파일을 교체한다.
 
 ```bash
 tools/build_apk.sh                  # JDK 17 설정으로 굽고 서명·플러그인까지 확인한 뒤 교체
-adb install -r ~/pokerdefense-test.apk
+adb install -r ~/stellardefense-test.apk
 ```
 
 ---

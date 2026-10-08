@@ -43,9 +43,9 @@ def main():
     # Inject Android ads only in this disposable checkout.
     project = ROOT / "project.godot"
     content = project.read_text()
-    ad_config = os.environ.get("POKERDEFENSE_ADMOB_ENV", "")
+    ad_config = os.environ.get("STELLARDEFENSE_ADMOB_ENV", "")
     if ad_config:
-        env_file = Path(os.environ["RUNNER_TEMP"]) / "pokerdefense-admob.env"
+        env_file = Path(os.environ["RUNNER_TEMP"]) / "stellardefense-admob.env"
         env_file.write_text(ad_config)
         env_file.chmod(0o600)
         try:
