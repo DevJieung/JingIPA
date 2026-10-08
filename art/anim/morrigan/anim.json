@@ -2,7 +2,7 @@
   "name": "morrigan_roster_v1",
   "ko": "모리안",
   "elem": "elec",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
     "w": 256,
     "h": 256
@@ -17,8 +17,8 @@
   },
   "scale": 0.7159090909090909,
   "muzzle_at": {
-    "x": 98,
-    "y": -116
+    "x": 89,
+    "y": -104
   },
   "hit_ms": 500.0,
   "face": 1,
@@ -43,7 +43,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "eac76dbadd6eb98627c60386897c4e5d31d2cac5764d4315970bc7e08ef9d9ac"
+      "sha256": "e2e17d912e61a8426b307c2bcfc572d47aca47f7fc6b02b9ca713a79dbae4f20"
     },
     "attack": {
       "frames": 12,
@@ -67,7 +67,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "5fbacf1b80349cc89cd5d3d06a2aec5c4488223503a44b94be016ad7ff6c2813",
+      "sha256": "a4930cdd3c215d4647da9c44bbd5e836e4275fb16291d90c09cb275f9c0da125",
       "hit_frame": 6
     },
     "effect": {
@@ -114,140 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/morrigan.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/morrigan.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        65,
         0,
-        0,
-        362,
-        373
+        314,
+        488
       ],
       [
-        362,
+        418,
         0,
-        724,
-        373
+        668,
+        488
       ],
       [
-        724,
+        767,
         0,
+        1018,
+        488
+      ],
+      [
+        1129,
+        0,
+        1374,
+        488
+      ],
+      [
+        26,
+        488,
+        358,
+        925
+      ],
+      [
+        376,
+        488,
+        692,
+        925
+      ],
+      [
+        734,
+        488,
+        1127,
+        925
+      ],
+      [
         1086,
-        373
+        488,
+        1392,
+        925
       ],
       [
-        1086,
-        0,
-        1448,
-        373
-      ],
-      [
-        0,
-        373,
-        362,
-        758
-      ],
-      [
-        362,
-        373,
-        724,
-        758
-      ],
-      [
-        724,
-        373,
-        1086,
-        758
-      ],
-      [
-        1086,
-        373,
-        1448,
-        758
-      ],
-      [
-        0,
-        758,
-        362,
+        59,
+        925,
+        352,
         1086
       ],
       [
-        362,
-        758,
-        724,
+        401,
+        925,
+        710,
         1086
       ],
       [
-        724,
-        758,
-        1086,
+        744,
+        925,
+        1055,
         1086
       ],
       [
-        1086,
-        758,
-        1448,
+        1084,
+        925,
+        1406,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.4985835694050991,
+        "factor": 0.4512820512820513,
         "offset": [
-          40,
+          66,
+          12
+        ]
+      },
+      {
+        "factor": 0.4512820512820513,
+        "offset": [
+          66,
+          12
+        ]
+      },
+      {
+        "factor": 0.4512820512820513,
+        "offset": [
+          65,
+          12
+        ]
+      },
+      {
+        "factor": 0.4512820512820513,
+        "offset": [
+          66,
+          12
+        ]
+      },
+      {
+        "factor": 0.4512820512820513,
+        "offset": [
+          42,
           38
         ]
       },
       {
-        "factor": 0.4985835694050991,
+        "factor": 0.4512820512820513,
         "offset": [
-          40,
+          45,
           38
         ]
       },
       {
-        "factor": 0.4985835694050991,
+        "factor": 0.4512820512820513,
         "offset": [
-          40,
+          66,
           38
         ]
       },
       {
-        "factor": 0.4985835694050991,
-        "offset": [
-          41,
-          38
-        ]
-      },
-      {
-        "factor": 0.4985835694050991,
-        "offset": [
-          34,
-          32
-        ]
-      },
-      {
-        "factor": 0.4985835694050991,
+        "factor": 0.4512820512820513,
         "offset": [
           40,
-          32
-        ]
-      },
-      {
-        "factor": 0.4985835694050991,
-        "offset": [
-          71,
-          32
-        ]
-      },
-      {
-        "factor": 0.4985835694050991,
-        "offset": [
-          41,
-          34
+          36
         ]
       }
+    ],
+    "source_muzzle": [
+      1068,
+      669
     ]
   },
   "portrait_id": "morrigan"

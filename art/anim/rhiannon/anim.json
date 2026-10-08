@@ -2,7 +2,7 @@
   "name": "rhiannon_roster_v1",
   "ko": "리아넌",
   "elem": "elec",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
     "w": 256,
     "h": 256
@@ -17,8 +17,8 @@
   },
   "scale": 0.5804597701149425,
   "muzzle_at": {
-    "x": 63,
-    "y": -137
+    "x": 74,
+    "y": -103
   },
   "hit_ms": 500.0,
   "face": 1,
@@ -43,7 +43,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "5eb916de44496bb7dca93136b7cefe4a75b64f53acad1fd8ecab533a52c441f9"
+      "sha256": "0653b04e8ffc7567fb547c94bf242207e3634afd820b0e6b71a95b23c11339b7"
     },
     "attack": {
       "frames": 12,
@@ -67,7 +67,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "063bbe33288ab11bec742178cce619fd2888e2f6905dfc9b8c5e168bb803f838",
+      "sha256": "3411da5f238c7640d7accda37b45b3e767a3c71d3343e6f84df862371d8b2e16",
       "hit_frame": 6
     },
     "effect": {
@@ -114,140 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/rhiannon.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/rhiannon.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        55,
         0,
+        321,
+        421
+      ],
+      [
+        418,
         0,
-        362,
-        382
+        684,
+        421
       ],
       [
-        362,
+        791,
         0,
-        724,
-        382
+        1053,
+        421
       ],
       [
-        724,
+        1155,
         0,
-        1086,
-        382
+        1421,
+        421
       ],
       [
-        1086,
-        0,
-        1448,
-        382
+        65,
+        421,
+        320,
+        816
       ],
       [
-        0,
-        382,
-        362,
-        771
+        422,
+        421,
+        681,
+        816
       ],
       [
-        362,
-        382,
-        724,
-        771
+        748,
+        421,
+        1116,
+        816
       ],
       [
-        724,
-        382,
-        1119,
-        771
+        1155,
+        421,
+        1419,
+        816
       ],
       [
-        1119,
-        382,
-        1448,
-        771
-      ],
-      [
-        0,
-        771,
-        362,
+        32,
+        816,
+        334,
         1086
       ],
       [
-        362,
-        771,
-        724,
+        388,
+        816,
+        706,
         1086
       ],
       [
-        724,
-        771,
-        1086,
+        753,
+        816,
+        1057,
         1086
       ],
       [
-        1086,
-        771,
-        1448,
+        1113,
+        816,
+        1419,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.48333333333333334,
+        "factor": 0.5209580838323353,
         "offset": [
-          38,
-          39
+          62,
+          5
         ]
       },
       {
-        "factor": 0.48333333333333334,
+        "factor": 0.5209580838323353,
         "offset": [
-          38,
-          39
+          63,
+          5
         ]
       },
       {
-        "factor": 0.48333333333333334,
+        "factor": 0.5209580838323353,
         "offset": [
-          39,
-          39
+          64,
+          5
         ]
       },
       {
-        "factor": 0.48333333333333334,
+        "factor": 0.5209580838323353,
         "offset": [
-          38,
-          39
+          63,
+          5
         ]
       },
       {
-        "factor": 0.48333333333333334,
+        "factor": 0.5209580838323353,
         "offset": [
-          41,
-          36
+          68,
+          19
         ]
       },
       {
-        "factor": 0.48333333333333334,
+        "factor": 0.5209580838323353,
         "offset": [
-          41,
-          36
+          53,
+          19
         ]
       },
       {
-        "factor": 0.48333333333333334,
+        "factor": 0.5209580838323353,
         "offset": [
-          41,
-          36
+          58,
+          19
         ]
       },
       {
-        "factor": 0.48333333333333334,
+        "factor": 0.5209580838323353,
         "offset": [
-          54,
-          36
+          62,
+          18
         ]
       }
+    ],
+    "source_muzzle": [
+      1024,
+      616
     ]
   },
   "portrait_id": "rhiannon"

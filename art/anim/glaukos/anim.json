@@ -2,7 +2,7 @@
   "name": "glaukos_roster_v1",
   "ko": "글라우코스",
   "elem": "water",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
     "w": 320,
     "h": 320
@@ -17,8 +17,8 @@
   },
   "scale": 0.7682119205298014,
   "muzzle_at": {
-    "x": 99,
-    "y": -102
+    "x": 101,
+    "y": -78
   },
   "hit_ms": 833.3333333333333,
   "face": 1,
@@ -43,7 +43,7 @@
         "w": 320,
         "h": 320
       },
-      "sha256": "a8435b30a1156264c6837ca9ba5041212df2650aed8f699689cb48a2f5a8790d"
+      "sha256": "73274e9ccf826e7b8e318b33dc359881f88ccd59b789885adf971bf5e0bd5879"
     },
     "attack": {
       "frames": 12,
@@ -67,7 +67,7 @@
         "w": 320,
         "h": 320
       },
-      "sha256": "4e8547ed70e918fa3a5c085a144532b88a85b364afcab8de42246256be96888a",
+      "sha256": "3a7d1096e29f0992a15b6686957262c4bbb7f599c607be90e5736328f580cc39",
       "hit_frame": 10
     },
     "effect": {
@@ -114,140 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/glaukos.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/glaukos.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        55,
         0,
-        0,
-        362,
-        390
+        369,
+        405
       ],
       [
-        362,
+        414,
         0,
-        724,
-        390
+        726,
+        405
       ],
       [
-        724,
+        773,
         0,
         1086,
-        390
+        405
       ],
       [
-        1086,
+        1136,
         0,
-        1448,
-        390
+        1444,
+        405
       ],
       [
-        0,
-        390,
-        362,
-        782
+        47,
+        405,
+        297,
+        788
       ],
       [
-        362,
-        390,
-        706,
-        782
+        437,
+        405,
+        671,
+        788
       ],
       [
-        706,
-        390,
-        1124,
-        782
+        750,
+        405,
+        1128,
+        788
       ],
       [
-        1124,
-        390,
-        1448,
-        782
+        1143,
+        405,
+        1442,
+        788
       ],
       [
-        0,
-        782,
-        362,
+        38,
+        788,
+        347,
         1086
       ],
       [
-        362,
-        782,
-        724,
+        398,
+        788,
+        711,
         1086
       ],
       [
-        724,
-        782,
-        1086,
+        761,
+        788,
+        1068,
         1086
       ],
       [
-        1086,
-        782,
-        1448,
+        1116,
+        788,
+        1421,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.4136986301369863,
+        "factor": 0.47634069400630913,
         "offset": [
-          42,
-          64
+          48,
+          31
         ]
       },
       {
-        "factor": 0.4136986301369863,
+        "factor": 0.47634069400630913,
         "offset": [
-          44,
-          63
+          49,
+          31
         ]
       },
       {
-        "factor": 0.4136986301369863,
+        "factor": 0.47634069400630913,
         "offset": [
-          45,
-          63
+          48,
+          31
         ]
       },
       {
-        "factor": 0.4136986301369863,
+        "factor": 0.47634069400630913,
         "offset": [
-          45,
-          63
+          50,
+          31
         ]
       },
       {
-        "factor": 0.4136986301369863,
+        "factor": 0.47634069400630913,
         "offset": [
           63,
-          62
+          43
         ]
       },
       {
-        "factor": 0.4136986301369863,
+        "factor": 0.47634069400630913,
         "offset": [
-          66,
-          62
+          68,
+          43
         ]
       },
       {
-        "factor": 0.4136986301369863,
+        "factor": 0.47634069400630913,
         "offset": [
-          84,
-          62
+          76,
+          44
         ]
       },
       {
-        "factor": 0.4136986301369863,
+        "factor": 0.47634069400630913,
         "offset": [
-          60,
-          62
+          53,
+          42
         ]
       }
+    ],
+    "source_muzzle": [
+      1072,
+      619
     ]
   },
   "portrait_id": "glaukos"

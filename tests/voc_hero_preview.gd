@@ -99,15 +99,15 @@ func _ready() -> void:
 		draw.set_process(false)
 		draw.state = DrawScreen.REVEAL
 		draw.rt = 3.0
-		draw.result = {"unit": Roster.unit_by_id("sigrid"), "hand": 9, "where": "bench"}
+		draw.result = {"unit": Roster.unit_by_id("sigrid"), "tier": Balance.TIER_MAX, "stars": Rite.MAX_STARS, "where": "bench"}
 		await capture(language + "_summon")
-		for unit in Roster.units_of_tier(Poker.Hand.ROYAL):
+		for unit in Roster.units_of_tier(Balance.TIER_MAX):
 			Run.phase = Run.Phase.SWAP
 			Run.running = true
 			Run.continue_used = true
 			var slot := Run.bench.size()
-			Run.bench.append({"unit": unit, "tier": Poker.Hand.ROYAL, "wave": Run.wave, "n": 1})
-			Run.last_result = {"unit": unit, "hand": Poker.Hand.ROYAL, "where": "bench", "slot": slot, "revived": true, "reward_pending": true}
+			Run.bench.append({"unit": unit, "tier": Balance.TIER_MAX, "wave": Run.wave, "n": 1})
+			Run.last_result = {"unit": unit, "tier": Balance.TIER_MAX, "orbit": [], "where": "bench", "slot": slot, "revived": true, "reward_pending": true}
 			draw = DrawScreen.new()
 			main._swap(draw)
 			draw.set_process(false)

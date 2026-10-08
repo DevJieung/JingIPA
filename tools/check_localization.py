@@ -17,7 +17,7 @@ def main():
     # The roster's old lore is no longer rendered; hero concepts are the display copy.
     ignored = {'roster.gd', 'i18n.gd', 'dbg.gd', 'debug_view.gd', 'dbg_sim.gd'}
     for folder in ['core', 'game']:
-        for path in (ROOT / folder).glob('*.gd'):
+        for path in (ROOT / folder).rglob('*.gd'):
             if path.name in ignored:
                 continue
             for match in LITERALS.finditer(path.read_text()):

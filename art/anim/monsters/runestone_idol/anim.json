@@ -6,11 +6,11 @@
   },
   "anchor": {
     "x": 96,
-    "y": 182
+    "y": 183
   },
   "scale": 0.3372093023255814,
   "movement": "float",
-  "source": "Krea 2 Turbo + MiniMax H3",
+  "source": "imagegen_chibi_v1",
   "clips": {
     "move": {
       "frames": 19,
@@ -35,19 +35,97 @@
         83.33333333333333,
         83.33333333333333
       ],
-      "loop": true
+      "loop": true,
+      "cell": {
+        "w": 192,
+        "h": 192
+      },
+      "sha256": "7a0bfb560eb36987fc545397107a9a1a09a4e5911416734a472e2549c5e4c3a3"
     }
   },
   "qc": {
     "canvas_clipping": false,
     "source_clipping": false,
-    "unique_poses": 19,
+    "unique_poses": 8,
     "forward_only": true,
     "fixed_scale": true,
-    "foot_patches": false,
-    "translation_range": [
+    "foot_patches": false
+  },
+  "palette_colors": 96,
+  "readability": {
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/runestone_idol.png",
+    "source_cells": [
+      [
+        81,
+        0,
+        300,
+        512
+      ],
+      [
+        467,
+        0,
+        686,
+        512
+      ],
+      [
+        848,
+        0,
+        1074,
+        512
+      ],
+      [
+        1236,
+        0,
+        1455,
+        512
+      ],
+      [
+        79,
+        512,
+        301,
+        1024
+      ],
+      [
+        464,
+        512,
+        686,
+        1024
+      ],
+      [
+        849,
+        512,
+        1070,
+        1024
+      ],
+      [
+        1233,
+        512,
+        1454,
+        1024
+      ]
+    ],
+    "phase_map": [
       0,
-      6
-    ]
+      0,
+      0,
+      1,
+      1,
+      2,
+      2,
+      2,
+      3,
+      3,
+      4,
+      4,
+      5,
+      5,
+      5,
+      6,
+      6,
+      7,
+      7
+    ],
+    "method": "imagegen chibi movement repaint; alpha threshold, extraction, nearest sampling and shared palette only"
   }
 }

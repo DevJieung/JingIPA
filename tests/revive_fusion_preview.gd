@@ -118,10 +118,10 @@ func review_revive(language: String, all_owned: bool) -> void:
 	Run.gold = 2000
 	Run.levels["atk"] = 6
 	Run.levels["rate"] = 3
-	Run.confirm_hand()
+	Run.confirm_summon()
 	if all_owned:
-		for unit in Roster.units_of_tier(Poker.Hand.ROYAL):
-			Run.bench.append({"unit": unit, "tier": Poker.Hand.ROYAL, "wave": 1, "n": 1})
+		for unit in Roster.units_of_tier(Balance.TIER_MAX):
+			Run.bench.append({"unit": unit, "tier": Balance.TIER_MAX, "wave": 1, "n": 1})
 	Run.phase = Run.Phase.BATTLE
 	Run.prepare_battle()
 	check(RunValidation.valid(Run.battle_checkpoint, Run.SAVE_VERSION), "revival preview begins from a valid checkpoint")

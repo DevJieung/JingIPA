@@ -2,7 +2,7 @@
   "name": "phantom_roster_v1",
   "ko": "팬텀",
   "elem": "none",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
     "w": 256,
     "h": 256
@@ -17,8 +17,8 @@
   },
   "scale": 0.852112676056338,
   "muzzle_at": {
-    "x": 81,
-    "y": -90
+    "x": 86,
+    "y": -77
   },
   "hit_ms": 666.6666666666666,
   "face": 1,
@@ -43,7 +43,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "7f8354d445626d1db025e8ca7fcfe12e9bf75792c4313570d9c16f975cbd6bcb"
+      "sha256": "95e624bcb62d3613af6e1bc006341d77b94e93e6e8532ea64ad0a5c4a1e9ef21"
     },
     "attack": {
       "frames": 12,
@@ -67,7 +67,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "e280641388bb87f257cbf712fe218e500993ac85cfa499a9f9b61913f0fa5a89",
+      "sha256": "0246e1f69d4ac49146b36c024a06470e31a1d5e65a698b6a3dcacb64435682d9",
       "hit_frame": 8
     },
     "effect": {
@@ -114,140 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/phantom.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/phantom.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        48,
         0,
+        331,
+        414
+      ],
+      [
+        395,
         0,
-        362,
-        363
+        679,
+        414
       ],
       [
-        362,
+        757,
         0,
-        724,
-        363
+        1043,
+        414
       ],
       [
-        724,
+        1126,
         0,
-        1086,
-        363
+        1406,
+        414
       ],
       [
-        1086,
-        0,
-        1448,
-        363
+        42,
+        414,
+        301,
+        813
       ],
       [
-        0,
-        363,
-        362,
-        736
+        402,
+        414,
+        694,
+        813
       ],
       [
-        362,
-        363,
-        724,
-        736
+        719,
+        414,
+        1127,
+        813
       ],
       [
-        724,
-        363,
-        1115,
-        736
+        1136,
+        414,
+        1423,
+        813
       ],
       [
-        1115,
-        363,
-        1448,
-        736
-      ],
-      [
-        0,
-        736,
-        362,
+        49,
+        813,
+        333,
         1086
       ],
       [
-        362,
-        736,
-        724,
+        400,
+        813,
+        690,
         1086
       ],
       [
-        724,
         736,
-        1086,
+        813,
+        1041,
         1086
       ],
       [
-        1086,
-        736,
-        1448,
+        1125,
+        813,
+        1407,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.4092219020172911,
+        "factor": 0.3955431754874652,
         "offset": [
-          53,
-          75
+          65,
+          60
         ]
       },
       {
-        "factor": 0.4092219020172911,
+        "factor": 0.3955431754874652,
         "offset": [
-          57,
-          75
+          66,
+          61
         ]
       },
       {
-        "factor": 0.4092219020172911,
+        "factor": 0.3955431754874652,
         "offset": [
-          57,
-          75
+          66,
+          60
         ]
       },
       {
-        "factor": 0.4092219020172911,
-        "offset": [
-          55,
-          75
-        ]
-      },
-      {
-        "factor": 0.4092219020172911,
-        "offset": [
-          55,
-          71
-        ]
-      },
-      {
-        "factor": 0.4092219020172911,
-        "offset": [
-          51,
-          71
-        ]
-      },
-      {
-        "factor": 0.4092219020172911,
-        "offset": [
-          62,
-          71
-        ]
-      },
-      {
-        "factor": 0.4092219020172911,
+        "factor": 0.3955431754874652,
         "offset": [
           67,
-          71
+          60
+        ]
+      },
+      {
+        "factor": 0.3955431754874652,
+        "offset": [
+          67,
+          67
+        ]
+      },
+      {
+        "factor": 0.3955431754874652,
+        "offset": [
+          54,
+          66
+        ]
+      },
+      {
+        "factor": 0.3955431754874652,
+        "offset": [
+          66,
+          66
+        ]
+      },
+      {
+        "factor": 0.3955431754874652,
+        "offset": [
+          68,
+          66
         ]
       }
+    ],
+    "source_muzzle": [
+      1092,
+      620
     ]
   },
   "portrait_id": "phantom"

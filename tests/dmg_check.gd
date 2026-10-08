@@ -6,13 +6,18 @@ extends Node
 ## 알고 싶은 것은 그게 아니라 **"이 한 대가 왜 이 숫자인가"** 다. 그걸 볼 데가 없어서
 ## 여태 print 를 박았다 지웠다 했다 — 이 파일이 그 자리를 대신한다.
 ##
-##   POCKER_NO_SAVE=1 godot --headless --path . res://tests/dmg_check.tscn -- <모드> <옵션>
+##   STELLARDEFENSE_NO_SAVE=1 godot --headless --path . res://tests/dmg_check.tscn -- <모드> <옵션>
+##
+## ★ **등급은 캐릭터가 아니라 영웅 한 장의 것이다**(Balance.TIER_ATK 의 ★). 그래서 「이 캐릭터를
+##   몇 성으로 세울 것인가」를 따로 준다: `--tier <0~9>`(반 별 칸) 또는 `--stars <1~5>`, 여럿을
+##   세울 때는 `--team id:겹:등급`. 안 주면 표의 원화 격을 그대로 등급으로 쓴다(Fixture.fresh 와
+##   같은 약속이다 — 0.5성부터 5성까지 고루 섞인 판이 되게 하려는 것이지, 캐릭터의 등급이 아니다).
 ##
 ## 모드 넷:
 ##   --calc      한 대의 곱셈 사슬을 줄줄이 편다 (기본)
 ##   --trace     실제 전투 한 탄을 돌려 **hp 가 깎이는 것을 전부** 찍는다
 ##   --selftest  --calc 의 산수와 실제 전투의 차감이 같은가 (판정: 정상)
-##   --table     표만 — 상성 5x5 · 탄 방식 · 체력 곡선 · 등급별 화력
+##   --table     표만 — 상성 5x5 · 탄 방식 · 체력 곡선 · 등급별 화력과 별 분포
 ##
 ## ★ 왜 계산을 여기에 **다시 적지 않는가**: 이 검사기는 Run.hero_stats() 와
 ##   BattleSim._hurt() 를 **그대로 부른다.** 여기에 공식을 베껴 적으면 게임을 고칠 때마다
@@ -175,8 +180,8 @@ class Tracer extends BattleSim:
 
 # =========================================================================== #
 func _ready() -> void:
-	if OS.get_environment("POCKER_NO_SAVE") != "1":
-		print("!! POCKER_NO_SAVE=1 없이 돌리고 있습니다 — 이 검사가 만든 판이")
+	if OS.get_environment("STELLARDEFENSE_NO_SAVE") != "1":
+		print("!! STELLARDEFENSE_NO_SAVE=1 없이 돌리고 있습니다 — 이 검사가 만든 판이")
 		print("   「하다 만 판」으로 남아서 다음에 앱을 켠 사람이 그 판을 잇게 됩니다.")
 	if _has("--help") or _has("-h"):
 		_usage()
@@ -223,13 +228,29 @@ func _parse_lv(s: String) -> Dictionary:
 	return out
 
 
-func _parse_team(s: String) -> Array:
+## `id:겹:등급` 을 읽는다. 겹과 등급은 생략할 수 있다(`id` · `id:2` · `id:1:7`).
+## `tier` 가 0 이상이면 등급을 못 박고, 아니면(-1) _setup 이 표의 원화 격을 쓴다.
+func _parse_team(s: String, tier: int = -1) -> Array:
 	var out := []
 	for part in s.split(",", false):
 		var kv: PackedStringArray = String(part).split(":")
-		out.append({"id": String(kv[0]).strip_edges(),
-				"n": int(String(kv[1])) if kv.size() > 1 else 1})
+		var entry := {"id": String(kv[0]).strip_edges(),
+				"n": int(String(kv[1])) if kv.size() > 1 and String(kv[1]) != "" else 1}
+		if kv.size() > 2:
+			entry["tier"] = clampi(int(String(kv[2])), 0, Balance.TIER_MAX)
+		elif tier >= 0:
+			entry["tier"] = tier
+		out.append(entry)
 	return out
+
+
+## `--tier <0~9>` 또는 `--stars <1~5>` 로 준 등급. 안 줬으면 -1.
+func _opt_tier() -> int:
+	if _has("--tier"):
+		return clampi(_opti("--tier", 0), 0, Balance.TIER_MAX)
+	if _has("--stars"):
+		return Rite.tier_of(_opti("--stars", 1))
+	return -1
 
 
 func _parse_pas(s: String) -> Array:
@@ -253,7 +274,8 @@ func _setup(team: Array, lvs: Dictionary, pas: Array, w: int, seed_value: int) -
 		if u.is_empty():
 			printerr("그런 캐릭터가 없습니다: ", t["id"], "   (--list 로 목록)")
 			return false
-		Run.heroes.append({"unit": u, "tier": int(u.get("tier", 0)),
+		# ★ 등급은 **영웅 한 장**의 것이다. 시킨 등급이 있으면 그것을, 없으면 표의 원화 격을 쓴다.
+		Run.heroes.append({"unit": u, "tier": clampi(int(t.get("tier", u.get("tier", 0))), 0, Balance.TIER_MAX),
 				"wave": Run.wave, "n": maxi(1, int(t["n"]))})
 	Run.levels.clear()
 	for k in lvs:
@@ -300,7 +322,7 @@ func _calc() -> void:
 	var lvs := _parse_lv(_opt("--lv", ""))
 	var pas := _parse_pas(_opt("--pas", ""))
 	var crit := _has("--crit")
-	if not _setup([{"id": uid, "n": n}], lvs, pas, w, 20260829):
+	if not _setup(_parse_team("%s:%d" % [uid, n], _opt_tier()), lvs, pas, w, 20260829):
 		_fail += 1
 		return
 
@@ -315,7 +337,8 @@ func _calc() -> void:
 	var st: Dictionary = Run.hero_stats(h)
 
 	print("\n========== 한 대의 계산 ==========")
-	print("캐릭터   %s  ·  등급 %d %s" % [_uname(u), t, Roster.TIER_KO[t]])
+	print("캐릭터   %s  ·  등급 %d칸 = %s%s" % [_uname(u), t, Roster.TIER_KO[t],
+			"" if _opt_tier() >= 0 else "  (등급을 안 줘서 표의 원화 격을 썼다 — --tier / --stars)"])
 	print("         속성 %s(%s)  ·  탄 방식 %s(%s)  ·  성향 %s(%s)  ·  겹침 x%d"
 			% [Balance.elem_ko(el), el, String(bul["ko"]), bk, String(prof["ko"]), pk, n])
 	var rk := String(u.get("role", "single"))
@@ -477,7 +500,7 @@ func _calc() -> void:
 # --------------------------------------------------------------------------- #
 func _trace() -> void:
 	var w := _opti("--wave", 12)
-	var team := _parse_team(_opt("--team", _opt("--unit", "chispa") + ":" + str(_opti("--n", 1))))
+	var team := _parse_team(_opt("--team", _opt("--unit", "chispa") + ":" + str(_opti("--n", 1))), _opt_tier())
 	var lvs := _parse_lv(_opt("--lv", ""))
 	var pas := _parse_pas(_opt("--pas", ""))
 	var seed_value := _opti("--seed", 20260829)
@@ -496,8 +519,9 @@ func _trace() -> void:
 	for i in range(sim.heroes.size()):
 		var he: Dictionary = sim.heroes[i]
 		var u: Dictionary = he["h"]["unit"]
-		print("   [%d] %-24s x%-2d  %s %s  한 발 %.2f · 초당 %.2f발 · %d발씩"
-				% [i, _uname(u), int(he["h"].get("n", 1)),
+		print("   [%d] %-24s %-5s x%-2d  %s %s  한 발 %.2f · 초당 %.2f발 · %d발씩"
+				% [i, _uname(u), Roster.TIER_KO[clampi(int(he["h"].get("tier", 0)), 0, Balance.TIER_MAX)],
+				   int(he["h"].get("n", 1)),
 				   Balance.elem_ko(String(he["elem"])), String(Balance.BULLET[String(he["kind"])]["ko"]),
 				   float(he["atk"]), float(he["rate"]), int(he["shots"])])
 	var bodies := {}
@@ -628,22 +652,34 @@ func _one_per_bullet(kinds: Array) -> Array:
 func _selftest() -> void:
 	print("\n========== 데미지 계산 자체 검사 ==========")
 
-	# (1) 곱셈 사슬 = hero_stats  — 캐릭터 서른 명 x 겹침 여섯 가지 x 상점/패시브 두 가지
-	print("\n1. 곱셈 사슬의 곱이 Run.hero_stats() 와 같은가")
+	# (1) 곱셈 사슬 = hero_stats  — 캐릭터 쉰 명 x (겹침 · 등급) 여섯 가지 x 상점/패시브 두 가지
+	#
+	# ★ **등급은 영웅 한 장의 것이다.** 그래서 캐릭터마다 표의 원화 격과 **다른** 등급 여섯으로
+	#   세워 본다(쉰 명을 돌면 열 칸이 다 걸린다). 격과 같은 등급으로만 세우면, hero_stats 가
+	#   영웅의 등급 대신 캐릭터 표의 tier 를 읽게 돼도 이 검사가 그대로 통과해 버린다.
+	print("\n1. 곱셈 사슬의 곱이 Run.hero_stats() 와 같은가 (등급은 영웅 한 장의 것)")
 	var cases := [
 		{"lv": {}, "pas": []},
 		{"lv": {"atk": 7, "rate": 5, "crit": 4, "critx": 3}, "pas": ["heavytip", "repeater", "keenedge"]},
 	]
 	var n_checked := 0
+	var tiers_seen := {}
+	var stacks := [1, 2, 3, 5, 8, 16]
 	for c in cases:
 		for u in Roster.UNITS:
-			for n in [1, 2, 3, 5, 8, 16]:
-				if not _setup([{"id": String(u["id"]), "n": n}], c["lv"], c["pas"], 1, 7):
+			for si in range(stacks.size()):
+				var n: int = stacks[si]
+				# 원화 격에서 1 · 4 · 7 · 0 · 3 · 6 칸 밀린 등급 — 여섯 중 격과 같은 것은 하나뿐이다.
+				var hero_tier: int = (int(u["tier"]) + 1 + si * 3) % (Balance.TIER_MAX + 1)
+				if not _setup([{"id": String(u["id"]), "n": n, "tier": hero_tier}], c["lv"], c["pas"], 1, 7):
 					_bad("판을 못 세웠다: %s" % u["id"])
 					continue
 				var h: Dictionary = Run.heroes[0]
 				var st: Dictionary = Run.hero_stats(h)
 				var t: int = int(h["tier"])
+				tiers_seen[t] = true
+				if t != hero_tier:
+					_bad("%s 를 등급 %d 로 세웠는데 %d 로 섰다" % [u["id"], hero_tier, t])
 				var pk := String(u.get("profile", "balance"))
 				var bk := String(u.get("bullet", "shot"))
 				var el := String(u.get("elem", "none"))
@@ -661,7 +697,18 @@ func _selftest() -> void:
 				if absf(want_rate - float(st["rate"])) > maxf(EPS, want_rate * 1e-5):
 					_bad("%s x%d rate: 사슬 %.4f vs hero_stats %.4f" % [u["id"], n, want_rate, float(st["rate"])])
 				n_checked += 1
-	print("   %d가지를 재 봤다 (캐릭터 %d명 x 겹침 6 x 상점·패시브 2)" % [n_checked, Roster.UNITS.size()])
+	print("   %d가지를 재 봤다 (캐릭터 %d명 x 겹침·등급 6 x 상점·패시브 2 · 등급 %d칸이 다 걸렸다)"
+			% [n_checked, Roster.UNITS.size(), tiers_seen.size()])
+	if tiers_seen.size() != Balance.TIER_MAX + 1:
+		_bad("등급 %d칸 중 %d칸만 재 봤다 — 안 잰 칸이 있다" % [Balance.TIER_MAX + 1, tiers_seen.size()])
+	# 같은 캐릭터를 열 칸에 차례로 세우면 화력이 한 칸도 빠짐없이 오른다 — 별이 곧 세기다.
+	for u in Roster.UNITS:
+		var last := 0.0
+		for tier in range(Balance.TIER_MAX + 1):
+			var dps := Run.hero_dps({"unit": u, "tier": tier, "wave": 1, "n": 1})
+			if dps <= last:
+				_bad("%s 가 %s 에서 아래 등급보다 세지 않다 (%.2f → %.2f)" % [u["id"], Roster.TIER_KO[tier], last, dps])
+			last = dps
 
 	# (2) Duplicate cards are separate fusion materials, never stacked damage.
 	print("\n2. 기존 중첩 데이터가 출전 영웅의 화력을 부풀리지 않는가")
@@ -973,14 +1020,20 @@ func _table() -> void:
 		print("   %-10s %-8.3f %-8.0f %s" % [String(b["ko"]) + "(" + String(k) + ")",
 				float(b["dmg"]), float(b["speed"]), ", ".join(PackedStringArray(extra))])
 
-	print("\n========== 등급별 기본 화력 ==========")
-	print("   %-4s %-16s %-10s %-10s %s" % ["등급", "족보", "TIER_ATK", "TIER_RATE", "그 등급 캐릭터"])
-	for t in range(10):
-		var names := []
-		for u in Roster.units_of_tier(t):
-			names.append(String(u["ko"]))
-		print("   %-4d %-16s %-10.1f %-10.2f %s" % [t, Roster.TIER_KO[t],
-				Balance.TIER_ATK[t], Balance.TIER_RATE[t], ", ".join(PackedStringArray(names))])
+	print("\n========== 등급별 기본 화력 (등급 = 반 별 칸 · 의식은 온 별만 준다) ==========")
+	print("   %-4s %-8s %-10s %-10s %-10s %s" % ["칸", "별", "TIER_ATK", "TIER_RATE", "기준 DPS", "오는 길"])
+	var whole := {}
+	for stars in range(Rite.MIN_STARS, Rite.MAX_STARS + 1):
+		whole[Rite.tier_of(stars)] = stars
+	for t in range(Balance.TIER_MAX + 1):
+		print("   %-4d %-8s %-10.1f %-10.2f %-10.1f %s" % [t, Roster.TIER_KO[t],
+				Balance.TIER_ATK[t], Balance.TIER_RATE[t], Balance.TIER_ATK[t] * Balance.TIER_RATE[t],
+				("의식 — 문 안의 별 %d개" % int(whole[t])) if whole.has(t) else "승급 · 합성 · 도박꾼의 눈"])
+	print("\n   한 번 돌렸을 때 / 무료 %d번을 다 썼을 때의 별 분포 (Rite.odds)" % Balance.FREE_REROLL)
+	var once := Rite.odds(1)
+	var free := Rite.odds(1 + Balance.FREE_REROLL)
+	for stars in range(Rite.MIN_STARS, Rite.MAX_STARS + 1):
+		print("   %d성  %6.2f%%  →  %6.2f%%" % [stars, once[stars] * 100.0, free[stars] * 100.0])
 
 	print("\n========== 체력 곡선 ==========")
 	print("   %-6s %-12s %-8s %-14s %-10s %s" % ["탄", "기준 체력", "마릿수", "합", "처치골드", "보스"])
@@ -994,14 +1047,14 @@ func _table() -> void:
 
 
 func _list() -> void:
-	print("\n캐릭터 %d명" % Roster.UNITS.size())
-	for t in range(10):
-		for u in Roster.units_of_tier(t):
-			print("   %-22s %-4d %-16s %-6s %-8s %s"
-					% [String(u["id"]), t, Roster.TIER_KO[t],
-					   Balance.elem_ko(String(u.get("elem", "none"))),
-					   String(Balance.BULLET[String(u.get("bullet", "shot"))]["ko"]),
-					   String(u["ko"])])
+	print("\n캐릭터 %d명  (등급은 영웅 한 장의 것 — 누구든 0.5성~5성 어느 등급으로든 선다. 아래 격은 원화의 격이다)"
+			% Roster.UNITS.size())
+	for u in Roster.UNITS:
+		print("   %-22s 원화 %2d격 %-6s %-8s %s"
+				% [String(u["id"]), int(u["tier"]) + 1,
+				   Balance.elem_ko(String(u.get("elem", "none"))),
+				   String(Balance.BULLET[String(u.get("bullet", "shot"))]["ko"]),
+				   String(u["ko"])])
 	print("\n몬스터 %d종" % Roster.MONSTERS.size())
 	for m in Roster.MONSTERS:
 		print("   %-20s %-8s %-6s %s" % [String(m["id"]), String(m["kind"]),
@@ -1015,10 +1068,11 @@ func _list() -> void:
 
 func _usage() -> void:
 	print("""
-데미지 계산 검사기 — POCKER_NO_SAVE=1 godot --headless --path . res://tests/dmg_check.tscn -- <모드>
+데미지 계산 검사기 — STELLARDEFENSE_NO_SAVE=1 godot --headless --path . res://tests/dmg_check.tscn -- <모드>
 
   --calc      한 대의 곱셈 사슬을 편다 (기본)
-      --unit <id>       캐릭터 (기본 match_gunner)
+      --unit <id>       캐릭터 (기본 chispa)
+      --tier <0~9>      그 영웅의 등급(반 별 칸). --stars <1~5> 로도 준다. 안 주면 표의 원화 격
       --n <겹>          겹친 수 (기본 1)
       --wave <탄>       맞는 쪽을 이 탄으로 (기본 1)
       --rank <1~5>      테마의 험한 정도 (기본 1)
@@ -1029,7 +1083,7 @@ func _usage() -> void:
 
   --trace     실제 전투 한 탄을 돌려 hp 가 깎이는 것을 전부 찍는다
       --wave <탄>       (기본 12)
-      --team a:2,b:1    성역에 세울 캐릭터 (기본 --unit 하나)
+      --team a:2,b:1:7  성역에 세울 캐릭터 — id:겹:등급 (기본 --unit 하나 · 등급은 --tier 로도)
       --seed <씨앗>     (기본 20260829)
       --dt <걸음>       (기본 1/60)
       --max <줄>        찍을 줄 수 (기본 50)
@@ -1037,6 +1091,6 @@ func _usage() -> void:
       --lv / --pas      --calc 과 같다
 
   --selftest  산수와 실제 전투가 같은 값인가 (판정: 정상 이 나와야 한다)
-  --table     상성표 · 탄 방식 · 등급별 화력 · 체력 곡선
+  --table     상성표 · 탄 방식 · 등급별 화력과 별 분포 · 체력 곡선
   --list      캐릭터 / 몬스터 / 패시브 id 목록
 """)

@@ -72,7 +72,7 @@ def build_document(chars):
                 doc += f"- **{title}:** {c[field]}\n"
             doc += f"\n[개별 T포즈 원화](art/concepts/last_refuge_v3/{c['id']}.png) · "
             doc += f"[실제 생성 프롬프트와 시드](art/concepts/last_refuge_v3/{c['id']}.json)\n"
-    (ROOT / 'pokerdefense_world_characters_v2.md').write_text(doc)
+    (ROOT / 'stellardefense_world_characters_v2.md').write_text(doc)
 
 
 def build_gallery(chars):
@@ -107,9 +107,9 @@ input{min-width:180px}#count{margin-left:auto;color:#576662}.grid{display:grid;g
 dialog img{display:block;max-width:90vw;max-height:80vh;object-fit:contain}dialog header{padding:8px 0;background:none;color:#242b2b;display:flex;justify-content:space-between;gap:20px;align-items:center}
 dialog button{padding:8px 16px;font:inherit;cursor:pointer;border:1px solid #ccc;background:white;border-radius:4px}#empty{padding:40px 5vw;color:#666}
 @media(max-width:500px){header{padding:32px 22px}.grid{padding:20px;gap:20px}nav{padding:12px 20px}#count{font-size:12px}}
-</style><header><small>ALL-IN DEFENSE · WORLD & CHARACTER ART · REV.3</small>
+</style><header><small>STELLAR DEFENSE · WORLD & CHARACTER ART · REV.3</small>
 <h1>마지막 불빛의 카지노</h1><p>좋은 패로 수호자를 불러, 피난소의 불을 지킨다.<br>도시를 유지하던 다섯 직능, 열 등급의 수호자. 캐릭터마다 외형을 설명하는 장비와 공격 동작을 함께 설계했습니다.</p>
-<p>50명 · 개별 정면 T포즈 · 1024 × 1024 · Krea 2 Turbo<br><a href="../../../pokerdefense_world_characters_v2.md">세계관 및 전체 설정 문서</a></p></header>
+<p>50명 · 개별 정면 T포즈 · 1024 × 1024 · Krea 2 Turbo<br><a href="../../../stellardefense_world_characters_v2.md">세계관 및 전체 설정 문서</a></p></header>
 <nav aria-label="캐릭터 필터"><select id="element" aria-label="타입"><option value="">모든 타입</option>__ELEMENT_OPTIONS__</select>
 <select id="tier" aria-label="등급"><option value="">모든 등급</option>__TIER_OPTIONS__</select><input id="search" aria-label="이름 또는 무기 검색" placeholder="이름 · 무기 검색"><span id="count" aria-live="polite">50명</span></nav>
 <main class="grid">__CARDS__</main><p id="empty" hidden>조건에 맞는 캐릭터가 없습니다.</p>

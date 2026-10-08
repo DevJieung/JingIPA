@@ -15,6 +15,9 @@ const DT := 1.0 / 30.0     ## 시뮬레이션 한 걸음. 화면보다 굵게 �
 
 func _ready() -> void:
 	var runs := Harness.arg_int("--runs", 16)
+	## 몇 번째 판부터 돌릴까. 판마다 씨앗이 정해져 있으므로(20260000 + 판 번호 x 977),
+	## 여러 프로세스가 구간을 나눠 돌리면 한 프로세스가 통으로 돌린 것과 같은 표본이 된다.
+	var first := Harness.arg_int("--from", 0)
 	var verbose := Harness.has_arg("--verbose")
 	if Harness.has_arg("--curve"):
 		for w in [1, 10, 20, 29, 30, 31, 40, 49, 60, 80, 99, 100]:
@@ -38,7 +41,7 @@ func _ready() -> void:
 	var t0 := Time.get_ticks_msec()
 
 	for r in range(runs):
-		var res := _one_run(20260000 + r * 977, verbose)
+		var res := _one_run(20260000 + (first + r) * 977, verbose)
 		reached.append(int(res["wave"]))
 		if bool(res["cleared"]):
 			cleared += 1
@@ -70,14 +73,14 @@ func _ready() -> void:
 		print("  %2d탄  %2d판   크리스탈 -%.2f   골드 %5.0f"
 				% [int(w), n, float(lost_at[w]) / float(n), float(gold_at[w]) / float(n)])
 
-	print("\n나온 족보")
+	print("\n뽑힌 등급 (별맞춤 의식 · 반 별은 도박꾼의 눈이 얹은 것)")
 	var total := 0
 	for h in hands:
 		total += int(hands[h])
 	for h in range(10):
 		if hands.has(h):
-			print("  %-20s %5d  (%.2f%%)"
-					% [Poker.HAND_KO[h], int(hands[h]), float(hands[h]) * 100.0 / float(total)])
+			print("  %-8s %5d  (%.2f%%)"
+					% [Roster.TIER_KO[h], int(hands[h]), float(hands[h]) * 100.0 / float(total)])
 	print("\n성역에 선 영웅의 속성 (탄마다 출전한 영웅을 세었다)")
 	var etot := 0
 	for e in elems:
@@ -99,8 +102,8 @@ func _one_run(seed_value: int, verbose: bool) -> Dictionary:
 	while Run.running and Run.wave < Balance.LAST_WAVE:
 		Run.begin_draw()
 		PlayPolicy.do_rerolls(Run)
-		var res := Run.confirm_hand()
-		hands[int(res["hand"])] = int(hands.get(int(res["hand"]), 0)) + 1
+		var res := Run.confirm_summon()
+		hands[int(res["tier"])] = int(hands.get(int(res["tier"]), 0)) + 1
 		# 새 영웅이 왔다 — 성역 여섯 자리를 다시 짠다(사람이라면 교체 창에서 하는 일).
 		PlayPolicy.arrange(Run)
 
@@ -127,7 +130,7 @@ func _one_run(seed_value: int, verbose: bool) -> Dictionary:
 			var th := Run.theme_for(Run.wave)
 			print("  %3d탄 %-10s %-10s 성역%d 전당%2d  뚫림%2d  크리스탈%3d  골드%6d  DPS%9.0f  패시브%d"
 					% [Run.wave, String(th.get("ko", "")).left(10),
-					   Poker.HAND_KO[int(res["hand"])], Run.heroes.size(),
+					   Roster.TIER_KO[int(res["tier"])], Run.heroes.size(),
 					   Run.bench.size(), sim.leaked, Run.lives, Run.gold,
 					   Run.total_dps(), Run.passives.size()])
 		if not Run.running:

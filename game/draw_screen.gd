@@ -1,20 +1,51 @@
 extends Node2D
 class_name DrawScreen
 
-## 카드 다섯 장을 받고, 맘에 안 드는 것을 다시 뽑고, 족보를 확정하는 화면.
+## 별맞춤 의식 — 별 다섯을 돌리고, 문 밖의 별만 다시 돌리고, 확정해 영웅을 부르는 화면.
 ##
-## 규칙(사용자가 정한 것):
-##  - 각 탄 시작 전에 트럼프 카드 5장을 받는다.
-##  - 맘에 안 드는 카드는 **한 번** 리롤할 수 있다.
-##  - 이미 리롤한 카드는 **추가 골드를 내지 않으면 더 리롤하지 못한다.** 값은 두 배씩 오른다.
-##  - 확정하면 족보 등급에 맞는 캐릭터가 그 등급 안에서 **무작위로** 나온다.
-##  - 풀하우스 이상이면 연출이 화려해진다.
+## 규칙(사용자가 정한 것 · core/rite.gd):
+##  - 탄마다 생명 수정 둘레의 별 다섯이 한 번 돈다. **빛의 문 안에 든 별의 수가 곧 등급**이다.
+##  - 맘에 안 들면 **문 밖의 별만** 다시 돌린다. 무료 횟수를 다 쓰면 골드를 낸다(두 배씩 오른다).
+##  - 광고를 보면 가장 바깥의 별 하나를 문 안으로 끌어온다.
+##  - 확정하면 그 등급의 영웅이 쉰 명 중에서 **무작위로** 나온다. 4성부터 연출이 화려해진다.
+##
+## ★ **결과는 Run.orbit 이 이미 정했다.** 여기서 별이 도는 것은 연출이고, 멈추는 자리는
+##   언제나 Rite.angle(ring, Run.orbit[ring]) 이다 — 손으로 멈추는 타이밍 게임이 아니다.
+##   그래서 도는 중에도 단추는 바로 듣는다(누르면 별을 제자리에 세우고 처리한다).
+## ★ 판은 game/rite_board.gd 가 그린다. 문의 폭 · 별의 자리는 전부 Rite 의 함수에서 온다.
 
 enum { PICK, REVEAL, SWAP, REVIVE_REWARD }
 
-const CARD_SC := 1.30
-const PICK_Y := 290.0
-const ROW_GAP := 26.0
+## 의식판의 한가운데. 큰 판 하나가 이 화면의 주인이다.
+const BOARD := Vector2(640, 400)
+## 확정 연출에서 영웅이 터져 나오는 자리(원화 한가운데).
+const HERO_AT := Vector2(414, 438)
+## 판을 놓는 밤하늘 판과 그 양옆의 읽을거리.
+const SKY := Rect2(72, 92, 1136, 600)
+const LEFT := Rect2(96, 128, 264, 528)       ## 문 안의 별 — 지금 몇 성인가
+const RIGHT := Rect2(920, 128, 264, 528)     ## 별마다 문에 들 확률
+const RESPIN_RECT := Rect2(146, 702, 324, 68)
+const GO_RECT := Rect2(490, 698, 300, 76)
+const PULL_RECT := Rect2(810, 702, 324, 68)
+
+## 화면에 들어와 첫 별이 멈추기까지. 화면 전환의 페이드(0.28초)가 걷히는 시간을 품는다.
+const ENTRY_FIRST := 0.70
+## 다시 돌렸을 때 첫 별이 멈추기까지.
+const RESPIN_FIRST := 0.42
+## 별과 별 사이. 안쪽 별부터 멈추고, 문이 가장 좁은 바깥 별이 마지막이라 긴장이 끝에 온다.
+## ★ 다섯이 다 서는 데 1.7초 안쪽이다. 한 판에 백 번 보는 화면이라 더 끌면 고문이다.
+const STOP_GAP := 0.24
+## 끌려오는 별(광고 · 조커)이 문 안에 닿기까지.
+const PULL_SEC := 0.60
+const JOKER_SEC := 0.40
+## 별이 잠기는 번쩍임이 가시는 시간.
+const LOCK_SEC := 0.45
+## 확정한 뒤 영웅이 터져 나오는 시각. 4성부터는 조금 더 끈다(showy).
+const BURST_AT := 1.35
+const BURST_SHOWY := 1.65
+## 터진 뒤 등급 별이 하나씩 박히는 박자.
+const STAR_IN_FIRST := 0.14
+const STAR_IN_GAP := 0.09
 
 var main = null
 var ui := Ui.new()
@@ -23,7 +54,6 @@ var fx := Fx.new()
 var hv := HeroView.new()
 var formation := FormationView.new()
 var fusion := FusionView.new()
-var card_choice := CardChoiceView.new()
 var revive_reward := ReviveRewardView.new()
 var formation_tab := true
 
@@ -33,9 +63,6 @@ var rt: float = 0.0              ## 확정 뒤 흐른 시간
 var result: Dictionary = {}
 var showy: bool = false
 var _fired: Dictionary = {}      ## 연출 중 한 번만 터뜨릴 것들
-## 카드가 뒤집히는 중이면 남은 시간. 리롤을 누른 순간 채워진다.
-var _flip: Array[float] = [0.0, 0.0, 0.0, 0.0, 0.0]
-const FLIP_SEC := 0.30
 ## ★ 전투로 넘어가는 중인가. 페이드가 도는 0.28초 동안에도 이 화면은 트리에 남아
 ##   _input 을 받는다. 예전에는 state 를 PICK 으로 되돌려 막았는데, 그러면 뽑기 화면이
 ##   다시 그려져서 「결정!」을 한 번 더 누를 수 있었고 **영웅이 공짜로 하나 더 생겼다.**
@@ -45,11 +72,32 @@ var _leaving: bool = false
 ## draw_set_transform 을 되돌릴 때 Vector2.ZERO 로 되돌리면 흔들림이 날아간다.
 var _sh: Vector2 = Vector2.ZERO
 
-var _rng := RandomNumberGenerator.new()
+## 별마다의 움직임. **비어 있으면 그 별은 Run.orbit 의 제자리에 멈춰 서 있다.**
+##   {"from": 시작 각, "to": 끝 각(바퀴 수까지 풀어 쓴 값), "t0": 시작 시각, "dur": 초, "pull": 끌려오는가}
+var _move: Array[Dictionary] = []
+## 별이 멈춘 시각. 잠기는 순간의 번쩍임에 쓴다.
+var _landed: Array[float] = []
+## 광고로 끌어오기를 청한 궤도와, 그 별이 서 있던 칸. 완료 콜백이 어느 별을 움직일지 여기서 안다.
+var _pull_ring: int = -1
+var _pull_from: int = -1
+## 광고 보상은 받았고 아직 끌려오는 모습을 안 보여 준 별. {"ring", "from"(각)} — 없으면 빈 것.
+## ★ 별은 이미 문 안으로 옮겨져 있다(Run.apply_ad_reward). 보상 알림이 문 자리를 덮고 있는
+##   동안은 옛 자리에 세워 두었다가, 알림이 걷히면 끌려오는 모습을 보여 준다.
+var _pulled: Dictionary = {}
+## 확정 직전의 별 자리. 조커가 끌어온 별이 어디서 왔는지 연출이 안다.
+var _before: Array[int] = []
+## 문 안의 별 수가 마지막으로 바뀐 시각 — 왼쪽 판의 별과 등급 글자가 그때 튄다.
+var _tally: int = 0
+var _tally_t: float = -9.0
+
+
+func _init() -> void:
+	for ring in range(Rite.RINGS):
+		_move.append({})
+		_landed.append(-9.0)
 
 
 func _ready() -> void:
-	_rng.randomize()
 	Ads.completed.connect(_ad_completed)
 	set_process(true)
 	# ★ 이미 확정한 탄을 이어 하는 경우 — 연출은 건너뛰고 **편성 판부터** 연다.
@@ -65,53 +113,166 @@ func _ready() -> void:
 		if bool(result.get("reward_pending", false)):
 			state = REVIVE_REWARD
 			revive_reward.begin(result)
+	elif Rite.valid(Run.orbit):
+		# 별이 돌다가 Run.orbit 의 자리에 차례로 멈춘다. 이어하기로 들어와도 같은 자리다.
+		_spin(_all_rings(), [])
 
 
 func _exit_tree() -> void:
 	if Ads.completed.is_connected(_ad_completed):
 		Ads.completed.disconnect(_ad_completed)
-	card_choice.close()
 
 
-func _ad_completed(kind: String, rewarded: bool) -> void:
-	if kind != "card" or _leaving or state != PICK or not is_inside_tree() \
-			or (main != null and main.screen != self):
-		return
-	var changed := card_choice.completed(rewarded)
-	if changed >= 0:
-		var r := card_rect(changed)
-		fx.burst(r.get_center(), Look.GOLD, 14, 240.0)
-		_flip[changed] = FLIP_SEC
+# --------------------------------------------------------------------------- #
+# 별의 움직임 — 자리는 Run.orbit 이 정했고 여기는 거기까지 가는 길만 짓는다
+# --------------------------------------------------------------------------- #
+func _all_rings() -> Array[int]:
+	var out: Array[int] = []
+	for ring in range(Rite.RINGS):
+		out.append(ring)
+	return out
+
+
+## 별들을 돌린다. `was` 가 비어 있으면 화면에 들어올 때의 첫 회전이고, 아니면 다시 돌리기다
+## (그 별이 서 있던 각에서 출발한다). 궤도마다 도는 쪽이 엇갈려 관측의처럼 보인다.
+func _spin(rings: Array[int], was: Array[float]) -> void:
+	var entry := was.is_empty()
+	var order := 0
+	for ring in rings:
+		var to := Rite.angle(ring, Run.orbit[ring])
+		var dir := 1.0 if ring % 2 == 0 else -1.0
+		var turns := 1.0 + 0.3 * float(order)
+		var from := to - dir * TAU * turns
+		if not entry:
+			# 서 있던 자리에서 출발해 turns 바퀴를 넘겨 돈 뒤에 새 자리에 선다.
+			from = was[ring]
+			var rest := fposmod((to - from) * dir, TAU)
+			to = from + dir * (rest + TAU * ceilf(maxf(0.0, turns - rest / TAU)))
+		_move[ring] = {"from": from, "to": to, "t0": t, "pull": false,
+				"dur": (ENTRY_FIRST if entry else RESPIN_FIRST) + STOP_GAP * float(order)}
+		order += 1
+	if order > 0:
 		Sfx.play("flip")
-	queue_redraw()
 
 
-func card_rect(i: int) -> Rect2:
-	var w := Look.CARD_W * CARD_SC
-	var h := Look.CARD_H * CARD_SC
-	var total := w * 5.0 + ROW_GAP * 4.0
-	var x0 := (1280.0 - total) * 0.5
-	return Rect2(x0 + float(i) * (w + ROW_GAP), PICK_Y, w, h)
+func _spinning() -> bool:
+	for move in _move:
+		if not move.is_empty():
+			return true
+	return false
 
 
-## 연출 중 카드가 가는 자리(가운데 위로 모인다).
-func reveal_rect(i: int) -> Rect2:
-	var w := Look.CARD_W
-	var h := Look.CARD_H
-	var total := w * 5.0 + 12.0 * 4.0
-	var x0 := (1280.0 - total) * 0.5
-	return Rect2(x0 + float(i) * (w + 12.0), 112.0, w, h)
+func _pos(ring: int) -> int:
+	return int(Run.orbit[ring]) if ring < Run.orbit.size() else 0
+
+
+## 그 별을 지금 그릴 각. 멈춰 선 별은 언제나 Run.orbit 의 제자리다 — 화면이 따로 기억하지 않는다.
+func _angle(ring: int) -> float:
+	if int(_pulled.get("ring", -1)) == ring:
+		return float(_pulled["from"])
+	var move: Dictionary = _move[ring]
+	if move.is_empty():
+		return Rite.angle(ring, _pos(ring))
+	var k := clampf((t - float(move["t0"])) / float(move["dur"]), 0.0, 1.0)
+	# 도는 별은 끝으로 갈수록 느려져 문 앞에서 기어간다. 끌려오는 별은 부드럽게 당겨진다.
+	var eased := k * k * (3.0 - 2.0 * k) if bool(move["pull"]) else 1.0 - pow(1.0 - k, 3.0)
+	return lerpf(float(move["from"]), float(move["to"]), eased)
+
+
+## 그 별이 방금 지나온 각 — 꼬리의 길이다. 빠를수록 길고, 멈출 즈음에는 없어진다.
+func _sweep(ring: int) -> float:
+	var move: Dictionary = _move[ring]
+	if move.is_empty():
+		return 0.0
+	var k := clampf((t - float(move["t0"])) / float(move["dur"]), 0.0, 1.0)
+	var slope := 6.0 * k * (1.0 - k) if bool(move["pull"]) else 3.0 * pow(1.0 - k, 2.0)
+	return clampf((float(move["to"]) - float(move["from"])) * slope / float(move["dur"]) * 0.055, -1.3, 1.3)
+
+
+## 그 별의 지금 모습. 도는 별 · 아직 안 끌려온 별은 문 안으로 치지 않는다.
+func _look(ring: int) -> int:
+	if not _move[ring].is_empty():
+		return RiteBoard.SPIN
+	if int(_pulled.get("ring", -1)) == ring or not Rite.valid(Run.orbit):
+		return RiteBoard.OUT
+	return RiteBoard.look_of(ring, _pos(ring))
+
+
+## 지금 화면에서 문 안에 **선** 별의 수. 도는 별은 멈춘 뒤에야 센다 — 그래서 별이 하나씩 찬다.
+func _shown_stars() -> int:
+	var n := 0
+	for ring in range(Rite.RINGS):
+		if _look(ring) in [RiteBoard.IN, RiteBoard.HELD]:
+			n += 1
+	return n
+
+
+## 별 하나가 멈췄다. 문 안이면 잠기는 소리가 별 수만큼 높아진다 — 몇 번째 별인지 귀로도 세어진다.
+func _land(ring: int, quiet: bool = false) -> void:
+	var pulled := bool(_move[ring].get("pull", false))
+	_move[ring] = {}
+	_landed[ring] = t
+	if not Rite.valid(Run.orbit):
+		return
+	var at := RiteBoard.slot_point(BOARD, ring, _pos(ring))
+	if Rite.in_gate(ring, _pos(ring)):
+		fx.ring(at, Look.GOLD, 12.0, 74.0 if pulled else 46.0, 0.42, 3.0)
+		fx.burst(at, Look.GOLD.lightened(0.3), 20 if pulled else 8, 150.0, 0.45, 3.0, 60.0)
+		if pulled:
+			Sfx.play("gain")
+		elif not quiet:
+			Sfx.force("block", -5.0, 0.84 + 0.12 * float(_shown_stars()))
+	elif not quiet:
+		Sfx.play("button", -16.0, 0.75)
+
+
+## 도는 별을 전부 제자리에 세운다. **연출은 언제든 넘길 수 있어야 한다** — 백 탄을 도는
+## 게임에서 못 넘기는 연출은 고문이다. 끌려오기를 기다리던 별도 같이 세운다.
+func skip_spin() -> void:
+	var any := not _pulled.is_empty()
+	_pulled = {}
+	for ring in range(Rite.RINGS):
+		if not _move[ring].is_empty():
+			_land(ring, true)
+			any = true
+	if any:
+		Sfx.play("block", -6.0, 0.84 + 0.12 * float(_shown_stars()))
+
+
+## 광고 보상 알림이 화면 위쪽(가장 바깥 문이 있는 자리)을 덮고 있는가.
+## ★ Ads 에 물어볼 공개 함수가 없어서 알림의 남은 시간을 직접 읽는다. 값이 없으면 안 덮인 것으로 본다.
+func _notice_up() -> bool:
+	return Ads.busy or (bool(Ads.get("_reward_notice")) and float(Ads.get("_message_left")) > 0.0)
+
+
+func _step_stars() -> void:
+	for ring in range(Rite.RINGS):
+		var move: Dictionary = _move[ring]
+		if not move.is_empty() and t >= float(move["t0"]) + float(move["dur"]):
+			_land(ring)
+	# 광고로 받은 별 — 알림이 걷히면 옛 자리에서 문 안으로 끌려온다(가까운 쪽으로 돈다).
+	if not _pulled.is_empty() and not _notice_up():
+		var ring := int(_pulled["ring"])
+		var from := float(_pulled["from"])
+		_pulled = {}
+		if Rite.valid(Run.orbit):
+			_move[ring] = {"from": from, "t0": t, "dur": PULL_SEC, "pull": true,
+					"to": from + wrapf(Rite.angle(ring, _pos(ring)) - from, -PI, PI)}
+			fx.ring(BOARD, Look.CRYSTAL, 30.0, 110.0, 0.5, 3.0)
+			Sfx.play("summon_charge", -8.0, 1.3)
+	var shown := _shown_stars()
+	if shown != _tally:
+		_tally = shown
+		_tally_t = t
 
 
 func _process(dt: float) -> void:
 	t += dt
-	card_choice.update()
 	fusion.update(dt)
 	fx.update(dt)
 	hv.update(dt)
-	for i in range(_flip.size()):
-		if _flip[i] > 0.0:
-			_flip[i] = max(0.0, _flip[i] - dt)
+	if state == PICK:
+		_step_stars()
 	if state == REVIVE_REWARD:
 		revive_reward.update(dt)
 	if state == REVEAL:
@@ -120,6 +281,9 @@ func _process(dt: float) -> void:
 	queue_redraw()
 
 
+# --------------------------------------------------------------------------- #
+# 입력
+# --------------------------------------------------------------------------- #
 ## ★ 편성 판은 **끌어서 굴린다.** 그래서 누르는 순간에 바로 처리하면 안 된다 —
 ##   목록을 굴리려고 손을 댄 자리의 영웅이 골라져 버린다. 눌렀다(press) · 움직였다
 ##   (motion) · 뗐다(release) 를 판에 그대로 넘기고, 판이 "굴린 것인지 고른 것인지"를
@@ -135,9 +299,6 @@ func _input(e: InputEvent) -> void:
 				if main != null:
 					_leaving = true
 					main.go(main.go_shop)
-		return
-	if card_choice.input(e, ui):
-		get_viewport().set_input_as_handled()
 		return
 	if hv.info >= 0:
 		hv.input(e, ui)
@@ -156,21 +317,60 @@ func _input(e: InputEvent) -> void:
 		if rt > 0.7:
 			_after_reveal()
 		return
-	var id := ui.hit(e.position)
-	if id == "":
+	# 의식판 — 단추 셋은 별이 도는 중에도 바로 듣는다. 빈 자리를 누르면 도는 별만 세운다.
+	match ui.hit(e.position):
+		"go":
+			Sfx.play("button")
+			_confirm()
+		"rite:respin":
+			_respin()
+		"rite:pull":
+			_request_pull()
+		_:
+			skip_spin()
+
+
+## 문 밖의 별만 다시 돌린다. 문 안의 별은 잠긴 채 그대로 빛난다.
+func _respin() -> void:
+	if state != PICK or _leaving:
 		return
-	if id == "go":
-		Sfx.play("button")
-		_confirm()
-	elif id.begins_with("want:") and state == PICK:
-		card_choice.open(int(id.get_slice(":", 1)))
-	elif id.begins_with("re"):
-		var i := int(id.substr(2))
-		if Run.reroll(i):
-			var r := card_rect(i)
-			fx.burst(r.position + r.size * 0.5, Look.GOLD, 14, 240.0)
-			_flip[i] = FLIP_SEC
-			Sfx.play("flip")
+	skip_spin()
+	var was: Array[float] = []
+	for ring in range(Rite.RINGS):
+		was.append(_angle(ring))
+	var moved := Run.respin()
+	if moved.is_empty():
+		return
+	_spin(moved, was)
+	fx.ring(BOARD, Look.CRYSTAL, 34.0, 104.0, 0.4, 3.0)
+
+
+## 보상형 광고 — 문 밖의 가장 바깥 별을 문 안으로 끌어온다. 무료 횟수 · 골드와 무관하다.
+func _request_pull() -> void:
+	if state != PICK or _leaving or Ads.busy:
+		return
+	skip_spin()
+	var ring := Run.pull_target()
+	if ring < 0:
+		return
+	_pull_ring = ring
+	_pull_from = _pos(ring)
+	if not Ads.request_reward("card", {"slot": ring}):
+		_pull_ring = -1
+
+
+func _ad_completed(kind: String, rewarded: bool) -> void:
+	if kind != "card" or _leaving or state != PICK or not is_inside_tree() \
+			or (main != null and main.screen != self):
+		return
+	var ring := _pull_ring
+	_pull_ring = -1
+	# ★ 보상은 Run 이 이미 적용했다(별은 문 안에 있다). 화면은 성공을 지어내지 않는다 —
+	#   그 별이 정말 문 안에 들었을 때만, 서 있던 자리에서 끌려오는 모습을 보여 준다.
+	if rewarded and ring >= 0 and Rite.valid(Run.orbit) and Rite.in_gate(ring, _pos(ring)) \
+			and _move[ring].is_empty():
+		_pulled = {"ring": ring, "from": Rite.angle(ring, _pull_from)}
+	queue_redraw()
 
 
 func _swap_input(e: InputEvent) -> void:
@@ -225,9 +425,9 @@ func _swap_input(e: InputEvent) -> void:
 
 
 func _confirm() -> void:
-	if card_choice.opened or Ads.busy or _leaving:
+	if Ads.busy or _leaving:
 		return
-	# ★ 이미 확정한 탄이면 편성 판으로 보낸다. 그냥 돌아가면 「결정!」이 죽은 단추가 되고
+	# ★ 이미 확정한 탄이면 편성 판으로 보낸다. 그냥 돌아가면 「소환」이 죽은 단추가 되고
 	#   _leave() 가 state == PICK 을 거절하므로(아래) 그 판에서 나갈 길이 없어진다.
 	if Run.phase == Run.Phase.SWAP:
 		result = Run.last_result
@@ -236,13 +436,18 @@ func _confirm() -> void:
 		hv.new_id = String((result.get("unit", {}) as Dictionary).get("id", ""))
 		_focus_latest()
 		return
-	result = Run.confirm_hand()
-	showy = bool(result["showy"])
+	# 도는 별을 세우고 확정한다 — 단추는 연출을 기다리지 않는다.
+	skip_spin()
+	_before.assign(Run.orbit)
+	var got := Run.confirm_summon()
+	if got.is_empty():
+		return
+	result = got
+	showy = bool(result.get("showy", false))
 	state = REVEAL
 	rt = 0.0
 	_fired.clear()
-	# 족보마다 다른 소리. 등급이 높을수록 화음이 길고 아래에 북이 깔린다.
-	Sfx.play("card_collect")
+	Sfx.play("summon_charge")
 
 
 ## 연출이 끝났다. **탄마다 빠짐없이** 편성 판을 띄운다.
@@ -281,7 +486,7 @@ func _leave() -> void:
 
 
 # --------------------------------------------------------------------------- #
-# 확정 연출 — 풀하우스 이상이면 여기가 화려해진다
+# 확정 연출 — 별이 수정으로 모여 영웅으로 터진다. 4성부터 화려하고 5성은 한 겹 더 얹는다
 # --------------------------------------------------------------------------- #
 func _once(key: String, at: float) -> bool:
 	if rt >= at and not _fired.has(key):
@@ -290,23 +495,75 @@ func _once(key: String, at: float) -> bool:
 	return false
 
 
+func _burst_at() -> float:
+	return BURST_SHOWY if showy else BURST_AT
+
+
+## 최종 등급을 이루는 꽉 찬 별의 수와, 반 별이 붙는가.
+static func _rank_parts(tier: int) -> Array:
+	var cells := clampi(tier, 0, Balance.TIER_MAX) + 1
+	return [cells / 2, cells % 2 == 1]
+
+
 func _reveal_beats() -> void:
-	var tier := int(result.get("hand", 0))
+	var tier := int(result.get("tier", 0))
 	var col := Look.tier_color(tier)
-	var center := Vector2(444, 412)
-	if _once("charge", 0.7):
-		Sfx.play("summon_charge")
-		fx.ring(Vector2(602, 246), Look.CRYSTAL, 90, 12, 0.62, 3)
-	if _once("burst", 1.65):
+	var at := _burst_at()
+	var grand := tier >= Balance.TIER_MAX
+	var joker := int(result.get("joker", -1))
+	var orbit: Array = result.get("orbit", [])
+	if joker >= 0 and joker < orbit.size() and _once("joker", JOKER_SEC):
+		var gate_at := RiteBoard.slot_point(BOARD, joker, int(orbit[joker]))
+		fx.ring(gate_at, Look.GOLD, 12.0, 70.0, 0.42, 3.0)
+		fx.burst(gate_at, Look.GOLD.lightened(0.3), 16, 150.0, 0.45, 3.0, 60.0)
+		Sfx.force("block", -5.0, 1.3)
+	if _once("burst", at):
+		# 판 위에 남은 잠금 고리 · 불똥을 걷는다 — 영웅 판 위에 판의 이펙트가 겹쳐 보이면 안 된다.
+		fx.clear()
 		Sfx.play("summon_burst")
 		Sfx.force("reveal%d" % tier)
 		fx.do_flash(Color(1, 0.96, 0.8, 0.56 if showy else 0.34), 0.28)
 		fx.do_shake(6 + tier * 0.9)
-		fx.rays(center, col, 14 + tier * 2, 380 + tier * 25, 0.85)
+		fx.rays(HERO_AT, col, 14 + tier * 2, 380 + tier * 25, 0.85)
 		for i in range(3):
-			fx.ring(center, Look.GOLD if i == 1 else col, 18, 170 + i * 65, 0.7 + i * 0.1, 5)
-		fx.shards(Rect2(center - Vector2(42, 58), Vector2(84, 116)), Look.CARD_BG, 32)
-		fx.burst(center, col.lightened(0.3), 32 + tier * 15, 360, 0.9, 4, 140)
+			fx.ring(HERO_AT, Look.GOLD if i == 1 else col, 18, 170 + i * 65, 0.7 + i * 0.1, 5)
+		# 수정 조각 — 별을 모았던 수정의 빛이 흩어진다.
+		fx.shards(Rect2(HERO_AT - Vector2(42, 58), Vector2(84, 116)), Look.CRYSTAL.lightened(0.45), 32)
+		fx.burst(HERO_AT, col.lightened(0.3), 32 + tier * 15, 360, 0.9, 4, 140)
+		if grand:
+			# 5성 — 금빛 빛살을 한 겹 더 깔고 고리를 멀리까지 보낸다.
+			fx.rays(HERO_AT, Look.GOLD, 28, 760, 1.5)
+			fx.burst(HERO_AT, Look.GOLD.lightened(0.35), 110, 420, 1.4, 5, 100)
+			for i in range(3):
+				fx.ring(HERO_AT, RiteBoard.LIGHT, 24, 330 + i * 80, 0.95 + i * 0.12, 5)
+	if grand and _once("echo", at + 0.34):
+		fx.do_flash(Color(1, 0.95, 0.74, 0.36), 0.3)
+		fx.do_shake(8.0)
+		fx.ring(HERO_AT, Look.GOLD, 30, 560, 0.9, 6)
+	# 등급 별이 하나씩 박힌다 — 문 안에 든 별을 다시 한번 **센다.**
+	var parts := _rank_parts(tier)
+	var full := int(parts[0])
+	for i in range(full):
+		if _once("star%d" % i, at + STAR_IN_FIRST + STAR_IN_GAP * float(i)):
+			var star_at := _rank_star(i)
+			fx.burst(star_at, Look.GOLD.lightened(0.3), 7, 130.0, 0.4, 3.0, 80.0)
+			Sfx.force("block", -7.0, 0.96 + 0.12 * float(i))
+	if bool(parts[1]) and bool(result.get("bumped", false)) and _once("bump", _half_at(full)):
+		var bump_at := _rank_star(full)
+		fx.ring(bump_at, Color("#ff7ac0"), 10.0, 64.0, 0.5, 4.0)
+		fx.burst(bump_at, Color("#ff7ac0").lightened(0.3), 18, 170.0, 0.55, 3.0, 80.0)
+		Sfx.play("gain")
+
+
+## 큰 등급 별 줄에서 i 번째 별의 자리.
+static func _rank_star(i: int) -> Vector2:
+	return Vector2(640.0 + float(i - 2) * 56.0, 196.0)
+
+
+## 반 별이 박히는 시각. 도박꾼의 눈으로 얹힌 반 별은 한 박자 쉬었다가 온다 — 덤이라는 것이 보이게.
+func _half_at(full: int) -> float:
+	return _burst_at() + STAR_IN_FIRST + STAR_IN_GAP * float(full) \
+			+ (0.30 if bool(result.get("bumped", false)) else 0.0)
 
 
 # --------------------------------------------------------------------------- #
@@ -322,18 +579,6 @@ func _draw() -> void:
 	_sh = fx.shake_offset()
 	draw_set_transform(_sh, 0.0, Vector2.ONE)
 	_draw_bg()
-	# ★ 화려한 등급에서는 초록 천을 한 번 어둡게 덮고 빛살을 깐다.
-	#   안 덮으면 빛살(반투명)이 초록에 물들어 풀하우스의 분홍도, 로열의 금빛도
-	#   전부 올리브색으로 보인다. 등급 색이 안 읽히면 화려할 이유가 없다.
-	if state == REVEAL:
-		var dim: float = clampf((rt - 0.45) / 0.25, 0.0, 1.0) * 0.62
-		draw_rect(Rect2(-40, -40, 1360, 880), Color(0, 0, 0, dim))
-	if state == REVEAL and rt >= 1.65:
-		var element := String((result.get("unit", {}) as Dictionary).get("elem", "none"))
-		Look.material_panel(self, Rect2(180, 235, 920, 424), Look.hero_card_face(element), Look.hero_card_edge(element))
-	fx.draw_back(self)      # 빛살·고리는 글자 **뒤에** 깔린다
-	fx.draw(self)
-	fx.draw_flash(self, Rect2(-40, -40, 1360, 880))
 	match state:
 		PICK:
 			_draw_pick()
@@ -344,156 +589,362 @@ func _draw() -> void:
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 	fusion.draw(self, ui)
 	hv.draw_info(self, ui)
-	card_choice.draw(self, ui)
 
 
-## 카드 테이블 — **도트로 그린다.**
+## 의식의 자리 — 야영지에 놓인 **밤하늘 판**. 도트로 그린다.
 ##
-## ★ 사용자가 정한 것: 「포커하는 화면도 2D 픽셀로 하고 디자인적으로 이질감이 안
-##   느껴지게」. 예전에는 반지름 46짜리 둥근 모서리에 매끈한 초록 천이었는데, 같은
-##   화면 아래에 96px 도트 캐릭터가 서 있어서 위아래가 다른 게임처럼 보였다.
-##   지금은 (1) 모서리를 한 칸씩 깎고 (2) 천에 **디더 격자**를 깔고 (3) 테두리를
-##   나무 널빤지 두 겹으로 두른다. 카드도 같은 격자로 그린다(Look.draw_card).
+## ★ 사용자가 정한 것: 「뽑는 화면도 2D 픽셀로 하고 디자인적으로 이질감이 안 느껴지게」.
+##   그래서 (1) 모서리를 한 칸씩 깎고 (2) 테두리를 나무 널빤지 두 겹으로 두르고
+##   (3) 하늘에 먼 별을 **도트 격자에 맞춰** 찍는다. 포커 시절의 초록 천 자리에 밤하늘이 들어왔다.
 func _draw_bg() -> void:
 	Look.camp_backdrop(self)
-	var g := Look.PX
 	if state == SWAP:
 		_draw_topbar()
 		return
-	var table := Rect2(72, 92, 1136, 600)
+	var g := Look.PX
 	# 널빤지 테두리 두 겹 — 바깥이 어둡고 안쪽이 밝다.
-	Look.px_panel(self, table, Look.FELT_EDGE, Color("#2a1a12"), 0.0)
-	Look.px_panel(self, table.grow(-g * 3.0), Look.FELT, Color("#4a3220"), 0.12)
-	# 천의 결 — 두 칸마다 한 점씩 밝게. 매끈한 초록은 도트 화면에서 저 혼자 매끈하다.
-	var felt := table.grow(-g * 5.0)
-	var y: float = Look.snap(felt.position.y, g)
-	var row := 0
-	while y < felt.position.y + felt.size.y:
-		var x: float = Look.snap(felt.position.x + (0.0 if row % 2 == 0 else g * 4.0), g)
-		while x < felt.position.x + felt.size.x - g:
-			draw_rect(Rect2(x, y, g, g), Color(1, 1, 1, 0.028))
-			x += g * 8.0
-		y += g * 4.0
-		row += 1
-	# 가운데 자리 표시 — 카드 다섯 장이 놓이는 자리를 옅게 파 둔다.
-	for i in range(5 if state == PICK else 0):
-		var cr := card_rect(i)
-		draw_rect(Look.snap_rect(cr.grow(6.0)), Color(0, 0, 0, 0.16))
+	Look.px_panel(self, SKY, Look.NIGHT_EDGE, Color("#2a1a12"), 0.0)
+	Look.px_panel(self, SKY.grow(-g * 3.0), Look.NIGHT, Color("#4a3220"), 0.10)
+	# 먼 별 — 격자에 맞춘 작은 점. 몇 개만 천천히 깜빡인다.
+	var sky := SKY.grow(-g * 5.0)
+	for i in range(64):
+		var hx := fposmod(sin(float(i) * 127.1) * 43758.5453, 1.0)
+		var hy := fposmod(sin(float(i) * 311.7) * 43758.5453, 1.0)
+		var at := Look.snap_v(sky.position + Vector2(hx, hy) * (sky.size - Vector2(g, g)), g)
+		var twinkle := 0.5 + 0.5 * sin(t * (0.5 + hx) + float(i))
+		var bright := i % 6 == 0
+		draw_rect(Rect2(at, Vector2(g, g) if bright else Vector2(g, g) * 0.5),
+				Color(0.76, 0.89, 1.0, 0.30 * twinkle if bright else 0.07 + 0.06 * twinkle))
 	_draw_topbar()
 
 
 func _draw_topbar() -> void:
-	Hud.topbar(self, "%d탄" % Run.wave)
+	Hud.topbar(self, "%d탄" % Run.wave, Look.INK, Hud.INFO_SIZE,
+			"별맞춤 의식" if state == PICK or state == REVEAL else "", Look.GOLD)
 
 
+func _panel(rect: Rect2) -> void:
+	Look.material_panel(self, rect, Color("#13212c"), Color("#3f5866"), "stone")
+
+
+# --------------------------------------------------------------------------- #
+# 의식판 — 세면 읽힌다: 문 안의 별 = 등급
+# --------------------------------------------------------------------------- #
 func _draw_pick() -> void:
-	var dealing := _flip.any(func(seconds: float) -> bool: return seconds > 0)
-	SummonArt.dealer(self, Rect2(498, 78, 216, 204), t, "" if dealing else "카드를 골라 운명을 완성하세요.")
+	var valid := Rite.valid(Run.orbit)
+	var settled := valid and not _spinning() and _pulled.is_empty()
+	var shown := _shown_stars()
+	# 지금 확정하면 나올 등급. 조커가 끌어올 별까지 센다(Run.rite_preview) — 화면이 「별 셋」이라
+	# 적어 놓고 4성을 내놓으면 안 된다. 별이 도는 동안에는 멈춘 별만 센다(결과를 미리 말하지 않는다).
+	var preview := Run.rite_preview() if settled else {"stars": shown, "tier": Rite.tier_of(shown) if shown > 0 else -1, "joker": -1}
+	var joker := int(preview.get("joker", -1))
 
-	# ★ 지금 족보를 이루고 있는 카드에 금테를 둘러 준다.
-	#   무엇을 남기고 무엇을 바꿔야 하는지가 한눈에 보여야, 리롤이 도박이 아니라 선택이 된다.
-	var now := Poker.evaluate(Run.cards)
-	var keys := Poker.key_cards(Run.cards, now)
-	for i in range(Run.cards.size()):
-		var r := card_rect(i)
-		var bob := sin(t * 2.2 + float(i) * 0.9) * 3.0
-		var matched := keys.has(Run.cards[i])
-		var at := r.position + Vector2(0, bob - (9 if matched else 0))
-		if matched:
-			Look.fill_round(self, Rect2(at - Vector2(7, 7), r.size + Vector2(14, 14)), 7, Color(Look.GOLD, 0.25))
-		if _flip[i] > 0.0:
-			# 다시 뽑은 카드는 한 번 뒤집힌다. 앞 절반은 뒷면, 뒤 절반은 새 카드.
-			# 가로만 눌러서 뒤집히는 것처럼 보이게 한다.
-			var fk: float = _flip[i] / FLIP_SEC          # 1 → 0
-			var squash: float = abs(fk * 2.0 - 1.0)      # 1 → 0 → 1
-			var w := Look.CARD_W * CARD_SC
-			draw_set_transform(at + Vector2(w * 0.5, 0.0) + _sh, 0.0,
-					Vector2(max(0.06, squash), 1.0))
-			if fk > 0.5:
-				Look.draw_card_back(self, Vector2(-w * 0.5, 0.0), CARD_SC)
-			else:
-				Look.draw_card(self, Vector2(-w * 0.5, 0.0), Run.cards[i], CARD_SC)
-			draw_set_transform(_sh, 0.0, Vector2.ONE)
-		else:
-			Look.draw_card(self, at, Run.cards[i], CARD_SC, matched)
-			if matched:
-				var ribbon := Rect2(at + Vector2(10, r.size.y - 28), Vector2(r.size.x - 62, 24))
-				Look.fill_round(self, ribbon, 3, Look.GOLD)
-				Look.text_center_fit(self, ribbon.get_center(), "조합 문장" if Save.card_mode == "sigil" else "족보 카드", 16, Look.BG_DEEP, ribbon.size.x - 8, 12)
-		ui.zone(Rect2(at, r.size), "re%d" % i, Run.can_reroll(i))
+	RiteBoard.draw_base(self, BOARD, 1.0, t)
+	RiteBoard.draw_gate(self, BOARD, 1.0, t)
+	RiteBoard.draw_core(self, BOARD, 1.0, t)
+	fx.draw_back(self)
+	for ring in range(Rite.RINGS if valid else 0):
+		var angle := _angle(ring)
+		var at := RiteBoard.point(BOARD, ring, angle)
+		var look := _look(ring)
+		var pulling := bool(_move[ring].get("pull", false))
+		if look == RiteBoard.SPIN:
+			RiteBoard.draw_trail(self, BOARD, ring, angle, _sweep(ring), 1.0, 1.0,
+					Look.CRYSTAL if pulling else RiteBoard.LIGHT)
+		if look == RiteBoard.HELD or pulling:
+			RiteBoard.draw_tether(self, BOARD, at, 1.0, t)
+		if ring == joker:
+			_draw_pull_hint(ring, angle)
+		var flash := clampf(1.0 - (t - _landed[ring]) / LOCK_SEC, 0.0, 1.0) \
+				if look == RiteBoard.IN or look == RiteBoard.HELD else 0.0
+		RiteBoard.draw_star(self, at, look, 1.0, t, flash)
+	fx.draw(self)
 
-		# 조작명은 짧게 유지하고 실제 남은 횟수/가격은 별도 상태 칸에서 읽는다.
-		var quota := Rect2(r.position.x, r.end.y + 12, r.size.x, 28)
-		var br := _draw_reroll(i, quota)
-		ui.reward_button(self, Rect2(br.position.x, br.end.y + 8, br.size.x, 50),
-			"원하는 카드", "want:%d" % i, Run.can_choose_card(i) and not Ads.busy, Look.CRYSTAL, 20)
-
-	# The hand summary occupies the empty felt to the dealer's left.
-	var hc := Look.tier_color(now)
-	var summary := Rect2(117, 129, 355, 146)
-	Look.fill_round(self, summary, 5, Color("#172c2c"))
-	Look.text_left(self, Vector2(138, 154), "현재 조합" if Save.card_mode == "sigil" else "현재 족보", 18, Look.INK_DIM)
-	Look.text_center_fit(self, Vector2(summary.get_center().x + 2, 188), Look.hand_name(now), 35, hc.lightened(0.2), 319, 22)
-	Look.draw_rarity_fit(self, Rect2(145, 212, 297, 20), now, 5.6)
-	var value := Poker.detail(Run.cards)
-	Look.text_box(self, Rect2(129, 240, 331, 28), "문장 x%.3f · %s" % [float(value.get("value_mult", 1.0)), Poker.detail_label(value)], 16, Look.CRYSTAL)
-	if Run.has("joker"):
-		Look.text_center(self, Vector2(640, 667), "조커 · 카드 1장 자동 교체", 22, Look.INK_DIM)
-
-	ui.button(self, Rect2(490, 700, 300, 76), "문장 확정" if Save.card_mode == "sigil" else "족보 확정", "go", true, Look.GOLD, 34)
+	_draw_tally(shown, settled, preview)
+	_draw_odds(settled, joker)
+	_draw_actions(settled, preview)
 
 
-func _draw_reroll(slot: int, quota: Rect2) -> Rect2:
-	var left := Run.rerolls_left(slot)
-	var cost := Run.reroll_cost_of(slot)
-	var enabled := Run.can_reroll(slot)
-	var accent := Look.GREEN if left > 0 else (Look.GOLD if enabled else Look.RED)
-	Look.fill_round(self, quota, 4, Look.BG_DEEP)
-	draw_line(quota.position + Vector2(8, quota.size.y - 1),
-		Vector2(quota.end.x - 8, quota.end.y - 1), Color(accent, 0.6), 1)
-	Look.text_left(self, quota.position + Vector2(9, 13),
-		"무료 잔여" if left > 0 else "교체 비용", 16, Look.INK_DIM)
-	var value := str(left) if left > 0 else "%d G" % cost
-	var value_size := 21
-	while value_size > 12 and Look.text_width(value, value_size) > quota.size.x - 82:
-		value_size -= 1
-	Look.text_right(self, Vector2(quota.end.x - 9, quota.position.y + 13), value, value_size, accent)
-	var action := Rect2(quota.position.x, quota.end.y + 5, quota.size.x, 48)
-	ui.button(self, action, "교체", "re%d" % slot, enabled, accent, 23)
-	return action
+## 조커가 확정 때 끌어올 별 — 그 별에서 가까운 문 끝까지 흐르는 점선.
+func _draw_pull_hint(ring: int, angle: float) -> void:
+	var side := signf(wrapf(angle - Rite.GATE_ANGLE, -PI, PI))
+	var delta := wrapf(Rite.GATE_ANGLE + (1.0 if side == 0.0 else side) * Rite.gate_half(ring) - angle, -PI, PI)
+	var radius := RiteBoard.orbit_radius(ring)
+	var count := maxi(2, int(absf(delta) * radius / 16.0))
+	var flow := fposmod(t * 1.6, 1.0)
+	for i in range(count):
+		var a0 := angle + delta * (float(i) + flow * 0.5) / float(count)
+		var a1 := angle + delta * (float(i) + flow * 0.5 + 0.45) / float(count)
+		draw_arc(BOARD, radius, minf(a0, a1), maxf(a0, a1), 4, Color(RiteBoard.LIGHT, 0.9), 3.0, true)
+	Look.draw_passive_icon(self, RiteBoard.point(BOARD, ring, angle) + Vector2(0, -27), 11.0,
+			Balance.passive_by_id("joker"), RiteBoard.LIGHT)
 
 
+## 왼쪽 판 — 문 안의 별이 몇 개인가, 그래서 몇 성인가. 아래에는 의식의 안내자가 한마디를 건넨다.
+func _draw_tally(shown: int, settled: bool, preview: Dictionary) -> void:
+	_panel(LEFT)
+	var cx := LEFT.get_center().x
+	var top := LEFT.position.y
+	var joker := int(preview.get("joker", -1))
+	var pop := clampf(1.0 - (t - _tally_t) / 0.25, 0.0, 1.0)
+	Look.text_center(self, Vector2(cx, top + 28), "문 안의 별", 21, Look.INK_DIM)
+	for i in range(Rite.MAX_STARS):
+		var at := Vector2(cx + float(i - 2) * 46.0, top + 76)
+		var lit := i < shown
+		var radius := 19.0 * (1.0 + 0.45 * pop if lit and i == shown - 1 else 1.0)
+		var points := Look.star_points(at, radius)
+		draw_colored_polygon(Look.star_points(at, 19.0), RiteBoard.COLD_FILL)
+		if lit:
+			draw_colored_polygon(points, Look.GOLD)
+		elif joker >= 0 and i == shown:
+			# 조커가 채울 자리 — 속이 빈 금테 별이 숨 쉰다. 아직 문 안의 별이 아니다.
+			draw_colored_polygon(points, Color(Look.GOLD, 0.16 + 0.16 * sin(t * 4.0)))
+		points.append(points[0])
+		draw_polyline(points, Look.GOLD if lit or (joker >= 0 and i == shown) else RiteBoard.COLD, 1.6, true)
+	var tier := int(preview.get("tier", -1))
+	if tier >= 0:
+		Look.text_center_out(self, Vector2(cx, top + 150), Look.star_label(tier), 72 + int(10.0 * pop),
+				Look.tier_color(tier).lightened(0.18), Look.BG_DEEP, 3)
+	var chip_y := top + 202
+	if joker >= 0:
+		_chip(Rect2(LEFT.position.x + 14, chip_y, LEFT.size.x - 28, 34), "joker", "소환 때 별 +1")
+		chip_y += 40
+	if settled and Run.has("eye") and tier < Balance.TIER_MAX:
+		_chip(Rect2(LEFT.position.x + 14, chip_y, LEFT.size.x - 28, 34), "eye",
+				"%d%% 확률로 +0.5성" % roundi(Balance.PASSIVE_EYE_P * 100.0))
+	# 의식의 안내자 — 지금 무엇을 볼지 한 줄로 말한다.
+	var face := Vector2(cx, LEFT.end.y - 72)
+	SummonArt.bubble(self, Rect2(LEFT.position.x + 12, face.y - 54 - 5 - 14 - 92, LEFT.size.x - 24, 92),
+			_guide_line(settled), face.x)
+	SummonArt.guide(self, face, 54, t)
+
+
+func _guide_line(settled: bool) -> String:
+	if not settled:
+		return "빛의 문 안에 멈춘 별을 세어 보세요."
+	var out := Rite.misses(Run.orbit).size()
+	if out == 0:
+		return "다섯 별이 모두 문 안에 들었습니다!"
+	if Run.can_respin():
+		return "문 밖의 별 %d개만 다시 돕니다." % out
+	return "골드가 모자랍니다. 이대로 소환하거나 별을 끌어오세요."
+
+
+func _chip(rect: Rect2, passive_id: String, label: String) -> void:
+	var passive := Balance.passive_by_id(passive_id)
+	var tint := Color(String(passive.get("tint", "#f6c445")))
+	Look.fill_round(self, rect, 4, tint.darkened(0.55))
+	Look.fill_round(self, rect.grow(-1), 3, Look.BG_DEEP.lerp(tint, 0.10))
+	Look.draw_passive_icon(self, rect.position + Vector2(20, rect.size.y * 0.5), 12.0, passive, tint)
+	Look.text_box(self, Rect2(rect.position.x + 40, rect.position.y + 2, rect.size.x - 48, rect.size.y - 4),
+			label, 18, tint.lightened(0.25), HORIZONTAL_ALIGNMENT_LEFT)
+
+
+## 오른쪽 판 — 별마다 문에 들 확률. **문의 폭이 곧 확률**이라는 것을 막대로 다시 말한다.
+## 줄의 차례는 판과 같다: 바깥 별(문이 가장 좁다)이 위, 수정이 붙든 안쪽 별이 아래.
+func _draw_odds(settled: bool, joker: int) -> void:
+	_panel(RIGHT)
+	Look.text_box(self, Rect2(RIGHT.position.x + 12, RIGHT.position.y + 12, RIGHT.size.x - 24, 32),
+			"별마다 문에 들 확률", 20, Look.INK_DIM)
+	var pull := Run.pull_target() if settled else -1
+	for row in range(Rite.RINGS):
+		var ring := Rite.RINGS - 1 - row
+		var box := Rect2(RIGHT.position.x + 10, RIGHT.position.y + 54 + row * 84, RIGHT.size.x - 20, 76)
+		var look := _look(ring)
+		var inside := look == RiteBoard.IN or look == RiteBoard.HELD
+		Look.fill_round(self, box, 4, Color(Look.GOLD, 0.10) if inside else Color(0, 0, 0, 0.24))
+		RiteBoard.draw_star(self, box.position + Vector2(27, 27), look, 0.88, t)
+		var chance := Rite.chance(ring)
+		var track := Rect2(box.position.x + 56, box.position.y + 21, 112, 12)
+		Look.fill_round(self, track, 3, Look.BG_DEEP)
+		Look.fill_round(self, Rect2(track.position, Vector2(maxf(5.0, track.size.x * chance), track.size.y)),
+				3, Look.GOLD if inside else RiteBoard.COLD)
+		Look.text_box(self, Rect2(box.end.x - 70, box.position.y + 9, 62, 36),
+				"항상" if Rite.anchored(ring) else RiteBoard.percent(chance), 23,
+				Look.GOLD if inside else Look.INK, HORIZONTAL_ALIGNMENT_RIGHT)
+		var status := "도는 중"
+		var status_col := Look.INK_DIM
+		if inside:
+			status = "수정이 붙든 별" if look == RiteBoard.HELD else "문 안 · 잠김"
+			status_col = Look.GOLD
+		elif look == RiteBoard.OUT:
+			status = "문 밖"
+			if ring == joker:
+				status = "문 밖 · 조커가 끌어옴"
+				status_col = RiteBoard.LIGHT
+			elif ring == pull:
+				status = "문 밖 · 끌어올 별"
+				status_col = Look.CRYSTAL
+		Look.text_box(self, Rect2(box.position.x + 56, box.position.y + 43, box.size.x - 64, 26),
+				status, 17, status_col, HORIZONTAL_ALIGNMENT_LEFT)
+	Look.text_box(self, Rect2(RIGHT.position.x + 12, RIGHT.end.y - 46, RIGHT.size.x - 24, 32),
+			"문이 넓을수록 잘 듭니다", 17, Look.INK_DIM)
+
+
+## 단추 셋 — 다시 돌리기 · 소환 · 별 끌어오기. id 와 켜짐 조건은 검사기와의 약속이다.
+func _draw_actions(settled: bool, preview: Dictionary) -> void:
+	var free := Run.respins_left()
+	var can := Run.can_respin()
+	var has_miss := Rite.valid(Run.orbit) and not Rite.misses(Run.orbit).is_empty()
+	var accent := Look.GREEN if free > 0 else Color("#d9a441")
+	ui.button(self, RESPIN_RECT, "", "rite:respin", can, accent, 26)
+	var ink := Look.INK if can else Color("#8b9aa5")
+	var icon := RESPIN_RECT.position + Vector2(34, RESPIN_RECT.size.y * 0.5 - 1)
+	draw_arc(icon, 11.0, -PI * 0.25, PI * 1.25, 18, ink, 3.0, true)
+	var head := icon + Vector2.from_angle(-PI * 0.25) * 11.0
+	draw_colored_polygon(PackedVector2Array([head + Vector2(-7, -5), head + Vector2(5, -6), head + Vector2(2, 6)]), ink)
+	# 남은 무료 횟수 또는 골드 값 — 조작명 옆의 따로 난 칸에서 바로 읽는다.
+	var chip := Rect2(RESPIN_RECT.end.x - 114, RESPIN_RECT.position.y + 13, 102, 40)
+	var label_w: float = RESPIN_RECT.size.x - 62.0 - (chip.size.x + 18.0 if has_miss else 12.0)
+	Look.text_box(self, Rect2(RESPIN_RECT.position.x + 56, RESPIN_RECT.position.y + 4, label_w, RESPIN_RECT.size.y - 10),
+			"다시 돌리기", 26, ink, HORIZONTAL_ALIGNMENT_LEFT)
+	if has_miss:
+		var value_col := Look.GREEN if free > 0 else (Look.GOLD if can else Look.RED)
+		Look.fill_round(self, chip, 4, Look.BG_DEEP)
+		draw_rect(Rect2(chip.position.x + 6, chip.end.y - 3, chip.size.x - 12, 2), Color(value_col, 0.7))
+		Look.text_box(self, chip.grow(-5), "무료 %d" % free if free > 0 else "%d G" % Run.respin_cost(),
+				22, value_col)
+
+	var tier := int(preview.get("tier", -1))
+	ui.button(self, GO_RECT, "%s 소환" % Look.star_label(tier) if settled and tier >= 0 else "소환",
+			"go", true, Look.GOLD, 34)
+	ui.reward_button(self, PULL_RECT, "별 끌어오기", "rite:pull",
+			Run.pull_target() >= 0 and not Ads.busy, Look.CRYSTAL, 26)
+
+
+# --------------------------------------------------------------------------- #
+# 확정 연출의 그림
+# --------------------------------------------------------------------------- #
 func _draw_reveal() -> void:
-	var tier := int(result.get("hand", 0))
-	var col := Look.tier_color(tier)
-	var cards: Array = result.get("cards", [])
-	if rt < 1.65:
-		var charge := clampf((rt - 0.6) / 0.65, 0, 1)
-		SummonArt.dealer(self, Rect2(498, 78, 216, 204), t, "", charge)
-		var gather := 1.0 - pow(1.0 - clampf(rt / 0.72, 0, 1), 3)
-		var launch := clampf((rt - 1.28) / 0.37, 0, 1)
-		var pile := Vector2(602, 244).lerp(Vector2(444, 412), launch * launch)
-		SummonArt.seal(self, pile, 28 + charge * 67, rt * 3, Look.CRYSTAL, charge)
-		for i in range(cards.size()):
-			var sc := lerpf(CARD_SC, 0.52, gather)
-			var destination := pile - Vector2(Look.CARD_W, Look.CARD_H) * sc * 0.5 + Vector2(i * 2, -i * 2)
-			var pos := card_rect(i).position.lerp(destination, gather)
-			draw_set_transform(pos + _sh, sin(rt * 8 + i) * 0.025 * charge, Vector2.ONE)
-			Look.draw_card(self, Vector2.ZERO, int(cards[i]), sc, false)
-			draw_set_transform(_sh, 0, Vector2.ONE)
+	var tier := int(result.get("tier", 0))
+	var at := _burst_at()
+	# ★ 밤하늘 판을 한 번 어둡게 덮는다. 안 덮으면 빛살(반투명)이 판의 색에 물들어
+	#   등급 색이 안 읽힌다 — 등급 색이 안 읽히면 화려할 이유가 없다.
+	draw_rect(Rect2(-40, -40, 1360, 880), Color(0, 0, 0, clampf((rt - 0.45) / 0.25, 0.0, 1.0) * 0.62))
+	if rt < at:
+		_draw_gather(at)
 		return
 	var unit: Dictionary = result.get("unit", {})
-	var pop := clampf((rt - 1.65) / 0.3, 0, 1)
-	Look.text_center_out(self, Vector2(640, 180), Look.hand_name(tier), 64 if showy else 54, col, Look.BG_DEEP, 3)
 	var element := String(unit.get("elem", "none"))
-	SummonArt.seal(self, Vector2(417, 433), 142, rt * 0.35, Balance.elem_color(element), 0.40)
-	var portrait := Rect2(248, 264 + (1 - pop) * 48, 332, 300)
-	Art.draw_unit_fit(self, unit, portrait, Color(1, 1, 1, pop))
-	Look.draw_rarity(self, Vector2(414, 603), tier, 13)
-	SummonArt.hero_info(self, unit, tier, Rect2(622, 246, 432, 394), false, result.get("hero", {"value": Poker.detail(cards)}))
+	Look.material_panel(self, Rect2(180, 235, 920, 424), Look.hero_card_face(element), Look.hero_card_edge(element))
+	fx.draw_back(self)      # 빛살·고리는 글자 **뒤에** 깔린다
+	fx.draw(self)
+	fx.draw_flash(self, Rect2(-40, -40, 1360, 880))
+	var pop := clampf((rt - at) / 0.3, 0.0, 1.0)
+	SummonArt.seal(self, HERO_AT, 142, rt * 0.35, Balance.elem_color(element), 0.40)
+	if tier >= Balance.TIER_MAX:
+		# 5성만의 금빛 인장과 둘레를 도는 별 — 4성과 한눈에 갈린다.
+		SummonArt.seal(self, HERO_AT, 166, -rt * 0.26, Look.GOLD, 0.6 * pop)
+		for i in range(12):
+			var around := HERO_AT + Vector2.from_angle(float(i) * TAU / 12.0 + rt * 0.14) * Vector2(184, 170)
+			var twinkle := 0.55 + 0.45 * sin(rt * 2.4 + float(i) * 1.7)
+			draw_colored_polygon(Look.star_points(around, 3.0 + twinkle * 3.0, 0.35),
+					Color(RiteBoard.LIGHT, (0.45 + twinkle * 0.5) * pop))
+	Art.draw_unit_fit(self, unit, Rect2(248, 268 + (1.0 - pop) * 48.0, 332, 340), Color(1, 1, 1, pop), tier)
+	SummonArt.hero_info(self, unit, tier, Rect2(622, 262, 432, 380))
+	_draw_rank(tier, at)
 	if String(result.get("where", "field")) == "bench":
 		Look.text_center(self, Vector2(640, 690), "영웅 전당에 보관되었습니다", 21, Look.CRYSTAL)
 	Look.text_center_out(self, Vector2(640, 748), "터치하여 배치하기", 24, Look.INK)
+
+
+## 터지기 전 — 문 안의 별이 수정으로 모여 한 덩이 빛이 되고, 영웅이 설 자리로 날아간다.
+func _draw_gather(at: float) -> void:
+	var orbit: Array = result.get("orbit", [])
+	var joker := int(result.get("joker", -1))
+	var charge := clampf((rt - 0.40) / maxf(0.1, at - 0.77), 0.0, 1.0)
+	var launch := clampf((rt - (at - 0.37)) / 0.37, 0.0, 1.0)
+	var orb := BOARD.lerp(HERO_AT, launch * launch)
+	RiteBoard.draw_base(self, BOARD, 1.0, t)
+	RiteBoard.draw_gate(self, BOARD, 1.0, t, 1.0 - launch)
+	draw_circle(BOARD, RiteBoard.EXTENT, Color(0, 0, 0, 0.32 * charge))     # 판은 물러나고 빛만 남는다
+	RiteBoard.draw_core(self, BOARD, 1.0, t, charge * (1.0 - launch))
+	fx.draw_back(self)
+	SummonArt.seal(self, orb, 30.0 + charge * 64.0, rt * 3.0, Look.CRYSTAL, charge)
+	draw_circle(orb, 16.0 + charge * 28.0, Color(RiteBoard.LIGHT, 0.22 * charge))
+	var inside: Array[int] = []
+	for ring in range(mini(Rite.RINGS, orbit.size())):
+		if Rite.in_gate(ring, int(orbit[ring])):
+			inside.append(ring)
+	for ring in range(mini(Rite.RINGS, orbit.size())):
+		var home := Rite.angle(ring, int(orbit[ring]))
+		var order := inside.find(ring)
+		var begin := 0.06 * float(maxi(0, order))
+		if ring == joker and ring < _before.size():
+			# 조커가 끌어온 별 — 문 밖의 제자리에서 문 안으로 끌려온 뒤에 모인다.
+			if rt < JOKER_SEC:
+				var from := Rite.angle(ring, _before[ring])
+				var k := clampf(rt / JOKER_SEC, 0.0, 1.0)
+				var swing := wrapf(home - from, -PI, PI)
+				var angle := from + swing * k * k * (3.0 - 2.0 * k)
+				var star := RiteBoard.point(BOARD, ring, angle)
+				RiteBoard.draw_tether(self, BOARD, star, 1.0, t, RiteBoard.LIGHT)
+				RiteBoard.draw_trail(self, BOARD, ring, angle, swing * 0.28 * sin(k * PI))
+				RiteBoard.draw_star(self, star, RiteBoard.SPIN, 1.0, t)
+				continue
+			begin = JOKER_SEC
+		if order < 0:
+			# 문 밖의 별은 식어서 사라진다.
+			RiteBoard.draw_star(self, RiteBoard.point(BOARD, ring, home), RiteBoard.OUT, 1.0, t, 0.0,
+					1.0 - clampf(rt / 0.35, 0.0, 1.0))
+			continue
+		var gather := clampf((rt - begin) / 0.5, 0.0, 1.0)
+		var eased := gather * gather * (3.0 - 2.0 * gather)
+		var radius := lerpf(RiteBoard.orbit_radius(ring), lerpf(36.0, 18.0, charge), eased)
+		var whirl := 5.5 * pow(maxf(0.0, rt - begin - 0.25), 1.7)
+		var angle := home + eased * (1.4 + TAU * float(order) / float(inside.size())) + whirl
+		var star := orb + Vector2.from_angle(angle) * radius
+		# 모이는 별은 꼬리를 끈다 — 지나온 쪽으로 옅은 빛 한 줄.
+		var behind := orb + Vector2.from_angle(angle - 0.5 * eased - 0.12) * (radius + 10.0 * (1.0 - eased))
+		draw_line(behind, star, Color(RiteBoard.LIGHT, 0.35 * gather), 4.0, true)
+		RiteBoard.draw_star(self, star, RiteBoard.IN if gather <= 0.0 else RiteBoard.SPIN,
+				lerpf(1.0, 0.86, eased), t)
+	draw_circle(orb, 10.0 * launch, Color(1, 1, 1, 0.85 * launch))
+	fx.draw(self)
+
+
+## 영웅 위의 큰 별 줄과 「N성」. 모였던 별이 하나씩 박히며 등급을 **다시 센다.**
+## 도박꾼의 눈으로 얹힌 반 별과 조커가 끌어온 별은 옆의 딱지가 무엇 덕인지 말해 준다.
+func _draw_rank(tier: int, at: float) -> void:
+	var parts := _rank_parts(tier)
+	var full := int(parts[0])
+	var half := bool(parts[1])
+	var bumped := bool(result.get("bumped", false))
+	var landed := 0
+	for i in range(full):
+		if rt >= at + STAR_IN_FIRST + STAR_IN_GAP * float(i):
+			landed += 1
+	var half_at := _half_at(full)
+	var half_in := half and rt >= half_at
+	Look.fill_round(self, Rect2(640 - 154, 196 - 31, 308, 62), 6, Color(Look.BG_DEEP, 0.86))
+	for i in range(Rite.MAX_STARS):
+		var c := _rank_star(i)
+		var slot := Look.star_points(c, 21.0)
+		draw_colored_polygon(slot, RiteBoard.COLD_FILL)
+		var lit := i < landed
+		var halved := i == full and half_in
+		if lit or halved:
+			var born := at + STAR_IN_FIRST + STAR_IN_GAP * float(i) if lit else half_at
+			var points := Look.star_points(c, 21.0 * (1.0 + 0.7 * clampf(1.0 - (rt - born) / 0.2, 0.0, 1.0)))
+			if lit:
+				draw_colored_polygon(points, Look.GOLD)
+			else:
+				# 왼쪽 반쪽 별 — 등급 배지(Look.draw_rarity)와 같은 자름이다.
+				draw_colored_polygon(PackedVector2Array([points[0], points[5], points[6], points[7], points[8], points[9]]),
+						Color("#ff7ac0") if bumped else Look.GOLD)
+		slot.append(slot[0])
+		draw_polyline(slot, Look.GOLD if lit or halved else RiteBoard.COLD, 1.6, true)
+	var shown := landed * 2 - 1 + (1 if half_in else 0)
+	var size := 66 if showy else 58
+	if shown >= 0:
+		Look.text_center_out(self, Vector2(640, 122), Look.star_label(shown), size,
+				Look.tier_color(shown).lightened(0.12), Look.BG_DEEP, 3)
+	# 딱지는 등급 글자의 양옆에 선다. 영문 「4.5-Star」처럼 글자가 길어져도 겹치지 않게 최종 등급의 폭을 잰다.
+	var reach := maxf(96.0, Look.text_width(Look.star_label(tier), size) * 0.5 + 18.0)
+	if int(result.get("joker", -1)) >= 0:
+		_chip(Rect2(640.0 - reach - 260.0, 104, 260, 36), "joker", "조커 · 별 하나 더")
+	if bumped and half_in:
+		_chip(Rect2(640.0 + reach, 104, 300, 36), "eye", "도박꾼의 눈 · +0.5성")
 
 
 ## 편성 판 — **탄마다** 뜬다. 새로 온 영웅을 어디에 세울지, 이번 탄에 오는 몬스터에

@@ -59,7 +59,7 @@ func _ready() -> void:
 	check(Sfx._music_id == "camp", "lobby plays the minor-key forge arrangement")
 	Run.phase = Run.Phase.DRAW
 	main.show_draw()
-	check(Sfx._music_id == "ritual", "card selection uses its separate all-in fate arrangement")
+	check(Sfx._music_id == "ritual", "the star rite uses its separate all-in fate arrangement")
 	for wave in [6, 10, 11]:
 		Run.wave = wave
 		main.go_battle()

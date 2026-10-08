@@ -1,32 +1,37 @@
-# 프로젝트 구조 안내 — 올인 디펜스
+# 프로젝트 구조 안내 — 스텔라 디펜스
 
-> 2026-09-15 기준. 폴더·파일이 무슨 역할을 하는지 한 곳에 적은 지도다.
+> 2026-10-08: 실제 3D 전환을 반영했다. 아래 상세 목록에는 이전 제작 파이프라인 기록도 남아 있다.
 > 게임 규칙은 [README.md](../README.md), 마무리 절차는 [WRAPUP.md](../WRAPUP.md) 를 본다.
 
-**한 줄 요약**: 트럼프 다섯 장으로 영웅을 뽑아 크리스탈을 지키는 디펜스. Godot 4.7.1 · 안드로이드 가로 화면 · 전부 2D 픽셀아트.
-화면은 `.tscn` 없이 GDScript `_draw()` 로 그리고, 그림·소리·애니메이션은 이 PC 의 로컬 모델(Krea 2 · Wan 2.2 · MiniMax H3 · ElevenLabs)로 만든다.
+별맞춤 의식으로 영웅을 불러 크리스탈을 지키는 디펜스. Godot 4.7.1 · Android/iOS · 가로 화면.
+전장은 `game/3d/`의 실제 메쉬·리그·조명·카메라로 렌더링하고, HUD는 GDScript `_draw()`로
+그린다. 랭크별 초상화는 같은 3D 모델에서 촬영한다. 현재 구조와 검증은 [STELLAR_3D.md](STELLAR_3D.md)를 본다.
 
 ---
 
 ## 0. 한눈에 보기
 
 ```
-pocker/
+stellardefense/
 ├── project.godot          Godot 프로젝트 설정 (오토로드 5개 · 메인 씬)
 ├── export_presets.cfg     안드로이드 APK · iOS 익스포트 프리셋
 ├── README.md              게임 규칙 전체 · 돌려 보기 · 그림 만드는 법
 ├── WRAPUP.md              마무리 절차 (검증 → 사진 → 굽기 → APK → 커밋)
 ├── AGENTS.md              에이전트 작업 규칙 (APK 고정 경로 · 디자인 서브에이전트)
-├── pokerdefense_world_characters_v2.md   세계관 · 50캐릭터 설정서
+├── stellardefense_world_characters_v2.md   세계관 · 50캐릭터 설정서
 ├── core/      게임 규칙 · 데이터 · 오토로드 (화면을 모르는 순수 로직)
 ├── game/      화면 하나 = 파일 하나 · 전투 시뮬레이터 · 이펙트
+│   └── 3d/    실제 3D 모델·전장·뷰포트·초상화·공통 배경
 ├── tests/     헤드리스 검사기 · 촬영 진입점 (Godot 씬)
 ├── tools/     생성 · 검증 · 빌드 도구 (Python · Bash)
 │   ├── sprite/     스프라이트 파이프라인 (원화 → 클립 → 시트 → 반입)
 │   ├── anim/       리그 기반 구(舊) 애니메이션 파이프라인
 │   ├── audio/      ElevenLabs 음원 생성 · 검사
+│   ├── 3d/         실제 모델 초상화 생성 · 화면 시각 검수
 │   └── blender3d/  3D → 도트 시험용 길 (공식 아님)
 ├── art/       그림 · 소리 · 애니메이션 에셋 (저장소에 넣는다)
+│   └── models/    50영웅 시각 프로필 · 550랭크 초상화 · 25몬스터 초상화 · 지형 셰이더
+├── data/      게임 데이터 DB `game.db` — 표의 원본. 게임은 안 읽고 APK · IPA 에도 안 실린다
 ├── docs/      설계 · 변경 기록 · 제출용 웹 페이지 소스
 ├── addons/admob/   AdMob 플러그인 (외부, Poing Studios)
 ├── android/        Godot 안드로이드 gradle 빌드 템플릿
@@ -35,13 +40,15 @@ pocker/
 └── build/          생성물 — 사진 · 로그 · 시트 중간물 · APK (git 제외)
 ```
 
-**데이터가 흐르는 길 셋**
+**데이터가 흐르는 길**
 
 | 흐름 | 원본 | 도구 | 결과 |
 |---|---|---|---|
-| 캐릭터·몬스터·테마 표 | `tools/roster.json` | `tools/gen_roster.py` | `core/roster.gd` (손으로 고치지 않는다) |
+| 게임 데이터(표 · 숫자 · 문구) | `data/game.db` | `tools/gamedb.py` (사용자 승인 뒤 `apply --approved`) | `tools/roster.json` · `core/locales/*.json` 통째로, `core/balance.gd` · `core/sound.gd` · `core/scenery.gd` 는 값만. 절차는 [GAME_DB.md](GAME_DB.md) |
+| 캐릭터·몬스터·테마 표 | `tools/roster.json` (위에서 내려온다) | `tools/gen_roster.py` | `core/roster.gd` (손으로 고치지 않는다) |
 | 정지 그림 | `tools/roster.json` 의 prompt | `tools/gen_art.py` (Krea 2) | `art/units/` · `art/monsters/` · `art/ui/` · `art/themes/` |
 | 애니메이션 | 원화 한 장 | `tools/sprite/*` (Wan 2.2 / H3) | `art/anim/<id>/` (`core/anim.gd` 가 읽는다) |
+| 실제 3D 모델·초상화 | `art/models/manifest.json` · `game/3d/stellar_models.gd` | `tests/3d/render_portraits.tscn` | 전장의 움직이는 메쉬와 `art/models/portraits/`의 등급별 렌더 |
 
 ---
 
@@ -49,12 +56,12 @@ pocker/
 
 | 파일 | 역할 |
 |---|---|
-| `project.godot` | Godot 설정. 앱 이름 「올인 디펜스」, 메인 씬 `game/boot.tscn`, 오토로드 **Save · I18n · Run · Sfx · Ads**, 뷰포트 1280x800 가로, GL Compatibility 렌더러, 기본 폰트 `core/fonts/RefugeSans-Bold.otf`, AdMob 플러그인 활성, 아이콘 `art/ui/crystal.png` |
-| `export_presets.cfg` | 프리셋 둘 — **Android Test APK** (`../../pokerdefense-test.apk` 로 굽는다, 패키지 `com.devjieung.pokerdefense`) · **iOS**. `include_filter` 에 `art/anim/*/anim.json` 과 `core/locales/*.json` 을 넣고, `exclude_filter` 로 `tools/ build/ docs/ tests/ art/sprite/ art/concepts/ art/animation/ art/audio_sources/` 등을 뺀다. 머리말에 그 까닭이 적혀 있다 |
-| `README.md` | 게임이 무엇인지 전부 — 카드 뽑기 → 영웅 → 전장 12자리 → 크리스탈 → 상점 → 100탄, 돌려 보는 법, 그림 만드는 법, 만듦새 |
+| `project.godot` | Godot 설정. 앱 이름 「스텔라 디펜스」, 메인 씬 `game/boot.tscn`, 오토로드 **Save · I18n · Run · Sfx · Ads**, 뷰포트 1280x800 가로, GL Compatibility 렌더러, 기본 폰트 `core/fonts/RefugeSans-Bold.otf`, AdMob 플러그인 활성, 아이콘 `art/ui/crystal.png` |
+| `export_presets.cfg` | 프리셋 둘 — **Android Test APK** (`../../pokerdefense-test.apk` 로 굽는다, 패키지 `com.devjieung.stellardefense`) · **iOS**. `include_filter` 에 `art/anim/*/anim.json` 과 `core/locales/*.json` 을 넣고, `exclude_filter` 로 `tools/ build/ docs/ tests/ art/sprite/ art/concepts/ art/animation/ art/audio_sources/` 등을 뺀다. 머리말에 그 까닭이 적혀 있다 |
+| `README.md` | 게임이 무엇인지 전부 — 별맞춤 의식 → 영웅 → 전장 12자리 → 크리스탈 → 상점 → 100탄, 돌려 보는 법, 그림 만드는 법, 만듦새 |
 | `WRAPUP.md` | 작업을 마칠 때의 순서 — `tools/verify.sh` 검증, 스크린샷, 그림·스프라이트 다시 굽기, APK, 커밋. 끝에 「절대 잊으면 안 되는 것」 |
 | `AGENTS.md` | 에이전트 작업 규칙. APK 는 항상 `~/pokerdefense-test.apk` 에 덮어쓴다. 디자인 작업은 `graphic_design_manager` 서브에이전트에 위임한다 |
-| `pokerdefense_world_characters_v2.md` | 세계관 「마지막 불빛의 카지노」 와 50캐릭터(속성 5 x 등급 10) 설정서. 이름·외형·기믹·프롬프트의 근거 문서 |
+| `stellardefense_world_characters_v2.md` | 세계관 「마지막 불빛의 카지노」 와 50캐릭터(속성 5 x 등급 10) 설정서. 이름·외형·기믹·프롬프트의 근거 문서 |
 | `.gitignore` | `.godot/` · `build/*` · `__pycache__` · `.env` 제외. **`art/` 는 일부러 넣는다** (다시 만드는 데 GPU 로 한 시간) |
 | `.env` | `ELEVENLABS_API_KEY`. git 제외 |
 | `CLAUDE.md` | 저장소 HEAD 에는 있으나 **작업 트리에서 지워진 상태**다. 코드 주석과 문서 곳곳이 `CLAUDE.md 4-3`, `CLAUDE.md 19` 처럼 절 번호로 참조한다 |
@@ -70,7 +77,7 @@ pocker/
 
 | 파일 | 이름 | 역할 |
 |---|---|---|
-| `run.gd` | `Run` | **한 판(런)의 상태 전부** — 단계(phase), 탄, 크리스탈(목숨), 골드, 영웅 편성, 카드 다섯 장과 칸별 카드 더미, 리롤 횟수, 패시브. 되돌릴 수 없는 순간(리롤·확정·구매)의 자동 저장도 여기서 건다 |
+| `run.gd` | `Run` | **한 판(런)의 상태 전부** — 단계(phase), 탄, 크리스탈(목숨), 골드, 영웅 편성, 별맞춤 의식의 별 자리와 다시 돌린 횟수, 패시브. 되돌릴 수 없는 순간(다시 돌리기·확정·구매)의 자동 저장도 여기서 건다 |
 | `save.gd` | `Save` | 저장 파일 하나 `user://save.cfg`. `run`(평생 기록) · `cur`(하던 판 통째로 = 자동 저장) · `opt`(설정·언어). `POCKER_NO_SAVE=1` 이면 읽기만 한다 |
 | `i18n.gd` | `I18n` | Kor / Eng 번역. `core/locales/*.json` 카탈로그를 읽고 `language_changed` 시그널을 낸다. 게임 ID·저장·전투 값은 언어와 무관하게 둔다 |
 | `sound.gd` | `Sfx` | 효과음·장면별 BGM 재생. 소리마다 최소 간격을 두어 겹침을 버린다. 파일이 없어도 조용히 넘어간다 |
@@ -80,7 +87,7 @@ pocker/
 
 | 파일 | class | 역할 |
 |---|---|---|
-| `poker.gd` | `Poker` | 트럼프 카드와 **족보 판정**. `Hand` enum 값이 곧 캐릭터 등급 인덱스. `tests/poker_check.gd` 가 전수 검사한다 |
+| `rite.gd` | `Rite` | **별맞춤 의식의 규칙** — 다섯 궤도의 별과 빛의 문. 문 안의 별 수가 등급(1~5성)이다. 순수 함수뿐이고 확률표(`odds`)와 그리는 자리(`angle`·`gate_half`)까지 여기서 준다. `tests/rite_check.gd` 가 경계는 전수로, 확률은 60만 번 굴려서 검사한다. 규칙 설명은 `docs/STAR_RITE.md` |
 | `balance.gd` | `Balance` | **게임의 숫자 전부** — 투기장 좌표와 길(`path_at`), 체력 곡선, 상성 배수, 골드, 상점 가격, 공격 방식별 계산. 순수 함수만 |
 | `roster.gd` | `Roster` | **자동 생성 파일** (`tools/gen_roster.py` ← `tools/roster.json`). 캐릭터 50 · 몬스터 25 · 테마 50 표와 등급 이름, 그림 높이, 총구 좌표(`muz`), 팔 뻗는 시간(`wind`) |
 | `run_validation.gd` | `RunValidation` | 저장 파일에서 온 값을 형 변환 전에 검사. 복구 실패 시 현재 판을 바꾸지 않는다 |
@@ -117,11 +124,12 @@ pocker/
 | 파일 | class | 역할 |
 |---|---|---|
 | `boot.tscn` | — | 메인 씬. `main.gd` 가 붙은 `Node2D` 하나 |
-| `main.gd` | — | **화면을 갈아 끼우는 곳.** 타이틀 → [테마 판] → (카드 뽑기 → 전투 → 상점) 반복 → 끝. 단계가 바뀔 때 자동 저장 |
+| `main.gd` | — | **화면을 갈아 끼우는 곳.** 타이틀 → [테마 판] → (별맞춤 의식 → 전투 → 상점) 반복 → 끝. 단계가 바뀔 때 자동 저장 |
 | `title_screen.gd` | `TitleScreen` | 타이틀. Kor / Eng 선택, 새로 시작 · 이어하기, 평생 기록 한 줄 |
 | `theme_screen.gd` | `ThemeScreen` | 테마가 바뀔 때 등장 몬스터 · 속성 · 비율을 보여 주는 판 |
-| `draw_screen.gd` | `DrawScreen` | 카드 다섯 장 받기 · 리롤 · 족보 확정 (PICK → REVEAL → SWAP) |
-| `summon_art.gd` | `SummonArt` | 뽑기 화면의 마녀 딜러 그림(`art/ui/dealer/witch.png`) 과 소환 연출 |
+| `draw_screen.gd` | `DrawScreen` | 별맞춤 의식 — 별 돌리기 · 다시 돌리기 · 소환 확정 (PICK → REVEAL → SWAP) |
+| `rite_board.gd` | `RiteBoard` | **별맞춤 의식판 그리기** — 궤도 다섯 · 수정 · 계단식 빛의 문 · 별. 뽑기 화면 · 전투 중 지원 팝업 · 메뉴 도움말 · 타이틀이 같이 쓴다. 문과 별의 자리는 `Rite.angle` · `Rite.gate_half` 에서만 받는다(보이는 문 = 판정) |
+| `summon_art.gd` | `SummonArt` | 의식 화면의 안내자 메달(`art/ui/dealer/witch.png`)과 소환 연출 · 영웅 정보 판 |
 | `shop_screen.gd` | `ShopScreen` | 탄 사이 상점 — 능력치 · 패시브(셋만) · 크리스탈 되사기 탭 |
 | `over_screen.gd` | `OverScreen` | 판 끝 화면. 이겼든 졌든 같은 화면, 문구와 색만 다르다 |
 | `menu_overlay.gd` | `MenuOverlay` | 모든 화면 공용 일시정지 메뉴. 화면의 처리와 입력을 함께 멈춘다 |
@@ -165,18 +173,18 @@ pocker/
 | 파일 | 역할 |
 |---|---|
 | `harness.gd` (`Harness`) | 세기(check) · 판정과 종료(finish) · 저장 보호 · 화면 누르기(tap/press) · 프레임 기다리기 · 사진(snap) · 인자 읽기 |
-| `fixture.gd` (`Fixture`) | 검사·촬영이 세우는 판 — 「n탄까지 간 판」 · 「원하는 족보가 나오는 손패」 |
+| `fixture.gd` (`Fixture`) | 검사·촬영이 세우는 판 — 「n탄까지 간 판」 · 「문 안에 별이 n개 선 의식」 |
 | `policy.gd` (`PlayPolicy`) | 「웬만큼 하는 사람」을 흉내 내는 자동 플레이어. 밸런스의 기준 실력 |
 
 ### 규칙 · 밸런스 검사
 
 | 파일 | 무엇을 보나 |
 |---|---|
-| `poker_check.gd` | 족보 판정 **전수 검사** — 52장에서 5장 고르는 2,598,960가지 전부 |
+| `rite_check.gd` | 별맞춤 의식 규칙 검사 — 문의 경계(모든 칸) · 별 세기 · 확률표와 실제 굴림 60만 판 · 다시 돌리기 · 그리는 자리 · 소환(쉰 명 누구든 어느 등급으로든) |
 | `balance_check.gd` | 자동 플레이로 100탄까지 여러 판 돌려 클리어율 · 탄별 목숨 손실 |
 | `dmg_check.gd` | 「이 한 대가 왜 이 숫자인가」 — 데미지가 지나가는 다섯 마디를 따라간다 |
 | `ns_check.gd` | **표와 표가 어긋나지 않는지** — 그림 · 소리 · 총구 좌표 · 무늬 · 이름 · 테마. `--strict` 면 그림 하나라도 없으면 실패 |
-| `rules_check.gd` | 새 규칙 회귀 — 발판 열둘 · 중복 출전 금지 · 옛 저장 이주 · 리롤 · 합성 · 보상 |
+| `rules_check.gd` | 새 규칙 회귀 — 발판 열둘 · 중복 출전 금지 · 옛 저장 거절 · 다시 돌리기 · 합성 · 보상 |
 | `formation_check.gd` | 두 입구 · 12자리 · 실시간 재배치 |
 | `range_check.gd` | 사거리 — 화면과 전투가 같은 값을 쓰는가 |
 | `push_check.gd` | 물 「특효」 밀어내기가 프레임 크기와 무관하게 같은 거리로 끝나는가 |
@@ -191,7 +199,7 @@ pocker/
 
 | 파일 | 무엇을 보나 |
 |---|---|
-| `play_check.gd` | 타이틀 → 카드 → 전투 → 상점을 **손가락으로 눌러** 한 바퀴. 그린 자리와 눌리는 자리가 같은지 |
+| `play_check.gd` | 타이틀 → 의식 → 전투 → 상점을 **손가락으로 눌러** 한 바퀴. 그린 자리와 눌리는 자리가 같은지 |
 | `flow_check.gd` | 저장 · 보상 · 메뉴 · 거래 회귀 |
 | `presentation_check.gd` | 화면 개선 회귀 — 확정 연출 · 편성 판 · 전당 탭 · 지형 그림 · 착탄 |
 | `rewards_ui_check.gd` | 보상(광고) 흐름 화면을 눌러 보고 `build/` 에 사진 |
@@ -206,7 +214,7 @@ pocker/
 | `demo.gd` + `demo_caption.gd` | 소개 영상 촬영 대본과 자막. `tools/record.py` 가 부른다 |
 | `all_hero_sprites_preview.gd` | 영웅 시트 재생 미리보기 → `build/all-hero-sprites/` |
 | `element_aoe_preview.gd` | 광역 5인 Idle · Attack · Shot 재생 → `build/element-aoe-sprites/` |
-| `dealer_refresh_preview.gd` | 딜러 · 소환 · 합성 · 야영지 UI 렌더 → `build/dealer-refresh/` |
+| `rite_design_preview.gd` | 별맞춤 의식 화면 · 확정 연출 · 지원 팝업 · 도움말 · 타이틀 · 도감 렌더와 그린 자리 = 판정 검사 → `build/rite-design/` |
 | `ui_polish_preview.gd` | 한영 포커 · 보상 · 영웅 정보 렌더 → `build/ui-polish/` |
 | `visual_refinement_preview.gd` | 희귀도 표식 · 마비 · 장판 발판 · 밀어내기 고정 픽스처 → `build/visual-refinement/` |
 | `monster_preview.gd` · `rarity_preview.gd` | 몬스터 클립 · 등급 연출 미리보기 |
@@ -219,9 +227,11 @@ pocker/
 
 | 파일 | 역할 |
 |---|---|
-| `verify.sh` | **검증 한 곳.** 0 커맨드라인 → 0-1 무늬 → 1 표 최신 → 1-1 음원 → 2 임포트 → 3 부팅 → 4 표 정합(4-1 시트 · 4-2 흐름 · 4-3 편성 · 4-4 피해 · 4-5 몬스터) → 5 족보 → 6 화면 한 바퀴 → 7 자동 플레이 → 8 폰트 → 8-1 한영 → 9 APK. `quick` · `--skip-sprites` |
+| `gamedb.py` | **게임 데이터 DB ↔ JSON · 게임 코드.** `status`(차이 보기) · `apply --approved`(승인된 값 내리기) · `pull`(파일을 직접 고친 값 들이기) · `check`(verify 용) · `log` · `init`. 코드 쪽은 리터럴을 읽어 바뀐 값의 글자만 갈아 끼운다 |
+| `verify.sh` | **검증 한 곳.** 0 커맨드라인 → 0-1 무늬 → 0-2 데이터 DB → 1 표 최신 → 1-1 음원 → 2 임포트 → 3 부팅 → 4 표 정합(4-1 시트 · 4-2 흐름 · 4-3 편성 · 4-4 피해 · 4-5 몬스터) → 5 별맞춤 의식 → 6 화면 한 바퀴 → 7 자동 플레이 → 8 폰트 → 8-1 한영 → 9 APK. `quick` · `--skip-sprites` |
 | `build_apk.sh` | JDK 17 로 APK 를 굽고 서명 · AdMob 플러그인을 확인한 뒤 `~/pokerdefense-test.apk` 를 교체 |
-| `roster.json` | **캐릭터 50 · 몬스터 25 · 테마 50 의 원본 표.** id · 이름 · 역할 · 속성 · 무기 · 프롬프트 · 크기 보정(`sc`) · `holes` · `floor_prompt`. 캐릭터를 더하거나 고치려면 여기 한 곳 |
+| `roster.json` | **캐릭터 50 · 몬스터 25 · 테마 50 의 표.** id · 이름 · 역할 · 속성 · 무기 · 프롬프트 · 크기 보정(`sc`) · `holes` · `floor_prompt`. 원본은 `data/game.db` 이고 `gamedb.py` 가 여기로 내린다 — 캐릭터를 더하거나 고치려면 DB 에서. 그림 · 스프라이트 도구는 여전히 이 파일을 읽는다 |
+| `ci/check_no_db.py` | 구운 APK · IPA · PCK 에 게임 데이터 DB 가 실리지 않았는지 연다. `build_apk.sh` · `ci/export.sh` · `ci/build_ipa.sh` 가 부른다 |
 | `gen_roster.py` | `roster.json` → `core/roster.gd`. `art/anim/*/anim.json` 의 총구 · 시간도 함께 찍는다 |
 | `gen_art.py` | 로컬 **Krea 2 Turbo** 로 정지 그림 생성(`--kind unit,monster,ui,theme`). **화풍 앵커가 여기 한 곳**에만 있다. 흰 배경 오려내기 · 픽셀화 후처리 |
 | `reroll_art.py` | 몇 명만 후보 여러 장을 뽑아 `build/cand/` 에 두고 눈으로 고른 뒤 얹는다 |
@@ -238,7 +248,7 @@ pocker/
 | `check_font.py` | 화면에 쓰는 모든 문자가 번들 폰트에 있는지(두부 방지) |
 | `check_localization.py` | UI 문자열과 로스터의 한영 커버리지 |
 | `verify_feedback.py` | 피드백 반영 검사 아홉 씬을 저장 보호 상태로 일괄 실행 → `build/feedback-verification/` |
-| `visual_refinement_review.py` · `ui_polish_review.py` · `dealer_refresh_review.py` | 두 해상도(1280x800 · 1000x625)로 실제 렌더한 검토 이미지 묶음 |
+| `visual_refinement_review.py` · `ui_polish_review.py` · `rite_design_review.py` | 두 해상도(1280x800 · 1000x625)로 실제 렌더한 검토 이미지 묶음 |
 | `build_world_design.py` | 세계관 문서 · Krea 입력 · 로컬 갤러리 빌드 (`docs/world_characters_v3.tsv` 기반) |
 | `gen_world_concepts.py` | V3 세계관 50명 T포즈 원화 생성(Krea 2) → `art/concepts/last_refuge_v3/` |
 | `review_world_concepts.py` · `review_world_pixel.py` | 원화 · 픽셀 변환본의 컨택트 시트와 출처 검증 |
@@ -356,6 +366,7 @@ Blender 로우폴리 → 리깅 → 직교 툰 렌더 → 팔레트 양자화 �
 |---|---|
 | `REWARDS_AND_FUSION.md` | **현재 전투 · 영웅 합성 · 보상형 광고 규칙.** README 가 「현재 규칙은 이 문서를 따른다」고 지목 |
 | `DESIGN_SYSTEM.md` | 디자인 기준(`graphic_design_manager` 가 세션마다 읽음) + 픽셀아트 제작 지침 · DGX Spark 워크플로 · 작업별 기록 |
+| `GAME_DB.md` | **게임 데이터 DB** — `data/game.db` 에서 고치고 승인 뒤 JSON · 게임 코드로 내리는 절차, 표 목록, 배포물 제외 |
 | `LOCALIZATION.md` | Kor / Eng 표시 — 언어 데이터 · 저장 · 검증 |
 | `DEBUG.md` | 데미지를 눈으로 따라가기 — 에디터 F3 오버레이 · 중단점 · 헤드리스 `dmg_check` |
 | `PROJECT_STRUCTURE.md` | 이 문서 |
@@ -395,6 +406,7 @@ Blender 로우폴리 → 리깅 → 직교 툰 렌더 → 팔레트 양자화 �
 | 경로 | 역할 |
 |---|---|
 | `addons/admob/` | **Poing Studios AdMob 플러그인 5.0.0** (외부 코드). `core/ads.gd` 가 사용. `gdscript/` · `csharp/` API, `android/bin/` 미디에이션 라이브러리, `ios/`, `docs/`, `skills/` |
+| `data/game.db` | **게임 데이터의 원본**(SQLite). 영웅 · 몬스터 · 테마 · 밸런스 표와 숫자 · 패시브 · 문구. `tools/gamedb.py` 로만 게임 파일과 오간다. `.gdignore` 와 내보내기 제외 필터로 배포물에서 뺀다 |
 | `android/` | Godot 안드로이드 **gradle 빌드 템플릿**(`build/`). `.build_version` = 4.7.1.stable. `.gdignore` |
 | `.codex/config.toml` | Codex 서브에이전트 활성화 |
 | `.codex/agents/graphic_design_manager.toml` | 전담 그래픽 디자인 서브에이전트 역할 정의(`AGENTS.md` 가 지목) |

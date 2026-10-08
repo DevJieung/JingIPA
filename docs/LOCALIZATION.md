@@ -4,13 +4,16 @@
 `opt.language`에 저장되며 진행 중인 판과 평생 기록을 보존한다. 이전 저장에 언어가
 없거나 지원하지 않는 값이면 한국어로 연다.
 
-앱 표시 이름은 한국어 `올인 디펜스`, 영어 `All-in Defense`다. Android/iOS 시스템 언어별 이름은 `project.godot`의 `application/config/name_localized`에서 지정하고, 게임 안 제목은 `I18n`을 따라 즉시 바뀐다. 기존 설치 업데이트와 저장 호환을 위해 패키지/번들 식별자와 저장 디렉터리는 유지한다. APK 산출물 이름도 사용자 지정 고정 경로를 유지한다.
+앱 표시 이름은 한국어 `스텔라 디펜스`, 영어 `Stellar Defense`다. Android/iOS 시스템 언어별 이름은 `project.godot`의 `application/config/name_localized`에서 지정하고, 게임 안 제목은 `I18n`을 따라 즉시 바뀐다. 패키지/번들 식별자와 저장 디렉터리는 `stellardefense`로 전환한다. 데스크톱에서는 접근 가능한 이전 저장을 읽고, 모바일에서는 새 패키지가 별도로 설치된다. APK 산출물 이름도 사용자 지정 고정 경로를 유지한다.
 
 ## 데이터와 표시
 
 - `core/i18n.gd`: `I18n` 자동 로드, 언어 선택·저장 연결과 번역 캐시.
 - `core/locales/ui.json`: 한국어 원문과 영어 번역, 기존 영어 표기의 한국어 변환.
 - `core/locales/heroes.json`: 50명 영웅의 짧은 한영 컨셉 소개.
+- 두 JSON의 원본은 `data/game.db`의 `strings` 표와 `units.blurb_ko / blurb_en`이다.
+  문구는 DB에서 고치고 승인 뒤 `python3 tools/gamedb.py apply --approved`로 내린다
+  (`docs/GAME_DB.md`). JSON을 직접 고쳤다면 `python3 tools/gamedb.py pull`로 들인다.
 - 이름은 기존 `Roster.UNITS`의 `ko / en`을 그대로 사용한다. ID는 번역하지 않는다.
 - `Look`은 문자열을 번역한 뒤 폭·줄바꿈을 계산하고 그린다. 잘린 문자열을 번역하지 않는다.
 - `SummonArt.hero_info`가 소환·합성·대기실 상세의 소개 구조를 공유한다.

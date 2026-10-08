@@ -1,0 +1,502 @@
+{
+  "blank": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 52,
+      "y": -109
+    }
+  },
+  "brasa": {
+    "anchor": {
+      "x": 143,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 30,
+      "y": -108
+    }
+  },
+  "brian": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 87,
+      "y": -114
+    }
+  },
+  "brigid": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 44,
+      "y": -80
+    }
+  },
+  "caden": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 84,
+      "y": -72
+    }
+  },
+  "candela": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 128,
+      "y": -113
+    }
+  },
+  "carmen": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 69,
+      "y": -110
+    }
+  },
+  "ceniza": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 20,
+      "y": -84
+    }
+  },
+  "chispa": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 60,
+      "y": -118
+    }
+  },
+  "conor": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 78,
+      "y": -130
+    }
+  },
+  "donn": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 83,
+      "y": -102
+    }
+  },
+  "dummy": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 101,
+      "y": -120
+    }
+  },
+  "echo": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 70,
+      "y": -94
+    }
+  },
+  "eira": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 69,
+      "y": -111
+    }
+  },
+  "estoque": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 100,
+      "y": -79
+    }
+  },
+  "finn": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 123,
+      "y": -87
+    }
+  },
+  "frosti": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 76,
+      "y": -84
+    }
+  },
+  "galene": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 82,
+      "y": -122
+    }
+  },
+  "glaukos": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 101,
+      "y": -78
+    }
+  },
+  "grey": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 99,
+      "y": -117
+    }
+  },
+  "helga": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 111,
+      "y": -104
+    }
+  },
+  "igni": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 115,
+      "y": -91
+    }
+  },
+  "isa": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 50,
+      "y": -79
+    }
+  },
+  "jokull": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 110,
+      "y": -71
+    }
+  },
+  "kari": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 49,
+      "y": -85
+    }
+  },
+  "keto": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 75,
+      "y": -96
+    }
+  },
+  "limne": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 53,
+      "y": -116
+    }
+  },
+  "lind": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 76,
+      "y": -102
+    }
+  },
+  "lugh": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 59,
+      "y": -94
+    }
+  },
+  "marea": {
+    "anchor": {
+      "x": 138,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 90,
+      "y": -104
+    }
+  },
+  "mimic": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 33,
+      "y": -104
+    }
+  },
+  "morrigan": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 89,
+      "y": -104
+    }
+  },
+  "nerea": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 106,
+      "y": -84
+    }
+  },
+  "niamh": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 48,
+      "y": -81
+    }
+  },
+  "null": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 62,
+      "y": -88
+    }
+  },
+  "phantom": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 86,
+      "y": -77
+    }
+  },
+  "phorkys": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 70,
+      "y": -123
+    }
+  },
+  "pip": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 96,
+      "y": -83
+    }
+  },
+  "protea": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 72,
+      "y": -102
+    }
+  },
+  "rhiannon": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 74,
+      "y": -103
+    }
+  },
+  "saeta": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 75,
+      "y": -104
+    }
+  },
+  "shift": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 100,
+      "y": -92
+    }
+  },
+  "sigrid": {
+    "anchor": {
+      "x": 146,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 25,
+      "y": -102
+    }
+  },
+  "snorri": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 127,
+      "y": -103
+    }
+  },
+  "solana": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 52,
+      "y": -82
+    }
+  },
+  "thalassa": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 19,
+      "y": -89
+    }
+  },
+  "triton": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 67,
+      "y": -105
+    }
+  },
+  "vidarr": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 55,
+      "y": -100
+    }
+  },
+  "volcan": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 49,
+      "y": -93
+    }
+  },
+  "zero": {
+    "anchor": {
+      "x": 128,
+      "y": 224
+    },
+    "muzzle_at": {
+      "x": 86,
+      "y": -100
+    }
+  }
+}

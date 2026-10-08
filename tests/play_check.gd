@@ -1,6 +1,6 @@
 extends Harness
 
-## 화면을 실제로 세워 놓고 **손가락으로 눌러** 타이틀 → 카드 → 전투 → 상점을 돌린다.
+## 화면을 실제로 세워 놓고 **손가락으로 눌러** 타이틀 → 의식 → 전투 → 상점을 돌린다.
 ##
 ## 왜 필요한가: 이 머신에는 화면이 없다. 배치가 어긋나는 건 사진으로 보지만,
 ## "버튼을 눌렀는데 아무 일도 안 일어난다" 같은 것은 사진으로도 안 보인다.
@@ -8,6 +8,10 @@ extends Harness
 ## 같은지까지 확인한다.
 ##
 ##   godot --headless --path . res://tests/play_check.tscn
+##
+## ★ 의식 화면의 단추 id 는 화면과의 약속이다: 소환 확정 `go` · 다시 돌리기 `rite:respin` ·
+##   광고로 별 끌어오기 `rite:pull`. 확정 연출은 0.7초 뒤부터 아무 데나 눌러 넘기고,
+##   편성 판의 `tobattle` · `formation:*` 는 그대로다.
 
 const WAVES := 4
 
@@ -103,40 +107,94 @@ func _step_title() -> void:
 
 func _step_draw(w: int) -> void:
 	var u := await _paint()
-	if Run.cards.size() != 5:
-		_bad("%d탄: 카드가 %d장이다" % [Run.wave, Run.cards.size()])
-	# 리롤 — 공짜가 남아 있는 첫 카드를 한 번 바꾼다.
-	var before: int = Run.cards[0]
+	if main.screen.state != DrawScreen.PICK:
+		_bad("%d탄: 의식 화면이 고르는 단계가 아니다 (state %d)" % [Run.wave, main.screen.state])
+	if not Rite.valid(Run.orbit):
+		_bad("%d탄: 의식의 별 자리가 성하지 않다 (%s)" % [Run.wave, str(Run.orbit)])
+		return
+	if Run.wave == 1 and Run.rite_stars() < Balance.RITE_FIRST_STARS:
+		_bad("1탄: 판의 첫 의식이 %d성으로 열렸다 (%d성 이상이어야 한다)" % [Run.rite_stars(), Balance.RITE_FIRST_STARS])
+	# ★ 무료 횟수는 **탄마다 새로 찬다.** 지난 탄에 쓴 횟수가 딸려 오면 2탄부터는 처음부터 골드를 낸다.
+	if Run.spins != 0 or Run.paid_spins != 0 or Run.pulls != 0 or Run.respins_left() != Run.free_rerolls():
+		_bad("%d탄: 새 의식인데 돌린 횟수가 남아 있다 (돌림 %d · 유료 %d · 끌어옴 %d · 무료 %d/%d)"
+				% [Run.wave, Run.spins, Run.paid_spins, Run.pulls, Run.respins_left(), Run.free_rerolls()])
+	for id in ["go", "rite:respin", "rite:pull"]:
+		if zone_of(main.screen, id).is_empty():
+			_bad("%d탄: 의식 화면에 %s 단추가 없다" % [Run.wave, id])
+	# 다시 돌리기 — 공짜가 남아 있다. 문 밖에 별이 있으면 눌러서 돌린다.
+	var before: Array[int] = Run.orbit.duplicate()
+	var missed := Rite.misses(before)
 	var gold_before := Run.gold
-	if Run.reroll_cost_of(0) != 0:
-		_bad("%d탄: 첫 리롤이 공짜가 아니다" % Run.wave)
-	if not _tap(u, "re0"):
-		_bad("%d탄: 리롤 버튼을 못 눌렀다" % Run.wave)
-	if Run.cards[0] == before and Run.rerolled[0] == 0:
-		_bad("%d탄: 리롤을 눌렀는데 카드가 그대로다" % Run.wave)
-	if Run.gold != gold_before:
-		_bad("%d탄: 공짜 리롤인데 골드가 줄었다" % Run.wave)
-	# 공짜를 다 쓴 카드는 값이 붙어야 한다
-	if Run.free_rerolls() == 1 and Run.reroll_cost_of(0) <= 0:
-		_bad("%d탄: 한 번 바꾼 카드가 여전히 공짜다 — 규칙이 깨졌다" % Run.wave)
-	# ★ **리롤은 누른 그 순간 담겨야 한다.** 안 담기면 뽑기 화면에서 앱을 껐다 켰을 때
-	#   리롤 횟수가 0 으로 되돌아가서 **공짜 리롤이 되살아난다** — 그게 곧 무한 리롤이다.
-	#   (POCKER_NO_SAVE=1 에서도 잡힌다: Save.store_run 이 파일에 쓰기 **전에**
+	if Run.respin_cost() != 0:
+		_bad("%d탄: 첫 다시 돌리기가 공짜가 아니다" % Run.wave)
+	if missed.is_empty():
+		# 처음부터 다섯이 다 들었다(드물다). 돌릴 것이 없으니 단추가 꺼져 있어야 하고,
+		# 눌러도 횟수도 골드도 그대로여야 한다.
+		if _tap(u, "rite:respin") or Run.spins != 0 or Run.gold != gold_before:
+			_bad("%d탄: 다섯 별이 다 들었는데 다시 돌리기가 눌린다" % Run.wave)
+	else:
+		if not _tap(u, "rite:respin"):
+			_bad("%d탄: 다시 돌리기 단추를 못 눌렀다" % Run.wave)
+		if Run.spins != 1:
+			_bad("%d탄: 다시 돌리기를 눌렀는데 안 돌았다 (돌린 횟수 %d)" % [Run.wave, Run.spins])
+		# ★ **문 안에 든 별은 잠긴다.** 다시 돌려서 이미 든 별이 빠지면 누를수록 손해인 단추가 된다.
+		for ring in range(Rite.RINGS):
+			if not missed.has(ring) and Run.orbit[ring] != before[ring]:
+				_bad("%d탄: 다시 돌렸더니 문 안의 %d번 별이 움직였다" % [Run.wave, ring])
+		if Run.rite_stars() < Rite.stars(before):
+			_bad("%d탄: 다시 돌렸더니 별이 줄었다 (%d → %d)" % [Run.wave, Rite.stars(before), Run.rite_stars()])
+		if Run.gold != gold_before:
+			_bad("%d탄: 공짜 다시 돌리기인데 골드가 줄었다" % Run.wave)
+		# 공짜를 다 쓰면 값이 붙어야 한다
+		if Run.free_rerolls() == 1 and Run.respin_cost() != Balance.reroll_cost(0):
+			_bad("%d탄: 한 번 돌린 뒤의 값이 %d 다 (%d 이어야 한다) — 규칙이 깨졌다"
+					% [Run.wave, Run.respin_cost(), Balance.reroll_cost(0)])
+	# ★ **다시 돌리기는 누른 그 순간 담겨야 한다.** 안 담기면 의식 화면에서 앱을 껐다 켰을 때
+	#   돌린 횟수가 0 으로 되돌아가서 **공짜 다시 돌리기가 되살아난다** — 그게 곧 무한 리롤이다.
+	#   별 자리도 같이 담겨야 한다. 안 그러면 껐다 켜는 것으로 맘에 드는 별이 나올 때까지 굴린다.
+	#   (STELLARDEFENSE_NO_SAVE=1 에서도 잡힌다: Save.store_run 이 파일에 쓰기 **전에**
 	#    cur_run 에 담고 나서 읽기 전용인지를 보기 때문이다.)
-	if Array(Save.cur_run.get("rerolled", [])) != Array(Run.rerolled):
-		_bad("%d탄: 리롤을 눌렀는데 이어할 판에 안 담겼다 (앱을 껐다 켜면 공짜 리롤이 되살아난다) — 담긴 것 %s / 실제 %s"
-				% [Run.wave, str(Save.cur_run.get("rerolled", [])), str(Run.rerolled)])
+	if not missed.is_empty() and Save.cur_run.get("rite", {}) != Run.snapshot()["rite"]:
+		_bad("%d탄: 다시 돌렸는데 이어할 판에 안 담겼다 (앱을 껐다 켜면 공짜 횟수와 별 자리가 되살아난다) — 담긴 것 %s / 실제 %s"
+				% [Run.wave, str(Save.cur_run.get("rite", {})), str(Run.snapshot()["rite"])])
+
+	# 별 끌어오기(광고) — 문 밖에 별이 남아 있으면 골드 · 무료 횟수와 무관하게 켜져 있고,
+	# 다 들었으면 꺼져 있다.
+	u = await _paint()
+	var pull_zone := zone_of(main.screen, "rite:pull")
+	if not pull_zone.is_empty() and bool(pull_zone["on"]) != (Run.pull_target() >= 0):
+		_bad("%d탄: 별 끌어오기 단추가 %s 있는데 끌어올 별은 %d번이다"
+				% [Run.wave, "켜져" if bool(pull_zone["on"]) else "꺼져", Run.pull_target()])
+	var respin_zone := zone_of(main.screen, "rite:respin")
+	if not respin_zone.is_empty() and bool(respin_zone["on"]) != Run.can_respin():
+		_bad("%d탄: 다시 돌리기 단추의 켜짐이 규칙(can_respin %s)과 다르다" % [Run.wave, str(Run.can_respin())])
+	# ★ **보상은 광고를 끝까지 본 뒤에만 온다.** 이 기계에는 광고가 없으므로 눌러도 별은
+	#   그대로여야 하고, 광고 대기 화면이 입력을 잠근 채로 남아도 안 된다.
+	var rite_before: Dictionary = Run.snapshot()["rite"]
+	_tap(u, "rite:pull")
+	if Run.snapshot()["rite"] != rite_before or Ads.busy:
+		_bad("%d탄: 광고를 안 봤는데 별이 끌려왔거나 광고 대기가 걸렸다 (%s → %s · busy %s)"
+				% [Run.wave, str(rite_before), str(Run.snapshot()["rite"]), str(Ads.busy)])
 
 	u = await _paint()
+	var stars_shown := Run.rite_stars()
 	if not _tap(u, "go"):
-		_bad("%d탄: 결정 버튼을 못 눌렀다" % Run.wave)
-	# ★ 같은 캐릭터가 또 나오면 옆에 서지 않고 **겹친다.** 그래서 세는 것은 자릿수가
-	#   아니라 겹친 수까지 더한 hero_total() 이다.
+		_bad("%d탄: 소환 단추를 못 눌렀다" % Run.wave)
+	# ★ 같은 캐릭터가 또 나오면 성역에 서지 않고 **전당에 따로 보관된다.** 그래서 세는 것은
+	#   성역의 자릿수가 아니라 전당까지 더한 hero_total() 이다.
 	if Run.hero_total() != w + 1:
 		_bad("%d탄: 영웅이 %d명이다 (%d명이어야 한다)" % [Run.wave, Run.hero_total(), w + 1])
 	if Run.heroes.size() > Balance.HERO_SLOTS:
 		_bad("%d탄: 성역에 %d명이 섰다 (%d명까지다)"
 				% [Run.wave, Run.heroes.size(), Balance.HERO_SLOTS])
+	# ★ **화면이 보여 준 별 수가 그대로 등급이어야 한다.** 문 안에 셋이 섰는데 2성이 나오면
+	#   그 순간 이 뽑기는 못 믿을 것이 된다. (패시브가 없는 판이라 조커도 눈도 안 낀다)
+	var got: Dictionary = Run.last_result
+	if Run.has("joker") or Run.has("eye"):
+		pass          # 조커는 별을 하나 더하고 눈은 반 별을 얹는다 — 그 셈은 tests/rite_check 가 본다
+	elif int(got.get("stars", -1)) != stars_shown or int(got.get("tier", -1)) != Rite.tier_of(stars_shown):
+		_bad("%d탄: 문 안의 별은 %d개였는데 %d성(등급 %d)이 나왔다"
+				% [Run.wave, stars_shown, int(got.get("stars", -1)), int(got.get("tier", -1))])
 	# ★ **확정하는 순간 담겨야 하고, 담긴 단계가 SWAP 이어야 한다.** 예전에는 phase 가
 	#   DRAW 인 채로 담겨서, 확정 뒤 홈 버튼을 누르면 이어하기가 뽑기 화면을 다시 띄웠고
 	#   「결정!」을 한 번 더 눌러 **영웅이 공짜로 하나 더** 생겼다. 그 익스플로잇을 막는다.
@@ -156,19 +214,56 @@ func _step_draw(w: int) -> void:
 	# ★ 확정은 **한 탄에 한 번**이다. 화면을 안 거치고 함수를 곧장 두 번 불러도 영웅이
 	#   늘면 안 된다 — 화면 쪽 빗장(_leaving)이 아니라 규칙 자체가 막아야 한다.
 	var dup_before: int = Run.hero_total()
-	Run.confirm_hand()
+	Run.confirm_summon()
 	if Run.hero_total() != dup_before:
-		_bad("%d탄: confirm_hand() 를 두 번 불렀더니 영웅이 %d → %d 가 됐다"
+		_bad("%d탄: confirm_summon() 을 두 번 불렀더니 영웅이 %d → %d 가 됐다"
 				% [Run.wave, dup_before, Run.hero_total()])
-	# ★ 확정한 뒤 연출이 도는 동안 화면은 아직 트리에 있다. 여기서 「결정!」을 또 누르면
-	#   영웅이 공짜로 하나 더 생기는 버그가 있었다. 눌러 보고 안 늘어나는지 확인한다.
+	# ★ 확정한 뒤 연출이 도는 동안 화면은 아직 트리에 있다. 여기서 「소환」을 또 누르면
+	#   영웅이 공짜로 하나 더 생기는 버그가 있었다. 단추 셋을 다 눌러 보고 영웅도, 별도,
+	#   골드도 그대로인지 확인한다.
 	var again: Ui = main.screen.ui
+	var rite_done: Dictionary = Run.snapshot()["rite"]
+	var gold_done := Run.gold
 	_tap(again, "go")
-	_tap(again, "re0")
+	_tap(again, "rite:respin")
+	_tap(again, "rite:pull")
 	if Run.hero_total() != w + 1:
 		_bad("%d탄: 연출 중에 또 눌렀더니 영웅이 %d명이 됐다" % [Run.wave, Run.hero_total()])
+	if Run.snapshot()["rite"] != rite_done or Run.gold != gold_done or Ads.busy:
+		_bad("%d탄: 확정한 뒤에 의식 단추가 눌려서 별이나 골드가 바뀌었다" % Run.wave)
+	# ★ 확정하자마자 누른 것은 연출을 넘기지도 못한다 — 넘어가면 방금 무엇이 나왔는지 못 본다
+	#   (연출은 0.7초 뒤부터 넘길 수 있다).
+	if main.screen.state != DrawScreen.REVEAL:
+		_bad("%d탄: 확정하자마자 누른 것으로 확정 연출이 넘어갔다 (state %d)" % [Run.wave, main.screen.state])
 	# 연출이 끝나면 **편성 판**이 뜬다 — 이제 탄마다 빠짐없이.
-	await _to_battle_via_board(main.screen)
+	# 한 탄은 0.7초가 지나자마자 넘기고, 한 탄은 연출을 끝까지 본 뒤에 넘긴다.
+	await _to_battle_via_board(main.screen, 900 if w % 2 == 0 else 2200)
+
+
+## 확정 연출(REVEAL)이 끝나 편성 판(SWAP)이 뜰 때까지 간다. 떴으면 참.
+##
+## ★ 연출은 **0.7초 뒤부터 아무 데나 누르면** 넘어간다(화면과의 약속). 화면 안쪽의 시계를
+##   읽지 않고 벽시계로 `hold_ms` 만큼 본 뒤에 넘어갈 때까지 누른다 — 누르기 전에 화면이
+##   바뀌어 버리는 쪽도 같이 본다(state 만 기다리면 그때 여기서 20초를 그냥 서 있는다).
+## ★ 시작하자마자 누른 것은 흘려야 한다. 그게 넘어가면 무엇이 나왔는지 못 보고 지나간다.
+func _skip_reveal(d, hold_ms: int) -> bool:
+	var t0 := Time.get_ticks_msec()
+	var poked := false
+	while d.state != DrawScreen.SWAP and main.screen == d \
+			and Time.get_ticks_msec() - t0 < 20000:
+		await get_tree().process_frame
+		d.queue_redraw()
+		if d.state != DrawScreen.REVEAL:
+			continue
+		var waited := Time.get_ticks_msec() - t0
+		if not poked and waited < 250:
+			poked = true
+			mouse(d, Vector2(640, 760), true)
+			if d.state != DrawScreen.REVEAL:
+				_bad("%d탄: 확정 연출이 시작하자마자(%dms) 눌려서 넘어갔다 — 0.7초는 보여야 한다" % [Run.wave, waited])
+		elif waited >= hold_ms:
+			mouse(d, Vector2(640, 760), true)
+	return d.state == DrawScreen.SWAP
 
 
 ## 확정 연출이 끝나면 편성 판(SWAP)이 뜬다 — **탄마다 빠짐없이**. 그 판을 눌러 전투로 간다.
@@ -176,18 +271,16 @@ func _step_draw(w: int) -> void:
 ## ★ 예전에는 성역이 꽉 찼을 때만 떴고, 그래서 이 검사도 확정한 뒤 곧장 전투를 기다렸다.
 ##   지금은 판을 안 넘기면 전투가 영영 시작되지 않는다 — 여기를 빼먹으면 검사가
 ##   "전투로 안 넘어간다"고만 말하고 진짜 이유는 안 알려 준다.
-func _to_battle_via_board(d) -> void:
-	var t0 := Time.get_ticks_msec()
-	while d.state != DrawScreen.SWAP and main.screen == d \
-			and Time.get_ticks_msec() - t0 < 20000:
-		await get_tree().process_frame
-		d.queue_redraw()
-		if d.state == DrawScreen.REVEAL and d.rt > 1.6:
-			mouse(d, Vector2(640, 760), true)
-	if d.state != DrawScreen.SWAP:
+func _to_battle_via_board(d, hold_ms: int = 900) -> void:
+	if not await _skip_reveal(d, hold_ms):
 		_bad("%d탄: 확정했는데 편성 판이 안 떴다 (state %d)" % [Run.wave, d.state])
 		await _wait_for("battle_screen", 600)
 		return
+	# 편성 판에는 의식 단추가 없어야 한다 — 남아 있으면 확정한 탄에서 또 돌리거나 또 소환한다.
+	await _paint()
+	for id in ["go", "rite:respin", "rite:pull"]:
+		if bool(zone_of(main.screen, id).get("on", false)):
+			_bad("%d탄: 편성 판에 의식 단추 %s 가 켜진 채 남아 있다" % [Run.wave, id])
 	var u := await _paint()
 	if not _tap(u, "tobattle"):
 		_bad("%d탄: 편성 판의 「전투 시작」을 못 눌렀다" % Run.wave)
@@ -300,38 +393,46 @@ func _step_shop(_w: int) -> void:
 ##   거기서 「옮기기」를 눌러야 골라진다. 팝업을 안 거치고 맞바꿔지면 규칙이 깨진 것이다.
 ## ★ 전당 칸은 **끌어서 굴리는** 자리라 누르기만 해서는 안 골라진다 — 떼야 한다
 ##   (_tap_release). 여기가 어긋나면 폰에서 목록을 굴릴 때마다 영웅이 골라진다.
-func _swap_once(u: Ui, where: String) -> void:
-	if Run.heroes.is_empty() or Run.bench.is_empty():
-		return
+## ★ **전당의 그 영웅이 성역의 다른 자리에 이미 선 캐릭터면 맞바꿔지지 않아야 한다**
+##   (중복 출전 금지). 뽑기가 쉰 명에서 고르므로 방금 뽑은 영웅이 그런 경우가 흔하다 —
+##   그때는 「거절되고 아무것도 안 바뀐다」를 본다. 실제로 맞바꿨으면 참을 돌려준다.
+func _swap_once(u: Ui, where: String, b: int = 0) -> bool:
+	if Run.heroes.is_empty() or b >= Run.bench.size():
+		return false
 	var before_f := String(Run.heroes[0]["unit"]["id"])
-	var before_b := String(Run.bench[0]["unit"]["id"])
+	var before_b := String(Run.bench[b]["unit"]["id"])
+	var allowed: bool = Run.can_deploy(Run.bench[b]["unit"], 0)
 	var total := Run.hero_total()
 	if not _tap(u, "formation:roster"):
 		_bad("영웅 정보 탭을 못 눌렀다")
 	u = await _paint()
 	if not _tap(u, "hv:f0"):
 		_bad("%s: 성역 0번을 못 눌렀다" % where)
-		return
+		return false
 	u = await _paint()
 	# 팝업이 떴어야 한다.
 	var hv = main.screen.hv
 	if hv.info < 0:
 		_bad("%s: 캐릭터를 눌렀는데 설명 팝업이 안 떴다" % where)
-		return
+		return false
 	if not _tap(u, "hv:move"):
 		_bad("%s: 팝업의 「옮기기」를 못 눌렀다" % where)
-		return
+		return false
 	u = await _paint()
-	if not _tap_release(u, "hv:b0"):
-		_bad("%s: 전당 0번을 못 눌렀다" % where)
-		return
-	if String(Run.heroes[0]["unit"]["id"]) != before_b \
-			or String(Run.bench[0]["unit"]["id"]) != before_f:
-		_bad("%s: 두 자리를 눌렀는데 안 바뀌었다 (%s / %s)"
-				% [where, Run.heroes[0]["unit"]["id"], Run.bench[0]["unit"]["id"]])
+	if not _tap_release(u, "hv:b%d" % b):
+		_bad("%s: 전당 %d번을 못 눌렀다" % [where, b])
+		return false
+	var now_f := String(Run.heroes[0]["unit"]["id"])
+	var now_b := String(Run.bench[b]["unit"]["id"])
+	if allowed and (now_f != before_b or now_b != before_f):
+		_bad("%s: 두 자리를 눌렀는데 안 바뀌었다 (%s / %s)" % [where, now_f, now_b])
+	if not allowed and (now_f != before_f or now_b != before_b):
+		_bad("%s: 성역의 다른 자리에 이미 선 %s 가 0번 자리로 올라왔다 — 같은 캐릭터가 두 자리에 선다"
+				% [where, before_b])
 	if Run.hero_total() != total:
 		_bad("%s: 자리를 바꿨더니 영웅 수가 %d → %d 로 바뀌었다"
 				% [where, total, Run.hero_total()])
+	return allowed
 
 
 ## 성역이 꽉 찬 채로 새 영웅이 오면 편성 판에서 **맞바꿀 수 있는가.**
@@ -344,16 +445,15 @@ func _step_swap() -> void:
 		return
 	Run.heroes.clear()
 	Run.bench.clear()
-	# 서로 다른 캐릭터 여섯으로 성역을 채운다(같은 캐릭터면 겹쳐 버려서 자리가 안 찬다).
-	# ★ **높은 등급 쪽부터** 채운다. 낮은 등급으로 채우면 다음에 뽑는 흔한 족보가
-	#   이미 선 캐릭터와 겹쳐서 교체 창이 안 뜨고, 검사가 조용히 아무것도 안 한다.
+	# 서로 다른 캐릭터로 성역을 가득 채운다(같은 캐릭터는 성역에 한 번만 서므로 자리가 안 찬다).
+	# 표의 뒤쪽부터 채우고, 등급은 표의 원화 격을 그대로 준다(Fixture.fresh 와 같은 약속이다).
 	for i in range(Roster.UNITS.size() - 1, -1, -1):
 		if Run.heroes.size() >= Balance.HERO_SLOTS:
 			break
 		var u: Dictionary = Roster.UNITS[i]
 		Run.gain_hero(u, int(u["tier"]))
 	if Run.heroes.size() != Balance.HERO_SLOTS:
-		_bad("성역 여섯 자리를 못 채웠다 (%d명)" % Run.heroes.size())
+		_bad("성역 %d자리를 못 채웠다 (%d명)" % [Balance.HERO_SLOTS, Run.heroes.size()])
 		return
 	Run.begin_draw()
 	var d := DrawScreen.new()
@@ -361,25 +461,29 @@ func _step_swap() -> void:
 	await frames(3)
 	var u2 := await _paint()
 	if not _tap(u2, "go"):
-		_bad("교체 검사: 결정 버튼을 못 눌렀다")
+		_bad("교체 검사: 소환 단추를 못 눌렀다")
 		return
 	# 연출이 끝날 때까지 기다린다 — 끝나면 편성 판(SWAP)으로 가야 한다.
-	# ★ 화면이 먼저 바뀌어 버리는 쪽도 봐야 한다. state 만 기다리면 겹쳤을 때
-	#   여기서 20초를 그냥 서 있는다.
-	var t0 := Time.get_ticks_msec()
-	while d.state != DrawScreen.SWAP and main.screen == d \
-			and Time.get_ticks_msec() - t0 < 20000:
-		await get_tree().process_frame
-		d.queue_redraw()
-		if d.state == DrawScreen.REVEAL and d.rt > 1.6:
-			mouse(d, Vector2(640, 760), true)
-	if d.state != DrawScreen.SWAP:
+	if not await _skip_reveal(d, 900):
 		_bad("확정했는데 편성 판이 안 떴다 (state %d, 전당 %d명)"
 				% [d.state, Run.bench.size()])
 		await _wait_for("battle_screen", 600)
 		return
+	# 성역이 가득 찼으므로 방금 뽑은 영웅은 전당 0번에 있다.
+	if Run.bench.is_empty():
+		_bad("교체 검사: 성역이 가득 찬 채로 뽑았는데 전당이 비었다")
+		return
 	var u3 := await _paint()
-	await _swap_once(u3, "편성 판")
+	if not await _swap_once(u3, "편성 판"):
+		# 방금 뽑은 영웅이 성역의 다른 캐릭터와 겹쳐서 위에서는 「거절」을 봤다. 성역에 없는
+		# 캐릭터를 전당에 하나 더 두고, 실제로 맞바뀌는 것까지 본다.
+		for spare in Roster.UNITS:
+			if int(Run.find_hero(String(spare["id"]))[1]) < 0:
+				Run.gain_hero(spare, int(spare["tier"]), false, false)
+				break
+		var u3b := await _paint()
+		if not await _swap_once(u3b, "편성 판(성역에 없는 캐릭터)", Run.bench.size() - 1):
+			_bad("교체 검사: 성역에 없는 캐릭터인데도 맞바꾸지 못했다")
 	var u4 := await _paint()
 	if not _tap(u4, "tobattle"):
 		_bad("편성 판의 「전투 시작」을 못 눌렀다")
@@ -466,8 +570,8 @@ func _step_hall() -> void:
 func _step_leak() -> void:
 	if not Run.running:
 		return
-	# ★ 성역을 **가장 약한 영웅 하나만** 남기고 비운다. 앞 검사(_step_swap)가 로열급
-	#   여섯을 세워 놓기 때문에, 그대로 두면 12탄이 한 마리도 안 뚫려서 이 검사가
+	# ★ 성역을 **가장 약한 영웅 하나만**(0.5성) 남기고 비운다. 앞 검사(_step_swap)가 5성까지
+	#   섞인 열둘을 세워 놓기 때문에, 그대로 두면 12탄이 한 마리도 안 뚫려서 이 검사가
 	#   조용히 아무것도 확인하지 않게 된다(실제로 그랬다).
 	Run.heroes.clear()
 	Run.bench.clear()
@@ -506,8 +610,8 @@ func _step_leak() -> void:
 ## ★ 사용자가 제일 급하다고 한 것이 이것이다(「게임 자동저장이 안 되네」). 화면으로는
 ##   확인할 길이 없다 — 앱을 껐다 켜야 보이는 것이라, 담고(snapshot) 되돌리는(restore)
 ##   두 함수를 여기서 직접 맞춰 본다.
-## ★ 담아야 하는 것: 탄·크리스탈·골드·성역·전당·능력치·패시브·카드 다섯 장·리롤 횟수.
-##   하나라도 빠지면 이어 한 판이 조용히 달라진다 — 리롤이 공짜로 되살아나는 것이
+## ★ 담아야 하는 것: 탄·크리스탈·골드·성역·전당·능력치·패시브·별 다섯의 자리·다시 돌린 횟수.
+##   하나라도 빠지면 이어 한 판이 조용히 달라진다 — 다시 돌리기가 공짜로 되살아나는 것이
 ##   그중 제일 나쁘다.
 ## ★ **전투 도중에 홈 버튼을 누르면 그 탄의 처음이 담겨야 한다.**
 ##   되돌리기는 「그 탄을 처음부터 다시」인데(Run.restore 주석), 지금 값을 담으면
@@ -558,16 +662,19 @@ func _step_save() -> void:
 	Run.levels["atk"] = 3
 	Run.passives.clear()
 	Run.passives.append(String(Balance.PASSIVES[0]["id"]))
-	Run.begin_draw()            # 카드 다섯 장과 덱을 채운다 (탄이 8 이 된다)
-	Run.reroll(0)
+	Run.begin_draw()            # 새 의식을 연다 (탄이 8 이 된다)
+	# 별 둘이 든 자리에서 한 번 다시 돌린다 — 별 자리와 돌린 횟수가 둘 다 담겨야 한다.
+	Run.orbit.assign(Fixture.orbit_for(2))
+	if Run.respin().is_empty():
+		_bad("자동 저장: 검사용 의식을 다시 돌리지 못했다")
 	var want := {
 		"wave": Run.wave, "lives": Run.lives, "gold": Run.gold,
 		"heroes": Run.heroes.size(), "bench": Run.bench.size(),
 		"total": Run.hero_total(), "atk": Run.lv("atk"),
-		# ★ duplicate() 가 없으면 Run.cards **그 배열**을 쥐게 되어(Array() 는 복사가 아니다)
-		#   되돌린 뒤 제 것과 비교하는 셈이 된다 — 검사가 언제나 통과했다.
-		"pas": Run.passives.size(), "cards": Array(Run.cards).duplicate(),
-		"rer": Array(Run.rerolled).duplicate(), "seed": Run.run_seed,
+		# ★ 깊은 복사가 없으면 Run 이 들고 있는 **그 배열**을 쥐게 되어, 되돌린 뒤 제 것과
+		#   비교하는 셈이 된다 — 그러면 검사가 언제나 통과한다.
+		"pas": Run.passives.size(), "rite": (Run.snapshot()["rite"] as Dictionary).duplicate(true),
+		"left": Run.respins_left(), "cost": Run.respin_cost(), "seed": Run.run_seed,
 		"lineup": Run.wave_lineup(Run.wave).size(),
 	}
 	Run.autosave()
@@ -597,10 +704,12 @@ func _step_save() -> void:
 	if Run.hero_total() != int(want["total"]):
 		_bad("자동 저장: 겹친 수까지 센 영웅이 %d 여야 하는데 %d 다"
 				% [int(want["total"]), Run.hero_total()])
-	if Array(Run.cards) != Array(want["cards"]):
-		_bad("자동 저장: 카드 다섯 장이 안 돌아왔다")
-	if Array(Run.rerolled) != Array(want["rer"]):
-		_bad("자동 저장: 리롤 횟수가 안 돌아왔다 — 이어 하면 공짜 리롤이 되살아난다")
+	if Run.snapshot()["rite"] != want["rite"] or not Rite.valid(Run.orbit):
+		_bad("자동 저장: 별 다섯의 자리와 돌린 횟수가 안 돌아왔다 (%s → %s)"
+				% [str(want["rite"]), str(Run.snapshot()["rite"])])
+	if Run.respins_left() != int(want["left"]) or Run.respin_cost() != int(want["cost"]):
+		_bad("자동 저장: 남은 무료 횟수가 %d → %d, 값이 %d → %d 로 바뀌었다 — 이어 하면 공짜 다시 돌리기가 되살아난다"
+				% [int(want["left"]), Run.respins_left(), int(want["cost"]), Run.respin_cost()])
 	# ★ 씨앗이 같으면 **그 탄에 오는 몬스터도 같아야** 한다. 안 그러면 상점이 보여 준
 	#   예고와 실제가 달라진다.
 	if Run.wave_lineup(Run.wave).size() != int(want["lineup"]):

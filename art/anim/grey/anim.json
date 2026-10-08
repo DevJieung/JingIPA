@@ -2,10 +2,10 @@
   "name": "grey_roster_v1",
   "ko": "그레이",
   "elem": "none",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
-    "w": 256,
-    "h": 256
+    "w": 320,
+    "h": 320
   },
   "static": {
     "w": 134,
@@ -17,8 +17,8 @@
   },
   "scale": 0.6822916666666666,
   "muzzle_at": {
-    "x": 100,
-    "y": -134
+    "x": 99,
+    "y": -117
   },
   "hit_ms": 416.66666666666663,
   "face": 1,
@@ -40,10 +40,10 @@
       "total_ms": 666.6666666666666,
       "loop": true,
       "cell": {
-        "w": 256,
-        "h": 256
+        "w": 320,
+        "h": 320
       },
-      "sha256": "c88af5332384b2e6fa1ba1dfcdcd8982ec41ef230da1b9b89980e9026e48ee23"
+      "sha256": "190fa28dede76e86d419f54ae551566fa6002dc2427ba75b60e793dbae5b25fa"
     },
     "attack": {
       "frames": 12,
@@ -64,10 +64,10 @@
       "total_ms": 1000.0,
       "loop": false,
       "cell": {
-        "w": 256,
-        "h": 256
+        "w": 320,
+        "h": 320
       },
-      "sha256": "130956e8aec7c9ee68d1ab5b42ae58e680956baf5890f99622100142e99ca7ca",
+      "sha256": "7aceb7b4633ddd2cfbc67a362480e182913303b4178c2da2c8ae67df7b640d3f",
       "hit_frame": 5
     },
     "shot": {
@@ -89,140 +89,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/grey.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/grey.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        38,
         0,
+        380,
+        444
+      ],
+      [
+        395,
         0,
-        368,
-        393
+        736,
+        444
       ],
       [
-        368,
+        751,
         0,
-        724,
-        393
+        1097,
+        444
       ],
       [
-        724,
+        1113,
         0,
-        1086,
-        393
+        1447,
+        444
       ],
       [
-        1086,
-        0,
-        1448,
-        393
+        32,
+        444,
+        373,
+        844
       ],
       [
-        0,
-        393,
-        362,
-        763
+        394,
+        444,
+        734,
+        844
       ],
       [
-        362,
-        393,
-        724,
-        763
+        744,
+        444,
+        1135,
+        844
       ],
       [
-        724,
-        393,
-        1096,
-        763
+        1081,
+        444,
+        1447,
+        844
       ],
       [
-        1096,
-        393,
-        1448,
-        763
-      ],
-      [
-        0,
-        763,
-        362,
+        46,
+        844,
+        293,
         1086
       ],
       [
-        362,
-        763,
-        724,
+        426,
+        844,
+        675,
         1086
       ],
       [
-        724,
-        763,
-        1086,
+        776,
+        844,
+        1024,
         1086
       ],
       [
-        1086,
-        763,
-        1448,
+        1154,
+        844,
+        1397,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.5161290322580645,
+        "factor": 0.5175202156334232,
         "offset": [
-          46,
-          21
+          68,
+          -6
         ]
       },
       {
-        "factor": 0.5161290322580645,
+        "factor": 0.5175202156334232,
         "offset": [
-          65,
-          21
+          66,
+          -6
         ]
       },
       {
-        "factor": 0.5161290322580645,
+        "factor": 0.5175202156334232,
         "offset": [
-          62,
-          21
+          66,
+          -5
         ]
       },
       {
-        "factor": 0.5161290322580645,
-        "offset": [
-          62,
-          21
-        ]
-      },
-      {
-        "factor": 0.5161290322580645,
-        "offset": [
-          49,
-          33
-        ]
-      },
-      {
-        "factor": 0.5161290322580645,
-        "offset": [
-          58,
-          33
-        ]
-      },
-      {
-        "factor": 0.5161290322580645,
-        "offset": [
-          60,
-          33
-        ]
-      },
-      {
-        "factor": 0.5161290322580645,
+        "factor": 0.5175202156334232,
         "offset": [
           67,
-          33
+          -6
+        ]
+      },
+      {
+        "factor": 0.5175202156334232,
+        "offset": [
+          64,
+          23
+        ]
+      },
+      {
+        "factor": 0.5175202156334232,
+        "offset": [
+          65,
+          23
+        ]
+      },
+      {
+        "factor": 0.5175202156334232,
+        "offset": [
+          62,
+          23
+        ]
+      },
+      {
+        "factor": 0.5175202156334232,
+        "offset": [
+          48,
+          17
         ]
       }
+    ],
+    "source_muzzle": [
+      1063,
+      606
     ]
   },
   "portrait_id": "grey"

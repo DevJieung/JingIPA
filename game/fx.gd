@@ -3,7 +3,7 @@ class_name Fx
 
 ## 이펙트 한 무더기. 화면 하나가 Fx 를 하나 들고 매 프레임 update() → draw() 한다.
 ##
-## 왜 노드로 안 만들었나: 풀하우스 연출 하나에 파티클이 300개 넘게 뜨는데, 그걸 전부
+## 왜 노드로 안 만들었나: 5성 소환 연출 하나에 파티클이 300개 넘게 뜨는데, 그걸 전부
 ## Node2D 로 만들면 프레임마다 노드가 300개 생겼다 사라진다. 폰에서 그대로 끊긴다.
 ## 여기서는 딕셔너리 배열 하나이고 그리기도 한 번에 끝난다.
 
@@ -274,14 +274,14 @@ func bolt(a: Vector2, b: Vector2, col: Color, life: float = 0.22,
 		"c": col, "w": width})
 
 
-## 가운데에서 뻗어 나가는 빛살. 풀하우스 이상에서만 쓴다.
+## 가운데에서 뻗어 나가는 빛살. 소환 · 합성 · 승리 연출이 쓴다.
 func rays(pos: Vector2, col: Color, n: int = 16, len_px: float = 620.0,
 		life: float = 1.1) -> void:
 	items.append({"t": "rays", "p": pos, "n": n, "len": len_px, "life": life,
 		"max": life, "c": col, "spin": _rng.randf() * TAU})
 
 
-## 카드가 깨져 흩어지는 조각.
+## 깨져 흩어지는 네모 조각(수정 조각 · 영웅 카드 조각).
 func shards(rect: Rect2, col: Color, n: int = 18) -> void:
 	for i in range(n):
 		var p := rect.position + Vector2(_rng.randf() * rect.size.x, _rng.randf() * rect.size.y)
@@ -407,8 +407,8 @@ func update(dt: float) -> void:
 
 
 ## 빛살·고리처럼 **글자 뒤에** 깔려야 하는 것들. 내용을 그리기 **전에** 부른다.
-## ★ 예전에는 전부 한 번에 앞에 그렸는데, 로열 연출에서 빛살이 족보 이름을 덮어
-##   무슨 족보인지 안 보였다. 게임에서 제일 드문 순간인데 그게 안 읽히면 안 된다.
+## ★ 예전에는 전부 한 번에 앞에 그렸는데, 최고 등급 연출에서 빛살이 등급 이름을 덮어
+##   무슨 등급인지 안 보였다. 게임에서 제일 드문 순간인데 그게 안 읽히면 안 된다.
 const BACK := ["rays", "ring"]
 
 
@@ -423,7 +423,7 @@ func draw(ci: CanvasItem) -> void:
 func _paint(ci: CanvasItem, back: bool) -> void:
 	for it in items:
 		# ★ layer 는 항목마다 정할 수 있다(bk). 적어 두지 않으면 표(BACK) 그대로다 —
-		#   확정 연출·결과·테마 판이 그 표에 기대고 있어서(빛살이 족보 이름을 덮으면 안 된다)
+		#   확정 연출·결과·테마 판이 그 표에 기대고 있어서(빛살이 등급 이름을 덮으면 안 된다)
 		#   기본값이 한 톨이라도 달라지면 안 된다(CLAUDE.md 8).
 		var bk: bool = bool(it.get("bk", String(it["t"]) in BACK))
 		if bk != back:

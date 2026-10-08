@@ -10,7 +10,7 @@ import sys, glob, json
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
-ROOT = Path("/home/dgxmaruta/pjt/pocker")
+ROOT = Path("/home/dgxmaruta/pjt/stellardefense")
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 import spec  # noqa: E402

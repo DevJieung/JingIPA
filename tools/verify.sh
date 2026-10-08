@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# 올인 디펜스 — 검증 한 곳. 갈무리 전에 이것만 돌리면 된다.
+# 스텔라 디펜스 — 검증 한 곳. 갈무리 전에 이것만 돌리면 된다.
 #
 #   tools/verify.sh          전부      (약 8분)
 #   tools/verify.sh --skip-sprites  스프라이트 검수 제외
-#   tools/verify.sh quick    빠르게    (족보 전수·자동 플레이를 줄인다, 약 3분)
+#   tools/verify.sh quick    빠르게    (의식 굴림·자동 플레이를 줄인다, 약 3분)
 #
-# ★ POCKER_NO_SAVE=1 로 돌린다. 검사를 돌릴 때마다 저장 파일이 덮이면
+# ★ STELLARDEFENSE_NO_SAVE=1 로 돌린다. 검사를 돌릴 때마다 저장 파일이 덮이면
 #   "내 기록"이라고 믿던 값이 사실은 테스트가 만든 값이 된다.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 GODOT="${GODOT:-$HOME/.local/bin/godot}"
-export POCKER_NO_SAVE=1
+export STELLARDEFENSE_NO_SAVE=1
 
 QUICK=0
 SKIP_SPRITES=0
@@ -88,6 +88,15 @@ else
 	echo "   ok: 무늬는 전부 도형으로 그린다"
 fi
 
+step "0-2. 게임 데이터가 DB 를 거쳐 바뀌었는가 (data/game.db ↔ JSON · 게임 코드)"
+# 데이터의 원본은 data/game.db 다(docs/GAME_DB.md). 누가 balance.gd 의 숫자나 roster.json 을
+# 직접 고치면 DB 가 옛 값을 든 채로 남고, 다음에 DB 에서 내릴 때 그 수정이 말없이 되돌아간다.
+# ★ DB 에만 있고 아직 안 내린 값(승인 대기)은 실패가 아니다 — 알림 한 줄만 찍는다.
+python3 tools/gamedb.py check > "$TMP/gamedb.log" 2>&1
+gamedb_rc=$?
+sed 's/^/   /' "$TMP/gamedb.log"
+check $gamedb_rc "게임 파일의 데이터가 DB 와 어긋나지 않음"
+
 step "1. 캐릭터 표가 최신인가 (tools/roster.json → core/roster.gd)"
 python3 tools/gen_roster.py --check > "$TMP/genroster.log" 2>&1
 check $? "로스터 일치 (파일 수정 없음)"
@@ -154,6 +163,12 @@ else
 fi
 
 step "4-2. 저장 · 보상 · 메뉴 · 거래 회귀 검사"
+godot_run 90 "$TMP/stellar-identity.log" res://tests/stellar_identity_check.tscn
+expect "Stellar Defense 명칭·저장 이전" "판정: 정상" "$TMP/stellar-identity.log"
+godot_run 120 "$TMP/stellar-gameplay.log" res://tests/stellar_gameplay_check.tscn
+expect "3D 전환 게임성 보존" "판정: 정상" "$TMP/stellar-gameplay.log"
+godot_run 180 "$TMP/stellar-render.log" res://tests/3d/stellar_render_check.tscn
+expect "3D 전체 모델·랭크 렌더 계약" "판정: 정상" "$TMP/stellar-render.log"
 godot_run 120 "$TMP/flow.log" res://tests/flow_check.tscn
 expect "게임 흐름" "판정: 정상" "$TMP/flow.log"
 
@@ -163,13 +178,13 @@ expect "누적 전과와 패시브" "판정: 정상" "$TMP/run-stats.log"
 godot_run 120 "$TMP/rules.log" res://tests/rules_check.tscn
 expect "합성과 보상 규칙" "판정: 정상" "$TMP/rules.log"
 godot_run 120 "$TMP/progression.log" res://tests/progression_check.tscn
-expect "상세 가치·합성 승급·중간 성장" "판정: 정상" "$TMP/progression.log"
+expect "별 등급·합성 승급·중간 성장" "판정: 정상" "$TMP/progression.log"
 godot_run 120 "$TMP/wave-scaling.log" res://tests/wave_scaling_check.tscn
 expect "후반 몬스터 수와 체력" "판정: 정상" "$TMP/wave-scaling.log"
 godot_run 120 "$TMP/revive-flow.log" res://tests/revive_flow_check.tscn
 expect "광고 부활 획득 연출" "판정: 정상" "$TMP/revive-flow.log"
 godot_run 120 "$TMP/reroll.log" res://tests/reroll_check.tscn
-expect "무료 교체 횟수" "판정: 정상" "$TMP/reroll.log"
+expect "무료 다시 돌리기 횟수" "판정: 정상" "$TMP/reroll.log"
 
 step "4-2a. 테마 출현 비율·목록 · 보상 알림 닫기"
 godot_run 120 "$TMP/theme-notice.log" res://tests/theme_notice_check.tscn
@@ -180,7 +195,7 @@ godot_run 120 "$TMP/theme-distribution.log" res://tests/theme_distribution_check
 expect "테마 분포" "판정: 정상" "$TMP/theme-distribution.log"
 
 step "4-2c. 테마 BGM 전환·반복·독립 음량 설정"
-POCKER_AUDIO_TEST=1 godot_run 120 "$TMP/audio-runtime.log" res://tests/audio_check.tscn
+STELLARDEFENSE_AUDIO_TEST=1 godot_run 120 "$TMP/audio-runtime.log" res://tests/audio_check.tscn
 expect "음악 재생" "판정: 정상" "$TMP/audio-runtime.log"
 
 step "4-3. 두 입구 · 12자리 · 실시간 재배치"
@@ -197,16 +212,18 @@ step "4-5. 몬스터 이동 클립 · 상태이상 · 희귀 착탄"
 godot_run 120 "$TMP/monster.log" res://tests/monster_check.tscn -- --assets
 expect "몬스터·이펙트 검사" "판정: 정상" "$TMP/monster.log"
 
-step "5. 족보 판정"
+step "5. 별맞춤 의식 규칙 (문의 경계 · 별 세기 · 확률표 · 다시 돌리기 · 소환)"
+# ★ 뽑기의 심장(core/rite.gd)이다. 문의 경계는 모든 칸을 전수로, 확률표는 실제 굴림으로 본다.
 if [ $QUICK -eq 1 ]; then
-	godot_run 120 "$TMP/poker.log" res://tests/poker_check.tscn -- --quick
+	godot_run 120 "$TMP/rite.log" res://tests/rite_check.tscn -- --quick
 else
-	godot_run 300 "$TMP/poker.log" res://tests/poker_check.tscn
-	expect "전수 2,598,960판" "전수 검사 2598960판" "$TMP/poker.log"
+	godot_run 300 "$TMP/rite.log" res://tests/rite_check.tscn
+	expect "굴림 600,000판" "굴림 검사 600000판" "$TMP/rite.log"
 fi
-expect "족보 판정" "판정: 정상" "$TMP/poker.log"
+expect "의식 규칙" "판정: 정상" "$TMP/rite.log"
+grep -E "^  다시 돌리기" "$TMP/rite.log" | sed 's/^/   /'
 
-step "6. 화면을 눌러서 한 바퀴 (타이틀 → 카드 → 전투 → 상점)"
+step "6. 화면을 눌러서 한 바퀴 (타이틀 → 의식 → 전투 → 상점)"
 godot_run 360 "$TMP/play.log" res://tests/play_check.tscn
 expect "화면 한 바퀴" "판정: 정상" "$TMP/play.log"
 # 부팅과 같은 이유로 여기서도 본다 — 전투·편성 판은 부팅만으로는 한 번도 안 그려진다.

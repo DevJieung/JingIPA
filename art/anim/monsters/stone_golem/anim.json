@@ -10,7 +10,7 @@
   },
   "scale": 0.3953488372093023,
   "movement": "walk",
-  "source": "Krea 2 Turbo + MiniMax H3",
+  "source": "imagegen_chibi_v1",
   "clips": {
     "move": {
       "frames": 18,
@@ -34,19 +34,96 @@
         83.33333333333333,
         83.33333333333333
       ],
-      "loop": true
+      "loop": true,
+      "cell": {
+        "w": 192,
+        "h": 192
+      },
+      "sha256": "cea8b1e10f469c0866345ae13aaa5420e688be1d87dd99c2b470dd3fea500f11"
     }
   },
   "qc": {
     "canvas_clipping": false,
     "source_clipping": false,
-    "unique_poses": 18,
+    "unique_poses": 8,
     "forward_only": true,
     "fixed_scale": true,
-    "foot_patches": false,
-    "translation_range": [
+    "foot_patches": false
+  },
+  "palette_colors": 96,
+  "readability": {
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/stone_golem.png",
+    "source_cells": [
+      [
+        16,
+        0,
+        371,
+        512
+      ],
+      [
+        401,
+        0,
+        757,
+        512
+      ],
+      [
+        785,
+        0,
+        1146,
+        512
+      ],
+      [
+        1174,
+        0,
+        1526,
+        512
+      ],
+      [
+        31,
+        512,
+        381,
+        1024
+      ],
+      [
+        419,
+        512,
+        758,
+        1024
+      ],
+      [
+        794,
+        512,
+        1146,
+        1024
+      ],
+      [
+        1174,
+        512,
+        1526,
+        1024
+      ]
+    ],
+    "phase_map": [
+      0,
+      0,
+      0,
+      1,
+      1,
+      2,
+      2,
       3,
-      5
-    ]
+      3,
+      4,
+      4,
+      4,
+      5,
+      5,
+      6,
+      6,
+      7,
+      7
+    ],
+    "method": "imagegen chibi movement repaint; alpha threshold, extraction, nearest sampling and shared palette only"
   }
 }

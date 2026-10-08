@@ -21,30 +21,28 @@ func _ready() -> void:
 		I18n.set_locale(language)
 		main.show_title()
 		await capture(language + "_title")
-		check(tap(main.screen, "language:" + language), "title language selector is reachable")
+		# 언어 선택은 2026-09-20 부터 모든 화면 우상단의 공통 단추다(MenuOverlay).
+		check(tap(main.menu, "language:" + language), "title language selector is reachable")
 		Fixture.prepare(24, 15092026)
 		Run.begin_draw()
 		Fixture.stack(2)
 		Run.passives.clear()
-		Run.rerolled = [1, 1, 1, 1, 1]
 		var draw := DrawScreen.new()
 		main._swap(draw)
 		draw.set_process(false)
-		await capture(language + "_poker")
-		draw._flip[0] = 0.15
-		await capture(language + "_redraw")
-		draw._flip[0] = 0.0
-		Fixture.stack(9)
-		await capture(language + "_poker_royal")
+		await capture(language + "_rite_spinning")
+		draw.skip_spin()
+		await capture(language + "_rite")
+		Fixture.stack(Rite.MAX_STARS)
+		await capture(language + "_rite_five")
 		Fixture.stack(2)
-		Run.rerolled = [1, 1, 1, 1, 1]
+		Run.spins = Run.free_rerolls()
 		var original_gold := Run.gold
 		Run.gold = 0
-		await capture(language + "_poker_no_gold")
-		for i in range(5):
-			check(bool(zone_of(draw, "want:%d" % i).get("on", false)), "card choice remains available with spent rerolls")
-			check(not bool(zone_of(draw, "re%d" % i).get("on", true)), "rerolls disable without gold")
-		check(ui_hit(draw, "go"), "hand can still be confirmed without gold")
+		await capture(language + "_rite_no_gold")
+		check(bool(zone_of(draw, "rite:pull").get("on", false)), "star pull remains available with spent re-spins")
+		check(not bool(zone_of(draw, "rite:respin").get("on", true)), "re-spin disables without gold")
+		check(ui_hit(draw, "go"), "the rite can still be confirmed without gold")
 		draw._confirm()
 		Run.gold = original_gold
 		draw.rt = 0.5
@@ -55,7 +53,7 @@ func _ready() -> void:
 		for id in ["pip", "thalassa", "morrigan", "rhiannon", "shift"]:
 			var unit := Roster.unit_by_id(id)
 			draw.result["unit"] = unit
-			draw.result["hand"] = int(unit["tier"])
+			draw.result["tier"] = int(unit["tier"])
 			await capture(language + "_hero_" + id)
 		draw.state = DrawScreen.SWAP
 		draw.formation._focused = true
@@ -120,7 +118,7 @@ func _ready() -> void:
 			shop.tab = tab
 			await capture(language + "_camp_" + tab)
 		main.menu.open()
-		for page in ["menu", "rules", "hands", "elements"]:
+		for page in ["menu", "rules", "rite", "elements"]:
 			main.menu.page = page
 			await capture(language + "_menu_" + page)
 		main.menu.close()

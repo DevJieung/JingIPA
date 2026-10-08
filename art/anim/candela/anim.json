@@ -2,7 +2,7 @@
   "name": "candela_roster_v1",
   "ko": "칸델라",
   "elem": "fire",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
     "w": 320,
     "h": 320
@@ -17,8 +17,8 @@
   },
   "scale": 0.7043010752688172,
   "muzzle_at": {
-    "x": 132,
-    "y": -132
+    "x": 128,
+    "y": -113
   },
   "hit_ms": 666.6666666666666,
   "face": 1,
@@ -43,7 +43,7 @@
         "w": 320,
         "h": 320
       },
-      "sha256": "bf5173af7b2672f1f4f0b9e3d3ce6f198cc03b394219738619ad29b41e52c85b"
+      "sha256": "24b0f823ae8392e743f7be1e89177582ad88b40e34f6181cafec7702ac51f926"
     },
     "attack": {
       "frames": 12,
@@ -67,7 +67,7 @@
         "w": 320,
         "h": 320
       },
-      "sha256": "382424b41e3482fa7120147cffc8dfed791fad052489b8fad6d7c69f57003c4b",
+      "sha256": "bf16ce32bd5e497f551b92d2ee09f205479a05168538c1842451cc5eb8e5b074",
       "hit_frame": 8
     },
     "effect": {
@@ -114,140 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/candela.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/candela.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        56,
         0,
+        281,
+        413
+      ],
+      [
+        426,
         0,
-        362,
-        363
+        652,
+        413
       ],
       [
-        362,
+        784,
         0,
-        724,
-        363
+        1006,
+        413
       ],
       [
-        724,
+        1147,
         0,
-        1086,
-        363
+        1368,
+        413
       ],
       [
-        1086,
-        0,
-        1448,
-        363
+        16,
+        413,
+        366,
+        797
       ],
       [
-        0,
-        363,
-        349,
-        745
+        328,
+        413,
+        696,
+        797
       ],
       [
-        349,
-        363,
-        724,
-        745
+        754,
+        413,
+        1158,
+        797
       ],
       [
-        724,
-        363,
-        1145,
-        745
+        1074,
+        413,
+        1437,
+        797
       ],
       [
-        1145,
-        363,
-        1448,
-        745
-      ],
-      [
-        0,
-        745,
-        362,
+        27,
+        797,
+        333,
         1086
       ],
       [
-        362,
-        745,
-        724,
+        379,
+        797,
+        709,
         1086
       ],
       [
-        724,
-        745,
-        1086,
+        743,
+        797,
+        1074,
         1086
       ],
       [
-        1086,
-        745,
-        1448,
+        1113,
+        797,
+        1418,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.5329512893982808,
+        "factor": 0.5224719101123596,
         "offset": [
-          40,
-          31
+          63,
+          8
         ]
       },
       {
-        "factor": 0.5329512893982808,
+        "factor": 0.5224719101123596,
         "offset": [
-          40,
-          31
+          64,
+          8
         ]
       },
       {
-        "factor": 0.5329512893982808,
+        "factor": 0.5224719101123596,
         "offset": [
-          40,
-          31
+          66,
+          8
         ]
       },
       {
-        "factor": 0.5329512893982808,
+        "factor": 0.5224719101123596,
         "offset": [
-          40,
-          31
+          63,
+          8
         ]
       },
       {
-        "factor": 0.5329512893982808,
+        "factor": 0.5224719101123596,
         "offset": [
-          30,
-          20
+          33,
+          23
         ]
       },
       {
-        "factor": 0.5329512893982808,
+        "factor": 0.5224719101123596,
         "offset": [
-          20,
-          20
+          8,
+          23
         ]
       },
       {
-        "factor": 0.5329512893982808,
+        "factor": 0.5224719101123596,
         "offset": [
-          52,
-          20
+          73,
+          24
         ]
       },
       {
-        "factor": 0.5329512893982808,
+        "factor": 0.5224719101123596,
         "offset": [
-          72,
-          20
+          12,
+          24
         ]
       }
+    ],
+    "source_muzzle": [
+      1105,
+      580
     ]
   },
   "portrait_id": "candela"

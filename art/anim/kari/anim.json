@@ -2,7 +2,7 @@
   "name": "kari_roster_v1",
   "ko": "카레",
   "elem": "ice",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
     "w": 256,
     "h": 256
@@ -17,8 +17,8 @@
   },
   "scale": 0.7302631578947368,
   "muzzle_at": {
-    "x": 52,
-    "y": -108
+    "x": 49,
+    "y": -85
   },
   "hit_ms": 666.6666666666666,
   "face": 1,
@@ -43,7 +43,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "1be6c4e7e57bea0a361d9f5be0bc59bbe80852b28084f0254ceb10b938acf898"
+      "sha256": "3bff6d545c012b08e30fcb2a411893f8d5312a9d366e6bcdef8efdb90258d051"
     },
     "attack": {
       "frames": 12,
@@ -67,7 +67,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "88148b1af87a61ab0d1d0f339df49cdc7c3ef17853a1ab71e0e2aba91703e53d",
+      "sha256": "4e337731b7ac0ecaa41898708e68c0fdafdcae1ecffbede82515fabddcf8f164",
       "hit_frame": 8
     },
     "effect": {
@@ -114,140 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/kari.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/kari.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        54,
         0,
+        335,
+        452
+      ],
+      [
+        411,
         0,
-        362,
-        397
+        697,
+        452
       ],
       [
-        362,
+        786,
         0,
-        724,
-        397
+        1067,
+        452
       ],
       [
-        724,
+        1151,
         0,
-        1086,
-        397
+        1427,
+        452
       ],
       [
-        1086,
-        0,
-        1448,
-        397
+        36,
+        452,
+        355,
+        872
       ],
       [
-        0,
-        397,
-        362,
-        794
+        398,
+        452,
+        722,
+        872
       ],
       [
-        362,
-        397,
-        724,
-        794
+        750,
+        452,
+        1102,
+        872
       ],
       [
-        724,
-        397,
-        1087,
-        794
+        1065,
+        452,
+        1433,
+        872
       ],
       [
-        1087,
-        397,
-        1448,
-        794
-      ],
-      [
-        0,
-        794,
-        362,
+        48,
+        872,
+        312,
         1086
       ],
       [
-        362,
-        794,
-        724,
+        384,
+        872,
+        681,
         1086
       ],
       [
-        724,
-        794,
-        1086,
+        737,
+        872,
+        1051,
         1086
       ],
       [
-        1086,
-        794,
-        1448,
+        1136,
+        872,
+        1404,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.40641711229946526,
+        "factor": 0.38676844783715014,
         "offset": [
-          64,
-          63
+          84,
+          50
         ]
       },
       {
-        "factor": 0.40641711229946526,
+        "factor": 0.38676844783715014,
         "offset": [
-          64,
-          63
+          83,
+          49
         ]
       },
       {
-        "factor": 0.40641711229946526,
+        "factor": 0.38676844783715014,
         "offset": [
-          64,
-          63
+          85,
+          49
         ]
       },
       {
-        "factor": 0.40641711229946526,
+        "factor": 0.38676844783715014,
         "offset": [
-          64,
-          63
+          86,
+          49
         ]
       },
       {
-        "factor": 0.40641711229946526,
+        "factor": 0.38676844783715014,
         "offset": [
-          65,
-          63
+          76,
+          62
         ]
       },
       {
-        "factor": 0.40641711229946526,
+        "factor": 0.38676844783715014,
         "offset": [
-          65,
-          63
+          75,
+          62
         ]
       },
       {
-        "factor": 0.40641711229946526,
+        "factor": 0.38676844783715014,
         "offset": [
-          65,
-          63
+          76,
+          62
         ]
       },
       {
-        "factor": 0.40641711229946526,
+        "factor": 0.38676844783715014,
         "offset": [
-          65,
-          63
+          51,
+          62
         ]
       }
+    ],
+    "source_muzzle": [
+      1011,
+      651
     ]
   },
   "portrait_id": "kari"

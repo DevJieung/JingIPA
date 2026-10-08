@@ -2,7 +2,7 @@
   "name": "shift_roster_v1",
   "ko": "시프트",
   "elem": "none",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
     "w": 256,
     "h": 256
@@ -18,7 +18,7 @@
   "scale": 0.7631578947368421,
   "muzzle_at": {
     "x": 100,
-    "y": -111
+    "y": -92
   },
   "hit_ms": 500.0,
   "face": 1,
@@ -43,7 +43,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "04cb0d3e6cf28b6108ba461c598aaaf64dfa0643bdb21c64869080f5f18fd434"
+      "sha256": "c88ee9b0e148697da5b5b51e3ffc68cd316f45c654f9a183c62aa07297ea776b"
     },
     "attack": {
       "frames": 12,
@@ -67,7 +67,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "0483905cbcca5e98a44bb01339d0211b9b666fafdb0b83b9e2fc334b09e6891b",
+      "sha256": "ac25e570f6bd538653244927a14ed016727da5e4e9bc62df11d124a1ae8e524f",
       "hit_frame": 6
     },
     "effect": {
@@ -114,140 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/shift.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/shift.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        31,
         0,
-        0,
-        362,
-        389
+        292,
+        437
       ],
       [
-        362,
+        397,
         0,
-        724,
-        389
+        656,
+        437
       ],
       [
-        724,
+        760,
         0,
+        1020,
+        437
+      ],
+      [
+        1123,
+        0,
+        1381,
+        437
+      ],
+      [
+        20,
+        437,
+        316,
+        832
+      ],
+      [
+        376,
+        437,
+        705,
+        832
+      ],
+      [
+        755,
+        437,
+        1145,
+        832
+      ],
+      [
         1086,
-        389
+        437,
+        1390,
+        832
       ],
       [
-        1086,
-        0,
-        1448,
-        389
-      ],
-      [
-        0,
-        389,
-        362,
-        779
-      ],
-      [
-        362,
-        389,
-        724,
-        779
-      ],
-      [
-        724,
-        389,
-        1125,
-        779
-      ],
-      [
-        1125,
-        389,
-        1448,
-        779
-      ],
-      [
-        0,
-        779,
-        362,
+        54,
+        832,
+        334,
         1086
       ],
       [
-        362,
-        779,
-        724,
+        410,
+        832,
+        691,
         1086
       ],
       [
-        724,
-        779,
-        1086,
+        761,
+        832,
+        1040,
         1086
       ],
       [
-        1086,
-        779,
-        1448,
+        1115,
+        832,
+        1393,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.41643835616438357,
+        "factor": 0.4318181818181818,
         "offset": [
-          50,
-          62
+          59,
+          35
         ]
       },
       {
-        "factor": 0.41643835616438357,
+        "factor": 0.4318181818181818,
         "offset": [
-          50,
-          62
+          58,
+          35
         ]
       },
       {
-        "factor": 0.41643835616438357,
+        "factor": 0.4318181818181818,
         "offset": [
-          50,
-          62
+          60,
+          35
         ]
       },
       {
-        "factor": 0.41643835616438357,
+        "factor": 0.4318181818181818,
         "offset": [
-          50,
-          62
+          61,
+          35
         ]
       },
       {
-        "factor": 0.41643835616438357,
+        "factor": 0.4318181818181818,
         "offset": [
-          51,
-          62
+          49,
+          53
         ]
       },
       {
-        "factor": 0.41643835616438357,
+        "factor": 0.4318181818181818,
         "offset": [
-          51,
-          62
+          37,
+          53
         ]
       },
       {
-        "factor": 0.41643835616438357,
+        "factor": 0.4318181818181818,
         "offset": [
-          75,
-          62
+          79,
+          53
         ]
       },
       {
-        "factor": 0.41643835616438357,
+        "factor": 0.4318181818181818,
         "offset": [
-          66,
-          62
+          38,
+          53
         ]
       }
+    ],
+    "source_muzzle": [
+      1100,
+      620
     ]
   },
   "portrait_id": "shift"

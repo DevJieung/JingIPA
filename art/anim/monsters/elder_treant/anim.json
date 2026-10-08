@@ -10,7 +10,7 @@
   },
   "scale": 0.3953488372093023,
   "movement": "walk",
-  "source": "Krea 2 Turbo + MiniMax H3",
+  "source": "imagegen_chibi_v1",
   "clips": {
     "move": {
       "frames": 17,
@@ -33,19 +33,95 @@
         83.33333333333333,
         83.33333333333333
       ],
-      "loop": true
+      "loop": true,
+      "cell": {
+        "w": 192,
+        "h": 192
+      },
+      "sha256": "c06d10048d743d6ef8a29db3e9623986f65caf0c675515225d135d7b20d21b03"
     }
   },
   "qc": {
     "canvas_clipping": false,
     "source_clipping": false,
-    "unique_poses": 17,
+    "unique_poses": 8,
     "forward_only": true,
     "fixed_scale": true,
-    "foot_patches": false,
-    "translation_range": [
+    "foot_patches": false
+  },
+  "palette_colors": 96,
+  "readability": {
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/elder_treant.png",
+    "source_cells": [
+      [
+        16,
+        0,
+        373,
+        512
+      ],
+      [
+        403,
+        0,
+        756,
+        512
+      ],
+      [
+        778,
+        0,
+        1133,
+        512
+      ],
+      [
+        1156,
+        0,
+        1514,
+        512
+      ],
+      [
+        15,
+        512,
+        370,
+        1024
+      ],
+      [
+        395,
+        512,
+        752,
+        1024
+      ],
+      [
+        779,
+        512,
+        1140,
+        1024
+      ],
+      [
+        1162,
+        512,
+        1520,
+        1024
+      ]
+    ],
+    "phase_map": [
+      0,
+      0,
+      0,
+      1,
+      1,
       2,
-      5
-    ]
+      2,
+      3,
+      3,
+      4,
+      4,
+      5,
+      5,
+      6,
+      6,
+      7,
+      7
+    ],
+    "method": "imagegen chibi movement repaint; alpha threshold, extraction, nearest sampling and shared palette only"
   }
 }

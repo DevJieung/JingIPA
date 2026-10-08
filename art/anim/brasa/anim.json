@@ -2,33 +2,27 @@
   "name": "brasa_aoe_v1",
   "ko": "브라사",
   "elem": "fire",
-  "source": "imagegen_element_aoe_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
-    "w": 256,
-    "h": 256
+    "w": 320,
+    "h": 320
   },
   "static": {
     "w": 130,
     "h": 198
   },
   "anchor": {
-    "x": 128,
+    "x": 143,
     "y": 224
   },
   "scale": 0.7121212121212122,
   "muzzle_at": {
-    "x": 20,
-    "y": -123
+    "x": 30,
+    "y": -108
   },
   "hit_ms": 583.3333333333333,
   "face": 1,
-  "fixed_feet": true,
-  "foot_pin_box": [
-    72,
-    202,
-    184,
-    229
-  ],
+  "fixed_feet": false,
   "palette_colors": 96,
   "clips": {
     "idle": {
@@ -46,10 +40,10 @@
       "total_ms": 666.6666666666666,
       "loop": true,
       "cell": {
-        "w": 256,
-        "h": 256
+        "w": 320,
+        "h": 320
       },
-      "sha256": "f91a67fb4dd04d14a33da0d611632770c69beb62c06c4d4a5005f4abadd1692b"
+      "sha256": "b411557e1fc5343cec6f62cd3ef1f0cb067741c3b65ca351481ebeba47618323"
     },
     "attack": {
       "frames": 12,
@@ -70,10 +64,10 @@
       "total_ms": 1000.0,
       "loop": false,
       "cell": {
-        "w": 256,
-        "h": 256
+        "w": 320,
+        "h": 320
       },
-      "sha256": "3a6dd6b52bb2c69008703119c775d21d5a00c7926117e7748045b8acd4bfbc28",
+      "sha256": "df31e5c2dc5782960040901486582c42c28a31cc9feb9c01d26b1c9ad7662173",
       "hit_frame": 7
     },
     "effect": {
@@ -120,82 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/element_aoe_v1/source/brasa.png",
-    "method": "image_gen source > keyed matte > aligned native cells > shared palette > pinned boots",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/brasa.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        26,
         0,
+        315,
+        399
+      ],
+      [
+        386,
         0,
-        362,
-        362
+        672,
+        399
       ],
       [
-        362,
+        739,
         0,
-        724,
-        362
+        1030,
+        399
       ],
       [
-        724,
+        1110,
         0,
-        1086,
-        362
+        1402,
+        399
       ],
       [
-        1086,
-        0,
-        1448,
-        362
+        26,
+        399,
+        327,
+        759
       ],
       [
-        0,
-        362,
-        362,
-        724
+        382,
+        399,
+        710,
+        759
       ],
       [
-        362,
-        362,
-        724,
-        724
+        713,
+        399,
+        1126,
+        759
       ],
       [
-        724,
-        362,
-        1109,
-        724
+        1071,
+        399,
+        1407,
+        759
       ],
       [
-        1109,
-        362,
-        1448,
-        724
-      ],
-      [
-        0,
-        724,
-        362,
+        61,
+        759,
+        315,
         1086
       ],
       [
-        362,
-        724,
-        724,
+        390,
+        759,
+        689,
         1086
       ],
       [
-        724,
-        724,
-        1086,
+        739,
+        759,
+        1064,
         1086
       ],
       [
-        1086,
-        724,
-        1448,
+        1138,
+        759,
+        1405,
         1086
       ]
+    ],
+    "source_transforms": [
+      {
+        "factor": 0.601823708206687,
+        "offset": [
+          32,
+          -16
+        ]
+      },
+      {
+        "factor": 0.601823708206687,
+        "offset": [
+          33,
+          -16
+        ]
+      },
+      {
+        "factor": 0.601823708206687,
+        "offset": [
+          33,
+          -16
+        ]
+      },
+      {
+        "factor": 0.601823708206687,
+        "offset": [
+          31,
+          -16
+        ]
+      },
+      {
+        "factor": 0.601823708206687,
+        "offset": [
+          32,
+          7
+        ]
+      },
+      {
+        "factor": 0.601823708206687,
+        "offset": [
+          34,
+          7
+        ]
+      },
+      {
+        "factor": 0.601823708206687,
+        "offset": [
+          40,
+          7
+        ]
+      },
+      {
+        "factor": 0.601823708206687,
+        "offset": [
+          4,
+          7
+        ]
+      }
+    ],
+    "source_muzzle": [
+      934,
+      580
     ]
   },
   "portrait_id": "brasa"

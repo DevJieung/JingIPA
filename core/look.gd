@@ -1,18 +1,20 @@
 extends RefCounted
 class_name Look
 
-## 색 · 글꼴 · 카드 그리기. 화면들이 저마다 색을 짓지 않게 여기 한곳에 모은다.
+## 색 · 글꼴 · 공통 표식(별 · 속성 · 패시브 문양) 그리기.
+## 화면들이 저마다 색을 짓지 않게 여기 한곳에 모은다.
 ##
-## 도트 그림과 UI 소재는 Krea로, 읽어야 하는 글자와 카드 무늬는 코드로 그린다.
-## 카드는 숫자가 또렷해야 하는데 96px 도트로 뽑으면 J 와 Q 가 구별이 안 됐다.
+## 도트 그림과 UI 소재는 Krea로, 읽어야 하는 글자와 도형 표식은 코드로 그린다.
+## ★ 포커 시절의 트럼프 카드 · 판타지 문장 카드 그리기는 2026-10-07 에 통째로 걷어냈다
+##   (뽑기가 별맞춤 의식으로 바뀌었다 — game/rite_board.gd). 등급은 어디서나 별이다.
 
-# 밤의 도박장. 배경은 아주 어둡게 깔고 카드와 금색만 튀게 한다.
+# 밤의 야영지. 배경은 아주 어둡게 깔고 별빛과 금색만 튀게 한다.
 const BG        := Color("#101b20")
 const BG_DEEP   := Color("#0a1117")
 const PANEL     := Color("#233033")
 const PANEL_EDGE := Color("#746347")
-const FELT      := Color("#123527")   ## 카드 테이블의 초록 천
-const FELT_EDGE := Color("#0a2018")
+const NIGHT      := Color("#0c1722")  ## 의식판을 놓는 밤하늘 판
+const NIGHT_EDGE := Color("#060d14")
 
 const INK       := Color("#f4efe4")   ## 밝은 글자
 const INK_DIM   := Color("#c8d2cb")
@@ -54,42 +56,34 @@ const DMG_WEAK   := Color("#ff8a3c")   ## 2배 — 뜨거운 주황
 const DMG_NORMAL := Color("#f4efe4")   ## 보통 — 흰 글자와 같은 색
 const DMG_RESIST := Color("#847bA2")   ## 반감 — 식은 잿빛
 
-const CARD_BG   := Color("#f7f3e8")
-const CARD_EDGE := Color("#2a2233")
-const CARD_RED  := Color("#c62a44")
-const CARD_BLK  := Color("#22202b")
-const CARD_BACK := Color("#8c1d2f")
-const CARD_BACK2 := Color("#5d0f1e")
-
-## 족보 등급별 색. 낮으면 수수하게, 높으면 눈이 부시게.
+## 등급별 색 — 반 별 단위의 열 칸(Balance.TIER_ATK). 낮으면 수수하게, 높으면 눈이 부시게.
+## 별맞춤 의식은 온 별(1 · 3 · 5 · 7 · 9번 칸)만 주고, 사이의 반 별은 승급과 합성으로 오른다.
+## ★ 는 소환 연출이 화려해지는 등급이다(Balance.SHOWY_TIER — 지금은 4성부터).
+## ★ 색은 덤이다. 등급은 언제나 별의 **수**로 먼저 읽힌다(draw_rarity · star_label).
 const TIER_COLOR := [
-	Color("#8b8b98"),  # 하이카드 — 회색
-	Color("#79c07a"),  # 원페어 — 풀색
-	Color("#5aa9d8"),  # 투페어 — 하늘
-	Color("#4a7fe0"),  # 트리플 — 파랑
-	Color("#8a6ae8"),  # 스트레이트 — 보라
-	Color("#c15ce0"),  # 플러시 — 자주
-	Color("#ff7ac0"),  # 풀하우스 — 분홍 ★
-	Color("#ff9a3c"),  # 포카드 — 주황 ★
-	Color("#ffd24a"),  # 스트레이트 플러시 — 금 ★
-	Color("#fff0b8"),  # 로열 — 흰 금빛 ★ (순백은 빛 연출 위에서 글자가 안 읽힌다)
+	Color("#8b8b98"),  # 0.5성 — 회색
+	Color("#79c07a"),  # 1성 — 풀색
+	Color("#5aa9d8"),  # 1.5성 — 하늘
+	Color("#4a7fe0"),  # 2성 — 파랑
+	Color("#8a6ae8"),  # 2.5성 — 보라
+	Color("#c15ce0"),  # 3성 — 자주
+	Color("#ff7ac0"),  # 3.5성 — 분홍
+	Color("#ff9a3c"),  # 4성 — 주황 ★
+	Color("#ffd24a"),  # 4.5성 — 금 ★
+	Color("#fff0b8"),  # 5성 — 흰 금빛 ★ (순백은 빛 연출 위에서 글자가 안 읽힌다)
 ]
-
-const CARD_W := 118.0
-const CARD_H := 168.0
-const CARD_R := 12.0
 
 ## 화면 전체. 덮개·섬광·터치 자리처럼 「화면 통째로」를 뜻하는 곳이 전부 이것을 쓴다.
 const SCREEN := Rect2(0, 0, 1280, 800)
 
-## 도트 한 칸의 크기. 카드와 포커 화면의 도형을 **이 격자에 맞춰** 그린다.
-## ★ 사용자가 정한 것: 「포커하는 화면도 2D 픽셀로, 디자인적으로 이질감이 안 느껴지게」.
-##   캐릭터·몬스터는 96~141px 도트 그림이라 한 칸이 대략 3~4px 로 보인다. 카드만
+## 도트 한 칸의 크기. 판때기와 뽑기 화면의 바탕 도형을 **이 격자에 맞춰** 그린다.
+## ★ 사용자가 정한 것: 「뽑는 화면도 2D 픽셀로, 디자인적으로 이질감이 안 느껴지게」.
+##   캐릭터·몬스터는 96~141px 도트 그림이라 한 칸이 대략 3~4px 로 보인다. 판때기만
 ##   매끈한 벡터로 그리면 같은 화면 안에서 **다른 게임 두 개**처럼 보인다.
 const PX := 4.0
 
 ## 좌표를 도트 격자에 맞춘다. 반올림이 아니라 **내림**이다 — 반올림하면 같은 도형이
-## 프레임마다 한 칸씩 튄다(카드가 숨 쉬듯 떠 있어서 좌표가 늘 소수다).
+## 프레임마다 한 칸씩 튄다(떠 있는 것의 좌표는 늘 소수다).
 static func snap(v: float, g: float = PX) -> float:
 	return floor(v / g) * g
 
@@ -122,21 +116,21 @@ static func px_panel(ci: CanvasItem, rect: Rect2, face: Color, edge: Color,
 		ci.draw_rect(Rect2(i.position + Vector2(g, g), Vector2(i.size.x - g * 2.0, g)),
 				face.lightened(lip))
 
-## 좁은 칸에 쓰는 짧은 등급 이름. 인덱스는 Poker.Hand 값과 같다.
-##
-## ★ 왜 Roster.TIER_KO 를 그냥 안 쓰는가: 「스트레이트플러시」는 여덟 자라, 전당
-##   칸이 좁아지면(94px) 이름 하나가 칸을 넘어 옆 칸까지 흘러넘친다. 등급은 **어디서나
-##   보여야 하는 것**이라 좁은 자리용 이름을 따로 둔다. 색(TIER_COLOR)이 늘 같이 붙으므로
-##   줄인 이름만으로도 어느 등급인지 헷갈리지 않는다.
-const TIER_SHORT := ["하이", "원페어", "투페어", "트리플", "스트레", "플러시",
-	"풀하우스", "포카드", "스트플", "로열"]
-
 static func tier_color(t: int) -> Color:
 	return TIER_COLOR[clampi(t, 0, TIER_COLOR.size() - 1)]
 
 
-static func tier_short(t: int) -> String:
-	return TIER_SHORT[clampi(t, 0, TIER_SHORT.size() - 1)]
+## 등급을 별 수로 적는다 — 「3성」·「3.5성」. **등급의 이름은 게임 어디서나 이것 하나다.**
+##
+## ★ 포커 시절에는 등급마다 족보 이름(원페어 · 풀하우스 …)이 있었고 좁은 칸용 줄임말까지
+##   따로 뒀다. 별맞춤 의식에서는 문 안의 별을 **세면** 등급이다 — 외울 이름이 없다.
+##   등급은 반 별 단위의 열 칸(Balance.TIER_ATK)이라 짝수 칸은 「2.5성」처럼 반 별이 붙는다.
+static func star_label(tier: int) -> String:
+	var t := clampi(tier, 0, Balance.TIER_MAX)
+	if t % 2 == 1:
+		return "%d성" % ((t + 1) / 2)
+	return "%.1f성" % (float(t + 1) * 0.5)
+
 
 
 ## 영웅 카드의 바탕과 테두리는 공격 속성만 따른다. 등급은 별로, 선택은 꺾쇠로 읽는다.
@@ -192,36 +186,6 @@ static func draw_rarity_fit(ci: CanvasItem, box: Rect2, tier: int, radius: float
 		return
 	var fit := rarity_rect(box, radius)
 	draw_rarity(ci, fit.get_center(), tier, (fit.size.y - 8.0) * 0.5)
-
-
-## 캐릭터의 **레어 등급표**. 등급 색으로 꽉 채운 알약 안에 등급 이름을 적는다.
-##
-## ★ 왜 색 막대만으로 안 두는가: 색만 있으면 "저 보라색이 스트레이트였나 플러시였나"를
-##   외워야 한다. 열 등급이나 되는 게임에서 그건 아무도 안 외운다. 글자가 같이 있어야
-##   색이 **이름을 부르는 표시**가 되고, 그제서야 색만 봐도 등급이 읽히기 시작한다.
-## ★ 글자를 어두운 색(BG_DEEP)으로 쓰는 이유: 등급 색은 높을수록 밝다(로열은 흰 금빛).
-##   밝은 바탕에 밝은 글자를 얹으면 제일 귀한 등급이 제일 안 읽힌다.
-##
-## 돌려주는 것: 실제로 그린 폭(px). 옆에 무언가를 이어 그릴 때 쓴다.
-static func draw_tier_chip(ci: CanvasItem, at: Vector2, tier: int, size: int = 18,
-		full: bool = false) -> float:
-	var s: String = tier_name(tier, full)
-	var w := tier_chip_w(tier, size, full)
-	var h := float(size) + 8.0
-	var r := Rect2(at.x, at.y - h * 0.5, w, h)
-	fill_round(ci, r.grow(1.5), h * 0.5 + 1.5, BG_DEEP)
-	fill_round(ci, r, h * 0.5, tier_color(tier))
-	text_center(ci, Vector2(at.x + w * 0.5, at.y), s, size, BG_DEEP)
-	return w
-
-
-static func tier_name(tier: int, full: bool = false) -> String:
-	return Roster.TIER_KO[clampi(tier, 0, 9)] if full else tier_short(tier)
-
-
-## 등급표를 그리면 얼마나 넓어지는가. **오른쪽 끝에 맞춰 놓을 때** 미리 재는 데 쓴다.
-static func tier_chip_w(tier: int, size: int = 18, full: bool = false) -> float:
-	return text_width(tier_name(tier, full), size) + float(size)
 
 
 ## 속성을 한 글자로. 칸이 40px 도 안 되는 자리에 「무상성」을 쓸 수는 없다.
@@ -373,11 +337,9 @@ static func material_panel(ci: CanvasItem, rect: Rect2, face: Color = PANEL,
 		ci.draw_rect(Rect2(corner, Vector2(4, 4)), edge.lightened(0.25))
 
 static func camp_backdrop(ci: CanvasItem) -> void:
-	if not Art.draw_fill(ci, "res://art/ui/refuge/camp.png", SCREEN):
-		Art.draw_fill(ci, Roster.ART.get("shop_bg", ""), SCREEN)
-	ci.draw_rect(SCREEN, Color(0.025, 0.06, 0.08, 0.32))
+	StellarBackdrop.draw(ci, SCREEN, Run.theme_for(Run.wave), 0.0, true)
 
-## 테두리만 그린다(안을 비우지 않고). 겹쳐 그리는 순서로 해결한다.
+
 static func outline_round(ci: CanvasItem, rect: Rect2, r: float, col: Color, w: float) -> void:
 	fill_round(ci, rect.grow(w), r + w, col)
 
@@ -567,480 +529,19 @@ static func text_width(s: String, size: int) -> float:
 	return font(size).get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
 
 
-## 카드 한 장. pos 는 왼쪽 위 모서리, scale 로 크기를 바꾼다.
-## hi 가 참이면 족보를 이룬 카드라는 뜻으로 테두리를 금색으로 두른다.
+## 합성 전용 각성 수호자의 금색 표식 — 여섯 모 방패 안의 별.
 ##
-## ★ **도트로 그린다**(사용자가 정한 것: 「포커하는 화면도 2D 픽셀로」). 예전에는 둥근
-##   모서리와 매끈한 곡선 무늬였는데, 같은 화면 아래쪽에 96px 도트 캐릭터가 서 있어서
-##   카드만 다른 게임에서 온 것처럼 보였다.
-##
-## ★ **실제 트럼프와 같은 판짜기**(사용자가 정한 것: 「실제 트럼프카드와 똑같이」).
-##   세 가지를 실제 카드에서 그대로 옮겨 왔다:
-##     1. 모서리 표시는 **왼쪽 위와 오른쪽 아래**, 아래쪽은 180도 돌아간다.
-##     2. 숫자 카드의 무늬는 **3열 x 7행 격자**의 정해진 자리에 놓인다(PIP_LAYOUT).
-##        그리고 **아래 절반은 거꾸로** 찍힌다 — 이 한 가지가 "진짜 카드"를 만든다.
-##     3. J·Q·K 는 **반쪽 그림을 위아래로 마주 붙인** 틀 그림이다(COURT_PX).
-static func draw_card(ci: CanvasItem, pos: Vector2, code: int, sc: float = 1.0,
-		hi: bool = false, dim: bool = false) -> void:
-	if Save.card_mode == "sigil":
-		_draw_sigil_card(ci, pos, code, sc, hi, dim)
+## ★ 포커 시절에는 여기에 패의 숫자를 적은 「숫자 방패 문장」이 있었다. 별맞춤 의식으로
+##   바뀌면서 패의 숫자가 없어졌으므로 숫자 문장은 폐기했다. 남은 것은 「이 영웅은 합성으로만
+##   만나는 각성 수호자」라는 표시 하나다 — 뽑기로 얻은 영웅에는 아무것도 안 그린다.
+static func draw_awakened_mark(ci: CanvasItem, center: Vector2, hero: Dictionary, radius: float = 14) -> void:
+	if not bool(hero.get("awakened", false)) and not bool((hero.get("unit", {}) as Dictionary).get("fusion_only", false)):
 		return
-	var w := roundf(CARD_W * sc)
-	var h := roundf(CARD_H * sc)
-	var p := pos.round()
-	var rect := Rect2(p, Vector2(w, h))
-	var edge := GOLD if hi else CARD_EDGE
-	fill_round(ci, Rect2(p + Vector2(2, 5), rect.size), 5, Color(0, 0, 0, 0.42))
-	fill_round(ci, rect, 5, edge)
-	fill_round(ci, rect.grow(-2), 4, CARD_BG.darkened(0.3) if dim else CARD_BG)
-	if hi:
-		ci.draw_rect(rect.grow(-5), Color(GOLD, 0.68), false, 1)
-	var suit := Poker.suit_of(code)
-	var col := CARD_RED if suit in [Poker.Suit.HEART, Poker.Suit.DIAMOND] else CARD_BLK
-	if dim:
-		col = col.lerp(CARD_BG, 0.45)
-	var rank := Poker.rank_of(code)
-	var rc: String = Poker.RANK_CHAR[rank - Poker.RANK_MIN]
-	var cx := w * 0.16
-	var mark := maxi(10, int(22 * sc))
-	text_center_fit(ci, p + Vector2(cx, h * 0.085), rc, mark, col, w * 0.28, 10)
-	card_suit(ci, p + Vector2(cx, h * 0.205), 6.4 * sc, suit, col)
-	text_center_fit(ci, p + Vector2(w - cx, h * 0.915), rc, mark, col, w * 0.28, 10)
-	card_suit(ci, p + Vector2(w - cx, h * 0.795), 6.4 * sc, suit, col)
-	if rank in [11, 12, 13]:
-		_court(ci, Rect2(p + Vector2(w * 0.235, h * 0.115), Vector2(w * 0.53, h * 0.77)), rc, suit, col, dim)
-		return
-	if rank == 14:
-		card_suit(ci, rect.get_center(), 31 * sc, suit, col)
-		return
-	for q in (PIP_LAYOUT.get(rank, []) as Array):
-		var v: Vector2 = q
-		card_suit(ci, p + Vector2(w * (0.33 + 0.34 * v.x), h * (0.17 + 0.66 * v.y)), 7.1 * sc, suit, col)
-
-
-## Continuous suit contours retain clean edges at both hand and picker sizes.
-static func card_suit(ci: CanvasItem, at: Vector2, radius: float, suit: int, col: Color) -> void:
-	var points := PackedVector2Array()
-	match suit:
-		Poker.Suit.DIAMOND:
-			points = PackedVector2Array([at + Vector2(0, -radius), at + Vector2(radius * 0.72, 0), at + Vector2(0, radius), at - Vector2(radius * 0.72, 0)])
-		Poker.Suit.HEART, Poker.Suit.SPADE:
-			for i in range(49):
-				var a := TAU * i / 48.0
-				var x := 16 * pow(sin(a), 3) / 17.0
-				var y := -(13 * cos(a) - 5 * cos(2*a) - 2 * cos(3*a) - cos(4*a)) / 17.0
-				points.append(at + Vector2(x, y * (-1 if suit == Poker.Suit.SPADE else 1)) * radius)
-		_:
-			ci.draw_circle(at + Vector2(0, -radius * 0.46), radius * 0.47, col)
-			ci.draw_circle(at + Vector2(-radius * 0.43, radius * 0.08), radius * 0.48, col)
-			ci.draw_circle(at + Vector2(radius * 0.43, radius * 0.08), radius * 0.48, col)
-	if not points.is_empty():
-		ci.draw_colored_polygon(points, col)
-		points.append(points[0])
-		ci.draw_polyline(points, col, 0.7, true)
-	if suit in [Poker.Suit.SPADE, Poker.Suit.CLUB]:
-		ci.draw_colored_polygon(PackedVector2Array([at + Vector2(0, -radius * 0.1), at + Vector2(radius * 0.4, radius), at + Vector2(-radius * 0.4, radius)]), col)
-
-
-## 숫자 카드의 무늬 자리. 실제 트럼프의 **3열 x 7행 격자**를 그대로 옮겼다 —
-## x 는 0.0 / 0.5 / 1.0 (왼·가운데·오른쪽), y 는 0/6 부터 6/6 까지 일곱 자리다.
-## 눈이 이미 외우고 있는 배치라, 한 자리만 틀려도 "가짜 카드"로 읽힌다.
-const PIP_LAYOUT := {
-	2:  [Vector2(0.5, 0.0), Vector2(0.5, 1.0)],
-	3:  [Vector2(0.5, 0.0), Vector2(0.5, 0.5), Vector2(0.5, 1.0)],
-	4:  [Vector2(0.0, 0.0), Vector2(1.0, 0.0), Vector2(0.0, 1.0), Vector2(1.0, 1.0)],
-	5:  [Vector2(0.0, 0.0), Vector2(1.0, 0.0), Vector2(0.5, 0.5),
-		 Vector2(0.0, 1.0), Vector2(1.0, 1.0)],
-	6:  [Vector2(0.0, 0.0), Vector2(1.0, 0.0), Vector2(0.0, 0.5), Vector2(1.0, 0.5),
-		 Vector2(0.0, 1.0), Vector2(1.0, 1.0)],
-	7:  [Vector2(0.0, 0.0), Vector2(1.0, 0.0), Vector2(0.5, 0.25),
-		 Vector2(0.0, 0.5), Vector2(1.0, 0.5), Vector2(0.0, 1.0), Vector2(1.0, 1.0)],
-	8:  [Vector2(0.0, 0.0), Vector2(1.0, 0.0), Vector2(0.5, 0.25),
-		 Vector2(0.0, 0.5), Vector2(1.0, 0.5), Vector2(0.5, 0.75),
-		 Vector2(0.0, 1.0), Vector2(1.0, 1.0)],
-	9:  [Vector2(0.0, 0.0), Vector2(1.0, 0.0), Vector2(0.0, 1.0 / 3.0),
-		 Vector2(1.0, 1.0 / 3.0), Vector2(0.5, 0.5), Vector2(0.0, 2.0 / 3.0),
-		 Vector2(1.0, 2.0 / 3.0), Vector2(0.0, 1.0), Vector2(1.0, 1.0)],
-	10: [Vector2(0.0, 0.0), Vector2(1.0, 0.0), Vector2(0.5, 1.0 / 6.0),
-		 Vector2(0.0, 1.0 / 3.0), Vector2(1.0, 1.0 / 3.0),
-		 Vector2(0.0, 2.0 / 3.0), Vector2(1.0, 2.0 / 3.0), Vector2(0.5, 5.0 / 6.0),
-		 Vector2(0.0, 1.0), Vector2(1.0, 1.0)],
-}
-
-
-## 그림 카드(J·Q·K). **반쪽 그림 하나를 위아래로 마주 붙인다** — 실제 트럼프가 그렇다.
-##
-## ★ 예전에는 왕관 하나와 글자 하나였다. 그것으로도 "그림 카드"인 줄은 알지만
-##   실제 카드와 나란히 놓으면 곧바로 가짜로 보였다. 사람 반쪽을 21x26 도트로 찍고
-##   180도 돌려 아래에 붙이면, 30px 안에서도 왕·여왕·기사가 서로 다르게 읽힌다.
-## ★ 무늬 색이 검정일 때 옷을 그대로 검정으로 칠하면 윤곽과 붙어 **덩어리 하나**가
-##   된다. 그래서 옷은 무늬 색을 바탕 쪽으로 조금 민 색이고 윤곽은 더 어둡게 민 색이다.
-static var _court_texture: CanvasTexture
-static var _court_regions: Dictionary = {}
-
-static func _court_portrait(ci: CanvasItem, box: Rect2, rank: String, dim: bool) -> bool:
-	if _court_texture == null:
-		var source := Art.tex("res://art/ui/dealer/card_courts.png")
-		if source == null:
-			return false
-		_court_texture = CanvasTexture.new()
-		_court_texture.diffuse_texture = source
-		_court_texture.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-		for i in range(3):
-			_court_regions[["J", "Q", "K"][i]] = Rect2(i * 512 + 4, 88, 504, 848)
-	var src: Rect2 = _court_regions.get(rank, _court_regions["K"])
-	var half := Rect2(box.position + Vector2(2, 3), Vector2(box.size.x - 4, (box.size.y - 6) * 0.5))
-	var target := Art.fit_rect(src.size, half)
-	var tint := Color(0.68, 0.68, 0.68, 1) if dim else Color.WHITE
-	ci.draw_texture_rect_region(_court_texture, target, src, tint)
-	var lower := Rect2(Vector2(target.position.x, box.get_center().y), target.size)
-	var size := Vector2(_court_texture.get_width(), _court_texture.get_height())
-	ci.draw_polygon(PackedVector2Array([lower.position, Vector2(lower.end.x, lower.position.y), lower.end, Vector2(lower.position.x, lower.end.y)]), PackedColorArray([tint]), PackedVector2Array([src.end / size, Vector2(src.position.x, src.end.y) / size, src.position / size, Vector2(src.end.x, src.position.y) / size]), _court_texture)
-	ci.draw_line(Vector2(box.position.x + 2, box.get_center().y), Vector2(box.end.x - 2, box.get_center().y), GOLD_DEEP, 1)
-	return true
-
-
-static func _court(ci: CanvasItem, box: Rect2, rc: String, suit: int, col: Color,
-		dim: bool) -> void:
-	var r := Rect2(box.position.round(), box.size.round())
-	var edge := col
-	# 틀 — 실제 카드의 그 네모 테두리.
-	fill_round(ci, r, 1, edge)
-	fill_round(ci, r.grow(-1), 1, CARD_BG.darkened(0.04) if not dim else CARD_BG.darkened(0.30))
-	if _court_portrait(ci, r, rc, dim):
-		return
-	var rows: Array = COURT_PX.get(rc, COURT_PX["K"])
-	var nr := rows.size()
-	var nc: int = (rows[0] as String).length()
-	var blk: float = maxf(1.0, floor(minf(r.size.x * 0.88 / float(nc),
-			r.size.y * 0.490 / float(nr))))
-	var pal := {
-		"o": col.darkened(0.55),
-		"s": Color("#f0c9a0"),
-		"h": Color("#a8743a"),
-		"r": col.lerp(CARD_BG, 0.16),
-		"w": Color("#eee9dd"),
-		"g": GOLD,
-	}
-	if dim:
-		for k in pal.keys():
-			pal[k] = (pal[k] as Color).lerp(CARD_BG, 0.45)
-	var fw := blk * float(nc)
-	var fh := blk * float(nr)
-	var mx := r.position.x + r.size.x * 0.5
-	var my := r.position.y + r.size.y * 0.5
-	_blit_court(ci, rows, pal, Vector2(mx - fw * 0.5, my - fh), blk, false)
-	_blit_court(ci, rows, pal, Vector2(mx - fw * 0.5, my), blk, true)
-	# 틀 안 모서리의 작은 무늬 — 실제 카드가 여기에 무늬를 하나씩 넣는다.
-	# ★ **틀이 좁으면(sc 1.0) 넣지 않는다.** 모서리 표시(cg 는 어느 크기에서나 2다)와
-	#   이 무늬 사이에 틀 테두리 한 줄밖에 안 남아서, 셋이 한 덩어리로 뭉쳐 카드 모서리에
-	#   정체 모를 얼룩이 생긴다(타이틀의 부채꼴이 그 크기다). 자리 비율을 밀어서 고칠 수는
-	#   없다 — sc 1.0 에서 비키게 만든 비율이 sc 1.3 에서는 사람 그림을 파고든다.
-	if blk < 3.0:
-		return
-	var sg: float = maxf(1.0, floor(blk * 0.55))
-	draw_suit_px(ci, r.position + Vector2(r.size.x * 0.10, r.size.y * 0.075), sg, suit, col)
-	draw_suit_px(ci, r.position + Vector2(r.size.x * 0.90, r.size.y * 0.925), sg, suit,
-			col, true)
-
-
-## 팔레트 도트판 한 장. rot 이 참이면 180도 돌린다(마주 붙는 아래 절반).
-## ★ 같은 색이 가로로 이어지면 한 번에 그린다 — 21x26 을 한 칸씩 그리면 546개다.
-static func _blit_court(ci: CanvasItem, rows: Array, pal: Dictionary, at: Vector2,
-		blk: float, rot: bool) -> void:
-	var nr := rows.size()
-	var nc: int = (rows[0] as String).length()
-	for y in range(nr):
-		var line: String = rows[nr - 1 - y] if rot else rows[y]
-		var run := -1
-		var cur := ""
-		for x in range(nc + 1):
-			var ch := ""
-			if x < nc:
-				ch = line[nc - 1 - x] if rot else line[x]
-				if not pal.has(ch):
-					ch = ""
-			if ch != cur:
-				if cur != "" and run >= 0:
-					ci.draw_rect(Rect2(at.x + blk * float(run), at.y + blk * float(y),
-							blk * float(x - run), blk), pal[cur])
-				cur = ch
-				run = x
-
-
-## 카드 무늬 도트판. 실제 트럼프의 실루엣을 그대로 옮긴 **11칸 폭 x 12줄**이다.
-##
-## ★ 글꼴로 그리지 않는 이유는 core/poker.gd 의 SUIT_KO 주석에 적어 뒀다.
-##   번들 폰트에 ♠♦♣ 가 없어서 두부로 깨진다.
-## ★ **열쇠는 인덱스가 Poker.Suit 와 정확히 같아야 한다는 것이다.** 예전 표는
-##   스페이드 자리(0)에 하트를, 하트 자리(1)에 스페이드를 넣어 두어서 — 색까지
-##   같이 갈리므로 — **검은 하트와 빨간 스페이드**가 화면에 찍혔다. 사용자가 본
-##   「카드모양 좀 이상하게 생성됨」이 정확히 이것이다.
-const SUIT_PX := {
-	Poker.Suit.SPADE: [
-		".....#.....", "....###....", "...#####...", "..#######..", ".#########.",
-		"###########", "###########", "###########", "###########", ".###...###.",
-		"....###....", "...#####...",
-	],
-	Poker.Suit.HEART: [
-		"..##...##..", ".####.####.", "###########", "###########", "###########",
-		"###########", ".#########.", "..#######..", "...#####...", "....###....",
-		".....#.....", "...........",
-	],
-	Poker.Suit.DIAMOND: [
-		".....#.....", "....###....", "...#####...", "..#######..", ".#########.",
-		".#########.", ".#########.", "..#######..", "...#####...", "....###....",
-		".....#.....", "...........",
-	],
-	Poker.Suit.CLUB: [
-		"....###....", "...#####...", "...#####...", ".##.###.##.", "###########",
-		"###########", "###########", ".##.###.##.", ".....#.....", "....###....",
-		"...#####...", "..#######..",
-	],
-}
-
-
-## 그림 카드의 반쪽 사람. 21칸 폭 x 26줄.
-## 글자는 팔레트다 — o 윤곽 · s 살 · h 머리 · r 옷(무늬색) · w 밝은 것 · g 금.
-## ★ 셋이 **실루엣부터** 달라야 한다. 왕은 뿔 셋 왕관에 흰 수염과 칼,
-##   여왕은 어깨를 덮는 긴 머리와 꽃, 잭은 깃 꽂은 챙모자와 창이다.
-##   얼굴 생김새로만 가르면 30px 안에서 셋이 같은 사람이 된다.
-const COURT_PX := {
-	"K": [
-		"......g...g...g......",
-		".....ggg.ggg.ggg.....",
-		".....ggggggggggg.....",
-		".....ggwggwggwgg.....",
-		".......ooooooo.......",
-		"......hsssssssh......",
-		"......hsssssssh......",
-		"......hsosssosh..wo..",
-		"......hsssssssh..wo..",
-		"......hssooossh..wo..",
-		"......wwwwwwwww.gggg.",
-		".......wwwwwww...wo..",
-		"........wwwww....wo..",
-		".......ogggggo...wo..",
-		".....orgggggggro.wo..",
-		"...orrrrrrgrrrrrrwo..",
-		".orrrrrrrrgrrrrrrwoo.",
-		"orrrrrrrrrgrrrrrrworo",
-		"orrrrrrrrrgrrrrrrworo",
-		"orrrrrrrrrgrrrrrrworo",
-		"orrrrrrrrrgrrrrrrworo",
-		"orrrrrrrrrgrrrrrrworo",
-		"orrrrrrrrrgrrrrrrworo",
-		"orrrrrrrrrgrrrrrrworo",
-		"orrrrrrrrrgrrrrrrworo",
-		"orrrrrrrrrgrrrrrrworo",
-	],
-	"Q": [
-		".....................",
-		"......w.w.w.w.w......",
-		".....ggggggggggg.....",
-		".....ggggggggggg.....",
-		".......hhhhhhh.......",
-		".....hhssssssshh.....",
-		".....hhssssssshh.....",
-		".....hhsosssoshh.....",
-		".....hhssssssshh.....",
-		".....hhssssssshh.....",
-		"..w..hhssssssshh.....",
-		".wgw.h..ooooo..h.....",
-		"..w.hh.........hh....",
-		"..g.hh.owwwwwo.hh....",
-		"..g.hhrwwwwwwwrhh....",
-		"..gohhrrrrwrrrrhho...",
-		".ogrhhrrrrwrrrrhhrro.",
-		"orgrhhrrrrwrrrrhhrrro",
-		"orgrhhrrrrwrrrrhhrrro",
-		"orgrhhrrrrwrrrrhhrrro",
-		"orgrrrrrrrwrrrrrrrrro",
-		"orgrrrrrrrwrrrrrrrrro",
-		"orgrrrrrrrwrrrrrrrrro",
-		"orgrrrrrrrwrrrrrrrrro",
-		"orgrrrrrrrwrrrrrrrrro",
-		"orgrrrrrrrwrrrrrrrrro",
-	],
-	"J": [
-		"..g..............w...",
-		"..g....rrrrrrr....w..",
-		"..g..rrrrrrrrrrr..w..",
-		"..w.ooooooooooooow...",
-		"..w....hhhhhhh.......",
-		".wgw..hsssssssh......",
-		"..w...hsssssssh......",
-		"..g...hsosssosh......",
-		"..g...hsssssssh......",
-		"..g...hssooossh......",
-		"..g...hsssssssh......",
-		"..g.....ooooo........",
-		"..g..................",
-		"..g....owwwwwo.......",
-		"..g..orwwwwwwwro.....",
-		"..gorrrrrrwrrrrrro...",
-		".ogrrrrrrrwrrrrrrrro.",
-		"orgrrrrrrrwrrrrrrrrro",
-		"orgrrrrrrrwrrrrrrrrro",
-		"orgrrrrrrrwrrrrrrrrro",
-		"orgrrrrrrrwrrrrrrrrro",
-		"orgrrrrrrrwrrrrrrrrro",
-		"orgrrrrrrrwrrrrrrrrro",
-		"orgrrrrrrrwrrrrrrrrro",
-		"orgrrrrrrrwrrrrrrrrro",
-		"orgrrrrrrrwrrrrrrrrro",
-	],
-}
-
-
-## 무늬를 도트판으로 찍는다. blk 은 한 칸의 크기, flip 이면 180도 돌린다
-## (실제 트럼프의 아래쪽 절반이 그렇다).
-static func draw_suit_px(ci: CanvasItem, c: Vector2, blk: float, suit: int,
-		col: Color, flip: bool = false) -> void:
-	var rows: Array = SUIT_PX.get(suit, SUIT_PX[Poker.Suit.SPADE])
-	var nr := rows.size()
-	var nc: int = (rows[0] as String).length()
-	var x0: float = snap(c.x - blk * float(nc) * 0.5, 1.0)
-	var y0: float = snap(c.y - blk * float(nr) * 0.5, 1.0)
-	for r in range(nr):
-		var line: String = rows[nr - 1 - r] if flip else rows[r]
-		var run := -1
-		for x in range(nc + 1):
-			var on := false
-			if x < nc:
-				on = (line[nc - 1 - x] if flip else line[x]) == "#"
-			if on and run < 0:
-				run = x
-			elif not on and run >= 0:
-				# ★ 한 칸씩 draw_rect 하면 카드 한 장에 도형이 삼백 개다. 가로로 이어진
-				#   칸은 한 번에 그린다 — 같은 그림인데 도형이 6분의 1로 준다.
-				ci.draw_rect(Rect2(x0 + blk * float(run), y0 + blk * float(r),
-						blk * float(x - run), blk), col)
-				run = -1
-
-
-## 무늬 하나를 반지름 r 로 그린다. 도트판을 그 크기에 맞춰 찍을 뿐이다 —
-## ★ 실루엣의 원본은 SUIT_PX **한 곳뿐이다.** 예전에는 여기가 원과 삼각형으로 따로
-##   그려서, 같은 스페이드가 자리에 따라 다른 모양으로 나왔다.
-static func draw_suit(ci: CanvasItem, c: Vector2, r: float, suit: int, col: Color) -> void:
-	if Save.card_mode == "sigil":
-		draw_sigil(ci, c, r, suit, col)
-		return
-	draw_suit_px(ci, c, maxf(1.0, floor(r * 2.0 / 12.0)), suit, col)
-
-
-## A mode changes the whole visual vocabulary while keeping the same combinations.
-const SIGIL_HANDS := ["단일 문장", "쌍의 결속", "이중 결속", "삼중 공명", "연속 공명", "문장 통일", "완전 결속", "사중 공명", "연속 문장", "왕관의 문장"]
-const SIGIL_COLORS := [Color("#75c790"), Color("#ffc86c"), Color("#68d7f0"), Color("#baaff2")]
-
-static func hand_name(tier: int) -> String:
-	return SIGIL_HANDS[clampi(tier, 0, 9)] if Save.card_mode == "sigil" else String(Poker.HAND_KO.get(tier, "?"))
-
-static func rank_name(rank: int) -> String:
-	return str(rank) if Save.card_mode == "sigil" else String(Poker.RANK_CHAR[clampi(rank - 2, 0, 12)])
-
-static func draw_sigil(ci: CanvasItem, c: Vector2, r: float, suit: int, col: Color) -> void:
-	match suit:
-		0: # Forest: a three-tier pine with a visible trunk.
-			for i in range(3):
-				var y := -r + i * r * 0.43
-				var width := r * (0.50 + i * 0.19)
-				ci.draw_colored_polygon(PackedVector2Array([c + Vector2(0, y), c + Vector2(width, y + r * 0.78), c + Vector2(-width, y + r * 0.78)]), col)
-			ci.draw_rect(Rect2(c + Vector2(-r * 0.12, r * 0.6), Vector2(r * 0.24, r * 0.43)), col)
-		1: # Sun: separate rays remain legible on tiny picker cards.
-			ci.draw_circle(c, r * 0.48, col)
-			for i in range(8):
-				var d := Vector2.from_angle(i * TAU / 8)
-				ci.draw_line(c + d * r * 0.68, c + d * r, col, maxf(1, r * 0.14))
-		2: # Wave: three broken crests rather than a card suit.
-			for row in range(3):
-				var points := PackedVector2Array()
-				for i in range(9):
-					points.append(c + Vector2((i / 8.0 - 0.5) * r * 1.8, (row - 1) * r * 0.55 + sin(i * PI / 4) * r * 0.2))
-				ci.draw_polyline(points, col, maxf(1, r * 0.16), false)
-		_: # Crescent: polygon avoids erasing the card's decorative background.
-			var points := PackedVector2Array()
-			for i in range(17):
-				var a := PI * 0.30 + i * PI * 1.40 / 16
-				points.append(c + Vector2.from_angle(a) * r)
-			for i in range(17):
-				var a := -PI * 0.65 - i * PI * 0.70 / 16
-				points.append(c + Vector2(r * 0.44, 0) + Vector2.from_angle(a) * r * 0.88)
-			ci.draw_colored_polygon(points, col)
-
-static func _draw_sigil_card(ci: CanvasItem, pos: Vector2, code: int, sc: float, hi: bool, dim: bool) -> void:
-	var rect := Rect2(pos.round(), Vector2(roundf(CARD_W * sc), roundf(CARD_H * sc)))
-	var suit := Poker.suit_of(code)
-	var tone: Color = SIGIL_COLORS[suit]
-	var ink := tone.lerp(INK_DIM, 0.58) if dim else tone
-	fill_round(ci, Rect2(rect.position + Vector2(2, 5), rect.size), 5, Color(0, 0, 0, 0.42))
-	px_panel(ci, rect, Color("#142a31").lerp(tone, 0.10), GOLD if hi else tone.darkened(0.30), 0.12)
-	ci.draw_rect(rect.grow(-6 * sc), Color(ink, 0.40), false, maxf(1, sc))
-	var rank := str(Poker.rank_of(code))
-	text_box(ci, Rect2(rect.position + Vector2(8, 4) * sc, Vector2(rect.size.x * 0.34, 29 * sc)), rank, int(24 * sc), ink)
-	text_box(ci, Rect2(rect.end - Vector2(rect.size.x * 0.34 + 8 * sc, 32 * sc), Vector2(rect.size.x * 0.34, 28 * sc)), rank, int(24 * sc), ink)
-	var center := rect.get_center()
-	ci.draw_colored_polygon(PackedVector2Array([center + Vector2(0, -43) * sc, center + Vector2(35, 0) * sc, center + Vector2(0, 43) * sc, center - Vector2(35, 0) * sc]), Color(ink, 0.12))
-	draw_sigil(ci, center, 25 * sc, suit, ink)
-	for sign in [-1, 1]:
-		ci.draw_line(center + Vector2(-18, sign * 55) * sc, center + Vector2(18, sign * 55) * sc, Color(ink, 0.55), maxf(1, sc))
-
-## The numeric crest encodes every value variant without changing its hero identity.
-static func draw_value_crest(ci: CanvasItem, center: Vector2, hero: Dictionary, radius: float = 14) -> void:
-	var value: Dictionary = hero.get("value", {})
-	var awakened := bool(hero.get("awakened", false)) or bool((hero.get("unit", {}) as Dictionary).get("fusion_only", false))
-	if value.is_empty() and not awakened:
-		return
-	var tone := GOLD if awakened else CRYSTAL
 	var points := PackedVector2Array([center + Vector2(0, -radius), center + Vector2(radius, -radius * 0.35), center + Vector2(radius * 0.72, radius * 0.67), center + Vector2(0, radius), center + Vector2(-radius * 0.72, radius * 0.67), center + Vector2(-radius, -radius * 0.35)])
 	ci.draw_colored_polygon(points, BG_DEEP)
 	points.append(points[0])
-	ci.draw_polyline(points, tone, 2, false)
-	var ranks: Array = value.get("ranks", [])
-	text_box(ci, Rect2(center - Vector2(radius * 0.80, radius * 0.65), Vector2(radius * 1.6, radius * 1.3)), str(ranks[0]) if not ranks.is_empty() else "+", int(radius * 1.05), tone)
-	if awakened:
-		ci.draw_colored_polygon(star_points(center - Vector2(0, radius + 4), radius * 0.32), GOLD)
-
-## 카드 뒷면. 리롤 연출에서 뒤집을 때 쓴다.
-static func draw_card_back(ci: CanvasItem, pos: Vector2, sc: float = 1.0) -> void:
-	if Save.card_mode == "sigil":
-		var box := Rect2(pos.round(), Vector2(CARD_W, CARD_H) * sc)
-		px_panel(ci, box, Color("#1d3640"), GOLD_DEEP, 0.14)
-		ci.draw_rect(box.grow(-7 * sc), Color(CRYSTAL, 0.42), false, maxf(1, sc))
-		for suit in range(4):
-			var point := box.get_center() + Vector2.from_angle(-PI * 0.5 + suit * TAU / 4) * 31 * sc
-			draw_sigil(ci, point, 10 * sc, suit, SIGIL_COLORS[suit])
-		ci.draw_colored_polygon(star_points(box.get_center(), 13 * sc, 0.32), GOLD)
-		return
-	var g: float = maxf(2.0, snap(PX * sc, 1.0))
-	var w := snap(CARD_W * sc, g)
-	var h := snap(CARD_H * sc, g)
-	var p := snap_v(pos, g)
-	px_panel(ci, Rect2(p + Vector2(g, g * 2.0), Vector2(w, h)), Color(0, 0, 0, 0.45),
-			Color(0, 0, 0, 0.45))
-	# 그려 둔 뒷면 그림이 있으면 그걸 쓰고, 없으면 아래 도형으로 대신 그린다.
-	var t := Art.tex(Roster.ART.get("card_back", ""))
-	if t != null:
-		px_panel(ci, Rect2(p, Vector2(w, h)), CARD_BACK, CARD_EDGE)
-		ci.draw_texture_rect(t, Rect2(p + Vector2(g, g), Vector2(w - g * 2.0, h - g * 2.0)),
-				false)
-		return
-	px_panel(ci, Rect2(p, Vector2(w, h)), CARD_BACK, CARD_EDGE)
-	px_panel(ci, Rect2(p + Vector2(g * 2.0, g * 2.0), Vector2(w - g * 4.0, h - g * 4.0)),
-			CARD_BACK2, GOLD_DEEP)
-	# 금색 마름모 격자 — 도트로 찍는다.
-	var step: float = g * 5.0
-	var y := p.y + g * 4.0
-	var row := 0
-	while y < p.y + h - g * 4.0:
-		var x := p.x + (g * 4.0 if row % 2 == 0 else g * 6.5)
-		while x < p.x + w - g * 4.0:
-			ci.draw_rect(Rect2(snap(x, g), snap(y, g), g, g), GOLD_DEEP)
-			ci.draw_rect(Rect2(snap(x - g, g), snap(y + g, g), g * 3.0, g), GOLD_DEEP)
-			ci.draw_rect(Rect2(snap(x, g), snap(y + g * 2.0, g), g, g), GOLD_DEEP)
-			x += step
-		y += step * 0.8
-		row += 1
+	ci.draw_polyline(points, GOLD, 2, false)
+	ci.draw_colored_polygon(star_points(center + Vector2(0, radius * 0.04), radius * 0.60), GOLD)
 
 
 # --------------------------------------------------------------------------- #
@@ -1236,8 +737,8 @@ static func draw_passive_icon(ci: CanvasItem, c: Vector2, r: float, p: Dictionar
 
 ## 패시브 한 장을 **카드 모양**으로 그린다. 상점이 이 한 함수로 진열을 만든다.
 ##
-## ★ 사용자가 정한 것: 「패시브도 카드 형태로 일러스트해서 이쁘게」. 포커 게임이라
-##   카드 모양이 이 게임의 말투이기도 하다 — 상점의 진열이 손패처럼 보이면 뜻이 맞는다.
+## ★ 사용자가 정한 것: 「패시브도 카드 형태로 일러스트해서 이쁘게」. 영웅 카드와 같은
+##   카드 모양이라, 상점의 진열이 「내가 쥘 수 있는 것」으로 읽힌다.
 ## ★ 등급(rank)은 **테두리 겹 수**로 말한다. 색만으로 두면 스물여섯 장 사이에서
 ##   어느 것이 귀한지가 안 읽힌다.
 static func draw_passive_card(ci: CanvasItem, r: Rect2, p: Dictionary, owned: bool,

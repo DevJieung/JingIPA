@@ -1,0 +1,2339 @@
+{
+  "generator": "Godot 4.7.1 actual Node3D / MeshInstance3D / Camera3D viewport capture",
+  "date": "2026-10-08",
+  "model": "game/3d/stellar_models.gd",
+  "profiles": "art/models/manifest.json",
+  "renderers": [
+    "tests/3d/render_portraits.tscn",
+    "tests/3d/render_brand.tscn"
+  ],
+  "style_reference": "https://www.youtube.com/watch?v=7gyIit5TtsI",
+  "identity_source": "Existing tools/roster.json hero prompt, skin, hair, work clothing, equipment and elemental identity",
+  "framing": "Full transformed mesh AABB camera fit, 16 percent safe margins, unchanged native PNG captures",
+  "assets": [
+    {
+      "path": "art/models/portraits/blank/00.png",
+      "sha256": "20195062bc2031bbe0fece307aee7ee1d37665b70521d77cbeb241d5e7f6a09d"
+    },
+    {
+      "path": "art/models/portraits/blank/01.png",
+      "sha256": "577677965d00658da553e5b656e5cc5e5d73464819e025d712139157f3828103"
+    },
+    {
+      "path": "art/models/portraits/blank/02.png",
+      "sha256": "71b26928dd004a412a1b6922f3803a7e2861d5054cf245b322bf14a35bae4752"
+    },
+    {
+      "path": "art/models/portraits/blank/03.png",
+      "sha256": "bfb09ad68ddf7d2f6e40bc3e0ea48e281eda2544ffe294fe01fd4ae20638a94d"
+    },
+    {
+      "path": "art/models/portraits/blank/04.png",
+      "sha256": "03ce06dcb267cc4b2a7b4d2ad771f661f351f7209e78bead85ed1588300d59c0"
+    },
+    {
+      "path": "art/models/portraits/blank/05.png",
+      "sha256": "853026e036cad5745985cb19688513a122af90858fa2d83235f05fe9fc2af2db"
+    },
+    {
+      "path": "art/models/portraits/blank/06.png",
+      "sha256": "253776385c7294219012013191647ebeb8a97deb49d6adc6494705595e60497d"
+    },
+    {
+      "path": "art/models/portraits/blank/06_awakened.png",
+      "sha256": "551d6964993fcea4b820562c499a82b04935a3019a66cf070f968c694d85231e"
+    },
+    {
+      "path": "art/models/portraits/blank/07.png",
+      "sha256": "ad3a1547bd2ea59692ac6fef93a099859c21c552bf62967c1360a6eca0c2ee4b"
+    },
+    {
+      "path": "art/models/portraits/blank/08.png",
+      "sha256": "2a5c3e8f8b864797788f228e2aac9a36fe8f2772b4be6017a8b084e19a3bc481"
+    },
+    {
+      "path": "art/models/portraits/blank/09.png",
+      "sha256": "3610a987345e39814c6b81c712f68c5821a66e46a4299ab92846e4413e9e9338"
+    },
+    {
+      "path": "art/models/portraits/brasa/00.png",
+      "sha256": "d5b74ecf40fb3c6dbe14790984304804659195ed9fd16b28f707dff94c3a6c30"
+    },
+    {
+      "path": "art/models/portraits/brasa/01.png",
+      "sha256": "08324a885ff9aeb99c66f591fd12328f3ab7cba627024df7a6a7b55a24602971"
+    },
+    {
+      "path": "art/models/portraits/brasa/02.png",
+      "sha256": "6aac9f077374f94fd55ede3bea7f1aad75cfbef02fdb4c0374f725e2303dcfb5"
+    },
+    {
+      "path": "art/models/portraits/brasa/03.png",
+      "sha256": "d41a7c53118e7287a79229721ad0d977200bf60613ad7c25260f0444a3882d9b"
+    },
+    {
+      "path": "art/models/portraits/brasa/04.png",
+      "sha256": "c458882410d3dc988d2736e4c0f79f1fc6dcde22a983844046d7c22ce1534a99"
+    },
+    {
+      "path": "art/models/portraits/brasa/05.png",
+      "sha256": "7ca09e3403150db8e7fc4b0ecdd6a351812336f9b58879653cdd2b2b1331a9fc"
+    },
+    {
+      "path": "art/models/portraits/brasa/06.png",
+      "sha256": "174ebd8ab6417f56119702620810a02a05a99b731a22ce55c3cdd66f7f62f93a"
+    },
+    {
+      "path": "art/models/portraits/brasa/07.png",
+      "sha256": "fc227a3a061f12d8fdd7ce04fde61a611c4c85667788cf52fc917f6b478ca866"
+    },
+    {
+      "path": "art/models/portraits/brasa/08.png",
+      "sha256": "0299e77e5174f5ec2b62d63c08115d4415afc07a3bfa54357c4d8a4cb377b6a4"
+    },
+    {
+      "path": "art/models/portraits/brasa/09.png",
+      "sha256": "ccaabd94b44b65ae40e1149ef4fd3ba7cb9b5abb616baee87039cda7ea7fd167"
+    },
+    {
+      "path": "art/models/portraits/brasa/09_awakened.png",
+      "sha256": "78aec9b2d89cb0ef3cfce0d0dee0f7ff06363e1569652bab0da01584a8fa707c"
+    },
+    {
+      "path": "art/models/portraits/brian/00.png",
+      "sha256": "376ddc1ebe64edbeaa16b9cadc268d49d61bc71c6a74867d54bc2d5581f481dd"
+    },
+    {
+      "path": "art/models/portraits/brian/01.png",
+      "sha256": "159f37dd5c3a0833771ca7b56e0e6583a8deae25f3ba7d09642444a1e6f82ef7"
+    },
+    {
+      "path": "art/models/portraits/brian/02.png",
+      "sha256": "4b3a45a632ac1078de5abb06527fa3f9f5f7c3ecfe2fa7c34733d64048760a7f"
+    },
+    {
+      "path": "art/models/portraits/brian/03.png",
+      "sha256": "e368a9e8d96829fe1340bbf9493e7e2b3e40842725b1f7b39accead4f49bf093"
+    },
+    {
+      "path": "art/models/portraits/brian/04.png",
+      "sha256": "c54d28c0bb987e4b01f75ae921a32d279797d3d62a019e4e03ba1eafd838e5fa"
+    },
+    {
+      "path": "art/models/portraits/brian/05.png",
+      "sha256": "21cedc9f647496fa20a34c22aab04602052959b0c58d29cb80f2d4e0e37f70e2"
+    },
+    {
+      "path": "art/models/portraits/brian/06.png",
+      "sha256": "73c6a9fa240be9df6c0b1e5a61d76493fd98977fe6ddffed207eef17481f3404"
+    },
+    {
+      "path": "art/models/portraits/brian/07.png",
+      "sha256": "5efb501742d834e4e85a046e5aa0cfdd5900475d94ca24802166bafe3758360b"
+    },
+    {
+      "path": "art/models/portraits/brian/08.png",
+      "sha256": "d529ddb0a5a48ff880f54aec3535ad133ebb931aa2aa0fa899fcd25394047505"
+    },
+    {
+      "path": "art/models/portraits/brian/09.png",
+      "sha256": "94369b295649092b656189666547f5deb2ac83f9c6d7709ce66916dbe853cff0"
+    },
+    {
+      "path": "art/models/portraits/brian/09_awakened.png",
+      "sha256": "9b55149c7458b5e40ee7725a642a7dc909916ef1dd3cf06fedf128f0ad7bd888"
+    },
+    {
+      "path": "art/models/portraits/brigid/00.png",
+      "sha256": "6c4a5b0bcb3e28ec37041655e33a2530c0ca56383133b266a26b47f89f2dc197"
+    },
+    {
+      "path": "art/models/portraits/brigid/00_awakened.png",
+      "sha256": "a1507fdbca1821b5cc8d41b450a6ab57c4ebc3b5b1b8c9f8e6fe12b2363ba653"
+    },
+    {
+      "path": "art/models/portraits/brigid/01.png",
+      "sha256": "7196ee452537a629f242ee3e1d074e241a5c828082d9e59edda515d93870d58c"
+    },
+    {
+      "path": "art/models/portraits/brigid/02.png",
+      "sha256": "428d5cc872cf98357eaed5a84a61342c79a0b21791f3dfc8a8e66b1e013b53bb"
+    },
+    {
+      "path": "art/models/portraits/brigid/03.png",
+      "sha256": "ae4074c0f337c63e1aaf66dfe4807963ad1de3437827513cdf887127e0d37566"
+    },
+    {
+      "path": "art/models/portraits/brigid/04.png",
+      "sha256": "af3e5b8df5428351c2b32108fcc328c5a0252fded66e5196829f6bdb5b664367"
+    },
+    {
+      "path": "art/models/portraits/brigid/05.png",
+      "sha256": "6ca479f144d0fcf02faa085d02835c0167c33f7de9ddf0c0b16b2a38b87daa8a"
+    },
+    {
+      "path": "art/models/portraits/brigid/06.png",
+      "sha256": "120195f91a10f5787c1d8b0e449e6507d33edcf0f5bbed32e877de9fe4f5d699"
+    },
+    {
+      "path": "art/models/portraits/brigid/07.png",
+      "sha256": "995628d45ce5c28f69d884e34a68aec4e834b05e0a0b8ad68d3772b404b95b13"
+    },
+    {
+      "path": "art/models/portraits/brigid/08.png",
+      "sha256": "1c4a3cf6da2ba0d3d63852c6662daa76717b25ced65407fca4c507a03837c5e4"
+    },
+    {
+      "path": "art/models/portraits/brigid/09.png",
+      "sha256": "7fcfd94bb8b90d49cae55a066ffe61150722103281ce74d7ee321f3b58a746f7"
+    },
+    {
+      "path": "art/models/portraits/caden/00.png",
+      "sha256": "687ee7ed22665dcc6452a0504e32356e37c2d7824fb7c07e8d1dd7b2eb7a051e"
+    },
+    {
+      "path": "art/models/portraits/caden/01.png",
+      "sha256": "b6a75f736bb1ad3395659d3d3d3e4aa81671929d4e8436ca8b78f295ee2b2f33"
+    },
+    {
+      "path": "art/models/portraits/caden/02.png",
+      "sha256": "5ee78d08b48cc14bf046ef07888563166d850fe2895f392452b655ae2110122e"
+    },
+    {
+      "path": "art/models/portraits/caden/03.png",
+      "sha256": "5971fc97fcffbf54ff27d8a73f8885cb98f42d14c615fcb93ffb2df9ca034c26"
+    },
+    {
+      "path": "art/models/portraits/caden/04.png",
+      "sha256": "4be3957fbdd2630b1144e377926eb27598c2d5ce2abdad8552f55be380789f82"
+    },
+    {
+      "path": "art/models/portraits/caden/05.png",
+      "sha256": "abed0f8e58aab9b55923d18a939c34cb43f21b912265046f39abe22e0f6b9075"
+    },
+    {
+      "path": "art/models/portraits/caden/06.png",
+      "sha256": "7b4b613350735a7cf94355c047d590cce363a9458aef1a184cfdacf0035645b6"
+    },
+    {
+      "path": "art/models/portraits/caden/07.png",
+      "sha256": "7f3d511b65fb3c873a1764eaa936349a4c9ecdda4c6e1770a55b0288fdf1f18f"
+    },
+    {
+      "path": "art/models/portraits/caden/07_awakened.png",
+      "sha256": "54d411d8571e54a6310dade8bdcf21652f1d94a18b8119ad3f619eb8484a7b36"
+    },
+    {
+      "path": "art/models/portraits/caden/08.png",
+      "sha256": "c85a95c826689d68f05fd56de73f92e071facf44aa7ee1dee5f9903811af1718"
+    },
+    {
+      "path": "art/models/portraits/caden/09.png",
+      "sha256": "a578492a9f1085c29119d792af1c9d94d4b0de27aef0d4858a28cb642f7dadc5"
+    },
+    {
+      "path": "art/models/portraits/candela/00.png",
+      "sha256": "7c5e97054eabd7e719743000778c754af518074db1855da7d49016ea8f303a43"
+    },
+    {
+      "path": "art/models/portraits/candela/01.png",
+      "sha256": "69a3ae48e9797252546fad74e510fdf1b9c3b02af44935c317d284f6b0df3325"
+    },
+    {
+      "path": "art/models/portraits/candela/02.png",
+      "sha256": "21f13d8c512bbadb67f7c08dacab8fdbf4eac0d19bd68ee5b41a61741fb5c56c"
+    },
+    {
+      "path": "art/models/portraits/candela/03.png",
+      "sha256": "96b08d62f6e1575095c0e84d22636529cf491402797b63027109a2cd10c6c132"
+    },
+    {
+      "path": "art/models/portraits/candela/04.png",
+      "sha256": "950a52a8885f522a949dd2ef2871cf80a5448fa37f1a75f812357afda59650a5"
+    },
+    {
+      "path": "art/models/portraits/candela/05.png",
+      "sha256": "afa028e1dd4029ef39bcb511424f0fb527ce86490b26449099c1b0484ac7e1e0"
+    },
+    {
+      "path": "art/models/portraits/candela/06.png",
+      "sha256": "4f10b418c1a05f539140471c891614e3ef95c8737224173a4105370b4d26fc19"
+    },
+    {
+      "path": "art/models/portraits/candela/07.png",
+      "sha256": "6a47c923899fc12f74fc1297ee0569dad6cf7fc411bac241af27738f088f41bd"
+    },
+    {
+      "path": "art/models/portraits/candela/07_awakened.png",
+      "sha256": "413a5c0af90eeab15bfae7c4f580ad1a7d165c07dec4e01a91838c697b5dba7f"
+    },
+    {
+      "path": "art/models/portraits/candela/08.png",
+      "sha256": "2326fc67d9752eeead5d7a9023a0d1ba6c797f35fa3050e30cbe9ad39f90dec6"
+    },
+    {
+      "path": "art/models/portraits/candela/09.png",
+      "sha256": "f89246d974bc97c9f62594b5eea26a626e2d9958b82926b4ee51f49a9ed8242c"
+    },
+    {
+      "path": "art/models/portraits/carmen/00.png",
+      "sha256": "45a450ed55963c4b70629a9ad65eb30d3bba1d8866a64ab20b2ed49939315049"
+    },
+    {
+      "path": "art/models/portraits/carmen/01.png",
+      "sha256": "e3864f161db1381410fba7fe4964f316efed9cfea5eefeb466f5b2f05af95999"
+    },
+    {
+      "path": "art/models/portraits/carmen/02.png",
+      "sha256": "d142ef99bcd0191a023038dc1d09adf5721a468711b50e410f26e284360d62a9"
+    },
+    {
+      "path": "art/models/portraits/carmen/03.png",
+      "sha256": "c16d1838e631a9fe3a25f5c35ee47f2a1a1e1cd9e646a24a995ac8b43cf0a661"
+    },
+    {
+      "path": "art/models/portraits/carmen/04.png",
+      "sha256": "3197dceca90ede3651ddfdc57d1e741c681a92f2444e44fafb18dbe618e46c34"
+    },
+    {
+      "path": "art/models/portraits/carmen/05.png",
+      "sha256": "781eaf0eb4524d2fde8e7bee39f0d103886c25a4e2cbc1b5a9574a3da38b35b9"
+    },
+    {
+      "path": "art/models/portraits/carmen/05_awakened.png",
+      "sha256": "e630ad9cd193897e52708c0c96505ea6497019acbe2b3ec8a0f7a74a8ee70fd0"
+    },
+    {
+      "path": "art/models/portraits/carmen/06.png",
+      "sha256": "2fb2720ba316014de186eb992fd67d159ee3a5d02d3ad8cc30f9172da3098c3a"
+    },
+    {
+      "path": "art/models/portraits/carmen/07.png",
+      "sha256": "fd8ead7534f4d4871c2f57bd1d464be716d3dfa273f2d49eb2e4e7d59f0c8b7c"
+    },
+    {
+      "path": "art/models/portraits/carmen/08.png",
+      "sha256": "4d0c4d98dfa01826e8c7cdab79b1329e2f76112b960872bbf23a910c9d632a9b"
+    },
+    {
+      "path": "art/models/portraits/carmen/09.png",
+      "sha256": "5eedd7e908a5ba378d8130256791077c9856ed8fcf41e3ffdd510b63274fa62a"
+    },
+    {
+      "path": "art/models/portraits/ceniza/00.png",
+      "sha256": "438a93f5d228580d628f1ffd73b87f8353c64f2cea1b5d77eb9c87a514aa15c2"
+    },
+    {
+      "path": "art/models/portraits/ceniza/01.png",
+      "sha256": "43fa6c3acf2153aef939a6bc7510d0e62f25080b666c9173a8342eb9df2075a4"
+    },
+    {
+      "path": "art/models/portraits/ceniza/02.png",
+      "sha256": "0101949e9a698daee26569665806b73f2384d710795bd905a6aa7d2013b59ade"
+    },
+    {
+      "path": "art/models/portraits/ceniza/02_awakened.png",
+      "sha256": "58e68250cc1ac19d61be06f703a9f23349f97eed29727707d9c83465431e8f88"
+    },
+    {
+      "path": "art/models/portraits/ceniza/03.png",
+      "sha256": "ea9b0aa0988e0f25ecbc32e8eadcaa5921302178c120a3f5094034fb811d7742"
+    },
+    {
+      "path": "art/models/portraits/ceniza/04.png",
+      "sha256": "a784b5ca856a36d6bbf8848ee4e2ddfda603471a33c92e4f4e2b56c604745341"
+    },
+    {
+      "path": "art/models/portraits/ceniza/05.png",
+      "sha256": "fe8ca0f6776c2b7858668f22d9bfa9e200e32f452d8a724cf0ca481338b47c99"
+    },
+    {
+      "path": "art/models/portraits/ceniza/06.png",
+      "sha256": "8d773b4999bee61451817b2c77e80acd1b673858dc9b67369595aa306eff6b87"
+    },
+    {
+      "path": "art/models/portraits/ceniza/07.png",
+      "sha256": "c438833768b3d2f867fbb5366f7f35397536c65d060dc2921013388abec4fcfe"
+    },
+    {
+      "path": "art/models/portraits/ceniza/08.png",
+      "sha256": "d502069cbf0ca7ae68a9c83f32deb8bc73f3f1be4e9bbe9ba1de6390d5de30cc"
+    },
+    {
+      "path": "art/models/portraits/ceniza/09.png",
+      "sha256": "173723932ffdd36016bcb017469cc3e7ffc3cdbf79b042da3e27f850044c6d58"
+    },
+    {
+      "path": "art/models/portraits/chispa/00.png",
+      "sha256": "43152a6d185181fcc5a3e7e3bf4e077fcd0144a48b1ab9853785f2d3b120c78f"
+    },
+    {
+      "path": "art/models/portraits/chispa/00_awakened.png",
+      "sha256": "db6e2c46c6cda805582b1075326025f2ac18e031d6803c7b6d17bc213afe0c42"
+    },
+    {
+      "path": "art/models/portraits/chispa/01.png",
+      "sha256": "30854abf44212f91564eeed6f6c0693103e9c9d3271edb107fdda108f99e41b4"
+    },
+    {
+      "path": "art/models/portraits/chispa/02.png",
+      "sha256": "98bcb7e74aab74557dfc216c89c2665333fb536dadf3253958a9d24eae785fbd"
+    },
+    {
+      "path": "art/models/portraits/chispa/03.png",
+      "sha256": "a9ae247629aa6851d3ec1b39d74dd3178c73dfb8301a9d25e65a8b40dd300d74"
+    },
+    {
+      "path": "art/models/portraits/chispa/04.png",
+      "sha256": "d50683b32a498711c0a7335ed97c5b836a9a308681cf3c7cdc1ac2edab1a48d7"
+    },
+    {
+      "path": "art/models/portraits/chispa/05.png",
+      "sha256": "4025b559562b69ac1332727ff620702b79250bac66486b52a2c931feae71e2ee"
+    },
+    {
+      "path": "art/models/portraits/chispa/06.png",
+      "sha256": "b6197be260b245f91ac069f9f3b4601ac57b0839f5b0db312d2ff735dabfea2c"
+    },
+    {
+      "path": "art/models/portraits/chispa/07.png",
+      "sha256": "52098ac584b772c97a03ff50949f6e62feb8366016b26caa79a209fb5c27d9f0"
+    },
+    {
+      "path": "art/models/portraits/chispa/08.png",
+      "sha256": "d161ebf08a882ebf5ee563f18e6bada73182414a1241c5edeea2ddf0836e5ba8"
+    },
+    {
+      "path": "art/models/portraits/chispa/09.png",
+      "sha256": "23cd3386cd302a8ca7db7b68e0e4d6ceab065a8c9699a93ee2c85afcdb46f5c5"
+    },
+    {
+      "path": "art/models/portraits/conor/00.png",
+      "sha256": "c4348230c89d9ca806902b33ad41957522aca56c61f540718f3a5110b6495c2f"
+    },
+    {
+      "path": "art/models/portraits/conor/01.png",
+      "sha256": "3bd61ffd301fb6bf0e3559cab0e059f77db15557232e591b66cfb573e753d254"
+    },
+    {
+      "path": "art/models/portraits/conor/02.png",
+      "sha256": "3b0586a4f7d23223154f741a2e5fc626adf30da29b39a59b5b40562d98bfedcc"
+    },
+    {
+      "path": "art/models/portraits/conor/03.png",
+      "sha256": "c0a1f3180ec653193b6a15f1d5b3e623978bca0a58f16ba4586601692952116e"
+    },
+    {
+      "path": "art/models/portraits/conor/04.png",
+      "sha256": "a618f74c2e61ce4feec1ab3750aaa999742652e13e09997600c15f7c37a13c9f"
+    },
+    {
+      "path": "art/models/portraits/conor/04_awakened.png",
+      "sha256": "68fbdf8e40f504469649e25367c820ed4b138c12935d093496543ddafde3d52a"
+    },
+    {
+      "path": "art/models/portraits/conor/05.png",
+      "sha256": "d0f2dd9433ec0be57fad987f464ce4817a7b71f36dac26bb78fd8836a93ce2e9"
+    },
+    {
+      "path": "art/models/portraits/conor/06.png",
+      "sha256": "adeb533ec25b6355d64e7d81d88721c2c8a66d84377940f1816e88261a9a724f"
+    },
+    {
+      "path": "art/models/portraits/conor/07.png",
+      "sha256": "42833446a7eaee6a30f3ce665ed93d9342102ff0eeac856c94a62950d1f268f6"
+    },
+    {
+      "path": "art/models/portraits/conor/08.png",
+      "sha256": "e733d8fb32a746841f41597ffab579ec30753c5d7812e04887d45781253f8147"
+    },
+    {
+      "path": "art/models/portraits/conor/09.png",
+      "sha256": "1e48d67d0584f003bc94d3d370218613a20c1bd96abca8ec5bcbb8c1087a9279"
+    },
+    {
+      "path": "art/models/portraits/donn/00.png",
+      "sha256": "347119273d169527e8d1f0ddb49fcf28ced74d0d7d502b7d1ea20cb7a8c4962f"
+    },
+    {
+      "path": "art/models/portraits/donn/01.png",
+      "sha256": "aabc5b04bc05cb154aafed84f9c81a2a49b0222a4d69ff49909fe29dd4ce2bb9"
+    },
+    {
+      "path": "art/models/portraits/donn/02.png",
+      "sha256": "2f8c4856f1ffa469d6b8727d3cab775c5e52ca60c2fdb5f5af7967ce7522c0f7"
+    },
+    {
+      "path": "art/models/portraits/donn/03.png",
+      "sha256": "9b1199ced2bcfec0656488a73ab21f888310f0cca267b5bc36ead50bb482eddc"
+    },
+    {
+      "path": "art/models/portraits/donn/03_awakened.png",
+      "sha256": "ce21a20782afaa8901944281b7881013656a7bbaadbfd96b61a3452007981f35"
+    },
+    {
+      "path": "art/models/portraits/donn/04.png",
+      "sha256": "e026943ce19ade4056468717268cf2960b05bc857ee207a64bf0fb70a32071f1"
+    },
+    {
+      "path": "art/models/portraits/donn/05.png",
+      "sha256": "cefcd4eda452e4d43e2892bf87dd620121b5e611d917dcd03ea41fb3550f87b7"
+    },
+    {
+      "path": "art/models/portraits/donn/06.png",
+      "sha256": "f13be83b825f7dfa53c7fab47ecdf1020b2358edfa96cc38b70f24ec4341b1cd"
+    },
+    {
+      "path": "art/models/portraits/donn/07.png",
+      "sha256": "6a6936def6da8c45330199b769cce45b73f54fffa8148f0c34a56c639e5bc5ac"
+    },
+    {
+      "path": "art/models/portraits/donn/08.png",
+      "sha256": "5b41aa1ec6af80994dab633de8345e3f9a21bcd2f00c8eac395c65f4ca39944a"
+    },
+    {
+      "path": "art/models/portraits/donn/09.png",
+      "sha256": "b9c1ee79359f8ed828c8b7cc0fd21060b59682023c1d43f803a5b4de52d26da5"
+    },
+    {
+      "path": "art/models/portraits/dummy/00.png",
+      "sha256": "55dda75398af52d6d7b160c20fc1a119c768bfcad0ea42399273ff19b81b301e"
+    },
+    {
+      "path": "art/models/portraits/dummy/01.png",
+      "sha256": "773a32369d6023ce9bc1252cb23ff346e146f29af512d47bd78cee1819bd05ab"
+    },
+    {
+      "path": "art/models/portraits/dummy/02.png",
+      "sha256": "171eb3840b7f075581e1793fb14626dc197346c90032ebe93d8b2918fbe09c54"
+    },
+    {
+      "path": "art/models/portraits/dummy/02_awakened.png",
+      "sha256": "72b08626f88ac224862763d9772f2bb9edccc520d2f689bf7e60b4b5d67c3ef6"
+    },
+    {
+      "path": "art/models/portraits/dummy/03.png",
+      "sha256": "f1ad99db0613ab57caa65a82a2970b79c4c683131251d3fb9501eed7e7958231"
+    },
+    {
+      "path": "art/models/portraits/dummy/04.png",
+      "sha256": "8b1c675beb83fa5b4b8772394030ebd0ececc6367e4a90b3c1cec970975b4fe6"
+    },
+    {
+      "path": "art/models/portraits/dummy/05.png",
+      "sha256": "427d558cf32ee5027a354868e6a0fd64c61584ec756c7280bde9d52ba0924b2a"
+    },
+    {
+      "path": "art/models/portraits/dummy/06.png",
+      "sha256": "e2e17ebea632f3cb6709630f67aa71d7a673ec65f06fe8ca397ead36f9f1473f"
+    },
+    {
+      "path": "art/models/portraits/dummy/07.png",
+      "sha256": "1edcbb12cfab50fbbed073ff1ca1c5a597a30ba4be6893efd4270d0cff204340"
+    },
+    {
+      "path": "art/models/portraits/dummy/08.png",
+      "sha256": "34c2fdbb7330db17f3389f056a2536217fb36c39f17369347cd68d5fcf4369ff"
+    },
+    {
+      "path": "art/models/portraits/dummy/09.png",
+      "sha256": "093226056202c0400c556e868cb37749f3bf09c629436751939984ee0313591a"
+    },
+    {
+      "path": "art/models/portraits/echo/00.png",
+      "sha256": "a81ffe93e557a5ecf1bc284fe7f54251688a0ab7062388b00a9aef21ebf699e6"
+    },
+    {
+      "path": "art/models/portraits/echo/01.png",
+      "sha256": "18170d313c85b338c63a5d50c12d0875276f9313d1a2dc0f351f1bb9321c6027"
+    },
+    {
+      "path": "art/models/portraits/echo/02.png",
+      "sha256": "67ac8b74666987fd7860075f81f2a86ef0f7259d97ad5d29d627912f688d4026"
+    },
+    {
+      "path": "art/models/portraits/echo/03.png",
+      "sha256": "1d787fa11034f47cdcab232fbc65b6a4a13cbf37333ab49a9443c1a25be67fc6"
+    },
+    {
+      "path": "art/models/portraits/echo/03_awakened.png",
+      "sha256": "36863711992e7b76c8e2ac8e3bf7f4bc6ef6ca0f17d619221921ef9437cf1bff"
+    },
+    {
+      "path": "art/models/portraits/echo/04.png",
+      "sha256": "83b8a2013a91028b5fee7f4e0a555c4a308f6fbc8f8d6a76bfb253822374023a"
+    },
+    {
+      "path": "art/models/portraits/echo/05.png",
+      "sha256": "14659c0b6c5b3ebcc249b2e3852a8a85e19b26d4ca66574b4af32c8c28b95a3c"
+    },
+    {
+      "path": "art/models/portraits/echo/06.png",
+      "sha256": "c73ee095a4a07a6338ab4a2af99fe45b8d33ab8bc51573278ba9f47ed7ffeb9b"
+    },
+    {
+      "path": "art/models/portraits/echo/07.png",
+      "sha256": "da4ef24bba52470343e0e9e2cb9cd737d117a00f619744ab2e77872cfa92d519"
+    },
+    {
+      "path": "art/models/portraits/echo/08.png",
+      "sha256": "84de389180b3893b529279a174e7696f4378a6b4f0fcdd67162dec9bb4f62280"
+    },
+    {
+      "path": "art/models/portraits/echo/09.png",
+      "sha256": "a754d8e8b74c02b85a2a9351d52b9a6bd2a30bbf286703649e557614ab8fc846"
+    },
+    {
+      "path": "art/models/portraits/eira/00.png",
+      "sha256": "184b9c235158cc679b23a9ed7ff2edfa351ca7862907e97250841a498d3ec356"
+    },
+    {
+      "path": "art/models/portraits/eira/01.png",
+      "sha256": "3dcaae67b447720dfb8efbcd628cad05a6b9147e31a647fb2faf3ae1e5950022"
+    },
+    {
+      "path": "art/models/portraits/eira/02.png",
+      "sha256": "1c0edc7046f29ddd2ed757158c52b8c8138ce440d8f162ac9c46c9261ba198cd"
+    },
+    {
+      "path": "art/models/portraits/eira/03.png",
+      "sha256": "3e9f739d136d316fdfba502a3ab4ba2559fe60e1fcdd01aa8c7587c72eb435bf"
+    },
+    {
+      "path": "art/models/portraits/eira/04.png",
+      "sha256": "cbd87a6302918f70fefb9dde7f07ec3c523b6c21285d1c762dc6bf6b2118ea87"
+    },
+    {
+      "path": "art/models/portraits/eira/04_awakened.png",
+      "sha256": "13eb2a3c3563e7c31915dea1f34ee7700308f867e1bad3c301edeb13fb96efd1"
+    },
+    {
+      "path": "art/models/portraits/eira/05.png",
+      "sha256": "f124b56056fd4847b3f4ba66625b0c9ad60bd3bdb3e9a745049c3669fff28dd3"
+    },
+    {
+      "path": "art/models/portraits/eira/06.png",
+      "sha256": "ffb9ea4943dbc6adbc95177d4022bdafd11bb1b32d862c7b9cf7271d459effae"
+    },
+    {
+      "path": "art/models/portraits/eira/07.png",
+      "sha256": "bc308a51c88e8693cc5b197e3fcaa1d4a1eac13d00ac917b77ef020fa42c887a"
+    },
+    {
+      "path": "art/models/portraits/eira/08.png",
+      "sha256": "2580d1d941e11b94fd6aca1a110846ecaaf72f0bcaca67dcfa5d4dfe74d7480e"
+    },
+    {
+      "path": "art/models/portraits/eira/09.png",
+      "sha256": "dbf42086aa20f4e245aeeb4c33ac5c1afa5b4e1bc1ef89d00dadfa5e662169ba"
+    },
+    {
+      "path": "art/models/portraits/estoque/00.png",
+      "sha256": "7a06671c91ba06970dbf3321b9d0d5e601f00a51616c0c6adc52332c8ed31d6c"
+    },
+    {
+      "path": "art/models/portraits/estoque/01.png",
+      "sha256": "2bd808358b2efecbb3e0ec835f96dc2a6b051b6dde1a3e8b658f8bdac86acc34"
+    },
+    {
+      "path": "art/models/portraits/estoque/02.png",
+      "sha256": "94600e7cac5c0dc9a8194766d8e48239c227680094eba9aac20da143691e809a"
+    },
+    {
+      "path": "art/models/portraits/estoque/03.png",
+      "sha256": "e8f21e99241d6e16bafb12abad455a41ceb40a59b631576458f8ae24caaa3f41"
+    },
+    {
+      "path": "art/models/portraits/estoque/04.png",
+      "sha256": "d4b6a19fd484721579f7e8dd1e1c8cb497564652df9fa4cf7622c798358e1dcc"
+    },
+    {
+      "path": "art/models/portraits/estoque/05.png",
+      "sha256": "52cb611d375d7364d18e1e857166dc2a67c406925829aa60ad72e541c64ae13a"
+    },
+    {
+      "path": "art/models/portraits/estoque/06.png",
+      "sha256": "159c7c8d658f63a0c6ec607ce97a59467e91fa05455d5152a171e8d0f5df7776"
+    },
+    {
+      "path": "art/models/portraits/estoque/07.png",
+      "sha256": "f954386eb134b87c1b31cd6165f3a6f64dbc22ee83683ee281e171468f061092"
+    },
+    {
+      "path": "art/models/portraits/estoque/08.png",
+      "sha256": "f3f1ac48e89e771d34ff30abb1d3165ac5e1378c73e1b9b15d228beb698542fa"
+    },
+    {
+      "path": "art/models/portraits/estoque/08_awakened.png",
+      "sha256": "f7d2588a4b27fe3b83b566edc28de6ccef223d8cfb4520d79f6fde6d462a4a3e"
+    },
+    {
+      "path": "art/models/portraits/estoque/09.png",
+      "sha256": "1ff7c3468c1748a65965128feb6795e176c5c6bbc031dad9087cf8010d7d5549"
+    },
+    {
+      "path": "art/models/portraits/finn/00.png",
+      "sha256": "3df9e75ef9a099200acdcab0c265cd80b49831e0e50751faeae0a1ffccf3ddac"
+    },
+    {
+      "path": "art/models/portraits/finn/01.png",
+      "sha256": "f5933e0ebd20aa0dc303a7616e6512d68de4b1392b9f01123cf518173bc9bed0"
+    },
+    {
+      "path": "art/models/portraits/finn/02.png",
+      "sha256": "a21950719eebab12c998dcb232928e66b40c73158866dd6a9ce541f1b6e5727d"
+    },
+    {
+      "path": "art/models/portraits/finn/02_awakened.png",
+      "sha256": "230b528960c781d86435a449adca9f870302378baa8b7298a78fcdede86955d0"
+    },
+    {
+      "path": "art/models/portraits/finn/03.png",
+      "sha256": "e98195b4fb388bbe97b3b48e9147dd308e031984942b45bc0b6c7a278c908887"
+    },
+    {
+      "path": "art/models/portraits/finn/04.png",
+      "sha256": "dff12c7aa59bb1cf385af4b6999360fbdc9163c2876675fd22ab23424e0157f1"
+    },
+    {
+      "path": "art/models/portraits/finn/05.png",
+      "sha256": "842f4db27408e49980ec95cadaef9279ad6421815d58ed9b8ab8eb6ae018c8a5"
+    },
+    {
+      "path": "art/models/portraits/finn/06.png",
+      "sha256": "4b2211010c93d161eed6c0335aea186f638aa3f7c50c6223e4b6f7cffd0ce951"
+    },
+    {
+      "path": "art/models/portraits/finn/07.png",
+      "sha256": "9d494893fb6d07b76a1415203176ac21ac27b367b2005b4b8115aed0a7bb3271"
+    },
+    {
+      "path": "art/models/portraits/finn/08.png",
+      "sha256": "10dc09616def67d21aa84ccb912c83af0b78c4221143ac7e54027ca52b5242c0"
+    },
+    {
+      "path": "art/models/portraits/finn/09.png",
+      "sha256": "66026886cdb0fa82770e8afb0740738958c0993dcc9bcebc3686d86d280a3989"
+    },
+    {
+      "path": "art/models/portraits/frosti/00.png",
+      "sha256": "e8b968cb2a7a008e6c7f7f536e03468b13ab29c29ea17fea972016618f3b7ba2"
+    },
+    {
+      "path": "art/models/portraits/frosti/01.png",
+      "sha256": "e96b0c1732558b1857c52723c0e9f27f3d5ffd23ab4a2f0e04888e739a37a26b"
+    },
+    {
+      "path": "art/models/portraits/frosti/02.png",
+      "sha256": "df98c19b7c0fae131d7edbd7d4b514177dfd78613392fefaea293c87f7976578"
+    },
+    {
+      "path": "art/models/portraits/frosti/03.png",
+      "sha256": "9c0c316a718442b07dea39398524c0ce87e6189455718b6b9baef567e9b0c563"
+    },
+    {
+      "path": "art/models/portraits/frosti/04.png",
+      "sha256": "5835b1992c245d65bd1cf9124be18c235a85db21f1404e23b4d39d5c21b0ea2c"
+    },
+    {
+      "path": "art/models/portraits/frosti/05.png",
+      "sha256": "99a4e2c9873f9b5bfbd76b6165d6a1456a2955d5aa616e43d00285fba59b956c"
+    },
+    {
+      "path": "art/models/portraits/frosti/06.png",
+      "sha256": "c1b6ce2f237ac0a0741a48ff45f5f10c966142b313dee3bf624cc134faad7357"
+    },
+    {
+      "path": "art/models/portraits/frosti/07.png",
+      "sha256": "6b166b21b25af7041739067049036e3b2af9a0d00612c840a245fd84b593d941"
+    },
+    {
+      "path": "art/models/portraits/frosti/08.png",
+      "sha256": "8bc729885f3de984e190445afcbc35febdc5e3378f9dc0d69fd03b3d34e0aace"
+    },
+    {
+      "path": "art/models/portraits/frosti/08_awakened.png",
+      "sha256": "0b1d31f48e07dd170711fe2bb2a31fd71dbeaa1536bc8c0886739397ede13ba3"
+    },
+    {
+      "path": "art/models/portraits/frosti/09.png",
+      "sha256": "6cd6a34fadc12e651663b8144b774d6732abd29484b97721a2b23b4962f98506"
+    },
+    {
+      "path": "art/models/portraits/galene/00.png",
+      "sha256": "318def989c88ea3e85ca4b718e99b4593813a6f310bea7cd3be05b911869bc6e"
+    },
+    {
+      "path": "art/models/portraits/galene/01.png",
+      "sha256": "776ef14d60258509cd6d4afd30ef29f17f7e4d8fea1244763e43f5d54f94c48f"
+    },
+    {
+      "path": "art/models/portraits/galene/02.png",
+      "sha256": "de94cbbff3daa01aa08d4df34f54294456755cb95d439853a584b87d511a3f46"
+    },
+    {
+      "path": "art/models/portraits/galene/03.png",
+      "sha256": "d5dab58c9ca44b6b69debd6d461d72c9459b2d5e6b3036e970a799652e56064f"
+    },
+    {
+      "path": "art/models/portraits/galene/04.png",
+      "sha256": "d162815d75e631acafca0ece031510d9d431d915e48d68cbd6f2e0f586662ca9"
+    },
+    {
+      "path": "art/models/portraits/galene/05.png",
+      "sha256": "d472c926090a0a5a5a908a86c414b9f338a8c5d91e06c830e29e5b3179a507c8"
+    },
+    {
+      "path": "art/models/portraits/galene/06.png",
+      "sha256": "98cb8b095224f6352c6a037b39c1985614a1223e5b003613ebcef58ae0973b52"
+    },
+    {
+      "path": "art/models/portraits/galene/07.png",
+      "sha256": "37bd10b55c08b8eace4070af6101c79a500dc7c279d98871189eb6fc533bbafb"
+    },
+    {
+      "path": "art/models/portraits/galene/08.png",
+      "sha256": "8c9e40db65c961c7c83f3536aac4047317cb8dc8963a95e5702b042eca719a9f"
+    },
+    {
+      "path": "art/models/portraits/galene/08_awakened.png",
+      "sha256": "c691031510fff860143a1c627a4ddfa4ab1a5495375abf08caf6f94213ca4660"
+    },
+    {
+      "path": "art/models/portraits/galene/09.png",
+      "sha256": "318ccb33a81c4932511b0b213aa62d19a2f7365c4e051ae2f68d0e85dcb2fbe8"
+    },
+    {
+      "path": "art/models/portraits/glaukos/00.png",
+      "sha256": "90b3e575a965cff096146f4de65ba7f8ce8cb9236c6979d6cd589ecd31eba702"
+    },
+    {
+      "path": "art/models/portraits/glaukos/01.png",
+      "sha256": "2590215342a0a4182216714a7b7f8172e5cd969b4bbe16a18d8d73b19db76925"
+    },
+    {
+      "path": "art/models/portraits/glaukos/02.png",
+      "sha256": "fc2062cd38d08783833fab47e779c3615f72b9f64ef7e16636843f1dc11488a0"
+    },
+    {
+      "path": "art/models/portraits/glaukos/03.png",
+      "sha256": "3243ef5dae794ee846f2aea628138b6732d26d2c740645eb696fd418c4e920f9"
+    },
+    {
+      "path": "art/models/portraits/glaukos/04.png",
+      "sha256": "503363d0907effa0052ec95496011ffd369424545870b87010a53143612d2c19"
+    },
+    {
+      "path": "art/models/portraits/glaukos/04_awakened.png",
+      "sha256": "618a69ab4efba37ed3ab176bbf4a2102cb81c1bfc9f261cd4b0e5094e5b9ef8a"
+    },
+    {
+      "path": "art/models/portraits/glaukos/05.png",
+      "sha256": "d46e9858f5137659a3328c806ee8ebdb3dacc3554cbe022f978e165fec4e993d"
+    },
+    {
+      "path": "art/models/portraits/glaukos/06.png",
+      "sha256": "9d4c5d1cd6a9efbc75d4eadf1a8b2f838d553dedfdc0bbfb6e72cb84ed42563d"
+    },
+    {
+      "path": "art/models/portraits/glaukos/07.png",
+      "sha256": "fc94504ef48508bf27a53686c12520251358bd4eca92603f1b7e9d6a884a5617"
+    },
+    {
+      "path": "art/models/portraits/glaukos/08.png",
+      "sha256": "f03dd871ba8ff18d11274adb25922e6737e73551da1f77251c85e24f9133a1cf"
+    },
+    {
+      "path": "art/models/portraits/glaukos/09.png",
+      "sha256": "313a1f70afb04700f0097105067d17854cb5232fda606a270577113f7bcd7f94"
+    },
+    {
+      "path": "art/models/portraits/grey/00.png",
+      "sha256": "74560cc1262d8b35c60725b439a99f143fcbd57306ff45d14c178114fa5af854"
+    },
+    {
+      "path": "art/models/portraits/grey/01.png",
+      "sha256": "aa8262e596eb22f7ba0b47d530f91b1fc6b20d983170ab3889a464d1d05042d9"
+    },
+    {
+      "path": "art/models/portraits/grey/02.png",
+      "sha256": "f137f51e0a1cdd70d4019d67af5216c2aefe63d658080e7aa4f15109f7aadb0d"
+    },
+    {
+      "path": "art/models/portraits/grey/03.png",
+      "sha256": "3e244668438da90f4026d9928a13363eb68f6fe3d4aaf1b99e29464407e1d84a"
+    },
+    {
+      "path": "art/models/portraits/grey/04.png",
+      "sha256": "5d9fbdaa8cd7f6ffd3db91b50a8ac211ae59aa5643147c5be099feb952c05971"
+    },
+    {
+      "path": "art/models/portraits/grey/05.png",
+      "sha256": "7e2f427e02dc15ab42719c4e1a56b66e5b07a04a7125e41664977af5b501874a"
+    },
+    {
+      "path": "art/models/portraits/grey/06.png",
+      "sha256": "23e3db686fc8cc39f6ba2173a97a3cb7764810fda502f4d517f97e49051330a2"
+    },
+    {
+      "path": "art/models/portraits/grey/07.png",
+      "sha256": "33fcf0b340ecb55069a37aa6b78922ff1bb9cff03d65e01c35170d579ab3d116"
+    },
+    {
+      "path": "art/models/portraits/grey/07_awakened.png",
+      "sha256": "451a6a48745d9a3993d9aec5049f63864ba983c0126845d5428e02e4412fa3f5"
+    },
+    {
+      "path": "art/models/portraits/grey/08.png",
+      "sha256": "b25eb74ad6abb586453e119a766f023b5967a1a30231ae66612d099a4a6460b8"
+    },
+    {
+      "path": "art/models/portraits/grey/09.png",
+      "sha256": "bc559878cd3149a5d6751b3319260a2df40207dd48853ea4c59843f19c4db5ad"
+    },
+    {
+      "path": "art/models/portraits/helga/00.png",
+      "sha256": "18820cf5dddb39ef83ce23da74de902e940f3e1cdc2afaaf9c8c0ef724e02d90"
+    },
+    {
+      "path": "art/models/portraits/helga/01.png",
+      "sha256": "a6ae2c2b264f10382fd78b98193502c9fab21eb35cf7c3c039d146534fd564c0"
+    },
+    {
+      "path": "art/models/portraits/helga/02.png",
+      "sha256": "82fb6ddb1dbb59173c1252746820f2e15194a706c693c778bdd7f072ae2e6b3b"
+    },
+    {
+      "path": "art/models/portraits/helga/03.png",
+      "sha256": "d71efd23a868816dd288916ab6c997ac9bdc263d93306def8b91f49ae6c993b2"
+    },
+    {
+      "path": "art/models/portraits/helga/04.png",
+      "sha256": "d4b4a184a989bb8cd05dff13be0dcd8578d6b0b9edbde8cadc0148d0c8f302ba"
+    },
+    {
+      "path": "art/models/portraits/helga/05.png",
+      "sha256": "f4d7f83f5ca60464dbf4dbc5a38fb359f4642fa9556962efd861f016013c48ec"
+    },
+    {
+      "path": "art/models/portraits/helga/06.png",
+      "sha256": "6849ea2a74cea9125b3dc16979bb1e2e919706acceb52aba4e0c6ab39093f8f9"
+    },
+    {
+      "path": "art/models/portraits/helga/06_awakened.png",
+      "sha256": "d031104c6c89c1a71e53074b292626e0e2e8cc0db29030f5be0c62ccb34582e0"
+    },
+    {
+      "path": "art/models/portraits/helga/07.png",
+      "sha256": "6eb9af830f4426014d97432c8eab59d893d2655ac6c1fddecbcc882cc6c374db"
+    },
+    {
+      "path": "art/models/portraits/helga/08.png",
+      "sha256": "40f95b9c1177b9736437253a847c66bf4415d4c235dee5451bcd94573a31e94b"
+    },
+    {
+      "path": "art/models/portraits/helga/09.png",
+      "sha256": "b3a9161e942ad3ec8df8b6accee701f332af83fd000bd095205af60b3a38871c"
+    },
+    {
+      "path": "art/models/portraits/igni/00.png",
+      "sha256": "86a249036674a2064ff671dfc6cfb095738c977d052479bc171f3574365112c2"
+    },
+    {
+      "path": "art/models/portraits/igni/01.png",
+      "sha256": "b6073e357fa30ab3b587ff43062f79113e921e9de59b43e452e9ea43054693da"
+    },
+    {
+      "path": "art/models/portraits/igni/02.png",
+      "sha256": "542ea821bbe32c2c11a20cb33b2523701a74d411b0ad5faa2e05c2ceb377f34c"
+    },
+    {
+      "path": "art/models/portraits/igni/03.png",
+      "sha256": "3bf137511527db8c3659c5158e26446e8fb3c15711adfc913377261618db320a"
+    },
+    {
+      "path": "art/models/portraits/igni/03_awakened.png",
+      "sha256": "1cf53a83886242074d4f3b458b211781c3fdceb9413687f6700d69d58370dfca"
+    },
+    {
+      "path": "art/models/portraits/igni/04.png",
+      "sha256": "07f7572cf53474de029baf9a45dd3cd444e9fddf5dc4b81a7bb48a34eb3da1f8"
+    },
+    {
+      "path": "art/models/portraits/igni/05.png",
+      "sha256": "e64028c75e737be039182d14e7716673218264ed9b3a3e4bc8b86aa18376ecc6"
+    },
+    {
+      "path": "art/models/portraits/igni/06.png",
+      "sha256": "0a24add7df34d0b556bdf96379fe92a43c03e9587bd1327c210595248b545b02"
+    },
+    {
+      "path": "art/models/portraits/igni/07.png",
+      "sha256": "09fb69cdad7b7ab93c70c139f8f2ac2c56c2b9a3decab2f2a1ae11f266168e01"
+    },
+    {
+      "path": "art/models/portraits/igni/08.png",
+      "sha256": "5dde381a39c3ddff343b774e4c4e25bb6ed5591dd6a2cf3a6efdf94af9334b3e"
+    },
+    {
+      "path": "art/models/portraits/igni/09.png",
+      "sha256": "b611f3c4311e681735c16da87db991b0bbdfde68a35ff8179ce4e1137ff286a3"
+    },
+    {
+      "path": "art/models/portraits/isa/00.png",
+      "sha256": "cf24709db81f284e454fddb8a1aa8b9adae04806b07abacf48fc1af0d7656144"
+    },
+    {
+      "path": "art/models/portraits/isa/01.png",
+      "sha256": "e7dbc93ec33ea1e049714c93b546ec539d2cb40b01870b29fce95f80127062f8"
+    },
+    {
+      "path": "art/models/portraits/isa/02.png",
+      "sha256": "1c05cb3c538991fc3ebd0201759ce2ba80ce03df02c21e91a9e0f719608260dc"
+    },
+    {
+      "path": "art/models/portraits/isa/03.png",
+      "sha256": "ca049944a8254fb410ab10fd6dcdf2077c69a52bd9438d9d36288210d71a6929"
+    },
+    {
+      "path": "art/models/portraits/isa/04.png",
+      "sha256": "b323450ef7570b21f0da7be3f3ff3cac6695c55835f88d3828eb7b088c9d091d"
+    },
+    {
+      "path": "art/models/portraits/isa/05.png",
+      "sha256": "18274dfe8640872956b9cfceadecdd1877db5070d16446f824c7f3f8e09bbbd1"
+    },
+    {
+      "path": "art/models/portraits/isa/06.png",
+      "sha256": "c561e8ec770bf62deef68ab728ed28798d5a7edc4981abb1c19d51747042d2b0"
+    },
+    {
+      "path": "art/models/portraits/isa/07.png",
+      "sha256": "c90c42efd4050299637511badb0a7172ef694543f4b214353d06bcf9c6974b83"
+    },
+    {
+      "path": "art/models/portraits/isa/08.png",
+      "sha256": "83e42342f303beb56bae32e8fe6ea4e3bec7430f351eb0b04fc0c5966f4fc501"
+    },
+    {
+      "path": "art/models/portraits/isa/09.png",
+      "sha256": "f35db3a2e885445475de7f0d0574dcbe95e9ea47f1c489f67f6dbc6ffd863d1c"
+    },
+    {
+      "path": "art/models/portraits/isa/09_awakened.png",
+      "sha256": "058ceb1f29171be70068e1fb2ac289db8269e4f37c120a1911a6509cd3d3aef4"
+    },
+    {
+      "path": "art/models/portraits/jokull/00.png",
+      "sha256": "8bdba6ba7feaddfc69564a02fc17b627caca40ce0e5147c18801740efcad83b3"
+    },
+    {
+      "path": "art/models/portraits/jokull/01.png",
+      "sha256": "487a25b73f6b6ccdb4efe0105690dcaab9a8d31d9cd88d5a8a620337429feb3c"
+    },
+    {
+      "path": "art/models/portraits/jokull/01_awakened.png",
+      "sha256": "9093e11a9fb03553aead7251dce585a432282b00e2286faa62ece66b38fcdaad"
+    },
+    {
+      "path": "art/models/portraits/jokull/02.png",
+      "sha256": "ad706a8417736beb990da0cd8e61beffd830c1ae507e47300be8ff1f5ea0997d"
+    },
+    {
+      "path": "art/models/portraits/jokull/03.png",
+      "sha256": "9ef198d666b1089af6c7d9e25de2de98bbb727e88c94c629391221fc315496f1"
+    },
+    {
+      "path": "art/models/portraits/jokull/04.png",
+      "sha256": "c56a49a4105c862b2099e7174d58c56552e0c0f5c3c939433031385e83fa5ee9"
+    },
+    {
+      "path": "art/models/portraits/jokull/05.png",
+      "sha256": "04fe116b41e06a031a7d404192baa21f2dc3e8c5f966419b380866b3deeac50c"
+    },
+    {
+      "path": "art/models/portraits/jokull/06.png",
+      "sha256": "099773ceee960823bd1093f721ac28f35326719671b72ecedde5089073075c2b"
+    },
+    {
+      "path": "art/models/portraits/jokull/07.png",
+      "sha256": "55e79a8b1b6429a0591583d6cb2a11c18afafd0be55beb57be1bbd3029057962"
+    },
+    {
+      "path": "art/models/portraits/jokull/08.png",
+      "sha256": "14d04fc2356cf08ec61836b50a4566955bfd47a65fc0ea3f976f3c47d25614f3"
+    },
+    {
+      "path": "art/models/portraits/jokull/09.png",
+      "sha256": "c4b0118e0fe6de41d6818c9547cdeac7a3af5e1da05d677c1c72a418634a9514"
+    },
+    {
+      "path": "art/models/portraits/kari/00.png",
+      "sha256": "eaf3ff4a09ab4077a385f366ef7510e40f57a42ef048ce87424edb7fcaa6d753"
+    },
+    {
+      "path": "art/models/portraits/kari/01.png",
+      "sha256": "f5585d1799eaae0c92a1138bbd0ca0d1d56186eb6685232500850524c747116a"
+    },
+    {
+      "path": "art/models/portraits/kari/02.png",
+      "sha256": "b3fb0fb35854cceb11b9c96fb17377511666cd216ab294aac4b8e3bd4b770e76"
+    },
+    {
+      "path": "art/models/portraits/kari/03.png",
+      "sha256": "b7df7e4be8cf21e37823f38410ed247d2cc2b3b13e291d0bbe39126e711172bc"
+    },
+    {
+      "path": "art/models/portraits/kari/03_awakened.png",
+      "sha256": "723c907a8f76313c9c1f2852eda0aec13040a9c3c4d6f23b670141583b6340b3"
+    },
+    {
+      "path": "art/models/portraits/kari/04.png",
+      "sha256": "4eff7bdea10c4b16b9bf916c4613b7b6fdf9ab89ff6c156da191cc232512e2f5"
+    },
+    {
+      "path": "art/models/portraits/kari/05.png",
+      "sha256": "f8fa4f53c18502827057f4e06dd1298f7f51316157769cb67d10b250fef0734f"
+    },
+    {
+      "path": "art/models/portraits/kari/06.png",
+      "sha256": "4826a0c56634d480a20d6ccfef64a352049ca43a68dddd1e694f82f0fe6fc413"
+    },
+    {
+      "path": "art/models/portraits/kari/07.png",
+      "sha256": "03b77ea9ab2adda87100ae23762a342cf2991133a9ab2d443a0ea81730d63897"
+    },
+    {
+      "path": "art/models/portraits/kari/08.png",
+      "sha256": "17f70b5d99ec37a4724a9dedff0399dceac07623457b6086e76ed108625ea3c8"
+    },
+    {
+      "path": "art/models/portraits/kari/09.png",
+      "sha256": "d8c81379404e8a294957265435da3395632f4cd54b88dccf6f5e4e2d611ee9b3"
+    },
+    {
+      "path": "art/models/portraits/keto/00.png",
+      "sha256": "dc4314adc4176494f17df4bb9252308362f63e261037d276055e276eb6b12125"
+    },
+    {
+      "path": "art/models/portraits/keto/01.png",
+      "sha256": "e80877bc34e11dee4d8cb61a9a0557eb58e0a832bcab1ae04739d6154ec035c2"
+    },
+    {
+      "path": "art/models/portraits/keto/02.png",
+      "sha256": "36c939745d55734ec4611351c2b4b76cdd7795aa191b3ced4efeb258f24d4fdb"
+    },
+    {
+      "path": "art/models/portraits/keto/03.png",
+      "sha256": "81b23a5381de99d0dbb500f182cc008a594a6b89fa54240f02e8c34b0664c434"
+    },
+    {
+      "path": "art/models/portraits/keto/04.png",
+      "sha256": "ce8f9757389c6b931eb8b8d9eb0fb277fd0e542da20aeff47a28d5a24e2a9ebd"
+    },
+    {
+      "path": "art/models/portraits/keto/05.png",
+      "sha256": "8cb37d523d530328998e55cef71672d577958b2c645599d21c4650394bbc594f"
+    },
+    {
+      "path": "art/models/portraits/keto/06.png",
+      "sha256": "966b8f57e4ad2c23152c0bd5bfd1e9840268ba78d6664e35c1d599692a208924"
+    },
+    {
+      "path": "art/models/portraits/keto/07.png",
+      "sha256": "a431393197be02f92c5cebaba7c54b03be4effd52203b7912f50cbecfd8502cb"
+    },
+    {
+      "path": "art/models/portraits/keto/07_awakened.png",
+      "sha256": "4bb38be62464c3dd376e498b3e01c8a05515c844ce70db6aff4b3559681e414c"
+    },
+    {
+      "path": "art/models/portraits/keto/08.png",
+      "sha256": "1b538e4d177aeef0546bade82f1adac11ca78f8a4c14c2d1ef00a0b1d2812de1"
+    },
+    {
+      "path": "art/models/portraits/keto/09.png",
+      "sha256": "d61973a34ceb4205a49f1c834c14f8d185a09ec33c929b5639a9d5d1aab0dba7"
+    },
+    {
+      "path": "art/models/portraits/limne/00.png",
+      "sha256": "0dbed36b9e8edab87817ded87f669a09ea11c596d5a099d90709e7a75d02dc8e"
+    },
+    {
+      "path": "art/models/portraits/limne/00_awakened.png",
+      "sha256": "75b75ded4b4811cbc2a4f688753a067cc97a2498bd562dc9db5ebc24b0514e77"
+    },
+    {
+      "path": "art/models/portraits/limne/01.png",
+      "sha256": "4494259030fa74964a0ec717326481f0a6931dee872c5fafa8c0dbaa32fdccbb"
+    },
+    {
+      "path": "art/models/portraits/limne/02.png",
+      "sha256": "296d6b336add0b0e6d57f0d2af1d59ee22a881199e85738e60e8fd9b3f53b120"
+    },
+    {
+      "path": "art/models/portraits/limne/03.png",
+      "sha256": "92a4c83d7cd5bd7556ce0041aab85e4cd79cbd5591ec6112ac1d56e66084a449"
+    },
+    {
+      "path": "art/models/portraits/limne/04.png",
+      "sha256": "dd03edabb5e7d49a6c1a5ddbdd9f743a934031c67830d9cd998254b738bc69d9"
+    },
+    {
+      "path": "art/models/portraits/limne/05.png",
+      "sha256": "ccaa3f7129055085a406e0da8c4f30fa6a2290b09518c85ebca55ba066616aeb"
+    },
+    {
+      "path": "art/models/portraits/limne/06.png",
+      "sha256": "49431fe5bc186bb86aa13ce18182b3fe8ff91e9e607ac5eb65015b5c90f2d1c5"
+    },
+    {
+      "path": "art/models/portraits/limne/07.png",
+      "sha256": "4c4dd977eecc6998b927f5b9dcebefffc5b8fc71c7e4d39ec21608e012483deb"
+    },
+    {
+      "path": "art/models/portraits/limne/08.png",
+      "sha256": "78fedb97bdf97ad43ec39dfebe4d8f049b043b18dd56688ded04dd078d0901ca"
+    },
+    {
+      "path": "art/models/portraits/limne/09.png",
+      "sha256": "ca15121b0a9872df3b8788d1dd04d774b98853f5707122bffcef19b1beff4a13"
+    },
+    {
+      "path": "art/models/portraits/lind/00.png",
+      "sha256": "6064d5cea2c8ea3e984eda304ab64b105ea56b1d279981d7a99233280d0d8b41"
+    },
+    {
+      "path": "art/models/portraits/lind/00_awakened.png",
+      "sha256": "7254131142d64c85d7c6194f7198393ad70201415f9522e8fa693b94a49fb3b7"
+    },
+    {
+      "path": "art/models/portraits/lind/01.png",
+      "sha256": "c55cf0e8ce41d9e55e701502c971bed2f136caa3023ef0aeaaeca5bc893df778"
+    },
+    {
+      "path": "art/models/portraits/lind/02.png",
+      "sha256": "b20a4b3e9356e5b3a9184401500bb2774b0d3237796cf5ec9a6e12a2cf71b722"
+    },
+    {
+      "path": "art/models/portraits/lind/03.png",
+      "sha256": "b303f9518b2efadd0b7467f637b2c03b233507289136abff4c2c4077b4376a85"
+    },
+    {
+      "path": "art/models/portraits/lind/04.png",
+      "sha256": "7ebcca732a2550af6252ab06df243b5fe9fd8b1010fb95224a9658c64a24f2fb"
+    },
+    {
+      "path": "art/models/portraits/lind/05.png",
+      "sha256": "dc4a168f5a9ad7087dce14b68d07d2b38c9c0ae396ed342e844d928104438387"
+    },
+    {
+      "path": "art/models/portraits/lind/06.png",
+      "sha256": "e3082403befeb8c60c7c92d0ce34c672f42bf8c8dc33a3251465f79ba67a07b1"
+    },
+    {
+      "path": "art/models/portraits/lind/07.png",
+      "sha256": "91fe6dabcd14feda95a2674d8a35ef460460ff13d82ee9cabc4c0ad551ca9b16"
+    },
+    {
+      "path": "art/models/portraits/lind/08.png",
+      "sha256": "515dce0cc9e219df2f9127ffea56e6f67141cfb8032f20b2e563fb9cc63fea97"
+    },
+    {
+      "path": "art/models/portraits/lind/09.png",
+      "sha256": "c97ef80ca7f2144752235503a8088b5db09576c1e9871dc9abb0bfcef8dcd2b0"
+    },
+    {
+      "path": "art/models/portraits/lugh/00.png",
+      "sha256": "1ec509e8bff541ebd0261e0c8a5f486cdc175174cae586f5995ba76cbd5c1f66"
+    },
+    {
+      "path": "art/models/portraits/lugh/01.png",
+      "sha256": "7de2e7fffac99f2fa334a31866381165e8a5014cddc447d7abeaca4b7d7418d4"
+    },
+    {
+      "path": "art/models/portraits/lugh/02.png",
+      "sha256": "806340baf35e5ee2012899173047cc5192d641894d1afecb9c608dc521402339"
+    },
+    {
+      "path": "art/models/portraits/lugh/03.png",
+      "sha256": "f17f47a3988ba32ce2a3b46718294fbf26562697ca46a8e228af89c3289963c7"
+    },
+    {
+      "path": "art/models/portraits/lugh/04.png",
+      "sha256": "bcb5a3b1d4e8e899e9ebf53257c1acdefe7d2ad3b12ae3e9d9b2e9b0d8639b2f"
+    },
+    {
+      "path": "art/models/portraits/lugh/05.png",
+      "sha256": "ec10e5ef4eab4aa788582eb67ce488549208259090ca2f4db74b8238548fadb0"
+    },
+    {
+      "path": "art/models/portraits/lugh/06.png",
+      "sha256": "81e60845dcfc64fe71bd2fb5523d437b8ac5f6b72e3113db04f91727d98f2a10"
+    },
+    {
+      "path": "art/models/portraits/lugh/07.png",
+      "sha256": "972db2b5fae334858c8aeff1f18a7720e043c1d60660d2d49d79d6ae3957e82a"
+    },
+    {
+      "path": "art/models/portraits/lugh/08.png",
+      "sha256": "69b5f85154f7360df62d9c2472cf26626e5ea4ec97f26ad54d52c05ff467f691"
+    },
+    {
+      "path": "art/models/portraits/lugh/08_awakened.png",
+      "sha256": "76a5b1289a4afbdffb0e29c0373ac84087e85384f7c562d7794eafd1736243b2"
+    },
+    {
+      "path": "art/models/portraits/lugh/09.png",
+      "sha256": "92d3ac8f58ebf2f887ee4c31871998753907b673021b8ca84f1910e1d60f8911"
+    },
+    {
+      "path": "art/models/portraits/marea/00.png",
+      "sha256": "f47ae7c438df6a86667399f7bf30b6b4706f732fb21e39e66299303e879c8fc0"
+    },
+    {
+      "path": "art/models/portraits/marea/01.png",
+      "sha256": "86145c405efda44d4ce0ddbe40a6ebd82e85b56d7bdfc7145b875cede8ac260d"
+    },
+    {
+      "path": "art/models/portraits/marea/02.png",
+      "sha256": "dcfc2a8614dc6fa74e2c333c142966b0659d54135527915dae79f2169ed93256"
+    },
+    {
+      "path": "art/models/portraits/marea/03.png",
+      "sha256": "b5a5f31591ae99640b30c8261731673438c074d2fa35ca551ca1de56bff61568"
+    },
+    {
+      "path": "art/models/portraits/marea/03_awakened.png",
+      "sha256": "13d15c4de3237a91d68f33616f6b28c1ec487b599e0e64dba54bc71260713e7f"
+    },
+    {
+      "path": "art/models/portraits/marea/04.png",
+      "sha256": "4cb8d61c53d276638d258d004b6fe3efd705222835fd530c51073f9038120944"
+    },
+    {
+      "path": "art/models/portraits/marea/05.png",
+      "sha256": "75853ab185a1b0558ce638343bdf8e882e42d86719dbeca357ef424c333d08db"
+    },
+    {
+      "path": "art/models/portraits/marea/06.png",
+      "sha256": "8b037f1a38914457aa54e57cb8668241e24cd9fd50bdc6c34c49e6298634e57d"
+    },
+    {
+      "path": "art/models/portraits/marea/07.png",
+      "sha256": "6fa3ab0260d681b7cc54550a4be0faca66b5b62d074729e8faff1d4169321377"
+    },
+    {
+      "path": "art/models/portraits/marea/08.png",
+      "sha256": "7adb9243369bce057cee659b5767d9fff2ca6c7cccd161638c90d4c52076903d"
+    },
+    {
+      "path": "art/models/portraits/marea/09.png",
+      "sha256": "28a6cee7226f3315dd7723b390ab1bb93856fc5f3ac23ee49c1a5433a5d636da"
+    },
+    {
+      "path": "art/models/portraits/mimic/00.png",
+      "sha256": "a5cd6fdb68f12426485b33f412941a380e81fc94a02777afe893c35d5e4d9e7b"
+    },
+    {
+      "path": "art/models/portraits/mimic/01.png",
+      "sha256": "0201f07936102ca1dbe80fcbea30a49125ad6f53b26b3b6c1f9d7a2f02794618"
+    },
+    {
+      "path": "art/models/portraits/mimic/01_awakened.png",
+      "sha256": "4ee4ae3cbfe4ecf4e136c6e7416737abecea3ffdc5d28b0e0bb79a25e89f5f52"
+    },
+    {
+      "path": "art/models/portraits/mimic/02.png",
+      "sha256": "bb047ac980afef03a9f76adc6c01465dca0530f80555098bd8a166ca36577889"
+    },
+    {
+      "path": "art/models/portraits/mimic/03.png",
+      "sha256": "b8c3efd70c6838e61c7b8bb35218fa6c0682a227a5ffb39f5e4f77daebe9d091"
+    },
+    {
+      "path": "art/models/portraits/mimic/04.png",
+      "sha256": "b332aef061b6ca9a504be189188d14133e2fb5d9ca00a5731ddc25c7b0ba59c7"
+    },
+    {
+      "path": "art/models/portraits/mimic/05.png",
+      "sha256": "68afe914c5bd99d6e66384cfb2e0cb25e7356091f9ec3c27282187d4370378a1"
+    },
+    {
+      "path": "art/models/portraits/mimic/06.png",
+      "sha256": "a954440d650b2449acdfd05dfcc8c367b8b00ffd407c0e2c93552b20ea1b957b"
+    },
+    {
+      "path": "art/models/portraits/mimic/07.png",
+      "sha256": "eb5874fce5adaad417fd6f7da13b4ae72b8097c7ace0e2ba8b4f05d921a3336b"
+    },
+    {
+      "path": "art/models/portraits/mimic/08.png",
+      "sha256": "2e7cef6c87df96364222fd6ff1cec3066d39c9f5553c9bf2184dccfb8371b32a"
+    },
+    {
+      "path": "art/models/portraits/mimic/09.png",
+      "sha256": "abf6a469013a4a30c3f6478cea4280fbeec125fe5a58b6931b9ec9a8e0a321e0"
+    },
+    {
+      "path": "art/models/portraits/morrigan/00.png",
+      "sha256": "62fdbf627734e821e6eb977f43f2333f4076a104e986cca18e0820896ed44446"
+    },
+    {
+      "path": "art/models/portraits/morrigan/01.png",
+      "sha256": "fb26dcd12f42e0f9a9b021b69a9458125f4f4c9d4b6b1c3f8201f9c9b97041d1"
+    },
+    {
+      "path": "art/models/portraits/morrigan/02.png",
+      "sha256": "afe5cf111ee794439a437572cd37db9d4bf334d0918183ae10dfa98cff44cd7d"
+    },
+    {
+      "path": "art/models/portraits/morrigan/03.png",
+      "sha256": "dcb4a89fea5a893e253d58a6ef689e9a3ed12e4dec24dc3f595bc3955d832742"
+    },
+    {
+      "path": "art/models/portraits/morrigan/04.png",
+      "sha256": "ffff22224e70ac0f8147a9c579d0d3059d2112cd1e7638484fa69bf885b94397"
+    },
+    {
+      "path": "art/models/portraits/morrigan/05.png",
+      "sha256": "75a1c79d0db9e5e42b4a43eee18cf6f7655e1623dfe76b243641ba86d0b40a5e"
+    },
+    {
+      "path": "art/models/portraits/morrigan/06.png",
+      "sha256": "cca251b0e246fbfbb346534626f117d82b8702900a60793b0b8e17a95993dff3"
+    },
+    {
+      "path": "art/models/portraits/morrigan/06_awakened.png",
+      "sha256": "8a9478c71f06856001c249cc46820366f33cec2f4227beef551596dec6afde0a"
+    },
+    {
+      "path": "art/models/portraits/morrigan/07.png",
+      "sha256": "4d7ab5c8ee2d02c876109cc3b07f68df8ca044870824fd84d637ee5cd6c56b73"
+    },
+    {
+      "path": "art/models/portraits/morrigan/08.png",
+      "sha256": "dc188df7ea188f7cbddc6cfe8ecb8c6083c21e66694dcbca73ee4791365faac5"
+    },
+    {
+      "path": "art/models/portraits/morrigan/09.png",
+      "sha256": "514aaf949dad171f501c9594eba811a722a12d81f785c90a0231bec97aaf3e12"
+    },
+    {
+      "path": "art/models/portraits/nerea/00.png",
+      "sha256": "4f43691f15364bbe17836f330e71328684b37ccf10b8cc23d28f47d924fe74bc"
+    },
+    {
+      "path": "art/models/portraits/nerea/01.png",
+      "sha256": "e1c51b29fe417aa660a676d3a6a721cd601e5bde144ef6811bb543a085d4e89e"
+    },
+    {
+      "path": "art/models/portraits/nerea/02.png",
+      "sha256": "d6346f7225a19993111db719f18ec9072ee3eaf12172fe9fc6b97e20dcfcafb0"
+    },
+    {
+      "path": "art/models/portraits/nerea/03.png",
+      "sha256": "5c3cd434cf819bc66827ca479b400a30283a45300bdbcbc018472c01f8cedd3a"
+    },
+    {
+      "path": "art/models/portraits/nerea/04.png",
+      "sha256": "2100031dce112b06b7203152710f9b6c3b2c130a9048f5420b9ac2f8c19e8e72"
+    },
+    {
+      "path": "art/models/portraits/nerea/05.png",
+      "sha256": "bc200c0c1e58b542991ba7e170556ac8e3f6f12cbefcc4e7e1c2e0d121ce8b4c"
+    },
+    {
+      "path": "art/models/portraits/nerea/06.png",
+      "sha256": "16db5fe9a7f588b7515debc8a6283fc27d757965ebe11ff292c08a8abe0a4d7b"
+    },
+    {
+      "path": "art/models/portraits/nerea/07.png",
+      "sha256": "e8b9b837ee77b86f07345ed33ad091750bf39d7688c0a23969ea3d4ae9cef120"
+    },
+    {
+      "path": "art/models/portraits/nerea/08.png",
+      "sha256": "ae679c8c1257e91bc5e9665abbcbb871e80bd61f79aeb2e85e682d81e0729d58"
+    },
+    {
+      "path": "art/models/portraits/nerea/09.png",
+      "sha256": "00d4047ffe24a2cfad93d8e8a8eaaa3799c7f9eaabb0dbe82bbf9febbfec944e"
+    },
+    {
+      "path": "art/models/portraits/nerea/09_awakened.png",
+      "sha256": "311d3daa94c0e7712d6c02095f3cb61f31cecfd8930c89219c2fbd2441ee3c43"
+    },
+    {
+      "path": "art/models/portraits/niamh/00.png",
+      "sha256": "7dd68910342cb8492c17aeac52b4d922e18c884410dedaca9a2fd06bf3b75570"
+    },
+    {
+      "path": "art/models/portraits/niamh/01.png",
+      "sha256": "b8d6870a01823077a71d7db5a7f8940585bc482220eb8f0579292558e32f3984"
+    },
+    {
+      "path": "art/models/portraits/niamh/02.png",
+      "sha256": "baa28ee18079ffeeb0426f9a8d64efea74e7b62366418b4c73b4d17005edb42a"
+    },
+    {
+      "path": "art/models/portraits/niamh/03.png",
+      "sha256": "b079a5c188b2872f5dc146e9881ae3685a3437c484b99cdbcf49801d262d3319"
+    },
+    {
+      "path": "art/models/portraits/niamh/04.png",
+      "sha256": "6aea2802024b9b1f5f988cb0b49f389c14775306c1da9997f7cddb435975b2fa"
+    },
+    {
+      "path": "art/models/portraits/niamh/05.png",
+      "sha256": "1a894963be6413c362f5f762b25af6373b32d866d241e208776836e65da1513b"
+    },
+    {
+      "path": "art/models/portraits/niamh/05_awakened.png",
+      "sha256": "eb63ceb63c5c2291f88205ff52069acba32360aef75db5257f7e0a79066ddcb6"
+    },
+    {
+      "path": "art/models/portraits/niamh/06.png",
+      "sha256": "8c1ff45e59308e884a77d325b74e62b38e6b72148714a7133d048e29f4c62a4a"
+    },
+    {
+      "path": "art/models/portraits/niamh/07.png",
+      "sha256": "b11054aa712f1afe265c16d1728c0a0b96efc9f35b59182672bb65eb3ead82f8"
+    },
+    {
+      "path": "art/models/portraits/niamh/08.png",
+      "sha256": "9218cb4ced477516f7bddee04064866028d6979f8aeefa87be1fb68878e2203d"
+    },
+    {
+      "path": "art/models/portraits/niamh/09.png",
+      "sha256": "c50236a612b366ebdbf4eba4c80666fe5a70b9ed5f2f487d471a48215e0edf81"
+    },
+    {
+      "path": "art/models/portraits/null/00.png",
+      "sha256": "ce4059b0015704ef0e02d84c12a6cf2cd9bc590dcb443124b9c9dbb8a4568a67"
+    },
+    {
+      "path": "art/models/portraits/null/01.png",
+      "sha256": "9248555851081a006eb01332d8ab47428c405a946c4877c760afb03317767739"
+    },
+    {
+      "path": "art/models/portraits/null/02.png",
+      "sha256": "be1d8fd7e3db7fb840a83f0205dba684c14cbe7e74c12901571d0ac6dd65f3ee"
+    },
+    {
+      "path": "art/models/portraits/null/03.png",
+      "sha256": "c5857eb4741701de2c6f395bd858728bcdeb1122285fd008f92a09ab5b2ea9a4"
+    },
+    {
+      "path": "art/models/portraits/null/04.png",
+      "sha256": "7ff752ecb90b30b99f8936f450d882ec6f41c2078bd4eb6a04a0fcd2850b4c70"
+    },
+    {
+      "path": "art/models/portraits/null/05.png",
+      "sha256": "653d3cbe0aa37d403296283a3105b00635606f33a98f65120ee2a2d3df43f134"
+    },
+    {
+      "path": "art/models/portraits/null/06.png",
+      "sha256": "221baf3f52dbdf5556d2ad9c669a07ea8b43b9c695e72b3ebc56214535300431"
+    },
+    {
+      "path": "art/models/portraits/null/07.png",
+      "sha256": "8a200167d106abdcb3ae40cbfb5e295943c400f7a7401fed80429bc5cf294693"
+    },
+    {
+      "path": "art/models/portraits/null/08.png",
+      "sha256": "cc3734b9a4f6e9cdc4e575ec8f5f99fa563d033146a44fe0d2f8b44855386351"
+    },
+    {
+      "path": "art/models/portraits/null/08_awakened.png",
+      "sha256": "277d10bc7da4b95de72264934800245cd0742d6a1aa48f3db524e684f08bae18"
+    },
+    {
+      "path": "art/models/portraits/null/09.png",
+      "sha256": "aa47349daefe9602dea5f1023f1ff370fee9bc28a5bd3ec0d83ad3452b60dcc1"
+    },
+    {
+      "path": "art/models/portraits/phantom/00.png",
+      "sha256": "7a9a147039e849c0cbced1b47191418a94c53c151b61f2eb0aebad13f475e69a"
+    },
+    {
+      "path": "art/models/portraits/phantom/01.png",
+      "sha256": "04a39c6091aebabb8bca576cac84c1f224c91e7a4281b9762dc01b5d8755c014"
+    },
+    {
+      "path": "art/models/portraits/phantom/02.png",
+      "sha256": "51f4ebab7750ac0440a1a2d67fb116208d454f95238a2a470b71edf313137515"
+    },
+    {
+      "path": "art/models/portraits/phantom/03.png",
+      "sha256": "f8f84f623aa9a5977703afc76c50714a98b1fb71e9c9446ddda0875f16d08fda"
+    },
+    {
+      "path": "art/models/portraits/phantom/04.png",
+      "sha256": "6151d04ce4802565647188bba00622b5a804e5343588ec7e7e654c754f3832e0"
+    },
+    {
+      "path": "art/models/portraits/phantom/05.png",
+      "sha256": "a6839d8b7154a5718ee46494d9abbb3bf15d45e8214a14cdc6138dc1f0c347b7"
+    },
+    {
+      "path": "art/models/portraits/phantom/05_awakened.png",
+      "sha256": "1614db75492b25a8e70014de67e99c56114e7b18f54b8f1b3a6f5dc1f431ba1e"
+    },
+    {
+      "path": "art/models/portraits/phantom/06.png",
+      "sha256": "6f8b1ff75cb5d39a6ce2a5fb93d7466be23ee0843400157658ab88e7e6355cec"
+    },
+    {
+      "path": "art/models/portraits/phantom/07.png",
+      "sha256": "9fa1f5d4a6b17ecba03537ef4e6798ee4ca668d5e8ab07a9a8fd438fa6b6a5f2"
+    },
+    {
+      "path": "art/models/portraits/phantom/08.png",
+      "sha256": "20cda86051d9b46f6969bbe79d6563ecbffb216338355c2dd6849e6528aa7dc6"
+    },
+    {
+      "path": "art/models/portraits/phantom/09.png",
+      "sha256": "eb6dd1b21f2d985d85ba7718e698396f16266b5014b32e577cc734450eac8ac6"
+    },
+    {
+      "path": "art/models/portraits/phorkys/00.png",
+      "sha256": "7590d23270f827142cce7a8a730fa1f5b741e928d4267716ef54c3549d48b415"
+    },
+    {
+      "path": "art/models/portraits/phorkys/01.png",
+      "sha256": "048d9d14d389dd079237e34fb40813c4a06fb1620f284b3a41f187cafbbcef65"
+    },
+    {
+      "path": "art/models/portraits/phorkys/01_awakened.png",
+      "sha256": "601b554b345171e890e823fa04c1b61b49f8f10147c1287ca1750e5509596ed0"
+    },
+    {
+      "path": "art/models/portraits/phorkys/02.png",
+      "sha256": "26d853b34011f32d8c9861524e68f5d9165ff801015ef6fa60d4e2fc195350bb"
+    },
+    {
+      "path": "art/models/portraits/phorkys/03.png",
+      "sha256": "033f951ed6796069bb6304461b4c8e90b01f91c3fe2f1315cbcb079006a445d2"
+    },
+    {
+      "path": "art/models/portraits/phorkys/04.png",
+      "sha256": "fa7de386e4086ab67cd8e3ca693f190b7bc35822013bc090bcbda5e251f1c89d"
+    },
+    {
+      "path": "art/models/portraits/phorkys/05.png",
+      "sha256": "55bd64ec49465a854fef69e35392f9eb18c9e53f8b21e809815a38c9c061d65c"
+    },
+    {
+      "path": "art/models/portraits/phorkys/06.png",
+      "sha256": "7078a60e58cbfc03f6364cae574919069f9c353555e651659da385582c88a4de"
+    },
+    {
+      "path": "art/models/portraits/phorkys/07.png",
+      "sha256": "10d699c75454f7360bbe6cb673ad0c55305c00299eb1de460c7e2792689afedf"
+    },
+    {
+      "path": "art/models/portraits/phorkys/08.png",
+      "sha256": "cf235a8cb4f5d30dd5c023cbbf978bd80076712b57b8ee7a7836b5074db36879"
+    },
+    {
+      "path": "art/models/portraits/phorkys/09.png",
+      "sha256": "8cceba0d311c38cfcbee6bdd22ab9cbf01dd0399c848447177d76c0f68e4c5df"
+    },
+    {
+      "path": "art/models/portraits/pip/00.png",
+      "sha256": "e4330af201b2c6866bd17040cb03740a350495351a5403be1104498d952c6e59"
+    },
+    {
+      "path": "art/models/portraits/pip/00_awakened.png",
+      "sha256": "06e7affa73873a0ea34263ddf2d41d53b02407fcbe38e1521e17b0127b0c05fd"
+    },
+    {
+      "path": "art/models/portraits/pip/01.png",
+      "sha256": "911661db3b9a1774112d90d1b0baade44823048697d402806125929e6878d03a"
+    },
+    {
+      "path": "art/models/portraits/pip/02.png",
+      "sha256": "39cb043cf3f506c18eb5b9d2d79e881bdfc66abbbed892f17b7f3a13e72e3175"
+    },
+    {
+      "path": "art/models/portraits/pip/03.png",
+      "sha256": "48bec293918c1e5c6208b74e3702f7f180cccdf5e1f9bb50466046511ffb6e18"
+    },
+    {
+      "path": "art/models/portraits/pip/04.png",
+      "sha256": "a3454949df3da3a55e4adf37c0681b38f6924d30dc6564afaeba44c8c4133567"
+    },
+    {
+      "path": "art/models/portraits/pip/05.png",
+      "sha256": "09f15a78499bd0169a96945237ca36e8903e8c955e5b3442c98d32e98e4e2dff"
+    },
+    {
+      "path": "art/models/portraits/pip/06.png",
+      "sha256": "aff5d4867677637a9e556af06da35fc91cf0ecf135f9447d58844832ea47ba8e"
+    },
+    {
+      "path": "art/models/portraits/pip/07.png",
+      "sha256": "fded5139058ce74e490be5859a26987bc3e917a8354cf2b15f48fa1ceeae0009"
+    },
+    {
+      "path": "art/models/portraits/pip/08.png",
+      "sha256": "604ef296bfc2a3dbe3cc1ce35142b154b5b998f0971c79c057c3226f376ca53d"
+    },
+    {
+      "path": "art/models/portraits/pip/09.png",
+      "sha256": "ca83a3399bae8f07ec289aaad8cdadf1fb1f45c9cacd9228ca744196abeb27f4"
+    },
+    {
+      "path": "art/models/portraits/protea/00.png",
+      "sha256": "9d43e34d1ec6440b927b3fba08a9923f1dad9d24233564a1776fa4e120dac8b3"
+    },
+    {
+      "path": "art/models/portraits/protea/01.png",
+      "sha256": "a98b525d3f5e983f72fc15c8b85e8e5b491ad3b2fde5ecca2df14dbf4fc97c8b"
+    },
+    {
+      "path": "art/models/portraits/protea/02.png",
+      "sha256": "00a61a9b9ddff1528d0f02ebd4d58cac70e7290dad1e34aebe5f9ad92d0a32a2"
+    },
+    {
+      "path": "art/models/portraits/protea/02_awakened.png",
+      "sha256": "370f6acda2f20392a8051eb5b7197040932215645ec210e9a160042d6121c313"
+    },
+    {
+      "path": "art/models/portraits/protea/03.png",
+      "sha256": "1c49c92762927b7702511c5edd2c7bd00f4e141a277df245e7e9fecf8b3e80d3"
+    },
+    {
+      "path": "art/models/portraits/protea/04.png",
+      "sha256": "b57829324f06ac13e919d09ea263e67ed50fbf69ed8fb54738f05547a2cecf01"
+    },
+    {
+      "path": "art/models/portraits/protea/05.png",
+      "sha256": "fd201ac0971a02ce0c4f390d1bb9f71a2997f05903f05981e2733cf695adea27"
+    },
+    {
+      "path": "art/models/portraits/protea/06.png",
+      "sha256": "628acf4b64ef23546a9e973b6dc914832a3cf515ffb9d89412cb599ebea1624b"
+    },
+    {
+      "path": "art/models/portraits/protea/07.png",
+      "sha256": "481a46b4addd627f20ee0b58d60b8f49dccba36ee7dee4c40e4c83092a2eb11f"
+    },
+    {
+      "path": "art/models/portraits/protea/08.png",
+      "sha256": "60783d05975407ee94edf459cb22ab288b812dd5f33784ee2aca49190150fa35"
+    },
+    {
+      "path": "art/models/portraits/protea/09.png",
+      "sha256": "ea8062ab2c65182d1d962d7ea18ce7375ff7f4c6ed46e0bb047df9bf03963a18"
+    },
+    {
+      "path": "art/models/portraits/rhiannon/00.png",
+      "sha256": "928f09accf5db8bd9402637ea55d915752bb5e58da0513cd50124233f445527f"
+    },
+    {
+      "path": "art/models/portraits/rhiannon/01.png",
+      "sha256": "0384453de96b4e2fc097c4c3069fb71ac81cd13c2f2b9c77e435796cf51b24a2"
+    },
+    {
+      "path": "art/models/portraits/rhiannon/01_awakened.png",
+      "sha256": "91e10dfed7e3ef4eb83ac912320fede327825458e3ba61250a66e5596d239771"
+    },
+    {
+      "path": "art/models/portraits/rhiannon/02.png",
+      "sha256": "21dd0218a5383147797db9873e9816a36de0f7a90eb2443701c7b54f71a51d17"
+    },
+    {
+      "path": "art/models/portraits/rhiannon/03.png",
+      "sha256": "dbd25c3c7035ec309e52111ff0bf853c69fa0e9e478fca19d8c8934c262c9436"
+    },
+    {
+      "path": "art/models/portraits/rhiannon/04.png",
+      "sha256": "8ed699d95c6a9b0fb2bbd591058a9553efaf2ebc37217bbfa30dfbc16f2848bf"
+    },
+    {
+      "path": "art/models/portraits/rhiannon/05.png",
+      "sha256": "c652eed8cc212e681871e9b3429cd28d7cfd0513ee13a6f1c548c57ab9644ca4"
+    },
+    {
+      "path": "art/models/portraits/rhiannon/06.png",
+      "sha256": "233b7776dd863f4628fcea6fb339a0cb66b64ccfc1bb60f4faa3f3f782aff8a7"
+    },
+    {
+      "path": "art/models/portraits/rhiannon/07.png",
+      "sha256": "ac959df34953fa5b1b94b8b3de45ab6c1e7b327bafda3fd3bad7149e194135bc"
+    },
+    {
+      "path": "art/models/portraits/rhiannon/08.png",
+      "sha256": "0a39ab13ddbb11d4afad73cea43115467fc8bf6dd11477be5c0e773f1c90582b"
+    },
+    {
+      "path": "art/models/portraits/rhiannon/09.png",
+      "sha256": "3b6cef582e58786254c8a1a91bf6afdd63813fadb407dd22a9aba3896287cf26"
+    },
+    {
+      "path": "art/models/portraits/saeta/00.png",
+      "sha256": "a59459269fd87ac10f53f4a278cd028d552d25a1d85ea1967f569e836ee43c31"
+    },
+    {
+      "path": "art/models/portraits/saeta/01.png",
+      "sha256": "7a8195fe93a278843997f3d5bff53da27f0e0cac3f306801b11e810ff63c1dfc"
+    },
+    {
+      "path": "art/models/portraits/saeta/02.png",
+      "sha256": "757050b3113ba6d237439ee576f482f67f08babe7d51cf07e7d54b788f2a3e5f"
+    },
+    {
+      "path": "art/models/portraits/saeta/03.png",
+      "sha256": "42f2e777059c6fb73084c231d7a55157b7bd87323507f2acba764ba98428437b"
+    },
+    {
+      "path": "art/models/portraits/saeta/04.png",
+      "sha256": "5679ad8e27566b1f1f1fc44883522a0e994aab850f5e459fbe3f775733d246f6"
+    },
+    {
+      "path": "art/models/portraits/saeta/05.png",
+      "sha256": "92c34afd9d351abad94f47aca17afa9ab75d250c7037c4593d635b730831ff36"
+    },
+    {
+      "path": "art/models/portraits/saeta/06.png",
+      "sha256": "fb2862d87916038699217b0e5e2002ee69db99518e62ad28745f16dd237bc8ad"
+    },
+    {
+      "path": "art/models/portraits/saeta/06_awakened.png",
+      "sha256": "90749220334d05f6a5db6f69a1d4ace7b961b23a1617f485ac1d120f4e45a67f"
+    },
+    {
+      "path": "art/models/portraits/saeta/07.png",
+      "sha256": "765a04e68f6afe27683b59f139e4b99adec00ac61fca789025eda803ef495e51"
+    },
+    {
+      "path": "art/models/portraits/saeta/08.png",
+      "sha256": "26b685f0c485720d5c1be6c33b904de5be95f1054f61f76c7d6e919ad504983d"
+    },
+    {
+      "path": "art/models/portraits/saeta/09.png",
+      "sha256": "807dd351a57de8aef8d69d274f01dc738a7814e564557b11e1edaa9e279a15bc"
+    },
+    {
+      "path": "art/models/portraits/shift/00.png",
+      "sha256": "2deddb2bc2a44152045557e09b785481391530f99ecb66419f19f1986dfed2c8"
+    },
+    {
+      "path": "art/models/portraits/shift/01.png",
+      "sha256": "40938bb2a851317aa9c9374ff89d9eeaa2714e8721d7fe33efc75dd47d9aed9b"
+    },
+    {
+      "path": "art/models/portraits/shift/02.png",
+      "sha256": "8d0ac207e5b0d3e9870124a1c57ccd64d3a1a2a552abcec8b6d7e369ee8ab4c9"
+    },
+    {
+      "path": "art/models/portraits/shift/03.png",
+      "sha256": "18783e164237d75c17823907f1fa115ae4e7676415d72d96d23f13c70f24fab3"
+    },
+    {
+      "path": "art/models/portraits/shift/04.png",
+      "sha256": "30eb3278a0ac83dbd6c025bd61d77b494b56c058187894b4e7b05f3c5b80c3b8"
+    },
+    {
+      "path": "art/models/portraits/shift/04_awakened.png",
+      "sha256": "1a5c8dfa880a92cbc2826f6773793ae26822a8445e3fd1a7fcf31ab353e1181d"
+    },
+    {
+      "path": "art/models/portraits/shift/05.png",
+      "sha256": "0b121ccd96f8e75acc17c2cbb40d47e171e9d195bd96327d4c3dbb00e30ab86d"
+    },
+    {
+      "path": "art/models/portraits/shift/06.png",
+      "sha256": "369ea27a9ca6a7294b7447dfcdaec14c5ad4afca9314bd6f3ad805d51947dcae"
+    },
+    {
+      "path": "art/models/portraits/shift/07.png",
+      "sha256": "fb43f42dc7571a84b08f77da73f9b36c5dcf94794550648754c5b8c20fa164a3"
+    },
+    {
+      "path": "art/models/portraits/shift/08.png",
+      "sha256": "1049241c05928985fea72dfdfb3a6d57a2bf375c4d426e379c0fd8af1a334ba1"
+    },
+    {
+      "path": "art/models/portraits/shift/09.png",
+      "sha256": "1bd1613ff69359e6c83e24ff40cacc108bf06a40de2c43a63c9de9127906816a"
+    },
+    {
+      "path": "art/models/portraits/sigrid/00.png",
+      "sha256": "15a8b74011574d5e9266baec699e3538a482382478703ee5ca10f3079691522e"
+    },
+    {
+      "path": "art/models/portraits/sigrid/01.png",
+      "sha256": "024df08ea9b3eb3f99046bf77ba83a28f0cd496ad34f761c6093b88743263125"
+    },
+    {
+      "path": "art/models/portraits/sigrid/02.png",
+      "sha256": "3bb9548a7d3808ec1d37dd034704bbfbb4e4b35e8b4c71a96f1ec93ba84829dd"
+    },
+    {
+      "path": "art/models/portraits/sigrid/03.png",
+      "sha256": "cdcff229f9abd1af9e46e4820bc50e588b09150de8575560e151a6d1cb824d74"
+    },
+    {
+      "path": "art/models/portraits/sigrid/04.png",
+      "sha256": "0a6584174a4e73f48dcecf6324d0dcceba20e6319dc06bcab1eb7a4420ca1c49"
+    },
+    {
+      "path": "art/models/portraits/sigrid/05.png",
+      "sha256": "b2bd9185cb1355f21b99c85b2bdc01ba726bfcc7a74c821b217210bb4119fcf2"
+    },
+    {
+      "path": "art/models/portraits/sigrid/06.png",
+      "sha256": "e1c0b89c75e746ee24e55ace13814e69fe13b456f39cc2962d2a25771e979a0c"
+    },
+    {
+      "path": "art/models/portraits/sigrid/07.png",
+      "sha256": "9c4373d7c0c7c2ccdc47b99109d213afd8ba0ba0312a5ac79d8860a31a909fbb"
+    },
+    {
+      "path": "art/models/portraits/sigrid/07_awakened.png",
+      "sha256": "e01df83a9ad1be2ec3ffa3523f05cb70cdfb998e163259b06fdd9268acac3a5d"
+    },
+    {
+      "path": "art/models/portraits/sigrid/08.png",
+      "sha256": "8fa7bf58371d18348745696e43d049e488b6379226d5bd1ecb4a50e89717d4f0"
+    },
+    {
+      "path": "art/models/portraits/sigrid/09.png",
+      "sha256": "53f333d3fea1d1312b6e52705f47f3a22b300b6213deae2951ca31b76511226d"
+    },
+    {
+      "path": "art/models/portraits/snorri/00.png",
+      "sha256": "167a7138df68fd70baf4197c30ae921143f25245ca15ac88af69fd99481c9c3d"
+    },
+    {
+      "path": "art/models/portraits/snorri/01.png",
+      "sha256": "525ec51a0f4b9c50143daa62ff824e2dd39d581b0c08f5b89a240476f2c14cc0"
+    },
+    {
+      "path": "art/models/portraits/snorri/02.png",
+      "sha256": "f5986bbcafb93c7b94495adb5a0fa09455e91bb3c6bbaa039a480bd60990c988"
+    },
+    {
+      "path": "art/models/portraits/snorri/03.png",
+      "sha256": "eae936ef9de6c9e10373359ab38c187ecd56f41f5dd2402764be32241353888f"
+    },
+    {
+      "path": "art/models/portraits/snorri/04.png",
+      "sha256": "18fc6109fea110bf0df9c66e3bb11c0cd42749f66564ffba59d8c5a3ed6e4ba7"
+    },
+    {
+      "path": "art/models/portraits/snorri/05.png",
+      "sha256": "650e6ec63d61cb4adebadfcbcb1ed3f4c00cf4af288fd2c9a44546f80660bceb"
+    },
+    {
+      "path": "art/models/portraits/snorri/05_awakened.png",
+      "sha256": "f4e31b84a14ffce0e78a11793a5ef42e51b83f4ba6ca0eeafbb74574f33a879c"
+    },
+    {
+      "path": "art/models/portraits/snorri/06.png",
+      "sha256": "5f9cdb44303990166107b6df1274a8fdd7007a7bc40bc65451846b11474c8281"
+    },
+    {
+      "path": "art/models/portraits/snorri/07.png",
+      "sha256": "61ef59bcfb81e675bac18678504f7fe3260f051be316c8d7e45b666ca5857a64"
+    },
+    {
+      "path": "art/models/portraits/snorri/08.png",
+      "sha256": "3ee675a1ee9b1f8401ded18662a0966574ae9e96aa4fffa80eb1997661855947"
+    },
+    {
+      "path": "art/models/portraits/snorri/09.png",
+      "sha256": "471e6360b7a4f61219a02ddbc95403bc26d001cb95a9d2199df9eac27105874b"
+    },
+    {
+      "path": "art/models/portraits/solana/00.png",
+      "sha256": "a65863a9acd21d55bead58e6db510023f1bf0b10c9c5218c051e857f0421c7e2"
+    },
+    {
+      "path": "art/models/portraits/solana/01.png",
+      "sha256": "af1107b3f9e6c4c2b08739b2e83147dcf3815f089e30bf11e481c39f4c9ee24b"
+    },
+    {
+      "path": "art/models/portraits/solana/01_awakened.png",
+      "sha256": "ea77f2609767fc7d334e2504dbc6b264c2d51946144f3d430123e86ce14a3503"
+    },
+    {
+      "path": "art/models/portraits/solana/02.png",
+      "sha256": "b5bb28c0f1b4aeda82f240b21e2a1f7575cf40949fbbd6eb052e89050c73bbbb"
+    },
+    {
+      "path": "art/models/portraits/solana/03.png",
+      "sha256": "47691eb86e72fca120a95e60608a22784cbe714459183d00b312d1044eac90bd"
+    },
+    {
+      "path": "art/models/portraits/solana/04.png",
+      "sha256": "bc423f90610e4257767e967fcbd1c0dff56571c30f6c640750c2efdbbc31c70c"
+    },
+    {
+      "path": "art/models/portraits/solana/05.png",
+      "sha256": "352de1af26752521bb8c44cb6e95bd21e34f96e7886d81c9b01fb4edd219c2b4"
+    },
+    {
+      "path": "art/models/portraits/solana/06.png",
+      "sha256": "37b08ce8f9addf9835c9fff3f59047a679b074b80317f58a20562b3459fb5fa0"
+    },
+    {
+      "path": "art/models/portraits/solana/07.png",
+      "sha256": "bf194fca405c5c91f6cf609eae71b6f1ed913715e72fa2e8da6ea4c69af78dff"
+    },
+    {
+      "path": "art/models/portraits/solana/08.png",
+      "sha256": "d344e474d601e120eaaf448861728850599c27d17d80adccb6c5a09b9f0cae24"
+    },
+    {
+      "path": "art/models/portraits/solana/09.png",
+      "sha256": "e847c602fd3a091068370684394f9f5d9f3a84ef0abab7993d2e651833f54d5d"
+    },
+    {
+      "path": "art/models/portraits/thalassa/00.png",
+      "sha256": "995559c96e257d9935dd5390b58c6662a5ca4d50664cef9f2aa91b7d1a9a5be5"
+    },
+    {
+      "path": "art/models/portraits/thalassa/01.png",
+      "sha256": "b42178c578e015639f446e21db25a238a1d4613a1aff6b3220a91a6fd026dd76"
+    },
+    {
+      "path": "art/models/portraits/thalassa/02.png",
+      "sha256": "c5f08581a3fa858b19004435148eb8bb7852693116ccfdccc045f00c07b885e7"
+    },
+    {
+      "path": "art/models/portraits/thalassa/03.png",
+      "sha256": "3bba8087382527e6187c85a017ac08f57b99bb6dde649c654bcedb87b0d274f6"
+    },
+    {
+      "path": "art/models/portraits/thalassa/04.png",
+      "sha256": "165ce5d6d504c39523e0c8cf47e38f835c516d5bd1b79dd0159758568526b5c3"
+    },
+    {
+      "path": "art/models/portraits/thalassa/05.png",
+      "sha256": "07b83ff5d5b50b855cab463f666eb1939ed3cd166ca8678eac43f4e4d6aa412d"
+    },
+    {
+      "path": "art/models/portraits/thalassa/05_awakened.png",
+      "sha256": "1765e5fe137b8a0404bff665bed016c818c20fbe3206ace751f4663e034d70f1"
+    },
+    {
+      "path": "art/models/portraits/thalassa/06.png",
+      "sha256": "fb48f4b3f95877b5a9614be69e90a273ccc0b8d8ca36e206c4bf6bf0bd4f97e4"
+    },
+    {
+      "path": "art/models/portraits/thalassa/07.png",
+      "sha256": "044e5dbec1ecd114fdd5c7cc47d4f6e26ce4a59cf597ff9fc5906757cd08020a"
+    },
+    {
+      "path": "art/models/portraits/thalassa/08.png",
+      "sha256": "911e165a9f39bf9ad50b4c915baecd7934a87f28828d5508466e9c0852461e65"
+    },
+    {
+      "path": "art/models/portraits/thalassa/09.png",
+      "sha256": "3d3ade2e29049d132d0e84d662dc6019396b38bf933bde47bb443d2b213eeedb"
+    },
+    {
+      "path": "art/models/portraits/triton/00.png",
+      "sha256": "5d26aacf12f01abc999cab1d44d2208bf0bd99c7a50bf793b6d5f73c326019f6"
+    },
+    {
+      "path": "art/models/portraits/triton/01.png",
+      "sha256": "90dc83d4da7086840f5a98712d07ed7f0ce1683504606a19e79d97ab320dec31"
+    },
+    {
+      "path": "art/models/portraits/triton/02.png",
+      "sha256": "53a4ee2630ce8dd711ad4d716573d9bf0ee71346f1d4b5b6daf72d6a0a5c91e7"
+    },
+    {
+      "path": "art/models/portraits/triton/03.png",
+      "sha256": "f99afd28d46e62e76b1b74afb9ce01f6204b2c5f427364ec4d17cd4e4ecf5bc2"
+    },
+    {
+      "path": "art/models/portraits/triton/04.png",
+      "sha256": "4681cb086b66460f4b313c1f8082d4d0735c2439ec778bdf47f5e1c241a96870"
+    },
+    {
+      "path": "art/models/portraits/triton/05.png",
+      "sha256": "aa6554d7bd405ade8dc643e40b8a02514365620e74a34177af2b6120057bfc8b"
+    },
+    {
+      "path": "art/models/portraits/triton/06.png",
+      "sha256": "29e0efea5a1041ccace56a335d0808b456fff54adc2eaf0581e2e5680162c69d"
+    },
+    {
+      "path": "art/models/portraits/triton/06_awakened.png",
+      "sha256": "6a4577265505eb0cf5e3d21db962ac8ccdafbac9279a32b6b425ab44ec43932c"
+    },
+    {
+      "path": "art/models/portraits/triton/07.png",
+      "sha256": "5760868aaaab6e5e5d7c4ba1692a8c242e14b1c7bddb592cf958f4dadb8a651d"
+    },
+    {
+      "path": "art/models/portraits/triton/08.png",
+      "sha256": "1fe062b798684a5c6ca851f81a7b83ebd56b288a6c07a18ee324e0b450b04012"
+    },
+    {
+      "path": "art/models/portraits/triton/09.png",
+      "sha256": "b9aa56ee49214cbd2850afc574b02b826bd2a0399b11197615fc55783c75c2ac"
+    },
+    {
+      "path": "art/models/portraits/vidarr/00.png",
+      "sha256": "fa2987c9349cb68533b41638f24074c972b40f888d770abf63f8b33af03b2905"
+    },
+    {
+      "path": "art/models/portraits/vidarr/01.png",
+      "sha256": "a550644da8f281c293688c191beb6aa9c73600b1525a6de4708395ef2707e65e"
+    },
+    {
+      "path": "art/models/portraits/vidarr/02.png",
+      "sha256": "aa451d0f033ea78b8f2218b6c4fbcc78557aeb361fa5265aa538fd9ad01c8a21"
+    },
+    {
+      "path": "art/models/portraits/vidarr/02_awakened.png",
+      "sha256": "7b284115e0730074e0da6ebe5ebed03b11c91366f0185227f7b2bbbc5bf5f4bc"
+    },
+    {
+      "path": "art/models/portraits/vidarr/03.png",
+      "sha256": "0a9e100ae1f0aa6f46b3a20faf3b3a9f8a8531359529fa1f7bf51cf8ba90662a"
+    },
+    {
+      "path": "art/models/portraits/vidarr/04.png",
+      "sha256": "ff67daf1d8009964c33eb2f8fc482044c013a805aaa2856eeec661b42856dda8"
+    },
+    {
+      "path": "art/models/portraits/vidarr/05.png",
+      "sha256": "365d8bdf1369aa562349bd87e957aee12e30bd1f0bcfab9682d6e5c1952969dd"
+    },
+    {
+      "path": "art/models/portraits/vidarr/06.png",
+      "sha256": "2e433eadd7a540c5929516ef2efebf543adfed0c93d967bc6ef505e2e235ae74"
+    },
+    {
+      "path": "art/models/portraits/vidarr/07.png",
+      "sha256": "b445a3461261d9fe37c9e3e02d435736ca30a98fd29073d32533c5f32f57aed1"
+    },
+    {
+      "path": "art/models/portraits/vidarr/08.png",
+      "sha256": "afe89d19091322c9777da275a5013c9a73f2ec5dfa7b71d35a3e4277ab15e583"
+    },
+    {
+      "path": "art/models/portraits/vidarr/09.png",
+      "sha256": "024da7845f059621cf8783b579379ac0e151c0f78fe1f6157dfe9af3f12e42b5"
+    },
+    {
+      "path": "art/models/portraits/volcan/00.png",
+      "sha256": "8dc22c214a18eee9852ad7ce4f5ca1df0f4423c64efdf9771dbc34a70d45d659"
+    },
+    {
+      "path": "art/models/portraits/volcan/01.png",
+      "sha256": "63cd2b94adb979e6de22ed6b7d0776f93fc4a6d16482c1d45e3ce59fc15eb83d"
+    },
+    {
+      "path": "art/models/portraits/volcan/02.png",
+      "sha256": "34d0a70dbd88f539a53933adcc1822e21a089809daa401612f92e55098c6b76d"
+    },
+    {
+      "path": "art/models/portraits/volcan/03.png",
+      "sha256": "54687ed7b2860f488ad5e257be4a54de6f49a0759f84d226b839592e0e1173d5"
+    },
+    {
+      "path": "art/models/portraits/volcan/04.png",
+      "sha256": "bb93a1cc8fd540bb98fe4439a76c9ac45bcd1e8f961efa854366651e1d2988e2"
+    },
+    {
+      "path": "art/models/portraits/volcan/04_awakened.png",
+      "sha256": "4491792f6e5df3c126088047e10ab290c64298d5263eccab4b0bc512bd510342"
+    },
+    {
+      "path": "art/models/portraits/volcan/05.png",
+      "sha256": "14f58347ca9831536ffe3b5b269910e1eaa0469fb4c40ab2d7a037b6fa9122b6"
+    },
+    {
+      "path": "art/models/portraits/volcan/06.png",
+      "sha256": "6b3302f963d446234467459894b3a5aa2cf6a47f66f8d8dee26a4f4a76808bd7"
+    },
+    {
+      "path": "art/models/portraits/volcan/07.png",
+      "sha256": "1483b3a42626fe98135318a85f1cf0aa2b68f7084de578db3dead9a54f5fae79"
+    },
+    {
+      "path": "art/models/portraits/volcan/08.png",
+      "sha256": "a66098cd0f5046a2a537d1339ecbe6a8e4354eb797dae90a7f16f8b61bc4e88e"
+    },
+    {
+      "path": "art/models/portraits/volcan/09.png",
+      "sha256": "62dd5957df5574c883991eb2ee6f7f9a24b0aaa5fb2f52eecfe826d28ba27197"
+    },
+    {
+      "path": "art/models/portraits/zero/00.png",
+      "sha256": "767c3db10b818dcb4bb795d952bd4427d47936577b2b2d3034a0dcfed6076507"
+    },
+    {
+      "path": "art/models/portraits/zero/01.png",
+      "sha256": "cd93dd4e98e1fb93c2840a2944d024b10038655cfb7f37caa47c81a00ca76319"
+    },
+    {
+      "path": "art/models/portraits/zero/02.png",
+      "sha256": "4e53662a5bc2e0ca8a0ad9300a20908b6fa5996332188ace408d143ec4942669"
+    },
+    {
+      "path": "art/models/portraits/zero/03.png",
+      "sha256": "a44a4116eb66c29b670a1e7b8ec650278ed62b3bdb535acc897a34cde782b668"
+    },
+    {
+      "path": "art/models/portraits/zero/04.png",
+      "sha256": "d91d5efd287fef7ed1a630434da6206f9c6072ff48c268e6fcd6a94159fc398f"
+    },
+    {
+      "path": "art/models/portraits/zero/05.png",
+      "sha256": "01e947175e9816df367f1c40a52f42da679e3400894b859a0667093558554729"
+    },
+    {
+      "path": "art/models/portraits/zero/06.png",
+      "sha256": "d3dfe0570f68ada2ede058dde74684009790a6dc48c140ca2439522660a66736"
+    },
+    {
+      "path": "art/models/portraits/zero/07.png",
+      "sha256": "5073411bd2c7909394ce56c9072ec52d6f8b6212cd1f9fcfeaea54bf5c6bf75c"
+    },
+    {
+      "path": "art/models/portraits/zero/08.png",
+      "sha256": "030f6b86a9d791cf6c5e38518fb45b2fd17960c39eaed8679d5c752c20686ab7"
+    },
+    {
+      "path": "art/models/portraits/zero/09.png",
+      "sha256": "2fa8349a3c1118ee756875e3ef84bcf3d4db9209fd6d56a8f53fadc790533c23"
+    },
+    {
+      "path": "art/models/portraits/zero/09_awakened.png",
+      "sha256": "45f884d882c5b0e939cfa040d2bc4dddc5e21d06659722f75efc35808ec46749"
+    },
+    {
+      "path": "art/models/monsters/abyss_leviathan.png",
+      "sha256": "c949286f9c37c1a9d8c90207f8c858a01be53c49ce5f495ddd8e79610121db04"
+    },
+    {
+      "path": "art/models/monsters/blaze_fox.png",
+      "sha256": "12de4f89da4c39fe700ea926629494305e65abc34c82d2c2d20d3860b2fd4f2f"
+    },
+    {
+      "path": "art/models/monsters/blizzard_wolf.png",
+      "sha256": "21c0ed55ee578cab3ede7f2a2470e26a7e63cd22d9ad08ac9bc62011bbae6ade"
+    },
+    {
+      "path": "art/models/monsters/bramble_imp.png",
+      "sha256": "426ec92182cb30a7e82127d0833dc79e264b3d8d5d062f0cac4426e9275af9de"
+    },
+    {
+      "path": "art/models/monsters/crystal_golem_king.png",
+      "sha256": "4119c87af946f37e44063d095b1791ad9aec18cef84575e5ac754bc25269442a"
+    },
+    {
+      "path": "art/models/monsters/crystal_skink.png",
+      "sha256": "ea47624359e1b9af3f9bda204a659524a2a074d83e1c0cca42ea80de2942ff2f"
+    },
+    {
+      "path": "art/models/monsters/drop_slime.png",
+      "sha256": "920c11ba944695ddcf10100ecffea148dc1ed31954b7015eaadd81a7e92f5a9c"
+    },
+    {
+      "path": "art/models/monsters/elder_treant.png",
+      "sha256": "38c1a2c3f297f416ce75c487482484815d3fe522a11087f9994550051bcd8135"
+    },
+    {
+      "path": "art/models/monsters/ember_imp.png",
+      "sha256": "79b10d185532991ef788d4f6ebfa9563623c42dd50c600d5adbe4b246dd7a436"
+    },
+    {
+      "path": "art/models/monsters/flame_dragon.png",
+      "sha256": "af0b884035d793597b6e3c3fc33824179269e7ba7a2593b7f0f4fb9fcff47196"
+    },
+    {
+      "path": "art/models/monsters/frost_imp.png",
+      "sha256": "936557344d2f39d52d1846a0bf0a382397e55a69c64277700984671e63512086"
+    },
+    {
+      "path": "art/models/monsters/glacier_dragon.png",
+      "sha256": "07703142a9f1ddc96329954bce5f018f6d006849f69acf50bf78dad6ed6d27a6"
+    },
+    {
+      "path": "art/models/monsters/glacier_titan.png",
+      "sha256": "8c7d45316d12099cd2866b524f81f267a71353d11ecf498e635a229beae2283a"
+    },
+    {
+      "path": "art/models/monsters/jelly_seer.png",
+      "sha256": "75a18fbbda0b763ae6d5041e0190096bd47ec128930ec8abc103dd40444d2493"
+    },
+    {
+      "path": "art/models/monsters/magma_brute.png",
+      "sha256": "1e62c6db01c00d2a14b7fa79408d4152823984c4e3602b3cb777cb33c7756b1c"
+    },
+    {
+      "path": "art/models/monsters/pebble_imp.png",
+      "sha256": "b4fa266b1724c5038a48d611e0734a9158da278a73b2a94d4861326c47ddd0e9"
+    },
+    {
+      "path": "art/models/monsters/pyre_priest.png",
+      "sha256": "5c92cbfe6ab76ed66a15fee5cfbffb1ddae67e81afa57312953b90b01cc4b404"
+    },
+    {
+      "path": "art/models/monsters/rapid_ray.png",
+      "sha256": "8d778e7f705ef96794fd985fcb42c8fdee6b34b1d810f7a435f31c74f98c2513"
+    },
+    {
+      "path": "art/models/monsters/rime_witch.png",
+      "sha256": "eee5a52b11f63de511f516e9ed291ff68681d3d1fbde29bf297148659c534102"
+    },
+    {
+      "path": "art/models/monsters/runestone_idol.png",
+      "sha256": "61e60f15bde1f67e3303b77a5746b76d7457b5c58f7a76c5ac6f88d5a27749be"
+    },
+    {
+      "path": "art/models/monsters/spore_cap.png",
+      "sha256": "63ef316ce72a95f968866d0e3099470933f12911384c6f7b150e96dc9c441018"
+    },
+    {
+      "path": "art/models/monsters/stone_golem.png",
+      "sha256": "77575436607f5073714adbdcd775fc02622797938fbaea586b176a18f75699e4"
+    },
+    {
+      "path": "art/models/monsters/titan_bloom.png",
+      "sha256": "f6846407b2b8ca6f8b245f533770b04c9100ea1f5aca543ff238bdb1a30c9daf"
+    },
+    {
+      "path": "art/models/monsters/vine_lynx.png",
+      "sha256": "d89e24accbdd0d878a4b611ce8b656898885edb80d8d737451a307474af30000"
+    },
+    {
+      "path": "art/models/monsters/wave_giant.png",
+      "sha256": "171dd5470cd3b32f2c2e11858f392b19bd5a251fc494d0553a07e0a996f7f706"
+    },
+    {
+      "path": "art/ui/launcher_main.png",
+      "sha256": "894fce87881be73bb1daf1d0130206af85513b6b9368c92fe3b5e95550365a90"
+    },
+    {
+      "path": "art/ui/launcher_adaptive.png",
+      "sha256": "2085b764857d810f578275513afdf585000a550baaa0d1d531253b6592ac730d"
+    },
+    {
+      "path": "art/ui/launcher_monochrome.svg",
+      "sha256": "c17f05707eab77939f2a46c55600d50e96d02513cc233fc1cabc999659d690e4"
+    },
+    {
+      "path": "art/ui/launcher_background.svg",
+      "sha256": "306a0c0f1a33f50616bcbe3de19046b3f1f1559b35c4849b899072900d646bd4"
+    },
+    {
+      "path": "art/ui/startup_logo.png",
+      "sha256": "894fce87881be73bb1daf1d0130206af85513b6b9368c92fe3b5e95550365a90"
+    },
+    {
+      "path": "art/ui/coin.png",
+      "sha256": "ae2c2bacecabd83fb97b6e58101bdd85fa8160c7d97abfb51369ebaa78261d7d"
+    }
+  ]
+}

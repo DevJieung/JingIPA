@@ -2,7 +2,7 @@ extends Node
 
 ## 한 판(런)의 상태 전부. 화면들은 이 노드만 보고 자기를 그린다.
 ##
-## 왜 오토로드인가: 카드 뽑기 → 전투 → 상점 이 셋이 서로 다른 씬인데 목숨·골드·영웅은
+## 왜 오토로드인가: 별맞춤 의식 → 전투 → 상점 이 셋이 서로 다른 씬인데 목숨·골드·영웅은
 ## 셋 사이를 계속 넘어다닌다. 씬끼리 값을 들고 다니게 하면 어느 한 곳에서만 갱신을
 ## 빠뜨려도 조용히 어긋난다.
 
@@ -11,7 +11,7 @@ signal lives_changed(lives: int)
 
 ## 지금 어느 단계인가. 화면 전환을 이 값으로 결정한다.
 ##
-## ★ **SWAP 은 「족보를 확정하고 영웅을 받았다」는 뜻이다.** 예전에는 확정을 해도 phase 가
+## ★ **SWAP 은 「의식을 확정하고 영웅을 받았다」는 뜻이다.** 예전에는 확정을 해도 phase 가
 ##   DRAW 그대로였는데, 그러면 저장된 판 하나가 뜻이 둘이 된다 — 「아직 안 뽑았다」와
 ##   「이미 받았다」가 구별이 안 된다. 실제로 그것이 익스플로잇이 됐다: 확정 뒤 홈 버튼을
 ##   누르면 phase 가 DRAW 인 채로 담기고, 이어하기가 뽑기 화면을 다시 띄워 「결정!」을
@@ -23,13 +23,15 @@ var wave: int = 0
 var lives: int = 0
 var gold: int = 0
 var kills: int = 0
-var best_hand: int = -1        ## 이번 판의 최고 족보 (평생 기록과 분리)
+var best_tier: int = -1        ## 이번 판에 뽑은 가장 높은 등급 (평생 기록과 분리)
 var running: bool = false
 
 ## 전장에 세워 둔 영웅들. **최대 Balance.HERO_SLOTS 명**이고, 여기 있는 영웅만 싸운다.
 ## 각 원소는
 ##   {"unit": <Roster 의 표 한 줄>, "tier": int, "wave": int, "n": int}
-## n 은 같은 캐릭터가 몇 겹으로 쌓였는가 — 그만큼 공격력이 배가 된다.
+## ★ **등급(tier)은 캐릭터가 아니라 이 영웅 한 장의 것이다**(Balance.TIER_ATK 의 반 별 칸).
+##   같은 캐릭터라도 1성으로도 5성으로도 뽑히고, 승급·합성으로 여기 값만 오른다.
+## n 은 옛 저장의 겹친 수다. 지금은 언제나 1 이다(같은 캐릭터는 따로 보관한다).
 var heroes: Array = []
 ## 영웅 전당. 자리가 없어 물러나 있는 영웅들. 모양은 heroes 와 같다.
 ## ★ 벤치에 있는 영웅은 **싸우지 않는다.** 겹치기(n)만 그대로 쌓인다 —
@@ -49,17 +51,16 @@ var shop_offer: Array[String] = []
 ## 이 판에서 크리스탈을 몇 개나 되샀는가. 살수록 값이 오른다(Balance.repair_cost).
 var repairs: int = 0
 
-## 이번 판에 받은 카드 다섯 장.
-var cards: Array[int] = []
-## 카드별 교체 횟수 (공짜 리롤·광고 직접 선택 포함).
-var rerolled: Array[int] = []
-## 카드별 **유료** 리롤 횟수. 값을 매기는 데 쓴다.
-var paid: Array[int] = []
-## 칸마다의 카드 더미. 섞은 52장을 다섯 칸에 **한 장씩 돌려** 나눠 준 것이다 —
-## 11 · 11 · 10 · 10 · 10 장. 칸끼리 겹치는 카드가 하나도 없으므로 손패 다섯 장도 안 겹친다.
-var _piles: Array = []
-## 칸마다 그 더미의 몇 번째를 보고 있는가. `cards[i] == _piles[i][_at[i]]` 가 언제나 참이다.
-var _at: Array[int] = []
+## 이번 탄의 별맞춤 의식 — 다섯 궤도의 별이 멈춘 자리(Rite 의 칸 번호). 안쪽 궤도부터다.
+## **문 안에 든 별의 수가 곧 뽑힐 영웅의 등급이다**(Rite.stars).
+var orbit: Array[int] = []
+## 이번 탄에 다시 돌린 횟수(무료 + 유료). 광고로 끌어온 것은 안 센다.
+var spins: int = 0
+## 그중 골드를 낸 횟수. 값을 매기는 데 쓴다(Balance.reroll_cost).
+var paid_spins: int = 0
+## 광고로 별을 끌어온 횟수. 다시 돌린 횟수와 합쳐 「의식의 판 번호」가 된다(rite_revision) —
+## 오래된 광고 콜백이 이미 바뀐 별을 또 끌어오지 못하게 한다.
+var pulls: int = 0
 
 const FUSION_BENCH := 100000
 var fusion_pending: Dictionary = {}
@@ -78,7 +79,7 @@ var rng := RandomNumberGenerator.new()
 ##   크리스탈 스무 개가 통째로 날아가는데 피할 길이 없다(자동 플레이 24판이 한 판도
 ##   못 깼다). 씨앗과 탄 번호만으로 정해 두면 **상점이 다음 탄을 정확히 보여 줄 수 있고**,
 ##   화면·검사기·전투가 언제 물어도 같은 답을 받는다.
-## ★ rng 로 굴리지 않는 이유도 같다 — 리롤을 몇 번 했느냐에 따라 편성이 달라지면
+## ★ rng 로 굴리지 않는 이유도 같다 — 별을 몇 번 다시 돌렸느냐에 따라 편성이 달라지면
 ##   상점에서 보여 준 것과 실제가 어긋난다.
 var run_seed: int = 0
 
@@ -94,15 +95,13 @@ var run_seed: int = 0
 ##   그 스무 탄이 한 탄처럼 보인다.
 var themes: Array[int] = []
 
-## 마지막으로 확정한 결과 — 전투 화면과 연출이 읽는다.
-var last_hand: int = -1
-var last_cards: Array[int] = []
-var last_key: Array[int] = []
+## 마지막으로 확정한 결과 — 검사기와 연출이 읽는다.
+var last_tier: int = -1
 var last_unit: Dictionary = {}
-var last_bumped: bool = false     ## 도박꾼의 눈으로 한 단계 올라갔는가
-var last_joker: int = -1          ## 조커가 바꿔 준 카드 자리(없으면 -1)
+var last_bumped: bool = false     ## 도박꾼의 눈으로 반 별 올라갔는가
+var last_joker: int = -1          ## 조커가 끌어온 별의 궤도(없으면 -1)
 ## 확정 결과를 통째로 담아 둔 것. 두 가지 일을 한다:
-##   1. confirm_hand() 을 **멱등**으로 만든다 — 어떤 경로로 두 번 불려도 영웅은 한 번만 준다.
+##   1. confirm_summon() 을 **멱등**으로 만든다 — 어떤 경로로 두 번 불려도 영웅은 한 번만 준다.
 ##   2. 이어하기가 편성 판을 **그대로 다시 세운다** — 확정 연출이 끝나면 편성 판이
 ##      탄마다 떠야 하는데(CLAUDE.md 2-1), 이것이 없으면 이어할 때만 그 판을 건너뛴다.
 var last_result: Dictionary = {}
@@ -130,7 +129,7 @@ func start_run(seed_value: int = 0) -> void:
 	lives = Balance.START_LIVES
 	gold = Balance.START_GOLD
 	kills = 0
-	best_hand = -1
+	best_tier = -1
 	heroes.clear()
 	bench.clear()
 	levels.clear()
@@ -146,13 +145,12 @@ func start_run(seed_value: int = 0) -> void:
 	support_wave = -1
 	support_available = false
 	repairs = 0
-	cards.clear()
+	orbit.clear()
+	spins = 0
+	paid_spins = 0
+	pulls = 0
 	last_result = {}
-	rerolled.clear()
-	paid.clear()
-	last_hand = -1
-	last_cards.clear()
-	last_key.clear()
+	last_tier = -1
 	last_bumped = false
 	last_joker = -1
 	last_unit = {}
@@ -208,7 +206,7 @@ func wave_seed(w: int) -> int:
 	return run_seed * 1000003 + w * 7919 + 11
 
 
-## 이 판의 테마 열 개를 뽑는다. **판 씨앗만으로 정해진다** — 리롤을 몇 번 했든 같다.
+## 이 판의 테마 열 개를 뽑는다. **판 씨앗만으로 정해진다** — 별을 몇 번 다시 돌렸든 같다.
 ##
 ## ★ 뒤 블록일수록 험한 곳이 걸린다. 첫 블록은 rank 1~2, 마지막 블록은 rank 4~5 다.
 ##   창(窓)을 셋으로 잡아(r-1 ~ r+1) 굳어 버리지 않게 했다 — 못 박으면 "몇 번째 판이든
@@ -418,19 +416,13 @@ func add_lives(n: int) -> void:
 
 
 # --------------------------------------------------------------------------- #
-# 카드 다섯 장 — 뽑기와 리롤
+# 별맞춤 의식 — 별을 돌리고, 문 밖의 별만 다시 돌린다 (규칙은 core/rite.gd)
 # --------------------------------------------------------------------------- #
-## 새 판의 카드를 뽑는다. 덱은 탄마다 새로 섞고, 그것을 **다섯 칸에 나눠 준다.**
+## 새 탄의 의식을 연다. 별 다섯이 한 번씩 돌아 멈춘다(가장 안쪽 별은 언제나 문 안이다).
 ##
-## ★ 사용자가 정한 규칙이다: 「칸마다 미리 열 장 혹은 열한 장 깔아 놓고, 리롤할 때마다
-##   그 더미에서 **순서대로** 나오게. 한 묶음 다 돌면 제자리로 돌아와서 반복.」
-##   그래서 한 칸이 이번 탄에 보여 줄 수 있는 카드가 미리 정해져 있고, 리롤은 52장에서
-##   새로 뽑는 것이 아니라 **그 줄을 한 칸 넘기는** 일이다.
-## ★ 나눠 주는 것은 **한 장씩 돌려서**다(실제로 카드를 나눠 주는 것과 같다).
-##   52 = 11+11+10+10+10 이라 앞의 두 칸만 한 장 많은데, 나누는 덱이 이미 섞여 있으므로
-##   그 한 장 차이가 특정 칸을 유리하게 만들지는 않는다.
-## ★ 칸끼리 카드가 안 겹치는 것이 여기서 나온다 — 52장을 **쪼개** 나눠 주기 때문이다.
-##   그래서 리롤을 몇 번을 하든 손패에 같은 카드가 두 장 설 수가 없다.
+## ★ **결과는 여기서 이미 정해진다.** 화면에서 별이 도는 것은 연출이고, 멈출 자리는
+##   판의 난수가 정해 둔 것을 그대로 따라간다 — 손으로 멈추는 타이밍 게임이 아니다.
+##   그래야 저장했다 이어 해도 별이 같은 자리에 서 있고, 껐다 켜서 다시 굴릴 수 없다.
 func begin_draw() -> void:
 	wave += 1
 	support_available = false
@@ -438,13 +430,13 @@ func begin_draw() -> void:
 	phase = Phase.DRAW
 	last_result = {}
 	battle_checkpoint = {}
-	var deck := Poker.full_deck()
-	_shuffle(deck)
-	cards.assign(deck.slice(0, 5))
-	rerolled.assign([0, 0, 0, 0, 0])
-	paid.assign([0, 0, 0, 0, 0])
-	_piles.clear()
-	_at.clear()
+	orbit.assign(Rite.roll(rng))
+	# 판의 첫 의식은 별 둘을 세운 채로 열린다 — 혼자 서는 첫 영웅을 2성으로 보장한다.
+	if wave == 1:
+		Rite.ensure_stars(orbit, Balance.RITE_FIRST_STARS, rng)
+	spins = 0
+	paid_spins = 0
+	pulls = 0
 
 
 func _shuffle(a: Array) -> void:
@@ -455,8 +447,8 @@ func _shuffle(a: Array) -> void:
 		a[j] = t
 
 
-## 강화 단계와 현재 활성 패시브를 반영한 카드 한 장당 무료 횟수.
-## 상점의 현재·다음 값과 실제 포커가 같은 계산을 사용한다.
+## 강화 단계와 현재 활성 패시브를 반영한 **탄마다의** 무료 다시 돌리기 횟수.
+## 상점의 현재·다음 값과 실제 의식이 같은 계산을 사용한다.
 func free_rerolls_at(level: int) -> int:
 	return int(up_at("reroll", level)) + (Balance.PASSIVE_DEAL if has("deal") else 0)
 
@@ -465,114 +457,122 @@ func free_rerolls() -> int:
 	return free_rerolls_at(lv("reroll"))
 
 
-## 카드별 남은 무료 횟수. 유료 교체 이후에도 음수를 표시하지 않는다.
-func rerolls_left(i: int) -> int:
-	if i < 0 or i >= cards.size() or i >= rerolled.size():
-		return 0
-	return maxi(0, free_rerolls() - rerolled[i])
+## 이번 탄에 남은 무료 다시 돌리기.
+func respins_left() -> int:
+	return maxi(0, free_rerolls() - (spins - paid_spins))
 
 
-## i 번 카드를 지금 다시 뽑는 데 드는 값. 0 이면 공짜다.
+## 지금 다시 돌리는 데 드는 값. 0 이면 공짜다.
 ##
-## ★ 규칙: 공짜 횟수를 다 쓴 카드는 **골드를 내지 않으면 더 리롤할 수 없다.**
-##   값은 그 카드를 유료로 리롤한 횟수에 따라 두 배씩 오른다(15 → 30 → 60 …).
-func reroll_cost_of(i: int) -> int:
-	if i < 0 or i >= cards.size():
+## ★ 규칙: 공짜를 다 쓰면 **골드를 내야** 더 돌릴 수 있다. 값은 이번 탄에 유료로 돌린
+##   횟수에 따라 두 배씩 오른다(Balance.reroll_cost).
+func respin_cost() -> int:
+	if respins_left() > 0:
 		return 0
-	if rerolls_left(i) > 0:
-		return 0
-	return Balance.reroll_cost(paid[i])
+	return Balance.reroll_cost(paid_spins)
 
 
-## ★ 더미가 돌고 돌므로 **바닥나서 못 바꾸는 일은 없다.** 막는 것은 골드뿐이다.
-##   (예전에는 다섯 칸이 덱 하나를 나눠 썼고, 47장을 다 쓰면 리롤이 통째로 잠겼다)
-func can_reroll(i: int) -> bool:
-	return running and phase == Phase.DRAW and i >= 0 and i < cards.size() \
-			and gold >= reroll_cost_of(i)
+## 문 안에 든 별의 수(1~5). 의식이 열려 있지 않으면 0.
+func rite_stars() -> int:
+	return Rite.stars(orbit) if Rite.valid(orbit) else 0
 
 
-## 실제로 다시 뽑는다. 성공하면 참.
-func reroll(i: int) -> bool:
-	if not can_reroll(i):
-		return false
-	var pool: Array[int] = []
-	for card in range(52):
-		if not cards.has(card):
-			pool.append(card)
-	var cost := reroll_cost_of(i)
+## 지금 확정하면 나올 등급. **조커가 끌어올 별까지 센다** — 화면이 「문 안의 별 3개」라고
+## 적어 놓고 4성을 내놓으면 안 되기 때문이다. 도박꾼의 눈(확률)은 굴려 봐야 알므로 안 센다.
+func rite_preview() -> Dictionary:
+	if not Rite.valid(orbit):
+		return {"stars": 0, "tier": -1, "joker": -1}
+	var joker_ring := Rite.pull_target(orbit) if has("joker") else -1
+	var count := mini(Rite.MAX_STARS, Rite.stars(orbit) + (1 if joker_ring >= 0 else 0))
+	return {"stars": count, "tier": Rite.tier_of(count), "joker": joker_ring}
+
+
+## 다시 돌릴 수 있는가. 문 밖에 별이 남아 있고 값을 낼 수 있어야 한다.
+## ★ 다 들었으면(5성) 더 돌릴 것이 없다 — 골드만 받고 아무 일도 안 일어나면 안 된다.
+func can_respin() -> bool:
+	return running and phase == Phase.DRAW and Rite.valid(orbit) \
+			and not Rite.misses(orbit).is_empty() and gold >= respin_cost()
+
+
+## 문 밖의 별만 다시 돌린다. **다시 돈 궤도 번호들**을 돌려준다 — 못 돌렸으면 빈 배열이다.
+## 문 안에 든 별은 건드리지 않으므로 다시 돌려서 등급이 내려가는 일은 없다.
+func respin() -> Array[int]:
+	var moved: Array[int] = []
+	if not can_respin():
+		return moved
+	var cost := respin_cost()
 	if cost > 0:
 		add_gold(-cost)
-		paid[i] += 1
-	rerolled[i] += 1
-	cards[i] = pool[rng.randi_range(0, pool.size() - 1)]
+		paid_spins += 1
+	spins += 1
+	moved = Rite.respin(orbit, rng)
+	# ★ 돌린 **바로 그 순간** 담는다. 안 담으면 맘에 안 드는 결과가 나왔을 때 앱을 껐다
+	#   켜는 것만으로 공짜 횟수와 쓴 골드가 되살아난다.
 	autosave()
-	return true
+	return moved
 
 
-## 원하는 카드 선택은 무료 리롤 잔여 횟수·골드와 무관하게 족보 확정 전에 이용한다.
-func can_choose_card(slot: int) -> bool:
-	return running and phase == Phase.DRAW and slot >= 0 and slot < cards.size()
+## 보상형 광고로 끌어올 별 — 문 밖의 가장 바깥 별. 끌어올 것이 없으면 -1.
+func pull_target() -> int:
+	if not running or phase != Phase.DRAW or not Rite.valid(orbit):
+		return -1
+	return Rite.pull_target(orbit)
 
 
-func card_choice_allowed(slot: int, desired: int, expected: int) -> bool:
-	return can_choose_card(slot) and desired >= 0 and desired < 52 \
-			and cards[slot] == expected and not cards.has(desired)
+## 그 궤도의 별을 광고 보상으로 끌어올 수 있는가. 무료 횟수·골드와 무관하다.
+func can_pull(ring: int) -> bool:
+	return running and phase == Phase.DRAW and Rite.valid(orbit) \
+			and ring >= 0 and ring < Rite.RINGS and not Rite.in_gate(ring, orbit[ring])
+
+
+## 의식의 판 번호. 별이 한 번이라도 바뀌면 오른다 — 광고를 보는 사이에 다시 돌렸다면
+## 그 광고의 보상은 옛 상태를 겨눈 것이라 거절한다.
+func rite_revision() -> int:
+	return spins + pulls
 
 
 # --------------------------------------------------------------------------- #
-# 족보 확정 → 영웅 등장
+# 의식 확정 → 영웅 등장
 # --------------------------------------------------------------------------- #
-## 지금 카드로 족보를 판정하고 그 등급의 캐릭터 중 하나를 무작위로 세운다.
+## 문 안의 별 수로 등급을 정하고, **쉰 명 중 하나를 무작위로** 그 등급으로 세운다.
 ## 화면은 반환값(딕셔너리)만 보고 연출한다.
-func confirm_hand() -> Dictionary:
+##
+## ★ 캐릭터와 등급은 서로 상관이 없다(Balance.TIER_ATK 의 ★). 별은 「얼마나 센가」를,
+##   무작위 추첨은 「누구인가」를 정한다 — 그래서 같은 캐릭터가 1성으로도 5성으로도 나온다.
+func confirm_summon() -> Dictionary:
 	# ★ **한 탄에 한 번만 준다.** 확정 연출 도중에 앱이 죽었다 살아나도, 화면이
 	#   실수로 두 번 불러도 영웅은 한 명이다. 화면 쪽 _leaving 방어(draw_screen.gd)와
 	#   같은 뜻인데 이쪽은 **재시작까지** 막는다.
 	if phase == Phase.SWAP:
 		return last_result
-	if not running or phase != Phase.DRAW or cards.size() != 5:
+	if not running or phase != Phase.DRAW or not Rite.valid(orbit):
 		return {}
-	var use: Array[int] = cards.duplicate()
+	var final: Array[int] = orbit.duplicate()
+
+	# 조커: 문 밖의 별 하나(가장 바깥)를 문 안으로 끌어온다.
 	last_joker = -1
-	var hand := Poker.evaluate(use)
-
-	# 조커: 다섯 장 중 한 장을 **가장 좋은 패가 되는 카드**로 친다.
 	if has("joker"):
-		var best := hand
-		var best_i := -1
-		var best_c := -1
-		for i in range(5):
-			for c in range(52):
-				if use.has(c):
-					continue
-				var trial: Array[int] = use.duplicate()
-				trial[i] = c
-				var h := Poker.evaluate(trial)
-				if h > best or (h == best and Poker.compare(trial, use if best_i < 0 else _joker_trial(use, best_i, best_c)) > 0):
-					best = h
-					best_i = i
-					best_c = c
-		if best_i >= 0:
-			use[best_i] = best_c
-			hand = best
-			last_joker = best_i
+		last_joker = Rite.pull_target(final)
+		if last_joker >= 0:
+			Rite.pull(final, last_joker, rng)
 
+	var count := Rite.stars(final)
+	var tier := Rite.tier_of(count)
+	# 도박꾼의 눈: 확률로 반 별이 더 얹힌다. 의식이 온 별만 주므로 반 별은 여기서만 나온다.
 	last_bumped = false
-	if has("eye") and hand < Poker.Hand.ROYAL and rng.randf() < Balance.PASSIVE_EYE_P:
-		hand += 1
+	if has("eye") and tier < Balance.TIER_MAX and rng.randf() < Balance.PASSIVE_EYE_P:
+		tier += 1
 		last_bumped = true
 
-	var unit := Roster.pick_unit(hand, rng)
-	var value := Poker.detail(use)
-	last_hand = hand
-	best_hand = maxi(best_hand, hand)
-	last_cards = use.duplicate()
-	last_key = Poker.key_cards(use, hand) if not last_bumped else use.duplicate()
+	var unit := Roster.pick_unit(rng)
+	last_tier = tier
+	best_tier = maxi(best_tier, tier)
 	last_unit = unit
-	var got := gain_hero(unit, hand, true, true, {"value": value, "variant": value["key"]})
-	last_result = {"hand": hand, "cards": last_cards, "key": last_key, "unit": unit,
-			"bumped": last_bumped, "joker": last_joker, "value": value, "variant": value["key"],
-			"showy": hand >= Poker.SHOWY,
+	orbit.assign(final)
+	var got := gain_hero(unit, tier, true, true)
+	last_result = {"tier": tier, "stars": count, "orbit": Array(final), "unit": unit,
+			"bumped": last_bumped, "joker": last_joker,
+			"showy": tier >= Balance.SHOWY_TIER,
 			"stacked": bool(got["stacked"]), "where": String(got["where"]),
 			"slot": int(got["slot"]), "n": int(got["n"])}
 	# ★ 영웅을 받은 **바로 그 순간** 담는다. 여기서 안 담으면 편성 판에 머무는 동안
@@ -580,15 +580,9 @@ func confirm_hand() -> Dictionary:
 	#   통째로 되돌아간다.
 	phase = Phase.SWAP
 	# 도감과 획득 영웅을 같은 저장에 담는다. 중간 저장은 재시작 시 도감만 중복 집계한다.
-	Save.record_hand(hand, String(unit.get("id", "")), false)
+	Save.record_summon(tier, String(unit.get("id", "")), false)
 	autosave()
 	return last_result
-
-
-static func _joker_trial(use: Array[int], index: int, card: int) -> Array[int]:
-	var trial: Array[int] = use.duplicate()
-	trial[index] = card
-	return trial
 
 
 # --------------------------------------------------------------------------- #
@@ -1003,7 +997,8 @@ func hero_stats(h: Dictionary) -> Dictionary:
 			* float(rol["atk"]) \
 			* Balance.elem_dmg(el) * resonance_mult(el) \
 			* Balance.atk_mult(lv("atk")) * pas_mult("atk")
-	atk *= float(h.get("value", {}).get("value_mult", 1.0)) * float(h.get("awakening_mult", 1.0))
+	# 각성 위력 — 합성으로 얻은 수호자와, 5성에서 더 승급한 영웅만 1.0 을 넘는다.
+	atk *= float(h.get("awakening_mult", 1.0))
 	var rate: float = Balance.TIER_RATE[t] * float(prof["rate"]) \
 			* Balance.rate_mult(lv("rate")) * pas_mult("rate")
 	# 사거리는 배치 미리보기와 실제 겨냥이 같은 값을 사용한다.
@@ -1112,7 +1107,11 @@ func buy_upgrade(id: String) -> bool:
 ##   이어하기가 **전장이 텅 빈 채로 40탄**을 여는 판을 만든다. 그건 "못 이어졌다"보다
 ##   나쁘다 — 플레이어는 왜 졌는지 모른다.
 ##   ☆ 판이 아예 안 열리는 쪽이 낫다. `restore()` 가 판 번호가 다르면 통째로 버린다.
-const SAVE_VERSION := 7
+## ★★ **8 로 올렸다 — 뽑기가 포커 다섯 장에서 별맞춤 의식으로 바뀌었기 때문이다**
+##   (2026-10-07). 옛 판에는 카드 다섯 장과 칸마다의 교체 횟수가 담겨 있고, 영웅마다
+##   포커 문장 값이 붙어 있다. 지금 규칙에는 그 어느 것도 없다 — 등급 표도 다시
+##   잡아서(Balance.TIER_ATK) 옛 영웅을 그대로 읽으면 같은 별인데 세기가 다르다.
+const SAVE_VERSION := 8
 
 
 ## 영웅 한 명을 저장할 수 있는 모양으로. **캐릭터 표는 통째로 담지 않는다** —
@@ -1121,12 +1120,9 @@ const SAVE_VERSION := 7
 static func _hero_out(h: Dictionary) -> Dictionary:
 	var out := {"u": String(h["unit"].get("id", "")), "t": int(h.get("tier", 0)),
 			"w": int(h.get("wave", 1)), "n": int(h.get("n", 1)), "post": int(h.get("post", -1))}
-	for key in ["value", "variant", "awakened", "awakening_mult"]:
+	for key in ["awakened", "awakening_mult"]:
 		if h.has(key):
 			out[key] = h[key]
-	if out.has("value"):
-		out["value"] = out["value"].duplicate(true)
-		out["value"].erase("value_mult")
 	return out.duplicate(true)
 
 
@@ -1136,11 +1132,9 @@ static func _hero_in(d: Dictionary) -> Dictionary:
 		return {}
 	var out := {"unit": u, "tier": int(d.get("t", 0)), "wave": int(d.get("w", 1)),
 			"n": maxi(1, int(d.get("n", 1))), "post": int(d.get("post", -1))}
-	for key in ["value", "variant", "awakened", "awakening_mult"]:
+	for key in ["awakened", "awakening_mult"]:
 		if d.has(key):
 			out[key] = d[key]
-	if out.has("value"):
-		out["value"] = Poker.restore_detail(out["value"])
 	return out.duplicate(true)
 
 
@@ -1162,22 +1156,19 @@ static func _ints(values: Array) -> Array[int]:
 
 ## 지금 이 판을 통째로 담는다. Save 가 이 딕셔너리 하나만 파일에 쓴다.
 ##
-## ★ 카드 다섯 장과 리롤 횟수까지 담는다. 안 담으면 뽑기 화면에서 앱을 껐다 켰을 때
-##   **리롤을 다시 공짜로** 할 수 있고, 그게 곧 무한 리롤이다.
-## ★ 칸마다의 더미(_piles)와 어디까지 넘겼는가(_at)도 담는다. 안 담으면 이어 한 판에서
-##   더미가 새로 섞여 **같은 카드가 두 칸에 서고**, 넘긴 자리도 처음으로 돌아간다.
+## ★ 별이 선 자리와 다시 돌린 횟수까지 담는다(`rite`). 안 담으면 의식 화면에서 앱을 껐다
+##   켰을 때 **다시 공짜로** 돌릴 수 있고, 그게 곧 무한 리롤이다.
 func snapshot(include_checkpoint: bool = true) -> Dictionary:
 	ensure_posts()
 	return {
-		"v": SAVE_VERSION, "rules_v": 2, "formation_v": 2, "seed": run_seed, "themes": themes.duplicate(),
+		"v": SAVE_VERSION, "rules_v": 3, "formation_v": 2, "seed": run_seed, "themes": themes.duplicate(),
 		"phase": phase, "wave": wave, "lives": lives, "gold": gold, "kills": kills,
-		"best_hand": best_hand,
+		"best_tier": best_tier,
 		"heroes": _heroes_out(heroes), "bench": _heroes_out(bench),
 		"levels": levels.duplicate(), "passives": Array(passives).duplicate(),
 		"owned_passives": _owned_passives_out(), "hero_damage": hero_damage.duplicate(true),
 		"offer": Array(shop_offer).duplicate(), "repairs": repairs,
-		"cards": Array(cards).duplicate(), "rerolled": Array(rerolled).duplicate(), "paid": Array(paid).duplicate(),
-		"piles": _piles.duplicate(true), "at": Array(_at).duplicate(),
+		"rite": {"orbit": Array(orbit).duplicate(), "spins": spins, "paid": paid_spins, "pulls": pulls},
 		"last": _last_out(), "rng": rng.state,
 		"fusion": _fusion_out(), "fusion_serial": fusion_serial,
 		"continue_used": continue_used,
@@ -1225,11 +1216,7 @@ func _last_out() -> Dictionary:
 		return {}
 	var d := last_result.duplicate()
 	d["unit"] = String((last_result.get("unit", {}) as Dictionary).get("id", ""))
-	d["cards"] = Array(last_result.get("cards", []) as Array)
-	d["key"] = Array(last_result.get("key", []) as Array)
-	if d.has("value"):
-		d["value"] = d["value"].duplicate(true)
-		d["value"].erase("value_mult")
+	d["orbit"] = Array(last_result.get("orbit", []) as Array)
 	return d
 
 
@@ -1241,11 +1228,9 @@ func _last_in(d: Dictionary) -> Dictionary:
 		return {}
 	var r := d.duplicate()
 	r["unit"] = u
-	r["cards"] = _ints(d.get("cards", []) as Array)
-	r["key"] = _ints(d.get("key", []) as Array)
-	r["hand"] = int(d.get("hand", 0))
-	if r.has("value"):
-		r["value"] = Poker.restore_detail(r["value"])
+	r["orbit"] = _ints(d.get("orbit", []) as Array)
+	r["tier"] = int(d.get("tier", 0))
+	r["stars"] = int(d.get("stars", 0))
 	return r
 
 
@@ -1269,9 +1254,9 @@ func restore(d: Dictionary) -> bool:
 	themes.assign(_ints(d.get("themes", []) as Array))
 	if themes.is_empty():
 		roll_themes()
-	# ★ 난수 상태를 그대로 잇는다. 씨앗을 (판 씨앗, 탄)으로 다시 심으면 등급마다
-	#   캐릭터가 정확히 셋이라(CLAUDE.md 4-0) 뽑히는 인덱스가 족보와 무관하게 고정되고,
-	#   그것을 알아낸 사람은 원하는 캐릭터를 골라 뽑을 수 있게 된다.
+	# ★ 난수 상태를 그대로 잇는다. 씨앗을 (판 씨앗, 탄)으로 다시 심으면 그 탄에 다시
+	#   돌려 나올 별과 뽑힐 캐릭터가 통째로 고정되고, 그것을 알아낸 사람은 껐다 켜는
+	#   것만으로 원하는 결과를 골라 뽑을 수 있게 된다.
 	if d.has("rng"):
 		rng.state = int(d["rng"])
 	else:
@@ -1280,7 +1265,7 @@ func restore(d: Dictionary) -> bool:
 	lives = clampi(int(d.get("lives", Balance.START_LIVES)), 0, Balance.MAX_LIVES)
 	gold = maxi(0, int(d.get("gold", 0)))
 	kills = maxi(0, int(d.get("kills", 0)))
-	best_hand = int(d.get("best_hand", -1))
+	best_tier = int(d.get("best_tier", -1))
 	heroes.clear()
 	bench.clear()
 	for group in ["heroes", "bench"]:
@@ -1312,13 +1297,11 @@ func restore(d: Dictionary) -> bool:
 	for oid in (d.get("offer", []) as Array):
 		shop_offer.append(String(oid))
 	repairs = maxi(0, int(d.get("repairs", 0)))
-	cards.assign(_ints(d.get("cards", []) as Array))
-	rerolled.assign(_ints(d.get("rerolled", []) as Array))
-	paid.assign(_ints(d.get("paid", []) as Array))
-	_piles = []
-	for row in (d.get("piles", []) as Array):
-		_piles.append(_ints(row as Array))
-	_at.assign(_ints(d.get("at", []) as Array))
+	var rite: Dictionary = d.get("rite", {})
+	orbit.assign(_ints(rite.get("orbit", []) as Array))
+	spins = maxi(0, int(rite.get("spins", 0)))
+	paid_spins = clampi(int(rite.get("paid", 0)), 0, spins)
+	pulls = maxi(0, int(rite.get("pulls", 0)))
 	last_result = _last_in(d.get("last", {}) as Dictionary)
 	if not last_result.is_empty():
 		# 이전 12인 편성을 옮긴 뒤에도 획득 팝업이 현재 대기 위치를 가리키게 한다.
@@ -1326,23 +1309,19 @@ func restore(d: Dictionary) -> bool:
 		if int(found[1]) >= 0:
 			last_result["where"] = found[0]
 			last_result["slot"] = found[1]
-	last_hand = int(last_result.get("hand", -1))
-	last_cards.assign(last_result.get("cards", []))
-	last_key.assign(last_result.get("key", []))
+	last_tier = int(last_result.get("tier", -1))
 	last_unit = last_result.get("unit", {})
 	last_bumped = bool(last_result.get("bumped", false))
 	last_joker = int(last_result.get("joker", -1))
-	if best_hand < 0:
+	if best_tier < 0:
 		for h in heroes + bench:
-			best_hand = maxi(best_hand, int(h["tier"]))
+			best_tier = maxi(best_tier, int(h["tier"]))
 	phase = int(d.get("phase", Phase.DRAW))
 	# 확정했다고 담겼는데 그 결과가 없으면(캐릭터 표가 바뀌어 id 를 못 찾는 등)
 	# 편성 판을 세울 수가 없다 — 전투로 보낸다. 영웅은 이미 받았으므로 손해가 없다.
 	if phase == Phase.SWAP and last_result.is_empty():
 		phase = Phase.BATTLE
 	fusion_pending = d.get("fusion", {}).duplicate(true)
-	if fusion_pending.has("value"):
-		fusion_pending["value"] = Poker.restore_detail(fusion_pending["value"])
 	fusion_serial = int(d.get("fusion_serial", 0))
 	continue_used = bool(d.get("continue_used", false))
 	retry_wave = bool(d.get("retry_wave", false))
@@ -1366,10 +1345,7 @@ func autosave() -> void:
 # Five-card fusion keeps an undo snapshot until its result is accepted.
 
 func _fusion_out() -> Dictionary:
-	var out := fusion_pending.duplicate(true)
-	if out.has("value"):
-		out["value"].erase("value_mult")
-	return out
+	return fusion_pending.duplicate(true)
 ## 대기 카드만 낮은 별부터, 같은 별이면 물·불·얼음·전기·무상성 순으로 표시한다.
 const ELEMENT_ORDER := ["water", "fire", "ice", "elec", "none"]
 func fusion_candidates() -> Array[int]:
@@ -1427,7 +1403,7 @@ static func fusion_min_tier(materials: Array) -> int:
 	var top := 0
 	for h in materials:
 		top = maxi(top, int(h["tier"]))
-	return mini(9, top + 1)
+	return mini(Balance.TIER_MAX, top + 1)
 
 
 func fuse_heroes(codes: Array) -> Dictionary:
@@ -1442,7 +1418,7 @@ func fuse_heroes(codes: Array) -> Dictionary:
 	var minimum_tier := fusion_min_tier(materials)
 	var probabilities := Balance.fusion_probabilities(score, minimum_tier)
 	var roll := rng.randf()
-	var tier := 9
+	var tier := Balance.TIER_MAX
 	for i in range(probabilities.size()):
 		if probabilities[i] <= 0.0:
 			continue
@@ -1455,24 +1431,18 @@ func fuse_heroes(codes: Array) -> Dictionary:
 	descending.reverse()
 	for code in descending:
 		bench.remove_at(int(code) - FUSION_BENCH)
-	var awakening_mult := 1.35
-	var value: Dictionary = {}
+	var awakening_mult := Balance.AWAKEN_BASE
 	for h in materials:
-		awakening_mult = maxf(awakening_mult, float(roundi(float(h.get("awakening_mult", 1.0)) * 100) + 15) / 100.0)
-		var candidate: Dictionary = h.get("value", {})
-		if float(candidate.get("value_mult", 1.0)) > float(value.get("value_mult", 1.0)):
-			value = candidate.duplicate(true)
+		awakening_mult = maxf(awakening_mult, Balance.awaken_step(float(h.get("awakening_mult", 1.0))))
 	var unit := Roster.pick_fusion_unit(tier, rng)
-	gain_hero(unit, tier, false, true, {"awakened": true, "awakening_mult": awakening_mult,
-		"value": value, "variant": String(value.get("key", "fusion"))})
+	gain_hero(unit, tier, false, true, {"awakened": true, "awakening_mult": awakening_mult})
 	fusion_serial += 1
 	fusion_pending = {"id": fusion_serial, "before_h": before_h, "before_b": before_b,
 			"material_codes": codes.duplicate(),
 			"unit": String(unit["id"]), "tier": tier, "score": score,
 			"min_tier": minimum_tier, "promoted": true, "awakening_mult": awakening_mult,
-			"value": value, "variant": String(value.get("key", "fusion")), "awakened": true,
-			"failed": false}
-	Save.seen_units[String(unit["id"])] = true
+			"awakened": true, "failed": false}
+	Save.note_unit(String(unit["id"]), tier)
 	autosave()
 	return fusion_pending
 
@@ -1488,25 +1458,25 @@ func claim_midpoint_support(choice: String, field_index: int = 0) -> Dictionary:
 		return {}
 	var result: Dictionary = {}
 	if choice == "summon":
-		var deck := Poker.full_deck()
-		_shuffle(deck)
-		var hand_cards: Array = deck.slice(0, 5)
-		var value := Poker.detail(hand_cards)
-		var tier := int(value["hand"])
-		var unit := Roster.pick_unit(tier, rng)
-		var got := gain_hero(unit, tier, false, true, {"value": value, "variant": value["key"]})
-		result = {"choice": choice, "unit": unit, "tier": tier, "cards": hand_cards, "value": value,
-			"where": got["where"], "slot": got["slot"]}
-		Save.seen_units[String(unit["id"])] = true
+		# 지원 소환은 **한 번 돌린 그대로** 받는다 — 다시 돌리기도 조커도 광고도 없다.
+		var support_orbit := Rite.roll(rng)
+		var count := Rite.stars(support_orbit)
+		var tier := Rite.tier_of(count)
+		var unit := Roster.pick_unit(rng)
+		var got := gain_hero(unit, tier, false, true)
+		result = {"choice": choice, "unit": unit, "tier": tier, "stars": count,
+			"orbit": Array(support_orbit), "where": got["where"], "slot": got["slot"]}
+		Save.note_unit(String(unit["id"]), tier)
 	elif choice == "promote":
 		if field_index < 0 or field_index >= heroes.size():
 			return {}
 		var hero: Dictionary = heroes[field_index]
 		var before := int(hero["tier"])
-		if before < 9:
+		if before < Balance.TIER_MAX:
 			hero["tier"] = before + 1
 		else:
-			hero["awakening_mult"] = float(roundi(float(hero.get("awakening_mult", 1.0)) * 100) + 15) / 100.0
+			hero["awakening_mult"] = Balance.awaken_step(float(hero.get("awakening_mult", 1.0)))
+		Save.note_unit(String(hero["unit"]["id"]), int(hero["tier"]))
 		result = {"choice": choice, "unit": hero["unit"], "tier": hero["tier"],
 			"before_tier": before, "where": "field", "slot": field_index,
 			"awakening_mult": hero.get("awakening_mult", 1.0)}
@@ -1555,11 +1525,11 @@ func reward_allowed(kind: String, data: Dictionary = {}) -> bool:
 	if data.has("seed") and (int(data["seed"]) != run_seed or int(data.get("wave", -1)) != wave):
 		return false
 	match kind:
+		# 「card」 는 광고 단위 이름이다(AdMob 의 card_change). 보상은 별 하나를 문 안으로 끌어온다.
 		"card":
-			var slot := int(data.get("slot", -1))
-			if not card_choice_allowed(slot, int(data.get("card", -1)), int(data.get("expected", -1))):
+			if not can_pull(int(data.get("slot", -1))):
 				return false
-			return not data.has("revision") or int(data["revision"]) == rerolled[slot]
+			return not data.has("revision") or int(data["revision"]) == rite_revision()
 		"fusion_undo":
 			return running and phase in [Phase.SWAP, Phase.SHOP] \
 					and not fusion_pending.is_empty() \
@@ -1576,9 +1546,8 @@ func apply_ad_reward(kind: String, data: Dictionary) -> bool:
 		return false
 	match kind:
 		"card":
-			var slot := int(data["slot"])
-			cards[slot] = int(data["card"])
-			rerolled[slot] += 1
+			Rite.pull(orbit, int(data["slot"]), rng)
+			pulls += 1
 		"fusion_undo":
 			return undo_fusion()
 		"crystal":
@@ -1602,7 +1571,7 @@ func revive_wave() -> bool:
 	continue_used = true
 	lives = max_lives()
 	add_gold(Balance.REVIVE_GOLD)
-	last_result = {"hand": Poker.Hand.ROYAL, "cards": Array(cards), "key": [],
+	last_result = {"tier": Balance.TIER_MAX, "stars": Rite.MAX_STARS, "orbit": [],
 			"unit": {}, "bumped": false, "joker": -1, "showy": true,
 			"stacked": false, "where": "", "slot": -1,
 			"n": 1, "revived": true, "reward_pending": true,

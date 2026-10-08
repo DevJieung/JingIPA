@@ -2,7 +2,7 @@
   "name": "pip_roster_v1",
   "ko": "핍",
   "elem": "none",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
     "w": 320,
     "h": 320
@@ -17,8 +17,8 @@
   },
   "scale": 0.6666666666666666,
   "muzzle_at": {
-    "x": 100,
-    "y": -88
+    "x": 96,
+    "y": -83
   },
   "hit_ms": 583.3333333333333,
   "face": 1,
@@ -43,7 +43,7 @@
         "w": 320,
         "h": 320
       },
-      "sha256": "f9a1bfe24f35da744a9485f16ff7269db3dc75714875d963caada43d2a82f4e6"
+      "sha256": "01c6de968b70fd5d8494aae8666a1f92f607f55e273fd8766fcc9d86d8937f2e"
     },
     "attack": {
       "frames": 12,
@@ -67,7 +67,7 @@
         "w": 320,
         "h": 320
       },
-      "sha256": "a87c8ed4e3338f13dde8d26cda9a99ff79abf186573f8535b53727a1e0a2a5e4",
+      "sha256": "dfec078489c3d5071d2831243c775e033be1b4e04673af8b1e0178caf51ce462",
       "hit_frame": 7
     },
     "shot": {
@@ -89,140 +89,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/pip.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/pip.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        48,
         0,
+        333,
+        421
+      ],
+      [
+        409,
         0,
-        362,
-        362
+        687,
+        421
       ],
       [
-        362,
+        757,
         0,
-        724,
-        362
+        1041,
+        421
       ],
       [
-        724,
+        1128,
         0,
-        1086,
-        362
+        1404,
+        421
       ],
       [
-        1086,
-        0,
-        1448,
-        362
+        56,
+        421,
+        336,
+        814
       ],
       [
-        0,
-        362,
-        362,
-        724
+        408,
+        421,
+        664,
+        814
       ],
       [
-        362,
-        362,
-        723,
-        724
+        710,
+        421,
+        1156,
+        814
       ],
       [
-        723,
-        362,
-        1115,
-        724
+        1097,
+        421,
+        1412,
+        814
       ],
       [
-        1115,
-        362,
-        1448,
-        724
-      ],
-      [
-        0,
-        724,
-        362,
+        74,
+        814,
+        299,
         1086
       ],
       [
-        362,
-        724,
-        724,
+        398,
+        814,
+        674,
         1086
       ],
       [
-        724,
-        724,
-        1086,
+        745,
+        814,
+        1042,
         1086
       ],
       [
-        1086,
-        724,
-        1448,
+        1141,
+        814,
+        1374,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.43902439024390244,
+        "factor": 0.4161849710982659,
         "offset": [
-          50,
-          67
+          65,
+          49
         ]
       },
       {
-        "factor": 0.43902439024390244,
+        "factor": 0.4161849710982659,
         "offset": [
-          63,
-          67
+          66,
+          50
         ]
       },
       {
-        "factor": 0.43902439024390244,
+        "factor": 0.4161849710982659,
         "offset": [
-          50,
-          67
+          65,
+          49
         ]
       },
       {
-        "factor": 0.43902439024390244,
+        "factor": 0.4161849710982659,
         "offset": [
-          50,
-          67
+          66,
+          49
         ]
       },
       {
-        "factor": 0.43902439024390244,
+        "factor": 0.4161849710982659,
         "offset": [
-          55,
-          67
+          78,
+          61
         ]
       },
       {
-        "factor": 0.43902439024390244,
+        "factor": 0.4161849710982659,
         "offset": [
-          59,
-          67
+          72,
+          60
         ]
       },
       {
-        "factor": 0.43902439024390244,
+        "factor": 0.4161849710982659,
         "offset": [
-          82,
-          67
+          66,
+          61
         ]
       },
       {
-        "factor": 0.43902439024390244,
+        "factor": 0.4161849710982659,
         "offset": [
-          63,
-          67
+          51,
+          60
         ]
       }
+    ],
+    "source_muzzle": [
+      1090,
+      614
     ]
   },
   "portrait_id": "pip"

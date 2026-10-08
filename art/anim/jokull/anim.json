@@ -2,10 +2,10 @@
   "name": "jokull_roster_v1",
   "ko": "요쿨",
   "elem": "ice",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
-    "w": 256,
-    "h": 256
+    "w": 320,
+    "h": 320
   },
   "static": {
     "w": 131,
@@ -17,8 +17,8 @@
   },
   "scale": 0.6558441558441559,
   "muzzle_at": {
-    "x": 100,
-    "y": -94
+    "x": 110,
+    "y": -71
   },
   "hit_ms": 750.0,
   "face": 1,
@@ -40,10 +40,10 @@
       "total_ms": 666.6666666666666,
       "loop": true,
       "cell": {
-        "w": 256,
-        "h": 256
+        "w": 320,
+        "h": 320
       },
-      "sha256": "85e0227b8a57d408b0ba76bf7e42e3c52cc9d2bd17ce57ea8f655bbd0b1be633"
+      "sha256": "dcf9ff3366228de22ea542ef265b885732cdc372475afaf5ddba9bd7fa33360c"
     },
     "attack": {
       "frames": 12,
@@ -64,10 +64,10 @@
       "total_ms": 1000.0,
       "loop": false,
       "cell": {
-        "w": 256,
-        "h": 256
+        "w": 320,
+        "h": 320
       },
-      "sha256": "2e8b5fea4a0ed16adf5d92eca62bb2ad33076f3b4b3a99cc553b4487b9d23cd9",
+      "sha256": "21619b44a5797a416b401aae58d807555df8ea3894d1ecc1d87572e9fd76c2e6",
       "hit_frame": 9
     },
     "effect": {
@@ -114,140 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/jokull.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/jokull.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        38,
         0,
+        376,
+        407
+      ],
+      [
+        390,
         0,
-        362,
-        384
+        733,
+        407
       ],
       [
-        362,
+        759,
         0,
-        724,
-        384
+        1096,
+        407
       ],
       [
-        724,
+        1118,
         0,
-        1086,
-        384
+        1447,
+        407
       ],
       [
-        1086,
-        0,
-        1448,
-        384
+        40,
+        407,
+        296,
+        784
       ],
       [
-        0,
-        384,
-        362,
-        786
+        407,
+        407,
+        648,
+        784
       ],
       [
-        362,
-        384,
-        724,
-        786
+        721,
+        407,
+        1118,
+        784
       ],
       [
-        724,
-        384,
-        1093,
-        786
+        1118,
+        407,
+        1447,
+        784
       ],
       [
-        1093,
-        384,
-        1448,
-        786
-      ],
-      [
-        0,
-        786,
-        362,
+        51,
+        784,
+        346,
         1086
       ],
       [
-        362,
-        786,
-        724,
+        381,
+        784,
+        720,
         1086
       ],
       [
-        724,
-        786,
-        1086,
+        750,
+        784,
+        1078,
         1086
       ],
       [
-        1086,
-        786,
-        1448,
+        1100,
+        784,
+        1406,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.44,
+        "factor": 0.5,
+        "offset": [
+          70,
+          20
+        ]
+      },
+      {
+        "factor": 0.5,
         "offset": [
           68,
-          55
+          20
         ]
       },
       {
-        "factor": 0.44,
+        "factor": 0.5,
         "offset": [
-          71,
-          56
+          70,
+          20
         ]
       },
       {
-        "factor": 0.44,
+        "factor": 0.5,
         "offset": [
-          72,
-          56
+          69,
+          20
         ]
       },
       {
-        "factor": 0.44,
+        "factor": 0.5,
         "offset": [
-          72,
-          56
+          70,
+          36
         ]
       },
       {
-        "factor": 0.44,
-        "offset": [
-          68,
-          48
-        ]
-      },
-      {
-        "factor": 0.44,
+        "factor": 0.5,
         "offset": [
           72,
-          48
+          36
         ]
       },
       {
-        "factor": 0.44,
+        "factor": 0.5,
         "offset": [
-          86,
-          47
+          72,
+          36
         ]
       },
       {
-        "factor": 0.44,
+        "factor": 0.5,
         "offset": [
-          75,
-          48
+          69,
+          36
         ]
       }
+    ],
+    "source_muzzle": [
+      1053,
+      641
     ]
   },
   "portrait_id": "jokull"

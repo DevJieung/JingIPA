@@ -2,7 +2,7 @@
   "name": "solana_roster_v1",
   "ko": "솔라나",
   "elem": "fire",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
     "w": 256,
     "h": 256
@@ -17,8 +17,8 @@
   },
   "scale": 0.7481481481481481,
   "muzzle_at": {
-    "x": 51,
-    "y": -99
+    "x": 52,
+    "y": -82
   },
   "hit_ms": 500.0,
   "face": 1,
@@ -43,7 +43,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "880a7f8e131d1b9734ad156cb1e8f1e18d5be61b5faaeca93377d4a44892970e"
+      "sha256": "275efb0f888d3ba0925091c67d5c280e3417fd1190a15cbf252c75b1d30dc799"
     },
     "attack": {
       "frames": 12,
@@ -67,7 +67,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "0ee6695b8a7a91b5d419d31ab8e975219b06a06ff2dd543b990414da80aca002",
+      "sha256": "97e0c19ff9fb11165336297667edabc1ea678691cb345e898ff71837ccc1cd33",
       "hit_frame": 6
     },
     "shot": {
@@ -114,140 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/solana.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/solana.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        53,
         0,
+        361,
+        422
+      ],
+      [
+        404,
         0,
-        362,
-        365
+        710,
+        422
       ],
       [
-        362,
+        765,
         0,
-        724,
-        365
+        1069,
+        422
       ],
       [
-        724,
+        1126,
         0,
-        1086,
-        365
+        1430,
+        422
       ],
       [
-        1086,
-        0,
-        1448,
-        365
+        46,
+        422,
+        381,
+        848
       ],
       [
-        0,
-        365,
-        362,
-        742
+        400,
+        422,
+        744,
+        848
       ],
       [
-        362,
-        365,
-        724,
-        742
+        758,
+        422,
+        1097,
+        848
       ],
       [
-        724,
-        365,
-        1086,
-        742
+        1126,
+        422,
+        1429,
+        848
       ],
       [
-        1086,
-        365,
-        1448,
-        742
-      ],
-      [
-        0,
-        742,
-        362,
+        44,
+        848,
+        344,
         1086
       ],
       [
-        362,
-        742,
-        724,
+        400,
+        848,
+        702,
         1086
       ],
       [
-        724,
-        742,
-        1086,
+        753,
+        848,
+        1046,
         1086
       ],
       [
-        1086,
-        742,
-        1448,
+        1106,
+        848,
+        1404,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.3879310344827586,
+        "factor": 0.375,
         "offset": [
-          70,
-          83
+          77,
+          66
         ]
       },
       {
-        "factor": 0.3879310344827586,
+        "factor": 0.375,
         "offset": [
-          70,
-          82
+          77,
+          66
         ]
       },
       {
-        "factor": 0.3879310344827586,
+        "factor": 0.375,
         "offset": [
-          70,
-          82
+          77,
+          66
         ]
       },
       {
-        "factor": 0.3879310344827586,
+        "factor": 0.375,
         "offset": [
-          70,
-          83
+          77,
+          66
         ]
       },
       {
-        "factor": 0.3879310344827586,
+        "factor": 0.375,
         "offset": [
-          70,
-          78
+          77,
+          64
         ]
       },
       {
-        "factor": 0.3879310344827586,
+        "factor": 0.375,
         "offset": [
-          70,
-          78
+          76,
+          64
         ]
       },
       {
-        "factor": 0.3879310344827586,
+        "factor": 0.375,
         "offset": [
-          70,
-          78
+          74,
+          65
         ]
       },
       {
-        "factor": 0.3879310344827586,
+        "factor": 0.375,
         "offset": [
-          70,
-          78
+          76,
+          64
         ]
       }
+    ],
+    "source_muzzle": [
+      1040,
+      627
     ]
   },
   "portrait_id": "solana"

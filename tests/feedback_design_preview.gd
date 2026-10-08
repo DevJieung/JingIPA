@@ -34,9 +34,11 @@ func _ready() -> void:
 		var draw := DrawScreen.new()
 		main._swap(draw)
 		draw.set_process(false)
-		for hand in [0, 4, 9]:
-			Fixture.stack(hand)
-			await capture(language + "_hand_%d" % hand)
+		# 별맞춤 의식 — 문 안의 별 1 · 3 · 5개.
+		for stars in [1, 3, 5]:
+			Fixture.stack(stars)
+			draw.skip_spin()
+			await capture(language + "_rite_%d" % stars)
 		Ads._finish(true, "광고 보상을 받았습니다.")
 		await capture(language + "_reward_notice")
 		Ads._message_left = 0

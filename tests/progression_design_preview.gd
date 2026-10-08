@@ -43,21 +43,14 @@ func _ready() -> void:
 	for language in ["ko", "en"]:
 		I18n.set_locale(language)
 		Save.seen_units.clear()
-		Save.card_mode = "sigil"
-		Save.best_hand = 9
+		Save.unit_best.clear()
+		Save.best_tier = 9
 		swap(TitleScreen.new())
-		await capture(language + "_title_sigil")
+		await capture(language + "_title")
 		main.menu.open()
 		await capture(language + "_menu")
-		check(tap(main.menu, "cards:poker") and Save.card_mode == "poker", "poker appearance choice")
-		main.menu.page = "hands"
-		await capture(language + "_poker_guide")
-		main.menu.close()
-		await capture(language + "_title_poker")
-		Save.card_mode = "sigil"
-		main.menu.open()
-		main.menu.page = "hands"
-		await capture(language + "_sigil_guide")
+		main.menu.page = "rite"
+		await capture(language + "_rite_guide")
 		main.menu.close()
 		var title: TitleScreen = main.screen
 		title.collection.opened = true
@@ -76,19 +69,15 @@ func _ready() -> void:
 		Fixture.fresh(20261006)
 		var draw := DrawScreen.new()
 		swap(draw)
-		for tier in range(10):
-			Fixture.stack(tier)
-			await capture(language + "_draw_%02d" % tier)
-		Fixture.stack(1)
-		draw.card_choice.open(0)
-		draw.card_choice.desired = Poker.code(14, 1)
-		await capture(language + "_card_picker")
-		draw.card_choice.close()
+		draw.skip_spin()
+		for stars in range(Rite.MIN_STARS, Rite.MAX_STARS + 1):
+			Fixture.stack(stars)
+			await capture(language + "_draw_%02d" % stars)
 		Run.heroes.clear()
 		Run.bench.clear()
 		Run.phase = Run.Phase.SWAP
 		for tier in [0,1,4,8,9]:
-			Run.bench.append({"unit": Roster.units_of_tier(tier)[0], "tier": tier, "wave": 1, "n":1, "value": Poker.detail(Fixture.hands()[tier])})
+			Run.bench.append({"unit": Roster.units_of_tier(tier)[0], "tier": tier, "wave": 1, "n": 1})
 		draw.fusion.opened = true
 		draw.fusion.selected.assign(Run.fusion_candidates())
 		await capture(language + "_fusion_materials")

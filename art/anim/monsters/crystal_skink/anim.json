@@ -10,7 +10,7 @@
   },
   "scale": 0.46601941747572817,
   "movement": "walk",
-  "source": "Krea 2 Turbo + MiniMax H3",
+  "source": "imagegen_chibi_v1",
   "clips": {
     "move": {
       "frames": 12,
@@ -28,19 +28,90 @@
         83.33333333333333,
         83.33333333333333
       ],
-      "loop": true
+      "loop": true,
+      "cell": {
+        "w": 192,
+        "h": 192
+      },
+      "sha256": "580ecdda7466aa6be022f3e0105ae620cbaa2fbf8df798bb61d2ade46fc92181"
     }
   },
   "qc": {
     "canvas_clipping": false,
     "source_clipping": false,
-    "unique_poses": 12,
+    "unique_poses": 8,
     "forward_only": true,
     "fixed_scale": true,
-    "foot_patches": false,
-    "translation_range": [
+    "foot_patches": false
+  },
+  "palette_colors": 96,
+  "readability": {
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/crystal_skink.png",
+    "source_cells": [
+      [
+        3,
+        0,
+        391,
+        512
+      ],
+      [
+        397,
+        0,
+        776,
+        512
+      ],
+      [
+        778,
+        0,
+        1157,
+        512
+      ],
+      [
+        1159,
+        0,
+        1536,
+        512
+      ],
+      [
+        4,
+        512,
+        392,
+        1024
+      ],
+      [
+        389,
+        512,
+        775,
+        1024
+      ],
+      [
+        773,
+        512,
+        1160,
+        1024
+      ],
+      [
+        1161,
+        512,
+        1536,
+        1024
+      ]
+    ],
+    "phase_map": [
+      0,
+      0,
+      1,
+      2,
+      2,
+      3,
+      4,
+      4,
+      5,
       6,
-      11
-    ]
+      6,
+      7
+    ],
+    "method": "imagegen chibi movement repaint; alpha threshold, extraction, nearest sampling and shared palette only"
   }
 }

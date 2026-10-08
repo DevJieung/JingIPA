@@ -2,7 +2,7 @@
   "name": "carmen_roster_v1",
   "ko": "카르멘",
   "elem": "fire",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
     "w": 256,
     "h": 256
@@ -17,8 +17,8 @@
   },
   "scale": 0.7707006369426752,
   "muzzle_at": {
-    "x": 65,
-    "y": -125
+    "x": 69,
+    "y": -110
   },
   "hit_ms": 583.3333333333333,
   "face": 1,
@@ -43,7 +43,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "2251110ee1386fd024b2ba1d934ce90580cbb8e59adb41e4634e831c13bc387f"
+      "sha256": "41593eb989db77861533106697996239f4093210732162bebe88f7fb840e1c3b"
     },
     "attack": {
       "frames": 12,
@@ -67,7 +67,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "29cedec921315fe6139af4a706ab72235f73b52410e3970976db4dea430097c2",
+      "sha256": "d95e849f1901691c2ae12779c4027e7a60e42fdf2b196a5254a9c993eeb1ca6f",
       "hit_frame": 7
     },
     "shot": {
@@ -89,140 +89,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/carmen.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/carmen.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        64,
         0,
+        318,
+        435
+      ],
+      [
+        426,
         0,
-        362,
-        400
+        682,
+        435
       ],
       [
-        362,
+        787,
         0,
-        724,
-        400
+        1041,
+        435
       ],
       [
-        724,
+        1149,
         0,
-        1086,
-        400
+        1404,
+        435
       ],
       [
-        1086,
-        0,
-        1448,
-        400
+        34,
+        435,
+        363,
+        851
       ],
       [
-        0,
-        400,
-        362,
-        794
+        395,
+        435,
+        727,
+        851
       ],
       [
-        362,
-        400,
-        724,
-        794
+        757,
+        435,
+        1137,
+        851
       ],
       [
-        724,
-        400,
-        1086,
-        794
+        1080,
+        435,
+        1406,
+        851
       ],
       [
-        1086,
-        400,
-        1448,
-        794
-      ],
-      [
-        0,
-        794,
-        362,
+        70,
+        851,
+        298,
         1086
       ],
       [
-        362,
-        794,
-        724,
+        431,
+        851,
+        664,
         1086
       ],
       [
-        724,
-        794,
-        1086,
+        792,
+        851,
+        1024,
         1086
       ],
       [
-        1086,
-        794,
-        1448,
+        1173,
+        851,
+        1390,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.4266304347826087,
+        "factor": 0.43977591036414565,
         "offset": [
-          51,
-          53
+          72,
+          33
         ]
       },
       {
-        "factor": 0.4266304347826087,
+        "factor": 0.43977591036414565,
         "offset": [
-          58,
-          53
+          72,
+          33
         ]
       },
       {
-        "factor": 0.4266304347826087,
+        "factor": 0.43977591036414565,
         "offset": [
-          58,
-          53
+          72,
+          33
         ]
       },
       {
-        "factor": 0.4266304347826087,
+        "factor": 0.43977591036414565,
         "offset": [
-          58,
-          53
+          72,
+          33
         ]
       },
       {
-        "factor": 0.4266304347826087,
+        "factor": 0.43977591036414565,
         "offset": [
-          54,
-          56
+          69,
+          41
         ]
       },
       {
-        "factor": 0.4266304347826087,
+        "factor": 0.43977591036414565,
         "offset": [
-          61,
-          56
+          68,
+          41
         ]
       },
       {
-        "factor": 0.4266304347826087,
+        "factor": 0.43977591036414565,
         "offset": [
-          61,
-          56
+          69,
+          41
         ]
       },
       {
-        "factor": 0.4266304347826087,
+        "factor": 0.43977591036414565,
         "offset": [
-          57,
-          56
+          42,
+          41
         ]
       }
+    ],
+    "source_muzzle": [
+      1047,
+      602
     ]
   },
   "portrait_id": "carmen"

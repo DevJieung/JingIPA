@@ -73,7 +73,7 @@ MUZZLE_MIN_X = 2
 
 # Native pipelines ship binary alpha and a shared actor palette. The new
 # roster preserves generated anatomy while aligning each pose's foot origin.
-NATIVE_PIXEL_SOURCES = {"last_refuge_v3_pixel_h3", "imagegen_element_aoe_v1", "imagegen_roster_v1"}
+NATIVE_PIXEL_SOURCES = {"last_refuge_v3_pixel_h3", "imagegen_element_aoe_v1", "imagegen_roster_v1", "imagegen_chibi_v1"}
 
 
 # --------------------------------------------------------------------------
@@ -180,7 +180,7 @@ def check_h3(meta: dict, sheets: dict, directory: str, names: dict) -> list[str]
     bad = []
     colors = set()
     patches = []
-    aligned_anatomy = meta.get("source") == "imagegen_roster_v1"
+    aligned_anatomy = meta.get("source") in {"imagegen_roster_v1", "imagegen_chibi_v1"}
     box = None if aligned_anatomy else tuple(meta["foot_pin_box"])
     for name, sheet in sheets.items():
         info = meta["clips"][name]
@@ -288,7 +288,7 @@ def one(uid: str, allow_left: set[str]) -> dict:
     per = {}
     for anim, sh in sheets.items():
         frames = frames_of(sh, cell)
-        if meta.get("source") in NATIVE_PIXEL_SOURCES and meta.get("source") != "imagegen_roster_v1":
+        if meta.get("source") in NATIVE_PIXEL_SOURCES and meta.get("source") not in {"imagegen_roster_v1", "imagegen_chibi_v1"}:
             # A swinging hose/blade can extend below the feet. Measure the
             # approved foot patch, whose complete pixels are checked above.
             box = tuple(meta["foot_pin_box"])

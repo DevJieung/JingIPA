@@ -14,6 +14,22 @@
 - 산출물과 서명 설정은 `docs/MOBILE_BUILDS.md`를 따른다. `.env`, 인증서,
   로컬 SDK/빌드 캐시와 생성용 대용량 원본을 Git에 넣지 않는다.
 
+# 게임 데이터 DB
+
+- 사용자 지정: 게임 데이터(영웅·몬스터·테마·밸런스 표와 숫자·패시브·문구)는
+  `data/game.db`에서 관리한다. 게임 코드는 DB를 읽지 않으며 데이터를 옮기려고 게임 코드의
+  구조를 바꾸지 않는다. 값은 `tools/gamedb.py`가 기존 JSON·게임 코드의 제자리에 내린다.
+- DB를 고친 뒤에는 `python3 tools/gamedb.py status`의 변경 목록을 사용자에게 보여 주고,
+  **사용자가 승인한 뒤에만** `python3 tools/gamedb.py apply --approved`로 내린다. 승인을
+  받지 않고 `--approved`를 붙이지 않는다. 이전 변경의 승인을 다음 변경에 이어 쓰지 않는다.
+- 데이터 값을 게임 파일(`core/balance.gd`의 표·상수, `tools/roster.json`,
+  `core/locales/*.json`, `core/sound.gd`의 `GAP`, `core/scenery.gd`의 `MAP_MOTIFS`)에서 직접
+  고치지 않는다. 코드 작업 때문에 직접 고쳤다면 `python3 tools/gamedb.py pull`로 DB에
+  들인다. `tools/verify.sh` 0-2 단계가 DB를 거치지 않은 변경을 실패로 잡는다.
+- 실배포물(APK·IPA)에는 DB 파일을 넣지 않는다. `data/.gdignore`, `export_presets.cfg`의
+  제외 필터, 빌드 스크립트의 `tools/ci/check_no_db.py` 검사를 빼지 않는다.
+- 표 목록과 절차는 `docs/GAME_DB.md`를 따른다.
+
 # 그래픽 디자인 전담 서브에이전트
 
 - 사용자 지정: 이 프로젝트의 모든 스프라이트 및 UI 디자인 작업은

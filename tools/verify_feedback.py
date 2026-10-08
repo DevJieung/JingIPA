@@ -21,14 +21,14 @@ def run(label, args, env, expected='판정: 정상'):
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    env = dict(os.environ, POCKER_NO_SAVE='1')
+    env = dict(os.environ, STELLARDEFENSE_NO_SAVE='1')
     good = run('audio_files', [sys.executable, 'tools/audio/check_audio.py'], env, 'PASS:')
     good = run('import', [str(GODOT), '--headless', '--path', str(ROOT), '--editor', '--import'], env, '') and good
     for scene in SCENES:
         args = [str(GODOT), '--headless', '--path', str(ROOT), f'res://tests/{scene}.tscn']
         if scene == 'ns_check':
             args += ['--', '--strict']
-        scene_env = dict(env, POCKER_AUDIO_TEST='1') if scene == 'audio_check' else env
+        scene_env = dict(env, STELLARDEFENSE_AUDIO_TEST='1') if scene == 'audio_check' else env
         good = run(scene, args, scene_env) and good
     for res in ['1280x800', '1000x625']:
         with xvfb(97, res) as render_env:

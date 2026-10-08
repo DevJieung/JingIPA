@@ -94,7 +94,7 @@ func _ready() -> void:
 		draw.rt = 3
 		for id in IDS:
 			var unit := Roster.unit_by_id(id)
-			draw.result = {"unit": unit, "hand": int(unit["tier"]), "where": "bench"}
+			draw.result = {"unit": unit, "tier": int(unit["tier"]), "where": "bench"}
 			await capture(language + "_summon_" + id)
 	main.queue_free()
 	await frames(3)

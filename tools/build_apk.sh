@@ -1,55 +1,58 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-pocker_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-pocker_output="/home/dgxmaruta/pokerdefense-test.apk"
-pocker_java="$pocker_root/build/toolchains/jdk17/bin/java"
-pocker_sdk="/home/dgxmaruta/Android/SdkFlutter"
-pocker_log="$pocker_root/build/android-admob.log"
-pocker_config="$pocker_root/build/godot-config"
+stellar_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+stellar_output="/home/dgxmaruta/pokerdefense-test.apk"
+stellar_java="$stellar_root/build/toolchains/jdk17/bin/java"
+stellar_sdk="/home/dgxmaruta/Android/SdkFlutter"
+stellar_log="$stellar_root/build/android-admob.log"
+stellar_config="$stellar_root/build/godot-config"
 # Serialize exports because Godot and Gradle share generated project files.
-exec 9> "$pocker_root/build/android-export.lock"
+exec 9> "$stellar_root/build/android-export.lock"
 flock -n 9 || { echo 'Another APK export is already running.'; exit 1; }
-pocker_stage="$(mktemp -d /home/dgxmaruta/.pokerdefense-build.XXXXXX)"
+stellar_stage="$(mktemp -d /home/dgxmaruta/.stellardefense-build.XXXXXX)"
 cleanup() {
-    if [ -f "$pocker_stage/project.godot" ]; then
-        cp -p -- "$pocker_stage/project.godot" "$pocker_root/project.godot"
+    if [ -f "$stellar_stage/project.godot" ]; then
+        cp -p -- "$stellar_stage/project.godot" "$stellar_root/project.godot"
     fi
-    rm -rf -- "$pocker_stage"
+    rm -rf -- "$stellar_stage"
 }
 trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
-pocker_apk="$pocker_stage/pokerdefense-test.apk"
+stellar_apk="$stellar_stage/pokerdefense-test.apk"
 
-test -x "$pocker_java"
-test -f "$pocker_config/godot/editor_settings-4.7.tres"
-cp -p -- "$pocker_root/project.godot" "$pocker_stage/project.godot"
-python3 "$pocker_root/tools/admob_config.py" --env "$pocker_root/.env" \
-    --project "$pocker_root/project.godot"
-XDG_CONFIG_HOME="$pocker_config" godot --headless --path "$pocker_root" \
-    --export-debug "Android Test APK" "$pocker_apk" > "$pocker_log" 2>&1
-cp -p -- "$pocker_stage/project.godot" "$pocker_root/project.godot"
-rm -- "$pocker_stage/project.godot"
+test -x "$stellar_java"
+test -f "$stellar_config/godot/editor_settings-4.7.tres"
+cp -p -- "$stellar_root/project.godot" "$stellar_stage/project.godot"
+python3 "$stellar_root/tools/admob_config.py" --env "$stellar_root/.env" \
+    --project "$stellar_root/project.godot"
+XDG_CONFIG_HOME="$stellar_config" godot --headless --path "$stellar_root" \
+    --export-debug "Android Test APK" "$stellar_apk" > "$stellar_log" 2>&1
+cp -p -- "$stellar_stage/project.godot" "$stellar_root/project.godot"
+rm -- "$stellar_stage/project.godot"
 # ★ grep 이다 — rg(ripgrep)는 이 머신에 없다(Claude Code 셸 안에서만 함수로 있다).
-if grep -Eq 'SCRIPT ERROR|ERROR:' "$pocker_log"; then
-    tail -60 "$pocker_log"
+if grep -Eq 'SCRIPT ERROR|ERROR:' "$stellar_log"; then
+    tail -60 "$stellar_log"
     exit 1
 fi
-test -s "$pocker_apk"
-"$pocker_java" -jar "$pocker_sdk/build-tools/36.0.0/lib/apksigner.jar" verify "$pocker_apk"
-"$pocker_sdk/arm64-tools/aapt2" dump xmltree --file AndroidManifest.xml "$pocker_apk" \
-    > "$pocker_stage/manifest.txt"
-grep -q 'org.godotengine.plugin.v2.PoingGodotAdMobRewardedAd' "$pocker_stage/manifest.txt"
-grep -q 'org.godotengine.plugin.v2.PoingGodotAdMobRewardedInterstitialAd' "$pocker_stage/manifest.txt"
-grep -q 'com.google.android.gms.ads.APPLICATION_ID' "$pocker_stage/manifest.txt"
-"$pocker_sdk/arm64-tools/aapt2" dump badging "$pocker_apk" > "$pocker_stage/badging.txt"
-grep -Fq "application-label:'올인 디펜스'" "$pocker_stage/badging.txt"
-grep -Fq "application-label-ko:'올인 디펜스'" "$pocker_stage/badging.txt"
-grep -Fq "application-label-en:'All-in Defense'" "$pocker_stage/badging.txt"
-python3 "$pocker_root/tools/admob_config.py" --env "$pocker_root/.env" \
-    --apk "$pocker_apk" --manifest "$pocker_stage/manifest.txt"
-python3 "$pocker_root/tools/audio/check_apk_audio.py" "$pocker_apk"
-chmod 644 "$pocker_apk"
-mv -f -- "$pocker_apk" "$pocker_output"
-printf 'APK ready: %s\n' "$pocker_output"
+test -s "$stellar_apk"
+"$stellar_java" -jar "$stellar_sdk/build-tools/36.0.0/lib/apksigner.jar" verify "$stellar_apk"
+"$stellar_sdk/arm64-tools/aapt2" dump xmltree --file AndroidManifest.xml "$stellar_apk" \
+    > "$stellar_stage/manifest.txt"
+grep -q 'org.godotengine.plugin.v2.PoingGodotAdMobRewardedAd' "$stellar_stage/manifest.txt"
+grep -q 'org.godotengine.plugin.v2.PoingGodotAdMobRewardedInterstitialAd' "$stellar_stage/manifest.txt"
+grep -q 'com.google.android.gms.ads.APPLICATION_ID' "$stellar_stage/manifest.txt"
+"$stellar_sdk/arm64-tools/aapt2" dump badging "$stellar_apk" > "$stellar_stage/badging.txt"
+grep -Fq "application-label:'스텔라 디펜스'" "$stellar_stage/badging.txt"
+grep -Fq "application-label-ko:'스텔라 디펜스'" "$stellar_stage/badging.txt"
+grep -Fq "application-label-en:'Stellar Defense'" "$stellar_stage/badging.txt"
+python3 "$stellar_root/tools/admob_config.py" --env "$stellar_root/.env" \
+    --apk "$stellar_apk" --manifest "$stellar_stage/manifest.txt"
+python3 "$stellar_root/tools/audio/check_apk_audio.py" "$stellar_apk"
+# 게임 데이터 DB(data/game.db)는 원본일 뿐 폰에 싣지 않는다 — 실렸으면 APK 를 교체하지 않는다.
+python3 "$stellar_root/tools/ci/check_no_db.py" "$stellar_apk"
+python3 "$stellar_root/tools/ci/check_stellar_assets.py" "$stellar_apk"
+chmod 644 "$stellar_apk"
+mv -f -- "$stellar_apk" "$stellar_output"
+printf 'APK ready: %s\n' "$stellar_output"

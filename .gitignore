@@ -31,3 +31,12 @@ override.cfg
 /art/concepts/
 /art/audio_sources/
 /art/portraits/sources/
+
+# 게임 데이터 DB(data/game.db)는 저장소에 넣는다. SQLite 가 열어 둔 동안 만드는 임시 파일만 뺀다.
+/data/*.db-journal
+/data/*.db-wal
+/data/*.db-shm
+/data/*.db.new
+
+# Large 3D modeling source files; the runtime model manifest and scenes are included.
+/art/models/sources/

@@ -2,7 +2,7 @@
   "name": "donn_roster_v1",
   "ko": "도난",
   "elem": "elec",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
     "w": 256,
     "h": 256
@@ -17,8 +17,8 @@
   },
   "scale": 0.5692307692307692,
   "muzzle_at": {
-    "x": 68,
-    "y": -109
+    "x": 83,
+    "y": -102
   },
   "hit_ms": 583.3333333333333,
   "face": 1,
@@ -43,7 +43,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "b046e7a316ae27a7538ba8fe63d7164cecf0f9cc38e92be6e36e452722a8c876"
+      "sha256": "dc53f5237f67ff36d70e78e2be1faf5e62ab05dc846231d81155c9260fb866fc"
     },
     "attack": {
       "frames": 12,
@@ -67,7 +67,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "9fb95a3a15ec0e049b7b7c2df10aae4b5cb89f6990ad26caed5466d6833d4dff",
+      "sha256": "fde809b498441683c64188d2123ca2fffe25f485e0da4c2e43d9c0b90f87e778",
       "hit_frame": 7
     },
     "effect": {
@@ -114,140 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/donn.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/donn.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        50,
         0,
+        296,
+        369
+      ],
+      [
+        412,
         0,
-        362,
-        362
+        657,
+        369
       ],
       [
-        362,
+        774,
         0,
-        724,
-        362
+        1020,
+        369
       ],
       [
-        724,
+        1136,
         0,
-        1086,
-        362
+        1382,
+        369
       ],
       [
-        1086,
-        0,
-        1448,
-        362
+        50,
+        369,
+        336,
+        733
       ],
       [
-        0,
-        362,
-        362,
-        724
+        412,
+        369,
+        695,
+        733
       ],
       [
-        362,
-        362,
-        724,
-        724
+        774,
+        369,
+        1114,
+        733
       ],
       [
-        724,
-        362,
-        1086,
-        724
+        1137,
+        369,
+        1384,
+        733
       ],
       [
-        1086,
-        362,
-        1448,
-        724
-      ],
-      [
-        0,
-        724,
-        362,
+        79,
+        733,
+        298,
         1086
       ],
       [
-        362,
-        724,
-        724,
+        394,
+        733,
+        717,
         1086
       ],
       [
-        724,
-        724,
-        1086,
+        749,
+        733,
+        1097,
         1086
       ],
       [
-        1086,
-        724,
-        1448,
+        1084,
+        733,
+        1425,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.5587392550143266,
+        "factor": 0.5668604651162791,
         "offset": [
-          27,
-          22
+          53,
+          15
         ]
       },
       {
-        "factor": 0.5587392550143266,
+        "factor": 0.5668604651162791,
         "offset": [
-          27,
-          22
+          53,
+          15
         ]
       },
       {
-        "factor": 0.5587392550143266,
+        "factor": 0.5668604651162791,
         "offset": [
-          27,
-          22
+          53,
+          15
         ]
       },
       {
-        "factor": 0.5587392550143266,
+        "factor": 0.5668604651162791,
         "offset": [
-          27,
-          22
+          53,
+          15
         ]
       },
       {
-        "factor": 0.5587392550143266,
+        "factor": 0.5668604651162791,
         "offset": [
-          27,
-          22
+          46,
+          18
         ]
       },
       {
-        "factor": 0.5587392550143266,
+        "factor": 0.5668604651162791,
         "offset": [
-          27,
-          22
+          46,
+          18
         ]
       },
       {
-        "factor": 0.5587392550143266,
+        "factor": 0.5668604651162791,
         "offset": [
-          27,
-          22
+          46,
+          18
         ]
       },
       {
-        "factor": 0.5587392550143266,
+        "factor": 0.5668604651162791,
         "offset": [
-          27,
-          22
+          53,
+          18
         ]
       }
+    ],
+    "source_muzzle": [
+      1065,
+      553
     ]
   },
   "portrait_id": "donn"

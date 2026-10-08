@@ -2,7 +2,7 @@
   "name": "limne_roster_v1",
   "ko": "림네",
   "elem": "water",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
     "w": 256,
     "h": 256
@@ -17,8 +17,8 @@
   },
   "scale": 0.49740932642487046,
   "muzzle_at": {
-    "x": 60,
-    "y": -135
+    "x": 53,
+    "y": -116
   },
   "hit_ms": 500.0,
   "face": 1,
@@ -43,7 +43,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "bf3d69f562f3b6a6cd495819ae17fc2d4b2dbc372ea240ebf1418a959e3d6c7e"
+      "sha256": "e488e66c61a02e4975ee1938999ebf2b647044580a4af3d305f9d2acf1ba9914"
     },
     "attack": {
       "frames": 12,
@@ -67,7 +67,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "dcc8333385d1b7c4be7cf4c11a6114a3a7af266630ad804f1d8e74ab5505f431",
+      "sha256": "c08077a7d803bae9d35c2eeb9c806e50c05c90ffadf5d6a62fb0ad978421ccb9",
       "hit_frame": 6
     },
     "effect": {
@@ -114,140 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/limne.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/limne.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        29,
         0,
+        315,
+        421
+      ],
+      [
+        392,
         0,
-        362,
-        390
+        678,
+        421
       ],
       [
-        362,
+        753,
         0,
-        724,
-        390
+        1040,
+        421
       ],
       [
-        724,
+        1116,
         0,
-        1086,
-        390
+        1402,
+        421
       ],
       [
-        1086,
-        0,
-        1448,
-        390
+        27,
+        421,
+        311,
+        804
       ],
       [
-        0,
-        390,
-        362,
-        767
+        380,
+        421,
+        731,
+        804
       ],
       [
-        362,
-        390,
-        724,
-        767
+        750,
+        421,
+        1106,
+        804
       ],
       [
-        724,
-        390,
-        1087,
-        767
+        1071,
+        421,
+        1402,
+        804
       ],
       [
-        1087,
-        390,
-        1448,
-        767
-      ],
-      [
-        0,
-        767,
-        362,
+        55,
+        804,
+        309,
         1086
       ],
       [
-        362,
-        767,
-        724,
+        393,
+        804,
+        696,
         1086
       ],
       [
-        724,
-        767,
-        1086,
+        748,
+        804,
+        1072,
         1086
       ],
       [
-        1086,
-        767,
-        1448,
+        1147,
+        804,
+        1407,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.5302197802197802,
+        "factor": 0.5230352303523035,
         "offset": [
-          31,
-          17
+          44,
+          4
         ]
       },
       {
-        "factor": 0.5302197802197802,
+        "factor": 0.5230352303523035,
         "offset": [
-          31,
-          17
+          45,
+          4
         ]
       },
       {
-        "factor": 0.5302197802197802,
+        "factor": 0.5230352303523035,
         "offset": [
-          31,
-          17
+          44,
+          4
         ]
       },
       {
-        "factor": 0.5302197802197802,
+        "factor": 0.5230352303523035,
         "offset": [
-          31,
-          17
+          45,
+          4
         ]
       },
       {
-        "factor": 0.5302197802197802,
+        "factor": 0.5230352303523035,
         "offset": [
-          31,
+          47,
           24
         ]
       },
       {
-        "factor": 0.5302197802197802,
+        "factor": 0.5230352303523035,
         "offset": [
-          31,
+          42,
           24
         ]
       },
       {
-        "factor": 0.5302197802197802,
+        "factor": 0.5230352303523035,
         "offset": [
-          31,
+          48,
           24
         ]
       },
       {
-        "factor": 0.5302197802197802,
+        "factor": 0.5230352303523035,
         "offset": [
-          32,
+          20,
           24
         ]
       }
+    ],
+    "source_muzzle": [
+      1005,
+      582
     ]
   },
   "portrait_id": "limne"

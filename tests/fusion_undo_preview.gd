@@ -28,7 +28,8 @@ func capture(name_: String) -> void:
 
 
 func seed_for_result(material_tier: int, target_tier: int) -> int:
-	var probabilities := Balance.fusion_probabilities((material_tier + 1) * 5)
+	# 2026-10-06 부터 합성은 최고 재료보다 +0.5성을 보장한다 — 실제 합성과 같은 바닥으로 확률을 낸다.
+	var probabilities := Balance.fusion_probabilities((material_tier + 1) * 5, mini(Balance.TIER_MAX, material_tier + 1))
 	var random := RandomNumberGenerator.new()
 	for candidate in range(10000):
 		random.seed = candidate
@@ -47,7 +48,7 @@ func setup_materials(tier: int) -> DrawScreen:
 	Fixture.fresh(21092026)
 	Run.heroes.clear()
 	Run.bench.clear()
-	var material := Roster.pick_unit(tier, Run.rng)
+	var material: Dictionary = Roster.units_of_tier(tier)[0]
 	for i in range(5):
 		Run.gain_hero(material, tier, false, false)
 	Run.phase = Run.Phase.SWAP
@@ -121,7 +122,7 @@ func _ready() -> void:
 	for language in ["ko", "en"]:
 		I18n.set_locale(language)
 		await check_result(language, 0, 1, "upgraded", 2)
-		await check_result(language, 8, 8, "same_tier", 1)
+		await check_result(language, 8, 9, "promoted", 1)
 		await check_result(language, 9, 9, "highest_tier", 1)
 		check(I18n.missing.is_empty(), "fusion labels are translated in " + language)
 	main.queue_free()

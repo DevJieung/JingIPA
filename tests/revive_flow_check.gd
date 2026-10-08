@@ -66,7 +66,8 @@ func _ready() -> void:
 			main._process(1.0)
 			check(main.screen is BattleScreen and Run.wave == before["wave"] and not Run.retry_wave, "retry starts the same wave without dealing again or skipping the final wave")
 			main.screen.set_process(false)
-			check(Run.cards == prepared["cards"] and Run.gold == prepared["gold"] and Run.snapshot()["heroes"] == prepared["heroes"], "retry preserves cards, upgrades, gold and formation")
+			check(Run.snapshot()["rite"] == prepared["rite"] and Run.gold == prepared["gold"] and Run.snapshot()["heroes"] == prepared["heroes"], "retry preserves the rite, upgrades, gold and formation")
+			check(Run.respin().is_empty() and Run.pull_target() == -1, "the retried battle never reopens the rite")
 			if attempt == 2:
 				Run.settle_wave(false)
 				if scenario == "final_wave":

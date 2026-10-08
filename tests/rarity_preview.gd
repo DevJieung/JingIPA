@@ -22,7 +22,7 @@ func _draw() -> void:
 		var origin := Vector2(28 + (tier / 5) * 624, 126 + (tier % 5) * 126)
 		Look.px_panel(self, Rect2(origin, Vector2(604, 112)), Look.PANEL, Look.PANEL_EDGE)
 		Look.text_left(self, origin + Vector2(14, 24), "%d등급" % (tier + 1), 19, Look.GOLD)
-		Look.text_left(self, origin + Vector2(14, 73), Poker.HAND_KO[tier], 17, Look.INK)
+		Look.text_left(self, origin + Vector2(14, 73), Look.star_label(tier), 17, Look.INK)
 		var p := origin + Vector2(355, 50)
 		Fx.projectile_glow(self, p, p - Vector2(25, 0), Vector2.RIGHT, Color("#ff8d3e"), tier, 0.35)
 		if not shot.is_empty():

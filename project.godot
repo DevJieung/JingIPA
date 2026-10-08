@@ -14,22 +14,22 @@ general/ios/enabled=false
 
 [application]
 
-config/name="올인 디펜스"
+config/name="스텔라 디펜스"
 config/name_localized={
-"en": "All-in Defense",
-"ko": "올인 디펜스"
+"en": "Stellar Defense",
+"ko": "스텔라 디펜스"
 }
-config/description="트럼프 다섯 장으로 영웅을 뽑아 몬스터를 막는 디펜스"
+config/description="별맞춤 의식으로 영웅을 불러 생명 수정을 지키는 디펜스"
 config/version="1.0.0"
 run/main_scene="res://game/boot.tscn"
 config/use_custom_user_dir=true
-config/custom_user_dir_name="pokerdefense"
+config/custom_user_dir_name="stellardefense"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 run/max_fps=60
 boot_splash/bg_color=Color(0.13725491, 0.3647059, 0.28235295, 1)
 boot_splash/show_image=false
 config/icon="res://art/ui/launcher_main.png"
-config/name.ios="All-in Defense"
+config/name.ios="Stellar Defense"
 
 [autoload]
 

@@ -6,8 +6,8 @@ var failures: Array[String] = []
 
 
 func _ready() -> void:
-	if OS.get_environment("POCKER_NO_SAVE") != "1":
-		push_error("Run startup preview with POCKER_NO_SAVE=1")
+	if OS.get_environment("STELLARDEFENSE_NO_SAVE") != "1":
+		push_error("Run startup preview with STELLARDEFENSE_NO_SAVE=1")
 		get_tree().quit(1)
 		return
 	var args := OS.get_cmdline_user_args()

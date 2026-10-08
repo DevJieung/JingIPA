@@ -2,10 +2,10 @@
   "name": "dummy_roster_v1",
   "ko": "더미",
   "elem": "none",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
-    "w": 256,
-    "h": 256
+    "w": 320,
+    "h": 320
   },
   "static": {
     "w": 56,
@@ -17,8 +17,8 @@
   },
   "scale": 0.5638297872340425,
   "muzzle_at": {
-    "x": 91,
-    "y": -148
+    "x": 101,
+    "y": -120
   },
   "hit_ms": 416.66666666666663,
   "face": 1,
@@ -40,10 +40,10 @@
       "total_ms": 666.6666666666666,
       "loop": true,
       "cell": {
-        "w": 256,
-        "h": 256
+        "w": 320,
+        "h": 320
       },
-      "sha256": "b486f0a6aece93088306c93da2836f0aec20bb2976a933c9705c7217c2d0c3ac"
+      "sha256": "13bad4fba54c52b1c21692c6fe06fccdedfa62a5bd7733edd1f84d084b0ed2e4"
     },
     "attack": {
       "frames": 12,
@@ -64,10 +64,10 @@
       "total_ms": 1000.0,
       "loop": false,
       "cell": {
-        "w": 256,
-        "h": 256
+        "w": 320,
+        "h": 320
       },
-      "sha256": "b663d7cde80ec102737b90649b06cb55e38b779b2bd6dbf0f1d4b09b055f8933",
+      "sha256": "1a6ea90d3a4b9023ae87726dcdd3e8ab92f1fbe725fdc7c30e2520db5d5123e1",
       "hit_frame": 5
     },
     "shot": {
@@ -89,140 +89,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/dummy.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/dummy.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        61,
         0,
+        277,
+        488
+      ],
+      [
+        424,
         0,
-        362,
-        420
+        639,
+        488
       ],
       [
-        362,
+        787,
         0,
-        724,
-        420
+        1001,
+        488
       ],
       [
-        724,
+        1149,
         0,
-        1086,
-        420
+        1363,
+        488
       ],
       [
-        1086,
-        0,
-        1448,
-        420
+        43,
+        488,
+        391,
+        873
       ],
       [
-        0,
-        420,
-        366,
-        811
+        422,
+        488,
+        761,
+        873
       ],
       [
-        366,
-        420,
-        724,
-        811
+        758,
+        488,
+        1161,
+        873
       ],
       [
-        724,
-        420,
-        1110,
-        811
+        1146,
+        488,
+        1438,
+        873
       ],
       [
-        1110,
-        420,
-        1448,
-        811
-      ],
-      [
-        0,
-        811,
-        362,
+        43,
+        873,
+        287,
         1086
       ],
       [
-        362,
-        811,
-        724,
+        394,
+        873,
+        647,
         1086
       ],
       [
-        724,
-        811,
-        1086,
+        775,
+        873,
+        1038,
         1086
       ],
       [
-        1086,
-        811,
-        1448,
+        1154,
+        873,
+        1402,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.47,
+        "factor": 0.49343832020997375,
         "offset": [
-          47,
-          27
+          71,
+          -17
         ]
       },
       {
-        "factor": 0.47,
+        "factor": 0.49343832020997375,
         "offset": [
-          47,
-          27
+          71,
+          -17
         ]
       },
       {
-        "factor": 0.47,
+        "factor": 0.49343832020997375,
         "offset": [
-          47,
-          27
+          72,
+          -17
         ]
       },
       {
-        "factor": 0.47,
+        "factor": 0.49343832020997375,
         "offset": [
-          47,
-          27
+          72,
+          -17
         ]
       },
       {
-        "factor": 0.47,
+        "factor": 0.49343832020997375,
         "offset": [
-          58,
-          41
+          72,
+          34
         ]
       },
       {
-        "factor": 0.47,
+        "factor": 0.49343832020997375,
         "offset": [
-          59,
-          41
+          71,
+          34
         ]
       },
       {
-        "factor": 0.47,
+        "factor": 0.49343832020997375,
         "offset": [
-          63,
-          40
+          72,
+          34
         ]
       },
       {
-        "factor": 0.47,
+        "factor": 0.49343832020997375,
         "offset": [
-          62,
-          40
+          70,
+          34
         ]
       }
+    ],
+    "source_muzzle": [
+      1076,
+      630
     ]
   },
   "portrait_id": "dummy"

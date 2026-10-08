@@ -2,7 +2,7 @@
   "name": "saeta_roster_v1",
   "ko": "사에타",
   "elem": "fire",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
     "w": 256,
     "h": 256
@@ -17,8 +17,8 @@
   },
   "scale": 0.7777777777777778,
   "muzzle_at": {
-    "x": 67,
-    "y": -121
+    "x": 75,
+    "y": -104
   },
   "hit_ms": 500.0,
   "face": 1,
@@ -43,7 +43,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "85f03c98a9a379f557c8c338aa3dbd800bf8863f4c1a456cfe15efed487f2b96"
+      "sha256": "3259e5fdc14bed9588e74fdd04e0dd5be74d62620db1792bc0cad85aef477f82"
     },
     "attack": {
       "frames": 12,
@@ -67,7 +67,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "19a1266340da1a1f7145bc1f26fd014231f468b697edd1b3c8ff1ad8ff9fcc11",
+      "sha256": "9633c2507507c176cd219dce495c708f382cc310edee273892f64d04510d571c",
       "hit_frame": 6
     },
     "shot": {
@@ -114,140 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/saeta.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/saeta.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        33,
         0,
+        356,
+        428
+      ],
+      [
+        395,
         0,
-        362,
-        371
+        717,
+        428
       ],
       [
-        362,
+        757,
         0,
-        724,
-        371
+        1079,
+        428
       ],
       [
-        724,
+        1119,
         0,
-        1086,
-        371
+        1440,
+        428
       ],
       [
-        1086,
-        0,
-        1448,
-        371
+        27,
+        428,
+        346,
+        833
       ],
       [
-        0,
-        371,
-        362,
-        827
+        386,
+        428,
+        751,
+        833
       ],
       [
-        362,
-        371,
-        724,
-        827
+        756,
+        428,
+        1122,
+        833
       ],
       [
-        724,
-        371,
-        1086,
-        827
+        1078,
+        428,
+        1446,
+        833
       ],
       [
-        1086,
-        371,
-        1448,
-        827
-      ],
-      [
-        0,
-        827,
-        362,
+        43,
+        833,
+        330,
         1086
       ],
       [
-        362,
-        827,
-        724,
+        394,
+        833,
+        682,
         1086
       ],
       [
-        724,
-        827,
-        1086,
+        751,
+        833,
+        1058,
         1086
       ],
       [
-        1086,
-        827,
-        1448,
+        1119,
+        833,
+        1411,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.4778761061946903,
+        "factor": 0.48942598187311176,
         "offset": [
-          51,
-          47
+          59,
+          15
         ]
       },
       {
-        "factor": 0.4778761061946903,
+        "factor": 0.48942598187311176,
         "offset": [
-          51,
-          47
+          59,
+          15
         ]
       },
       {
-        "factor": 0.4778761061946903,
+        "factor": 0.48942598187311176,
         "offset": [
-          51,
-          47
+          59,
+          15
         ]
       },
       {
-        "factor": 0.4778761061946903,
+        "factor": 0.48942598187311176,
         "offset": [
-          50,
-          47
+          59,
+          15
         ]
       },
       {
-        "factor": 0.4778761061946903,
+        "factor": 0.48942598187311176,
         "offset": [
-          54,
-          6
+          58,
+          27
         ]
       },
       {
-        "factor": 0.4778761061946903,
+        "factor": 0.48942598187311176,
         "offset": [
-          53,
-          6
+          57,
+          27
         ]
       },
       {
-        "factor": 0.4778761061946903,
+        "factor": 0.48942598187311176,
         "offset": [
-          53,
-          6
+          60,
+          27
         ]
       },
       {
-        "factor": 0.4778761061946903,
+        "factor": 0.48942598187311176,
         "offset": [
-          51,
-          6
+          39,
+          26
         ]
       }
+    ],
+    "source_muzzle": [
+      1048,
+      617
     ]
   },
   "portrait_id": "saeta"

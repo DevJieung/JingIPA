@@ -1,0 +1,2423 @@
+{
+  "version": 1,
+  "generator": "built-in image_gen edits",
+  "style": "imagegen_chibi_v1",
+  "counts": {
+    "hero": 50,
+    "monster": 25,
+    "npc": 1
+  },
+  "postprocessing": "alpha threshold, atlas extraction, nearest scaling, shared palette and foot-origin alignment; no procedural anatomy replacement",
+  "preserved": [
+    "identity",
+    "equipment",
+    "element",
+    "world scale",
+    "attack and movement timing",
+    "shot/effect sprites"
+  ],
+  "assets": [
+    {
+      "id": "blank",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/blank.png",
+      "source_sha256": "c02a718085aa3a29e8af1e14f076f61c96a6389aa87c73e34fe6725489b470c0",
+      "generation": {
+        "id": "blank",
+        "prompt": "Character ID: blank. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-ccbc422b-bfe7-472a-b551-e541c6d17199.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/blank/anim.json",
+          "sha256": "7b81ca1d5cd36bcd1dcd59f0aa4b3956856e72da73ac40f2c2cb6faf6656237e"
+        },
+        {
+          "path": "art/anim/blank/blank_aoe_v1_idle.png",
+          "sha256": "091c9e93f1429751682a54fdac38adb36c7768aa1ae2d3cc1aa5d603ffb1232b"
+        },
+        {
+          "path": "art/anim/blank/blank_aoe_v1_attack.png",
+          "sha256": "0f4eacf9f43bd3b69d169deb46750ad8e5cad61324cb1f505cd5cbb79d594879"
+        },
+        {
+          "path": "art/units/blank.png",
+          "sha256": "bd230b504c3a489c0b953739ba7c92cc95a0af0c2887007a3d9a5267fb1f0476"
+        },
+        {
+          "path": "art/portraits/blank.png",
+          "sha256": "23eb5049967e20584a8417770385bad72e7e00b3aa2ac140b97c7aeee867b9d3"
+        }
+      ]
+    },
+    {
+      "id": "brasa",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/brasa.png",
+      "source_sha256": "95471cd61532a92189f1fab063fcc217c34d05ebc4f9b062627bcede9fe7d8ac",
+      "generation": {
+        "id": "brasa",
+        "prompt": "Character ID: brasa. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-e74ae751-c919-4a13-9457-894b1f37d567.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/brasa/anim.json",
+          "sha256": "be29a76ce648e47b3a942ec76c98f38b5a2dbb9a97fa788d8c97bffcd6742254"
+        },
+        {
+          "path": "art/anim/brasa/brasa_aoe_v1_idle.png",
+          "sha256": "b411557e1fc5343cec6f62cd3ef1f0cb067741c3b65ca351481ebeba47618323"
+        },
+        {
+          "path": "art/anim/brasa/brasa_aoe_v1_attack.png",
+          "sha256": "df31e5c2dc5782960040901486582c42c28a31cc9feb9c01d26b1c9ad7662173"
+        },
+        {
+          "path": "art/units/brasa.png",
+          "sha256": "7ba1e01ecb3a57fd8176ff3f5995b6854249ea07923465a87ef6e2526ed392f7"
+        },
+        {
+          "path": "art/portraits/brasa.png",
+          "sha256": "00df1282fb79630b5b275ab3463c776f71dee1b3e4c3fa6801a0ff41c22a1a1c"
+        }
+      ]
+    },
+    {
+      "id": "brian",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/brian.png",
+      "source_sha256": "7315783a244f93a422ef25340f73a21cffa0ca4df7cf53990e0a4a08784d57c7",
+      "generation": {
+        "id": "brian",
+        "prompt": "Character ID: brian. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-dc94f89e-1997-48a2-8ef8-5382052b4537.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/brian/anim.json",
+          "sha256": "5231e5743b21382f65a31da32a9bf966d5ec366cb2340b8dbde17bf10ed98256"
+        },
+        {
+          "path": "art/anim/brian/brian_roster_v1_idle.png",
+          "sha256": "b4c9d51108b33a92dd4e1c09b8862b41933629e49952ff95fac773e8adf17305"
+        },
+        {
+          "path": "art/anim/brian/brian_roster_v1_attack.png",
+          "sha256": "be13384d0354bf7da24563ea56b889a45a8bdc164bdcdcec63a9e3ad57238541"
+        },
+        {
+          "path": "art/units/brian.png",
+          "sha256": "12f965b9df396d3c40b2e123b5d115b14bfaa420837e1ffa359eb617ad0931a2"
+        },
+        {
+          "path": "art/portraits/brian.png",
+          "sha256": "848ba24e08159a58d0eebb0206d58b0ec3ac4889e931d7053d18b83277d80e05"
+        }
+      ]
+    },
+    {
+      "id": "brigid",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/brigid.png",
+      "source_sha256": "aed0db078566698eea67fee2d690936e37872f2c7882e1284650166e7f04741e",
+      "generation": {
+        "id": "brigid",
+        "prompt": "Character ID: brigid. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "references": [
+          "art/animation/roster_v1/source/brigid.png",
+          "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-2ed165b9-3d39-4184-9c8d-afec39aee16a.png"
+        ],
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-65e60d1c-56c6-436b-b7cd-ef3909f90f82.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/brigid/anim.json",
+          "sha256": "51b8c9c82591b31880d9413a933d22594afb9e572e8a379028b97d6f5343a303"
+        },
+        {
+          "path": "art/anim/brigid/brigid_roster_v1_idle.png",
+          "sha256": "25dabd40eeec2e70f9fbede640c27dfa9c345ebd1ff6f8c49fc2f8c2ab51fcad"
+        },
+        {
+          "path": "art/anim/brigid/brigid_roster_v1_attack.png",
+          "sha256": "e11ee1b1d940be7608582ebbca307f4525345b8d41c6dda6cebeacff5996616d"
+        },
+        {
+          "path": "art/units/brigid.png",
+          "sha256": "afac34d182a4ff4fe0ccdc909fd8dee9d2e6527ae6b03a7036b20accb57b8530"
+        },
+        {
+          "path": "art/portraits/brigid.png",
+          "sha256": "e91f394eea608c5a9921bea1d81758a78262737e0314e7e652929f132665fb14"
+        }
+      ]
+    },
+    {
+      "id": "caden",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/caden.png",
+      "source_sha256": "57708a8c0b71f4f4ff4f8eba582d3957a6b1ead68402093e1c8b533ecea575f8",
+      "generation": {
+        "id": "caden",
+        "prompt": "Character ID: caden. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "references": [
+          "art/animation/roster_v1/source/caden.png",
+          "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-2ed165b9-3d39-4184-9c8d-afec39aee16a.png"
+        ],
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-a4a232a6-76c9-4a60-9040-76a5ada7aaab.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/caden/anim.json",
+          "sha256": "9b751d4b24e5e5ecf52d4ba9dae7f371090635b5a5a3eb6799c0fa76c1e9205e"
+        },
+        {
+          "path": "art/anim/caden/caden_roster_v1_idle.png",
+          "sha256": "6ec633fc6015b4f1028fe27b5c5a78122c22043344834c9e7cf540e63b8b976f"
+        },
+        {
+          "path": "art/anim/caden/caden_roster_v1_attack.png",
+          "sha256": "78819ecc2712664a69ef890a0c533a630df6ce044e42ad41282b4a48fd3d4537"
+        },
+        {
+          "path": "art/units/caden.png",
+          "sha256": "1c1899c96e0b31fc09404bdef6cd98dc4ab21f7473d2efcaf42c06cd71450b76"
+        },
+        {
+          "path": "art/portraits/caden.png",
+          "sha256": "69adb734fa373fb7846f01a686680d5fdeaf5982c9aa40f68b0ded8cd70494df"
+        }
+      ]
+    },
+    {
+      "id": "candela",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/candela.png",
+      "source_sha256": "69fc7b5689e9948aacac52057974ef6f702bb1fcff9c501cf2f08a88887f282a",
+      "generation": {
+        "id": "candela",
+        "prompt": "Character ID: candela. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "references": [
+          "art/animation/roster_v1/source/candela.png",
+          "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-2ed165b9-3d39-4184-9c8d-afec39aee16a.png"
+        ],
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-2340bb15-250e-4eee-8f64-6fd776477111.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/candela/anim.json",
+          "sha256": "bea16cc526ec363416c9788f5d01b29e44c0b2791e81a5f39b07774e231d76c7"
+        },
+        {
+          "path": "art/anim/candela/candela_roster_v1_idle.png",
+          "sha256": "24b0f823ae8392e743f7be1e89177582ad88b40e34f6181cafec7702ac51f926"
+        },
+        {
+          "path": "art/anim/candela/candela_roster_v1_attack.png",
+          "sha256": "bf16ce32bd5e497f551b92d2ee09f205479a05168538c1842451cc5eb8e5b074"
+        },
+        {
+          "path": "art/units/candela.png",
+          "sha256": "7a251b74af4928dc0b9bc8d6de50f067c8ecb48a3e1a8c37b6995239746341a3"
+        },
+        {
+          "path": "art/portraits/candela.png",
+          "sha256": "ef0d0cf301bfe138545f311572dae4fda447387c754873bf97234cd6eccebe73"
+        }
+      ]
+    },
+    {
+      "id": "carmen",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/carmen.png",
+      "source_sha256": "15405cc6b770a00d5ef41094f6d67289d522bd4daf8a0b2f2c2b1e93e1318ea9",
+      "generation": {
+        "id": "carmen",
+        "prompt": "Character ID: carmen. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "references": [
+          "art/animation/roster_v1/source/carmen.png",
+          "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-2ed165b9-3d39-4184-9c8d-afec39aee16a.png"
+        ],
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-78954866-78f0-4e45-afcb-1a8dcb3928df.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/carmen/anim.json",
+          "sha256": "c80a6ed410ab3bede9db9ccb40df5652ac31c2c2f8c4d29fd5a37b5fc6a02bb2"
+        },
+        {
+          "path": "art/anim/carmen/carmen_roster_v1_idle.png",
+          "sha256": "41593eb989db77861533106697996239f4093210732162bebe88f7fb840e1c3b"
+        },
+        {
+          "path": "art/anim/carmen/carmen_roster_v1_attack.png",
+          "sha256": "d95e849f1901691c2ae12779c4027e7a60e42fdf2b196a5254a9c993eeb1ca6f"
+        },
+        {
+          "path": "art/units/carmen.png",
+          "sha256": "c91413e7dfe0baed21dde441bd323f9e55906fb4e1e378e3a147c281af3129a0"
+        },
+        {
+          "path": "art/portraits/carmen.png",
+          "sha256": "a934ebcad27d53b0548dfa23f6854a7be09cc264aa74ca320e11d5b311673ac6"
+        }
+      ]
+    },
+    {
+      "id": "ceniza",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/ceniza.png",
+      "source_sha256": "a59d7c2bb11551f011983f02125ac186e9e2e483093e91cfc5471a7ca9be0499",
+      "generation": {
+        "id": "ceniza",
+        "prompt": "Character ID: ceniza. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-43af7ba4-9166-432c-9847-b149b5251483.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/ceniza/anim.json",
+          "sha256": "1e563cc9634d33a02c902f6f17950b61457db0f1ac86227ad9076de215ae4151"
+        },
+        {
+          "path": "art/anim/ceniza/ceniza_roster_v1_idle.png",
+          "sha256": "4ddbef0d1557bc2f90dfea08706f53899a03034831f34ce8a92b2e7257ebfe83"
+        },
+        {
+          "path": "art/anim/ceniza/ceniza_roster_v1_attack.png",
+          "sha256": "b56e79d92ebe818eea3f942f32636c0f377ad4053fb5f0032ee6f9eb8234f7f4"
+        },
+        {
+          "path": "art/units/ceniza.png",
+          "sha256": "686ae2cca51530c682f8b70aae91d7d7a7a2e82c5ce8ec9a7a33f048e2813ec8"
+        },
+        {
+          "path": "art/portraits/ceniza.png",
+          "sha256": "1bc8e1ad8e87435b784936c28608b6bbe98d67857427cb898e98057bda78b24b"
+        }
+      ]
+    },
+    {
+      "id": "chispa",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/chispa.png",
+      "source_sha256": "43c01e854dc03e2d7f43214b023c51d5ef11a13627012f89ba0f2fa853bb6b8e",
+      "generation": {
+        "id": "chispa",
+        "prompt": "Character ID: chispa. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-b717e1a1-a16b-4e5b-b594-61a226f5e328.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/chispa/anim.json",
+          "sha256": "a28875e908abfc5d26f817f2119845ba88e0a7b5ce5e1d5e7fcfc4dfcd918dc1"
+        },
+        {
+          "path": "art/anim/chispa/chispa_roster_v1_idle.png",
+          "sha256": "1fa731ada317203f58d141ba3aa08b5ff1ae14687a71abbe4107a250649f1e68"
+        },
+        {
+          "path": "art/anim/chispa/chispa_roster_v1_attack.png",
+          "sha256": "57bf20c93d25442359b17774e4d74b33c8f278ad7bbfd150f3dd131b6c38065b"
+        },
+        {
+          "path": "art/units/chispa.png",
+          "sha256": "d4c8a87b1a5ce09250a0d57817821827d8057bf30b5d7211b4741c49560c314e"
+        },
+        {
+          "path": "art/portraits/chispa.png",
+          "sha256": "4391b9bb876d0eebd59b4e274fdc010dd84d32f887333c5d991c3c43a5d23eaa"
+        }
+      ]
+    },
+    {
+      "id": "conor",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/conor.png",
+      "source_sha256": "f76960af72a0a9e53176f08623715da588aeda56920fedd38e37fb08d44b1f8d",
+      "generation": {
+        "id": "conor",
+        "prompt": "Character ID: conor. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-5d36677f-17bb-44c7-b5bd-28a7acde43e4.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/conor/anim.json",
+          "sha256": "5768213468c6a265952a05821a9da0c2124f40163164508e57954d08fd6964f4"
+        },
+        {
+          "path": "art/anim/conor/conor_roster_v1_idle.png",
+          "sha256": "d99c639a9d4d1fc5538279f4e420b5bcf0ffce8bfc6434431011ffad26521163"
+        },
+        {
+          "path": "art/anim/conor/conor_roster_v1_attack.png",
+          "sha256": "497d7c48e381eec5add8444868a47574258b59055d45de2fa0e65074e07f6bea"
+        },
+        {
+          "path": "art/units/conor.png",
+          "sha256": "3bbdc18db491131823f89405c2478ae64c8e7701026b4f7c3897e9e6155a1662"
+        },
+        {
+          "path": "art/portraits/conor.png",
+          "sha256": "65292d4f69831df913e8e0526fd96a4b6a7bb0dacb265205e2fa290e06c4db61"
+        }
+      ]
+    },
+    {
+      "id": "donn",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/donn.png",
+      "source_sha256": "c202421528a781a284d619df5d573a50372e81a62fa28ce1149caa6f73d07c43",
+      "generation": {
+        "id": "donn",
+        "prompt": "Character ID: donn. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-367b0d6e-db0b-4ca5-8cd0-8b3aeb1d7754.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/donn/anim.json",
+          "sha256": "f48eaa9927d64889d8e00a00b71429785f5ebd2d19d8f438d25fc7fb6b38253e"
+        },
+        {
+          "path": "art/anim/donn/donn_roster_v1_idle.png",
+          "sha256": "dc53f5237f67ff36d70e78e2be1faf5e62ab05dc846231d81155c9260fb866fc"
+        },
+        {
+          "path": "art/anim/donn/donn_roster_v1_attack.png",
+          "sha256": "fde809b498441683c64188d2123ca2fffe25f485e0da4c2e43d9c0b90f87e778"
+        },
+        {
+          "path": "art/units/donn.png",
+          "sha256": "41c44a607e41fff16484c02e2f18b5753c494a3c9d0433cc82641f6579a5d1e0"
+        },
+        {
+          "path": "art/portraits/donn.png",
+          "sha256": "95772ed1ca3e66228beaad9d87a309ccefb27470b27f09c854ad16c0ac7e53e1"
+        }
+      ]
+    },
+    {
+      "id": "dummy",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/dummy.png",
+      "source_sha256": "34466bb4da64286364655cf961d49d491e734600572b3fdaa31dace29397c818",
+      "generation": {
+        "id": "dummy",
+        "prompt": "Character ID: dummy. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-3d22d374-b22d-472d-b461-c3dc35fc2ecc.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/dummy/anim.json",
+          "sha256": "4f3aabd217f86bdf92a63d52019c686fe05baafcfa7b5abd01229fdca187831b"
+        },
+        {
+          "path": "art/anim/dummy/dummy_roster_v1_idle.png",
+          "sha256": "13bad4fba54c52b1c21692c6fe06fccdedfa62a5bd7733edd1f84d084b0ed2e4"
+        },
+        {
+          "path": "art/anim/dummy/dummy_roster_v1_attack.png",
+          "sha256": "1a6ea90d3a4b9023ae87726dcdd3e8ab92f1fbe725fdc7c30e2520db5d5123e1"
+        },
+        {
+          "path": "art/units/dummy.png",
+          "sha256": "8f219c284853cb781c320060f7beda636dc3b05770179d6d1f1d72df8b82edf6"
+        },
+        {
+          "path": "art/portraits/dummy.png",
+          "sha256": "dff196042f3d5294c3299d859dc2c57cc78528c6f336574d374969086a53e0db"
+        }
+      ]
+    },
+    {
+      "id": "echo",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/echo.png",
+      "source_sha256": "ab66b4d8f5014032c7364a22228c44ee74cafe56f0c46cd87dc19dc2498c8a7d",
+      "generation": {
+        "id": "echo",
+        "prompt": "Character ID: echo. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-a9f1748e-9417-4714-9432-26c534b3bf3d.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/echo/anim.json",
+          "sha256": "9251209ce8c6e818391da54f29023aefa59b1973de70f311f51c0589812d0a64"
+        },
+        {
+          "path": "art/anim/echo/echo_roster_v1_idle.png",
+          "sha256": "82d51552b659c5f0427750b364e10418320c87b4905939ecf8c9488dc58130ae"
+        },
+        {
+          "path": "art/anim/echo/echo_roster_v1_attack.png",
+          "sha256": "36e12100765607486cfc127125caa14ffe9e0f641afa5b44a6af4ed124af9a80"
+        },
+        {
+          "path": "art/units/echo.png",
+          "sha256": "8740d6ab8927a491c30bc58208ce1f501656dc1a437ad5bfbbae5d5163489274"
+        },
+        {
+          "path": "art/portraits/echo.png",
+          "sha256": "88c5e35b0a21b4ffcdd0df4757eb445b95bd0208a99dee16447609635d04237f"
+        }
+      ]
+    },
+    {
+      "id": "eira",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/eira.png",
+      "source_sha256": "9df5aaf8d52f5eea0875f6d3a3b1c369f16b950f3cf1cba94ec6800153682b11",
+      "generation": {
+        "id": "eira",
+        "prompt": "Character ID: eira. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-7ffdfc88-35e8-423e-ad95-6a1b20bbbd8b.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/eira/anim.json",
+          "sha256": "0bea907cbf435c6dcfbb900417bb15080ab69a3ec668b08e33a3c0f54897c910"
+        },
+        {
+          "path": "art/anim/eira/eira_roster_v1_idle.png",
+          "sha256": "0164e5db4c62bd65d64a0c82a7d0538186d8a451f7c72b1af19e316bbebfed19"
+        },
+        {
+          "path": "art/anim/eira/eira_roster_v1_attack.png",
+          "sha256": "31325d5e514a0338f06b90644170102b5da27a7a174cfd492f6a0a52f0750595"
+        },
+        {
+          "path": "art/units/eira.png",
+          "sha256": "f6c444159d38153929e43c1773ee3cbc445580e3f0eaa7bee5f62baa061a295d"
+        },
+        {
+          "path": "art/portraits/eira.png",
+          "sha256": "c85c7c51a0e6d0e9227931c3f6e4339c31c3ba0733720d9ebe7872463d5f6e64"
+        }
+      ]
+    },
+    {
+      "id": "estoque",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/estoque.png",
+      "source_sha256": "1b079f9e911fb1779b01b94608bd7d138b5f44cfc7821e834889828308555721",
+      "generation": {
+        "id": "estoque",
+        "prompt": "Character ID: estoque. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-177c2ddc-18a5-4252-adc3-ca79fb476539.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/estoque/anim.json",
+          "sha256": "e77ddf477029088ac76faaf09cf034be626a9326d985c79830ed30ccc273758e"
+        },
+        {
+          "path": "art/anim/estoque/estoque_roster_v1_idle.png",
+          "sha256": "95d2b2e8295d17b8ac1180aa8ba8e0bca9bcf8ec10e5318c21feb82b4318ddf3"
+        },
+        {
+          "path": "art/anim/estoque/estoque_roster_v1_attack.png",
+          "sha256": "ba9ce1f4e33df68823d5ee4c006ae57c701c6483b297f3c7e9200c000557912f"
+        },
+        {
+          "path": "art/units/estoque.png",
+          "sha256": "4ad49fb68684e3c63fc6517b9665b52d88dfb40d18aefaa5ab23dc62d35eda92"
+        },
+        {
+          "path": "art/portraits/estoque.png",
+          "sha256": "728f3e0ce80600f21f3028304b1e228bdf8977de9e8506e7da113b2be60edc4c"
+        }
+      ]
+    },
+    {
+      "id": "finn",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/finn.png",
+      "source_sha256": "c04983452761359d7f143a60523b71f01eeb1097e51bdf15aafda5b7bd0489d4",
+      "generation": {
+        "id": "finn",
+        "prompt": "Character ID: finn. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-5cef90e9-482e-4f17-9793-6fc2299f26bf.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/finn/anim.json",
+          "sha256": "485fb0a4607429a0e70d8b9cfa53a23b323bf1bfd05bc2618e302458b8614818"
+        },
+        {
+          "path": "art/anim/finn/finn_roster_v1_idle.png",
+          "sha256": "aeb8a584af33f92ee35745d38cc96ed3000f3577352b8a06315cad25fd5ddb56"
+        },
+        {
+          "path": "art/anim/finn/finn_roster_v1_attack.png",
+          "sha256": "274dfb38ecabc58c489dce8cfa46bb2d894db1a3b9ced732ceb927f7a231f18c"
+        },
+        {
+          "path": "art/units/finn.png",
+          "sha256": "1aa430b8f5558e6d15372d1a85aeb5bd19c74a5b90a30a1462e2cc286fc1917f"
+        },
+        {
+          "path": "art/portraits/finn.png",
+          "sha256": "912712529565bbb303cf963a9731470d3444d1638ebc01f5532242bace2ee215"
+        }
+      ]
+    },
+    {
+      "id": "frosti",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/frosti.png",
+      "source_sha256": "6680f37662383e8d7e408cf69e9b41514dc62460b621e4a56a891c14b8417145",
+      "generation": {
+        "id": "frosti",
+        "prompt": "Character ID: frosti. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-3b3d0aad-0b83-4a2a-815e-b8953f90f383.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/frosti/anim.json",
+          "sha256": "70198f00887493df615a44435cad114d4a39e1d180e07042ec3cd3454f0ad828"
+        },
+        {
+          "path": "art/anim/frosti/frosti_roster_v1_idle.png",
+          "sha256": "f1f3e5db6f4cfbe00a1248b8ce60d7cc4802fac83d8d1756f84b42e3ef15179d"
+        },
+        {
+          "path": "art/anim/frosti/frosti_roster_v1_attack.png",
+          "sha256": "238ea726f28d236ae5f79d5f12f0c641cf6a98df85f49448ad6dfd66ea2b5f55"
+        },
+        {
+          "path": "art/units/frosti.png",
+          "sha256": "c5b75f98a1f76197432584ab6b0d526dc512d9741e8a43608d3a1b974379ae0d"
+        },
+        {
+          "path": "art/portraits/frosti.png",
+          "sha256": "56ad863373b7a0c9afcf571e1be7a3fe9841db9f6ca8b7a8572ec8261ad8dbaa"
+        }
+      ]
+    },
+    {
+      "id": "galene",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/galene.png",
+      "source_sha256": "bd6021c7627eed4388e3664efa79c561ee641e1db7e4156f89b31a85ac5abf48",
+      "generation": {
+        "id": "galene",
+        "prompt": "Character ID: galene. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-7f731781-074b-4ced-898b-5e2ab09eb67b.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/galene/anim.json",
+          "sha256": "2527fcceae3b986cee01c6080e7d89b6bf32871db0d417346f8c3f0b77ec52ec"
+        },
+        {
+          "path": "art/anim/galene/galene_roster_v1_idle.png",
+          "sha256": "c145c3194c6620a906965e7c0eca89bd7f5cc843af1f37d46e7953754792ba09"
+        },
+        {
+          "path": "art/anim/galene/galene_roster_v1_attack.png",
+          "sha256": "005ec4570b57f0577cad1deb234fbb88d788f118c720e488cccaec31f6194847"
+        },
+        {
+          "path": "art/units/galene.png",
+          "sha256": "b934eac27ecb7586d3ac71cde8ce3f420048d9fac0e6224128480920f17c9298"
+        },
+        {
+          "path": "art/portraits/galene.png",
+          "sha256": "d801c5b9ce7b013634bd26408e84a038adaae6baf4c044b107ed180e249a2209"
+        }
+      ]
+    },
+    {
+      "id": "glaukos",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/glaukos.png",
+      "source_sha256": "014a0c5896d3c22e85160c5257e6c4da8bcd5b50393961c35ba1b6c2aa4eb368",
+      "generation": {
+        "id": "glaukos",
+        "prompt": "Character ID: glaukos. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-30e615e2-3fb1-4858-82b8-4aac3ae6268a.png",
+        "status": "generated",
+        "repair": {
+          "id": "glaukos",
+          "prompt": "Use case: identity-preserve. Repair only the sprite atlas layout in this approved chibi character sheet. Preserve exact face, chunky body proportions, colors, outfit, weapons and every pose. Keep4columns3rows. Make each complete actor slightly smaller WITHIN its cell so EVERY body, weapon and release glow is fully visible and surrounded by at least40px of true transparent padding. CRITICAL: first-row and second-row rightmost actor gun barrels are cut off by the right image edge; redraw the complete barrel matching the first actor, then inset all sprites sufficiently. No intersecting/connected silhouettes between neighboring cells. Genuine transparent background, no checkerboard, scenery, floor or shadow. Output1536x1152.",
+          "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-8892baba-7ff4-4f14-87aa-59d6d65e01fc.png",
+          "status": "generated"
+        }
+      },
+      "outputs": [
+        {
+          "path": "art/anim/glaukos/anim.json",
+          "sha256": "b15aeca3312377c3f1b8c8449dbba3d8c5d480ab5c42c98e1a750ff24c903aee"
+        },
+        {
+          "path": "art/anim/glaukos/glaukos_roster_v1_idle.png",
+          "sha256": "73274e9ccf826e7b8e318b33dc359881f88ccd59b789885adf971bf5e0bd5879"
+        },
+        {
+          "path": "art/anim/glaukos/glaukos_roster_v1_attack.png",
+          "sha256": "3a7d1096e29f0992a15b6686957262c4bbb7f599c607be90e5736328f580cc39"
+        },
+        {
+          "path": "art/units/glaukos.png",
+          "sha256": "fe013a855a1ef2c6c3dad7b2be58e22d179daf69264732c4d1b922b4945c6262"
+        },
+        {
+          "path": "art/portraits/glaukos.png",
+          "sha256": "beb7a7672a887d476cde3a71bb2a036c4aa6e9dc7768ebca16f3f2ee26a73eac"
+        }
+      ]
+    },
+    {
+      "id": "grey",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/grey.png",
+      "source_sha256": "47051498b1a5c559282af40e7ad53a8047b18f0c0a7f686f4b505bf26e0092fa",
+      "generation": {
+        "id": "grey",
+        "prompt": "Character ID: grey. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-1592a5bc-892c-4778-bf9c-02011081faf7.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/grey/anim.json",
+          "sha256": "7ef372f1813d0633bbfcdaed0c6d7349bdeb7c94042e41dcf7328201fa19ca66"
+        },
+        {
+          "path": "art/anim/grey/grey_roster_v1_idle.png",
+          "sha256": "190fa28dede76e86d419f54ae551566fa6002dc2427ba75b60e793dbae5b25fa"
+        },
+        {
+          "path": "art/anim/grey/grey_roster_v1_attack.png",
+          "sha256": "7aceb7b4633ddd2cfbc67a362480e182913303b4178c2da2c8ae67df7b640d3f"
+        },
+        {
+          "path": "art/units/grey.png",
+          "sha256": "0724235c2806c4f80176031970047aa2ac631fc90e420cfd3f87983249d01dc5"
+        },
+        {
+          "path": "art/portraits/grey.png",
+          "sha256": "bc8084e05e2da37b103ba6e66ec4c3288bfea36a7666763fadc7e516a5ad7806"
+        }
+      ]
+    },
+    {
+      "id": "helga",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/helga.png",
+      "source_sha256": "41f411d0199635892f4241c4349b0cd3186feaaa498ca0b95c90b5a14a34f471",
+      "generation": {
+        "id": "helga",
+        "prompt": "Character ID: helga. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-da0b9980-ea6d-461c-aff8-a5e62ae3f326.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/helga/anim.json",
+          "sha256": "a39da9f44fabcdd23d95b65a17a0bbb8731582e2f210b248aebb492cad9578bc"
+        },
+        {
+          "path": "art/anim/helga/helga_roster_v1_idle.png",
+          "sha256": "6cda4e1fa0585b68ef14948e27dcf3ada5623a9974cd02859484f64ff5c32f57"
+        },
+        {
+          "path": "art/anim/helga/helga_roster_v1_attack.png",
+          "sha256": "acca09737e78bc618885596b18099aaeb22f8ac4752690de4a9d40b70a52a33f"
+        },
+        {
+          "path": "art/units/helga.png",
+          "sha256": "019f2d51918e180452aa3d0a93e6f195c7ae54fb4c4a31dc0195aceb01e2237d"
+        },
+        {
+          "path": "art/portraits/helga.png",
+          "sha256": "68f4ea0b8bc41cf114f391d97662d10839138364171d4e15b6ee1c68d0fb19bd"
+        }
+      ]
+    },
+    {
+      "id": "igni",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/igni.png",
+      "source_sha256": "468b8df5418d5f17cf85370f06876fb77babd38d42674e785176bec7ceda78ec",
+      "generation": {
+        "id": "igni",
+        "prompt": "Character ID: igni. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-281d87a9-d43d-46f7-9c63-13ab74e950e8.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/igni/anim.json",
+          "sha256": "3f74782050998d231109b744e0925fb39b5dfd6e22a3f6ea1a62c6677493dd7b"
+        },
+        {
+          "path": "art/anim/igni/igni_roster_v1_idle.png",
+          "sha256": "0977992e99ac7d6b722d4cf39d920660ea51a82daa2b8c97fcb7bf4ce4ffb560"
+        },
+        {
+          "path": "art/anim/igni/igni_roster_v1_attack.png",
+          "sha256": "f3e7c577f23a40acdb11d2d3d8fef3067804e208d6d24e8bb977059d47f4684d"
+        },
+        {
+          "path": "art/units/igni.png",
+          "sha256": "5a04f8981df16b869349e2c7d8834bfc253284300d4a2acce3dca2dd33b51fd1"
+        },
+        {
+          "path": "art/portraits/igni.png",
+          "sha256": "cd047ded654fff2e180f317df975a9867e4b0fc838e7df4d838ed711c87649bc"
+        }
+      ]
+    },
+    {
+      "id": "isa",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/isa.png",
+      "source_sha256": "6887fe103f3bfbc8f3db8966b4a9011f0431bc528a32bd1df3e10b8674b1a4cd",
+      "generation": {
+        "id": "isa",
+        "prompt": "Character ID: isa. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-2fad53f8-d93c-472a-a2f1-d26f3707a139.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/isa/anim.json",
+          "sha256": "824d0414b5fe99f12124a1994b429e2a90ae76d27254a7a3fb062b0674c26db6"
+        },
+        {
+          "path": "art/anim/isa/isa_roster_v1_idle.png",
+          "sha256": "bfd3f567ef2f6423ee095802ec2c21e5435ca1400f1dd61abf7468872890479f"
+        },
+        {
+          "path": "art/anim/isa/isa_roster_v1_attack.png",
+          "sha256": "d6419cd55e363d7cd22bb4a7771352aa21f49fbbace71f4ee3e78c65a9f0a0a9"
+        },
+        {
+          "path": "art/units/isa.png",
+          "sha256": "2a781c49b9112fd37547ae15f9144c8ecbc15fbae08335ba4d5aca74612e486b"
+        },
+        {
+          "path": "art/portraits/isa.png",
+          "sha256": "ac9dd2c5536c1a3c762dbfe5f00bce6b1673de4336bacf035d90c03a7242a06d"
+        }
+      ]
+    },
+    {
+      "id": "jokull",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/jokull.png",
+      "source_sha256": "c362f18daf06d8888beda8e9925bfeefeb1852f3e7145162b2e3c205df6f330b",
+      "generation": {
+        "id": "jokull",
+        "prompt": "Character ID: jokull. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-4286cc32-7748-4b6d-b663-fd7835ab8ddb.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/jokull/anim.json",
+          "sha256": "bd4d2cbceb14c5690d579795cc98225c90c85c65d91628c57a3d088346d6ddb7"
+        },
+        {
+          "path": "art/anim/jokull/jokull_roster_v1_idle.png",
+          "sha256": "dcf9ff3366228de22ea542ef265b885732cdc372475afaf5ddba9bd7fa33360c"
+        },
+        {
+          "path": "art/anim/jokull/jokull_roster_v1_attack.png",
+          "sha256": "21619b44a5797a416b401aae58d807555df8ea3894d1ecc1d87572e9fd76c2e6"
+        },
+        {
+          "path": "art/units/jokull.png",
+          "sha256": "cad9c0b5c3aadb5cd96d5497e550e470e26f4af195b4229f7e081094ae2a438d"
+        },
+        {
+          "path": "art/portraits/jokull.png",
+          "sha256": "5d283baa999632ff93d528d238daaef8929597b68703b9a69e336c93718f8978"
+        }
+      ]
+    },
+    {
+      "id": "kari",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/kari.png",
+      "source_sha256": "563ba9fcd17a8997ec7491ad4da98171decd53b7d263757fcd81579563a03bc5",
+      "generation": {
+        "id": "kari",
+        "prompt": "Character ID: kari. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-89886b3b-8b19-436a-9315-7f901d616f23.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/kari/anim.json",
+          "sha256": "51adc859edc33f8ccf5535d634554921aa62b6472fcf2f06ca8a06f0a1848a50"
+        },
+        {
+          "path": "art/anim/kari/kari_roster_v1_idle.png",
+          "sha256": "3bff6d545c012b08e30fcb2a411893f8d5312a9d366e6bcdef8efdb90258d051"
+        },
+        {
+          "path": "art/anim/kari/kari_roster_v1_attack.png",
+          "sha256": "4e337731b7ac0ecaa41898708e68c0fdafdcae1ecffbede82515fabddcf8f164"
+        },
+        {
+          "path": "art/units/kari.png",
+          "sha256": "e69c046302ca6b04f333cbd877dfa6a1c4ce288e6cabab1c44cd678b9003e537"
+        },
+        {
+          "path": "art/portraits/kari.png",
+          "sha256": "cf6c88653abd9811e65bbe121c6b90c41a2fe9cf38f09dd560ebd15b90c8d07b"
+        }
+      ]
+    },
+    {
+      "id": "keto",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/keto.png",
+      "source_sha256": "61c8a582d96f1f47616c45b11400abb6f00932af9539bb1e3fb26a90a7ab6e5a",
+      "generation": {
+        "id": "keto",
+        "prompt": "Character ID: keto. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-02a63361-be66-4404-bd90-defc225abf2e.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/keto/anim.json",
+          "sha256": "f7f041675f89d6ac5ae96b643e33c21ce23dd36b58f6f7c98fe1564f19e50b76"
+        },
+        {
+          "path": "art/anim/keto/keto_roster_v1_idle.png",
+          "sha256": "5e183fae8aabde411bad7ad9f39cdc319c8ee961b58fceb0748b6104fdd78e79"
+        },
+        {
+          "path": "art/anim/keto/keto_roster_v1_attack.png",
+          "sha256": "9bdb6202ee0126cd5a8e5bd872eac1f420d1bef65c697cce513d57cf20118190"
+        },
+        {
+          "path": "art/units/keto.png",
+          "sha256": "8afce9dd1a7e14575a828218faefbbaea5ff154d1fb97e6e8f93cd9fb88ea606"
+        },
+        {
+          "path": "art/portraits/keto.png",
+          "sha256": "d783d812ce5f4f71e4b8ce35a66490da348584e9c7a5506735fcfe87dc512d17"
+        }
+      ]
+    },
+    {
+      "id": "limne",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/limne.png",
+      "source_sha256": "e6f7be80536f57ff615b465a56ebc6c9022d8bb99c051c623d80370814a6cdd6",
+      "generation": {
+        "id": "limne",
+        "prompt": "Representative large-face chibi repaint from existing limne atlas",
+        "prompt_record": "Summary of the initial proportion sample; not the verbatim tool prompt. Subsequent character records preserve their full prompts.",
+        "references": [
+          "art/animation/roster_v1/source/limne.png"
+        ],
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-2ed165b9-3d39-4184-9c8d-afec39aee16a.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/limne/anim.json",
+          "sha256": "d10d99f7973f40deea2cfc0893b5c3925d9a617443e2162c212438a5bdae3e96"
+        },
+        {
+          "path": "art/anim/limne/limne_roster_v1_idle.png",
+          "sha256": "e488e66c61a02e4975ee1938999ebf2b647044580a4af3d305f9d2acf1ba9914"
+        },
+        {
+          "path": "art/anim/limne/limne_roster_v1_attack.png",
+          "sha256": "c08077a7d803bae9d35c2eeb9c806e50c05c90ffadf5d6a62fb0ad978421ccb9"
+        },
+        {
+          "path": "art/units/limne.png",
+          "sha256": "4a1219a58530bb49a1136f26ed21f0c4fdb3ae0a0178ce49ab2472f09cace428"
+        },
+        {
+          "path": "art/portraits/limne.png",
+          "sha256": "ea8a117cdcf148b8f24715761f2b3ef57191c1d49141c05dbc34647812cd257c"
+        }
+      ]
+    },
+    {
+      "id": "lind",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/lind.png",
+      "source_sha256": "85803267f50cdb92f14529e7a871fad1c853e03f9c38af3ca441528f0cc8c915",
+      "generation": {
+        "id": "lind",
+        "prompt": "Character ID: lind. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-ec9ed778-57a6-4f91-aae0-9af24d5da6ec.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/lind/anim.json",
+          "sha256": "71fe847f3da4bf07d888dbbc49784f4c07055fb849ada947a9630a8d00c5c43e"
+        },
+        {
+          "path": "art/anim/lind/lind_roster_v1_idle.png",
+          "sha256": "c7bc56707867f02fb3d6a45daadeb95fb050ee9c7543f4c4a452d2b9d66bea99"
+        },
+        {
+          "path": "art/anim/lind/lind_roster_v1_attack.png",
+          "sha256": "1a5a7c4161e50723ac160667d1a5fe6ffe9344cd90b2abca5cf89fa2c16488af"
+        },
+        {
+          "path": "art/units/lind.png",
+          "sha256": "82f9ea7b13f6226dd72b25413e3a4a8c98992104ae8a897eaae6827d09c3487a"
+        },
+        {
+          "path": "art/portraits/lind.png",
+          "sha256": "a9667f1b18b023cd4d12f1ed791f64fad4ad701254c6e46f73befd202b12bca2"
+        }
+      ]
+    },
+    {
+      "id": "lugh",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/lugh.png",
+      "source_sha256": "22d0c236cc679da02512af1ca84529ceec5c77882bace134eaca2d2db910b974",
+      "generation": {
+        "id": "lugh",
+        "prompt": "Character ID: lugh. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-b36acf24-3d56-4367-9dc1-fef823664e20.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/lugh/anim.json",
+          "sha256": "c2d11ac82c458dcd0c46238b8740ed0390c62f5c705548ed465be3d5e6345354"
+        },
+        {
+          "path": "art/anim/lugh/lugh_aoe_v1_idle.png",
+          "sha256": "e29644fb5a8d2f3f10af2c26104125ac31e0b7416b07f2c7598ce34ac63a2bbd"
+        },
+        {
+          "path": "art/anim/lugh/lugh_aoe_v1_attack.png",
+          "sha256": "241f335597cb58cd427c357ac3b7bc30fccc10bbb7fd7639054bdca653d6448e"
+        },
+        {
+          "path": "art/units/lugh.png",
+          "sha256": "e9a904836b0a7f45d73c7acaba10ca3a63d56950f3f1bc4f1f8f5dac91e42d84"
+        },
+        {
+          "path": "art/portraits/lugh.png",
+          "sha256": "1d4da76cccb0802b5e4e27351e1fa66fd17cc8bc4a3039a2d7f36f9af0ee0e5d"
+        }
+      ]
+    },
+    {
+      "id": "marea",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/marea.png",
+      "source_sha256": "14bb0d75c30bee46078cc2d6b41758a140136562c2d0ef3693d221b47945d671",
+      "generation": {
+        "id": "marea",
+        "prompt": "Character ID: marea. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-a3b5ef84-f534-4bca-8301-ba6d8118679f.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/marea/anim.json",
+          "sha256": "1c525cbc5beeebb0e8226e886fb2a0b34058b4122be520a52b6367d9cebe362e"
+        },
+        {
+          "path": "art/anim/marea/marea_roster_v1_idle.png",
+          "sha256": "b8b2d8be18479cfc32200d48b73705f9ca966e5b24d0e08c44eea339393e8a5f"
+        },
+        {
+          "path": "art/anim/marea/marea_roster_v1_attack.png",
+          "sha256": "536b2b69447715af6413aa42f6cf097cd25a192e6d5580b3f8451035e434f508"
+        },
+        {
+          "path": "art/units/marea.png",
+          "sha256": "07faab7fbf98c6acf092e5bd8468a48e7a4b1c4eb12c30f12715569ab95cf9be"
+        },
+        {
+          "path": "art/portraits/marea.png",
+          "sha256": "2d9649a1cf449a6aa4b4c049fe545696a6ba5072b4831708595a6f459a5630be"
+        }
+      ]
+    },
+    {
+      "id": "mimic",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/mimic.png",
+      "source_sha256": "83670e51f339e890469d20ef0a4ac195d9cf3b6f078b488482e2bfcc8ce0697f",
+      "generation": {
+        "id": "mimic",
+        "prompt": "Character ID: mimic. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-6c1efd0d-561a-4b13-9eeb-2d989392927d.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/mimic/anim.json",
+          "sha256": "7d685b69b34a9d74befb390d441bd2c25912144f702593119a8ac7a754299716"
+        },
+        {
+          "path": "art/anim/mimic/mimic_roster_v1_idle.png",
+          "sha256": "4c9eea227a07919e17390bb33b19c7df42010c1d46561fa14f8f0753b1aacd5f"
+        },
+        {
+          "path": "art/anim/mimic/mimic_roster_v1_attack.png",
+          "sha256": "fe09a1c8289398d98f098757ed96fafd9a550860188cbb976d6f5419c0104b4f"
+        },
+        {
+          "path": "art/units/mimic.png",
+          "sha256": "dc9a7dcbf2f99637c3954b5a280ee3dd780b6f0e688eb61295ced8c435aca4ae"
+        },
+        {
+          "path": "art/portraits/mimic.png",
+          "sha256": "56e7e9f8c636afbcf81289b39c855097d4e6d333b952c35abfb4ecdaf4d103b0"
+        }
+      ]
+    },
+    {
+      "id": "morrigan",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/morrigan.png",
+      "source_sha256": "1ff2a52377ee8609201d998fd21cd8bf0b314d1f916cbbad2c861093a2a37154",
+      "generation": {
+        "id": "morrigan",
+        "prompt": "Character ID: morrigan. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-d61850f7-e868-4dcc-b762-a72b0d0bc6cc.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/morrigan/anim.json",
+          "sha256": "22e0c027e82306954e0bfa09b07085586cf3d7cfd8526dfeaa6276ba06d940fb"
+        },
+        {
+          "path": "art/anim/morrigan/morrigan_roster_v1_idle.png",
+          "sha256": "e2e17d912e61a8426b307c2bcfc572d47aca47f7fc6b02b9ca713a79dbae4f20"
+        },
+        {
+          "path": "art/anim/morrigan/morrigan_roster_v1_attack.png",
+          "sha256": "a4930cdd3c215d4647da9c44bbd5e836e4275fb16291d90c09cb275f9c0da125"
+        },
+        {
+          "path": "art/units/morrigan.png",
+          "sha256": "75d3561bafe0741d93544e48e23eb50b0fef8a263a8af89e0c13add96850603a"
+        },
+        {
+          "path": "art/portraits/morrigan.png",
+          "sha256": "8e629c1b420b1d91726564ff801d0c31458d2a6b4d588456b9cdb5af8b5b957b"
+        }
+      ]
+    },
+    {
+      "id": "nerea",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/nerea.png",
+      "source_sha256": "4f138a9e5773f64516a2fe2a4b1070572edf3b84546db5ae155c57200ce3abab",
+      "generation": {
+        "id": "nerea",
+        "prompt": "Character ID: nerea. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-2f21bc0f-cce0-4d9d-bf02-1e22752d14ad.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/nerea/anim.json",
+          "sha256": "2175a7eb89af8dcb208fc55975c3cac0bd05bb7cbd59b536526c34a274c5eeb7"
+        },
+        {
+          "path": "art/anim/nerea/nerea_roster_v1_idle.png",
+          "sha256": "026bfe94bc2c16eedb8b9a0140fcec2c310a3da56ef70ead7aa4c85b2255a65b"
+        },
+        {
+          "path": "art/anim/nerea/nerea_roster_v1_attack.png",
+          "sha256": "59cbf19236b0f8758bed11ec7758932ba9d4632de48e35eb741b9a6890340525"
+        },
+        {
+          "path": "art/units/nerea.png",
+          "sha256": "3d11b9c9b0d4c2d1e656ad3fe07e2fa8aa5b4212297fc33340835cb556a8e30a"
+        },
+        {
+          "path": "art/portraits/nerea.png",
+          "sha256": "86b071e5445321b0566a1a7079fb32f36d0fb96441839ebd13212d6fad23da82"
+        }
+      ]
+    },
+    {
+      "id": "niamh",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/niamh.png",
+      "source_sha256": "bc6a1a4b1d6937dc83ee4fd7ff8c42f67acf9b53d14ba69a157e595e4d20d9f8",
+      "generation": {
+        "id": "niamh",
+        "prompt": "Character ID: niamh. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-dd2272aa-5f13-4bbe-b71f-f8af96de9e49.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/niamh/anim.json",
+          "sha256": "d6823eaa6cac1933435d185132f4b080268352321872d939f5060167c17ec7fa"
+        },
+        {
+          "path": "art/anim/niamh/niamh_roster_v1_idle.png",
+          "sha256": "0b993bb1acdd09cde6fdaad2bfbf15948ce9bde5896d1bad3e01a642579e31a1"
+        },
+        {
+          "path": "art/anim/niamh/niamh_roster_v1_attack.png",
+          "sha256": "811f46c7a00e386ef0efc13aa6287263ce6b066dd19f9509f56c2fdee5057cd6"
+        },
+        {
+          "path": "art/units/niamh.png",
+          "sha256": "9c103f5e0ef43dd884796fd1110a35fb8682d0d28fd4e68ba35d1fe64829a52d"
+        },
+        {
+          "path": "art/portraits/niamh.png",
+          "sha256": "5f1325f7c4dc8202415d5577f41a0fbb4207ede8da95e60fa5941818994091f2"
+        }
+      ]
+    },
+    {
+      "id": "null",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/null.png",
+      "source_sha256": "93525043110f7ae0c5f7bce80e44d0fa78193324dc383322ac4c362774a77e65",
+      "generation": {
+        "id": "null",
+        "prompt": "Character ID: null. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-ec3efa1c-b990-4e4b-a1c5-9eab4bbc8683.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/null/anim.json",
+          "sha256": "55c2149f569f3fd591014a800ea5e22280c4f1173cfc48d371783ad57ff22d95"
+        },
+        {
+          "path": "art/anim/null/null_roster_v1_idle.png",
+          "sha256": "2866596eb5133a7bd802cbd6af60c2d0e9327bf985439055c1b2f8d9386321ea"
+        },
+        {
+          "path": "art/anim/null/null_roster_v1_attack.png",
+          "sha256": "b3e9c5a44991bc0bec9fce14f8474ad604b3d2b396f7a6ed5261aa823d018e4b"
+        },
+        {
+          "path": "art/units/null.png",
+          "sha256": "5bb8d1fc975ad4892bc017f52bd649eebf5adc0f13fc907fb1213c500679d30e"
+        },
+        {
+          "path": "art/portraits/null.png",
+          "sha256": "7316a706f871096c4fa180632c681d0877d3214d4f876a7aa0594a1c29af79b7"
+        }
+      ]
+    },
+    {
+      "id": "phantom",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/phantom.png",
+      "source_sha256": "545deabc3abf9ce46843323c6de446b0eb97ffe5d545ab23d89566b049de7f80",
+      "generation": {
+        "id": "phantom",
+        "prompt": "Character ID: phantom. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-f782e64b-1ff4-4674-a9c6-a9f87093902e.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/phantom/anim.json",
+          "sha256": "076cf9e9fe81ca0c8dc387c4dc9a2a62d43a042fb4b74fe4f424aca3b6876a24"
+        },
+        {
+          "path": "art/anim/phantom/phantom_roster_v1_idle.png",
+          "sha256": "95e624bcb62d3613af6e1bc006341d77b94e93e6e8532ea64ad0a5c4a1e9ef21"
+        },
+        {
+          "path": "art/anim/phantom/phantom_roster_v1_attack.png",
+          "sha256": "0246e1f69d4ac49146b36c024a06470e31a1d5e65a698b6a3dcacb64435682d9"
+        },
+        {
+          "path": "art/units/phantom.png",
+          "sha256": "10b70321a11e418e63f723a5294a34533978728b0d3a3112d1182b68bd992b7f"
+        },
+        {
+          "path": "art/portraits/phantom.png",
+          "sha256": "b76815229424a63f8b2e0b645fdb687b5cf2b38730ad9cee9cdc9f102ba504b2"
+        }
+      ]
+    },
+    {
+      "id": "phorkys",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/phorkys.png",
+      "source_sha256": "c6b17e7dd2552a6a2c11cea5948289db93f09b9f0e1f7f91e7e7a3e13b6a04a8",
+      "generation": {
+        "id": "phorkys",
+        "prompt": "Character ID: phorkys. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-fa57431b-2aaa-43c5-b750-33d381b2979a.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/phorkys/anim.json",
+          "sha256": "c8e778c6fb1a33434bbf880c0bdde2d13356881b8a3e8dbb6a07ee660569a5b9"
+        },
+        {
+          "path": "art/anim/phorkys/phorkys_roster_v1_idle.png",
+          "sha256": "f27e99214ce6eb5eb9e44e1764028b27ef640cc033a268d914d6f2a424cdbacd"
+        },
+        {
+          "path": "art/anim/phorkys/phorkys_roster_v1_attack.png",
+          "sha256": "566da0a1b378cbedf9dd1bd5c59745d35c324ad96ea33ac4b5275c8562e065cf"
+        },
+        {
+          "path": "art/units/phorkys.png",
+          "sha256": "b596b8bb630eaea25705517778dbedb28ec2ff23b9cac48548b94f9ee08ff477"
+        },
+        {
+          "path": "art/portraits/phorkys.png",
+          "sha256": "a4baff14100e4bafb3f8bde50e7016f29ea37f9365d9ff871e462599116bba72"
+        }
+      ]
+    },
+    {
+      "id": "pip",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/pip.png",
+      "source_sha256": "579b49536950d2a804fbbaa8eaacb4d6d9e2f00ab7b6303644a51b20a898157f",
+      "generation": {
+        "id": "pip",
+        "prompt": "Character ID: pip. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-f7cfa749-eeb3-4a1e-af7f-2424dd59c043.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/pip/anim.json",
+          "sha256": "658fcfdacb8bb7c306968957de55d8f5b97c8e01698ee372659e826efa3a11cc"
+        },
+        {
+          "path": "art/anim/pip/pip_roster_v1_idle.png",
+          "sha256": "01c6de968b70fd5d8494aae8666a1f92f607f55e273fd8766fcc9d86d8937f2e"
+        },
+        {
+          "path": "art/anim/pip/pip_roster_v1_attack.png",
+          "sha256": "dfec078489c3d5071d2831243c775e033be1b4e04673af8b1e0178caf51ce462"
+        },
+        {
+          "path": "art/units/pip.png",
+          "sha256": "590996618e7663f008c095cad02b954496588135bbf9ec59b7fd8b0ef7b898f4"
+        },
+        {
+          "path": "art/portraits/pip.png",
+          "sha256": "7125c5ffbe13b2211dfa83358a1729edcde59712306f9ed89540ee6c1c3eb9ea"
+        }
+      ]
+    },
+    {
+      "id": "protea",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/protea.png",
+      "source_sha256": "852a749ef3741103529a8fd89d467b369f76b1c88c77efd8270ea9a86f4a70c9",
+      "generation": {
+        "id": "protea",
+        "prompt": "Character ID: protea. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-3f9e0a06-ab8c-4b98-b71f-bd97d179647a.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/protea/anim.json",
+          "sha256": "8a91a6605f90bfbc7846df471e463d56b48200fbbb4342b91aad6bef54b91c7a"
+        },
+        {
+          "path": "art/anim/protea/protea_roster_v1_idle.png",
+          "sha256": "542b39965adb2b276ef6fba4b757816ecdcdc87fcd8bd964eabf9afc5620e4d7"
+        },
+        {
+          "path": "art/anim/protea/protea_roster_v1_attack.png",
+          "sha256": "97692ce5339c0c13a8870d27b2574b92775f16048f017f51d0e4b7b172452ecf"
+        },
+        {
+          "path": "art/units/protea.png",
+          "sha256": "8f650886a4b02dd34f219c2f31eb93c72fa4985ff6d02147ded58361bb6eb5f0"
+        },
+        {
+          "path": "art/portraits/protea.png",
+          "sha256": "a2ebe7b68e9e3f57f92d4e16fef5f55b53507f7df093e78970097cadad8a7a74"
+        }
+      ]
+    },
+    {
+      "id": "rhiannon",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/rhiannon.png",
+      "source_sha256": "25203745324f2c3bb24368d2e943476ae8cfd929e3addc6956644f8c20d2d8ca",
+      "generation": {
+        "id": "rhiannon",
+        "prompt": "Character ID: rhiannon. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-9cd157be-38b4-4821-b53d-f49dea4e1849.png",
+        "status": "generated",
+        "repair": {
+          "id": "rhiannon",
+          "prompt": "Use case: identity-preserve. Repair only the sprite atlas layout in this approved chibi character sheet. Preserve exact face, chunky body proportions, colors, outfit, weapons and every pose. Keep4columns3rows. Make each complete actor slightly smaller WITHIN its cell so EVERY body, weapon and release glow is fully visible and surrounded by at least40px of true transparent padding. CRITICAL: second-row third actor's electricity touches the fourth actor's hair; separate these sprites with a wide transparent gap, shrink only the flash if needed. No intersecting/connected silhouettes between neighboring cells. Genuine transparent background, no checkerboard, scenery, floor or shadow. Output1536x1152.",
+          "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-b2c4d19f-37a8-4179-a0eb-228cb4f3f516.png",
+          "status": "generated"
+        }
+      },
+      "outputs": [
+        {
+          "path": "art/anim/rhiannon/anim.json",
+          "sha256": "62bb032c897a81ce07bfc68b6f8b962fde296a003b37ae206c04150cb5d10d13"
+        },
+        {
+          "path": "art/anim/rhiannon/rhiannon_roster_v1_idle.png",
+          "sha256": "0653b04e8ffc7567fb547c94bf242207e3634afd820b0e6b71a95b23c11339b7"
+        },
+        {
+          "path": "art/anim/rhiannon/rhiannon_roster_v1_attack.png",
+          "sha256": "3411da5f238c7640d7accda37b45b3e767a3c71d3343e6f84df862371d8b2e16"
+        },
+        {
+          "path": "art/units/rhiannon.png",
+          "sha256": "658c03a86e44088e2370828cf547ee94ed319162773205727a09eec1ccf920b2"
+        },
+        {
+          "path": "art/portraits/rhiannon.png",
+          "sha256": "db071350eec1b80348fd29e54e2135d8251eb04397ea115091f5bddaa22a7ba9"
+        }
+      ]
+    },
+    {
+      "id": "saeta",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/saeta.png",
+      "source_sha256": "e10a69900b147a15a688514a37074b580b637deb1cdcd545312f1f30b2cae8e9",
+      "generation": {
+        "id": "saeta",
+        "prompt": "Character ID: saeta. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-55083890-7e74-4771-9b23-7c334d2dfd64.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/saeta/anim.json",
+          "sha256": "7f64dc61462013281d814b7a2a886019af91f91358c6133bb12fece9530f5c63"
+        },
+        {
+          "path": "art/anim/saeta/saeta_roster_v1_idle.png",
+          "sha256": "3259e5fdc14bed9588e74fdd04e0dd5be74d62620db1792bc0cad85aef477f82"
+        },
+        {
+          "path": "art/anim/saeta/saeta_roster_v1_attack.png",
+          "sha256": "9633c2507507c176cd219dce495c708f382cc310edee273892f64d04510d571c"
+        },
+        {
+          "path": "art/units/saeta.png",
+          "sha256": "03cf25976007aa88458a0d893fc471c6a15d3e858a56cec8b53494b1603e948f"
+        },
+        {
+          "path": "art/portraits/saeta.png",
+          "sha256": "a68c654769fa75806fde61c32414610cbbdb7652870523c9e2ae7e00e1a51a70"
+        }
+      ]
+    },
+    {
+      "id": "shift",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/shift.png",
+      "source_sha256": "f5d72c9da5c856cf947dfc802a51356107382c02e2dc1c290a2f451669e17aff",
+      "generation": {
+        "id": "shift",
+        "prompt": "Character ID: shift. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-993cf773-e4ba-440b-8a76-d7eb5143face.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/shift/anim.json",
+          "sha256": "a8c334bcc0af1044fa9ad4687bfd13e5e4ff6bbcf2e7e71611a9abb75175e95a"
+        },
+        {
+          "path": "art/anim/shift/shift_roster_v1_idle.png",
+          "sha256": "c88ee9b0e148697da5b5b51e3ffc68cd316f45c654f9a183c62aa07297ea776b"
+        },
+        {
+          "path": "art/anim/shift/shift_roster_v1_attack.png",
+          "sha256": "ac25e570f6bd538653244927a14ed016727da5e4e9bc62df11d124a1ae8e524f"
+        },
+        {
+          "path": "art/units/shift.png",
+          "sha256": "8f38e9ee3730d4d7926763f758da84358b00308d1b4a3fa4e5ff018d0eabe4ee"
+        },
+        {
+          "path": "art/portraits/shift.png",
+          "sha256": "11327a20fad9400518b4007f7a60d2314060185b5a7213158ab55f1864ad3b20"
+        }
+      ]
+    },
+    {
+      "id": "sigrid",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/sigrid.png",
+      "source_sha256": "4ad91d9789c2960eaf9a2c9741b8ededb488e9576cb59f5915d408f5caff8c0f",
+      "generation": {
+        "id": "sigrid",
+        "prompt": "Character ID: sigrid. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-29ebe2f6-2d27-4184-90db-afee7c432cc2.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/sigrid/anim.json",
+          "sha256": "349322b59ea42f92caf1485aede2a54eccf04f3a1baeddc96efd40dee5e054f2"
+        },
+        {
+          "path": "art/anim/sigrid/sigrid_aoe_v1_idle.png",
+          "sha256": "bd6dbc559cf0b16219ebb6139a4c428a3fe34aab8717d0dab94483b098ab480b"
+        },
+        {
+          "path": "art/anim/sigrid/sigrid_aoe_v1_attack.png",
+          "sha256": "0f0e62951baeeff077dcc7b7814f01592e098296ed05b100a1798c0c8583eefe"
+        },
+        {
+          "path": "art/units/sigrid.png",
+          "sha256": "fa831a00b3f8dfef1be8f7162c971b62d920f8bebb0bda31107d55238cbd086e"
+        },
+        {
+          "path": "art/portraits/sigrid.png",
+          "sha256": "e4011bc2f76f5dd3d226dfd1417b0248fe55a70fea82e91ec32b3b12942222fe"
+        }
+      ]
+    },
+    {
+      "id": "snorri",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/snorri.png",
+      "source_sha256": "276b30e4984d79bb125a3e6bdb72c1c351a8dfef0b8678cd4a8ea39212c3f734",
+      "generation": {
+        "id": "snorri",
+        "prompt": "Character ID: snorri. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-42cab8c8-4b01-40d2-999c-60921c7277ce.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/snorri/anim.json",
+          "sha256": "bef2e000142a4fcdfd085f37acbe83688c60773281032c8c1a4c3d359ea14e20"
+        },
+        {
+          "path": "art/anim/snorri/snorri_roster_v1_idle.png",
+          "sha256": "cef9cb8b7890b1244a24ba485e194524e1618e4cc49c650f7f337f88ffed63c3"
+        },
+        {
+          "path": "art/anim/snorri/snorri_roster_v1_attack.png",
+          "sha256": "27acbac9388644b3b2dc11f52c0d1a9092163d4bbf8b970c9a5deb706e294942"
+        },
+        {
+          "path": "art/units/snorri.png",
+          "sha256": "91f433390170040efa230996ba153002f222b6676d728f41aea3b239111a648a"
+        },
+        {
+          "path": "art/portraits/snorri.png",
+          "sha256": "8f6bfe8ac9038f6423f4601405a965149381b3b80dce069877a70cf2ba61f571"
+        }
+      ]
+    },
+    {
+      "id": "solana",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/solana.png",
+      "source_sha256": "bb94a393d7f16d64896c11ce7b56516e37bf81c8e9834fc6f394fbf5fb04f84b",
+      "generation": {
+        "id": "solana",
+        "prompt": "Character ID: solana. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-ad0a6b83-e2d9-48fc-8c8b-7b09a7664a69.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/solana/anim.json",
+          "sha256": "2536b7bf445c61bf75a2651cdc9787ee0617211944fd4137fd1c81a3b13bf3fc"
+        },
+        {
+          "path": "art/anim/solana/solana_roster_v1_idle.png",
+          "sha256": "275efb0f888d3ba0925091c67d5c280e3417fd1190a15cbf252c75b1d30dc799"
+        },
+        {
+          "path": "art/anim/solana/solana_roster_v1_attack.png",
+          "sha256": "97e0c19ff9fb11165336297667edabc1ea678691cb345e898ff71837ccc1cd33"
+        },
+        {
+          "path": "art/units/solana.png",
+          "sha256": "6c2f6e3083dc399f86a1b0e7fd5c1026c352f69259a979529c84a5d5e6706e93"
+        },
+        {
+          "path": "art/portraits/solana.png",
+          "sha256": "83ed13a99a8810ef4d928dbee0d5b37a44a62178b5b57b9277a22d8cff9c9ce6"
+        }
+      ]
+    },
+    {
+      "id": "thalassa",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/thalassa.png",
+      "source_sha256": "c359dd7a8e42b68dabf6cc1ca46779844b704e8c75545b66a100fb7bdb2316fe",
+      "generation": {
+        "id": "thalassa",
+        "prompt": "Character ID: thalassa. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-475de99a-cd00-4d43-98fd-4a412a9e230c.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/thalassa/anim.json",
+          "sha256": "e7b534c1612fc713067e703d8efe2f51c94920110803673fe7d2b71339532a0a"
+        },
+        {
+          "path": "art/anim/thalassa/thalassa_aoe_v1_idle.png",
+          "sha256": "aefde761f27e7dbff30a8cdf8f6bb4435e7a7c395e44484ff27ff57fa3123e2c"
+        },
+        {
+          "path": "art/anim/thalassa/thalassa_aoe_v1_attack.png",
+          "sha256": "8f1874303552c3ac488788970614649d503220833c43436cb59226a8d50999bc"
+        },
+        {
+          "path": "art/units/thalassa.png",
+          "sha256": "06062060e00d35aaa76ed5a4dc68caba47e273ab1f147423642c9335e9eb0a6e"
+        },
+        {
+          "path": "art/portraits/thalassa.png",
+          "sha256": "1901fcbf94ea22f31c94080971709d50e63dd9315d4a2de3ae832f4643fc01d5"
+        }
+      ]
+    },
+    {
+      "id": "triton",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/triton.png",
+      "source_sha256": "83db84227993491282f8eba6cc28b8a1c67f9ce7f95a5811e0c167431f892fda",
+      "generation": {
+        "id": "triton",
+        "prompt": "Character ID: triton. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-b6fb77d5-e357-4654-a7cf-cd5a0d530479.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/triton/anim.json",
+          "sha256": "8f6df6b6ed941a78dad12b572fa28e25117eecbbcfb2313f93c1c5babb8160ef"
+        },
+        {
+          "path": "art/anim/triton/triton_roster_v1_idle.png",
+          "sha256": "65c1c4b13172f875cf73a2f939cd790d31076bbd6898602cd73ac833a1d3f71f"
+        },
+        {
+          "path": "art/anim/triton/triton_roster_v1_attack.png",
+          "sha256": "b199022b498d4f28a085f25c77452ad288d48afd4e4162c749737cdeb0f5ea4b"
+        },
+        {
+          "path": "art/units/triton.png",
+          "sha256": "08ce546f343d33106c600108993d9c520663117ce357b7ebb0fe63dfa73bab8e"
+        },
+        {
+          "path": "art/portraits/triton.png",
+          "sha256": "8b01bf8361045e45db2e73e0143163c7c999771f4b550c01422ac0c124a60691"
+        }
+      ]
+    },
+    {
+      "id": "vidarr",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/vidarr.png",
+      "source_sha256": "ff089d22c5f1e3884e65b16eb737051b3a349e6f3bb77bbc208d94bc603c37ce",
+      "generation": {
+        "id": "vidarr",
+        "prompt": "Character ID: vidarr. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-577a04fd-e627-4777-84df-13e36b8092aa.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/vidarr/anim.json",
+          "sha256": "d8a79a6cab463213c83166aee7302501ad7e236b2a2a122e97e1d427176b0248"
+        },
+        {
+          "path": "art/anim/vidarr/vidarr_roster_v1_idle.png",
+          "sha256": "2ae658b8c297c4dac1e6da8c1c5cd37de72dd9455f7187c8dc3d9a9bc2dc8c61"
+        },
+        {
+          "path": "art/anim/vidarr/vidarr_roster_v1_attack.png",
+          "sha256": "792a855913c4a9059daf4facfadda9035df74dbbf5e8718bd2f05c67688adbcb"
+        },
+        {
+          "path": "art/units/vidarr.png",
+          "sha256": "91d7dcf03f00fc2c107066ae4c9e2fac4c8a9090d5ec79984e1cc675cafbb42f"
+        },
+        {
+          "path": "art/portraits/vidarr.png",
+          "sha256": "69233bbab0e1cb5ad98d6f6dd12c6c70517f4c311c27d55f30296d2a30a10e7f"
+        }
+      ]
+    },
+    {
+      "id": "volcan",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/volcan.png",
+      "source_sha256": "e0fa3b8b1bfb68cd25240e91584a7c5660ac5553e768908b6aa106459929e38c",
+      "generation": {
+        "id": "volcan",
+        "prompt": "Character ID: volcan. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-545bb500-8f75-4827-8b81-86ef7430be12.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/volcan/anim.json",
+          "sha256": "2e57583d0cca5fa224b0c729f3eace5bdc4b3b00f8ec77b349504ce80bfcab8f"
+        },
+        {
+          "path": "art/anim/volcan/volcan_roster_v1_idle.png",
+          "sha256": "0bfce609be19bac9ba647dd10bd072d5512d79afb72228e1bd9c5bed4fc8426f"
+        },
+        {
+          "path": "art/anim/volcan/volcan_roster_v1_attack.png",
+          "sha256": "c77a832e3ef3626235c7ce440a47639447f41cac01745cddc228de5c8af54118"
+        },
+        {
+          "path": "art/units/volcan.png",
+          "sha256": "894de9bd03ccd6faf96ef1656e5997c19d4b0c79c4c8790ca880f76d81b2e62a"
+        },
+        {
+          "path": "art/portraits/volcan.png",
+          "sha256": "051899846b51eaddfef61dfb81d9895e91f737d35d690197f36a592e0f1d7909"
+        }
+      ]
+    },
+    {
+      "id": "zero",
+      "kind": "hero",
+      "source": "art/animation/chibi_v1/source/zero.png",
+      "source_sha256": "19f92e0e3b782c175e27d3115b98816d7c950a302fd12a940769970a27bc74a0",
+      "generation": {
+        "id": "zero",
+        "prompt": "Character ID: zero. Use case: identity-preserve. EDIT IMAGE1's existing game character atlas. IMAGE2 is PROPORTION/STYLE reference only, do NOT copy its character, water tank or hose. Redraw IMAGE1 character in every actor pose with chunky chibi proportions like image2: large round head and readable face 35-40% of body height, around 2.6 heads tall, broad torso, SHORT THICK legs and forearms, broad boots. Clearly squatter/full-bodied than input. Preserve IMAGE1's exact hair, face identity, skin, costume, weapons, palette and elemental identity. Keep pixel art with dark clustered outlines, sharp flat material colors, 3/4 right-facing view. Exact 4 columns x 3 rows sprite atlas: row1 four subtle idle phases, row2 SAME four original attack keyposes in same order, row3 SAME four original effect sprites. SAME head size/equipment/body scale across all 8 actor frames. Full weapon must remain visible; keep at least 24px empty gutter inside every cell on all sides so NO sprites touch neighboring cells. All actors have feet on same baseline and centered boot positions, weapons safely inset. Use genuine TRANSPARENT background including all internal gaps. No magenta, checkerboard, scene, floor shadows, text, grid or labels. Do not remove or add equipment. Keep same original pose roles and facing. Output 1536x1152.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-399f8e39-18b3-4b01-bc54-af8d5eff5e88.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/zero/anim.json",
+          "sha256": "97b44e729dc936e3f914ac21aff6a3d6fe6936ebb11f19efc8f2105586b58734"
+        },
+        {
+          "path": "art/anim/zero/zero_roster_v1_idle.png",
+          "sha256": "45480ca8d6a3e3baa078dc82bd40a32a2584afb7394861353085957d305a6fe6"
+        },
+        {
+          "path": "art/anim/zero/zero_roster_v1_attack.png",
+          "sha256": "4722209bbbd043c9b3c63c51de00e763fd81a41bd880de0894a3223e338ee1b7"
+        },
+        {
+          "path": "art/units/zero.png",
+          "sha256": "b90864c62774e9f7f45d0b23291a23ff4a7bc057874a8c7a90eaa00ad0279a49"
+        },
+        {
+          "path": "art/portraits/zero.png",
+          "sha256": "eb1745a078c729d70bd396e73e5512e69c0f5c04e3f7e728fdd1eb676999f8bb"
+        }
+      ]
+    },
+    {
+      "id": "abyss_leviathan",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/abyss_leviathan.png",
+      "source_sha256": "5fecb8040d95ef065b838445a0c3da4d84b68487b4cd124bb9ac4c752f68005e",
+      "generation": {
+        "id": "abyss_leviathan",
+        "prompt": "Character ID:abyss_leviathan. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Floating serpent wing/fins flap in place, short compact neck and broad large dragon head. Keep coiled serpent lower body, no human legs. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-4a0e5dcb-eb46-4c3b-936c-eb484373144b.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/abyss_leviathan/anim.json",
+          "sha256": "8a7f4f4c2d5a044de3f54a5c2b25b122348f4bb90a31ef123b0e237c67242506"
+        },
+        {
+          "path": "art/anim/monsters/abyss_leviathan/abyss_leviathan_move.png",
+          "sha256": "539857e0249a24e6415c20753d7f03dd5ec7964cd94718c72f0370053732d6ef"
+        },
+        {
+          "path": "art/monsters/abyss_leviathan.png",
+          "sha256": "a57d63bc632bc629802f51ea5ce0b08096ac5656a35ec219ff0c36f5d1f85e38"
+        }
+      ]
+    },
+    {
+      "id": "blaze_fox",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/blaze_fox.png",
+      "source_sha256": "bb77b0c3616b7cf434c6eca8c332bcd1f6d9c40595c0889092ae92da66ca6598",
+      "generation": {
+        "id": "blaze_fox",
+        "prompt": "Character ID:blaze_fox. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Quadruped walking in place, alternating four short stout legs; retain flame tail and fox muzzle. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-c4414b80-7c47-4b3f-8244-41ff4ae05d83.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/blaze_fox/anim.json",
+          "sha256": "2794461fbb5e4588585ae10d76f31024bf1888eae63a56baac14402712b1f987"
+        },
+        {
+          "path": "art/anim/monsters/blaze_fox/blaze_fox_move.png",
+          "sha256": "279043ce649139dc4ccae3a8ead29b7fe3c73d7719b82ca09312ec711d2eea0e"
+        },
+        {
+          "path": "art/monsters/blaze_fox.png",
+          "sha256": "4a7fc3dea46ffae6921dc7f0082d399e07c6cfd76cb21f9418a23ec4fb147d9d"
+        }
+      ]
+    },
+    {
+      "id": "blizzard_wolf",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/blizzard_wolf.png",
+      "source_sha256": "609f57c46e572e11020344eae2562e88a33190a7b96d1c69f9a6b5dc5d70fede",
+      "generation": {
+        "id": "blizzard_wolf",
+        "prompt": "Character ID:blizzard_wolf. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Quadruped walking in place, alternating four short stout legs; retain wolf muzzle and icy fur. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-fb10f9d5-b41a-4455-8c2e-e8d59faa72b4.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/blizzard_wolf/anim.json",
+          "sha256": "2397cd44d0ed343a51f97f816f28d83e82991d9ba60739157f86597713c43393"
+        },
+        {
+          "path": "art/anim/monsters/blizzard_wolf/blizzard_wolf_move.png",
+          "sha256": "f1eab60ba5ecfa30e8900f75ef25ccdd9bfafbcdb4ed65fb19617648ea022632"
+        },
+        {
+          "path": "art/monsters/blizzard_wolf.png",
+          "sha256": "068e97c1dce608acc7fd01ce29d5d20b760c7aa9d64a6570dcdba8847964370a"
+        }
+      ]
+    },
+    {
+      "id": "bramble_imp",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/bramble_imp.png",
+      "source_sha256": "ec703e8a7f876239f4801b8848207992e311b4cdff36bd16e7768eed4cb02c4a",
+      "generation": {
+        "id": "bramble_imp",
+        "prompt": "Character ID:bramble_imp. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Small biped walks in place, alternate stout root legs. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-9c2fca43-3a28-49b8-9078-e6b7ac779657.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/bramble_imp/anim.json",
+          "sha256": "e025a1cf9ff0e3f352b30a1702166df38af853f50f484a781191547400c98c2a"
+        },
+        {
+          "path": "art/anim/monsters/bramble_imp/bramble_imp_move.png",
+          "sha256": "a824e9536cb2bd5bf61e0befcc8b260709808b1c35d0b7b81b8662fda5e1d06e"
+        },
+        {
+          "path": "art/monsters/bramble_imp.png",
+          "sha256": "eecbba720f7171b7373456fa7b385fa13d1383f2cbcd83272f41cd23531a607b"
+        }
+      ]
+    },
+    {
+      "id": "crystal_golem_king",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/crystal_golem_king.png",
+      "source_sha256": "5e9ff068d096f325135fa74c6f2c8bb59bbe5cf8e02a88c2008e40cfa0a76185",
+      "generation": {
+        "id": "crystal_golem_king",
+        "prompt": "Character ID:crystal_golem_king. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Heavy biped marches in place, alternate stout legs and counter-swing thick arms. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-5b0d64bf-a1d3-4914-9b47-1d61369c93e5.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/crystal_golem_king/anim.json",
+          "sha256": "02641338d21c5c6103b54bbf0169f43c2526089bb303df83e98261495f3f2c5b"
+        },
+        {
+          "path": "art/anim/monsters/crystal_golem_king/crystal_golem_king_move.png",
+          "sha256": "fbc51a1fb4081031eb6aa2a9097ddf79db9d1567b6dd07b2c666fd1ff8a4dbda"
+        },
+        {
+          "path": "art/monsters/crystal_golem_king.png",
+          "sha256": "54a04c18ce46380aeecdeadfccee5c88c1b11829663a421829ab8e28c9f9c979"
+        }
+      ]
+    },
+    {
+      "id": "crystal_skink",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/crystal_skink.png",
+      "source_sha256": "0fb4b2fbd512de14f844ac9c0e7f7a3d8c5494b3e6f8425cd8c38f8015646b00",
+      "generation": {
+        "id": "crystal_skink",
+        "prompt": "Character ID:crystal_skink. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Quadruped walks in place, four short legs, big lizard face and intact amber crystals. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-5e1b502c-b03e-4f67-aa99-4a608bdb64c6.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/crystal_skink/anim.json",
+          "sha256": "4268c06889505a75e8f17b3fe43a22a509050223a1af0d1791da10d63dab0fbd"
+        },
+        {
+          "path": "art/anim/monsters/crystal_skink/crystal_skink_move.png",
+          "sha256": "580ecdda7466aa6be022f3e0105ae620cbaa2fbf8df798bb61d2ade46fc92181"
+        },
+        {
+          "path": "art/monsters/crystal_skink.png",
+          "sha256": "b09165d65e38359cdc3300b48147fb73499b0ee5bc208208ebdae72f3fd799b9"
+        }
+      ]
+    },
+    {
+      "id": "drop_slime",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/drop_slime.png",
+      "source_sha256": "b0cf9417e3c2741b0b80411888ea87860556fc68827f7519a8db7102a71c2f4d",
+      "generation": {
+        "id": "drop_slime",
+        "prompt": "Character ID:drop_slime. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Low broad jelly blob squashes gently and undulates forward in place, enlarge eyes, no added limbs. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-a53cd214-cbe7-4626-aea9-bb9b0b097c6a.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/drop_slime/anim.json",
+          "sha256": "6762634061d3f96fcce2ba74315ede0d273e465ae83788a376567e71c81a9ff1"
+        },
+        {
+          "path": "art/anim/monsters/drop_slime/drop_slime_move.png",
+          "sha256": "c157bb1e5ceba129bbdb86b7c1c791df98560317262fb6e309b546b77952886d"
+        },
+        {
+          "path": "art/monsters/drop_slime.png",
+          "sha256": "205603cbfcece8b4e45f69ef5b2dfbab45d103fb84c95892f3b3f07734f82557"
+        }
+      ]
+    },
+    {
+      "id": "elder_treant",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/elder_treant.png",
+      "source_sha256": "3f04a032f132ee20849414123e627bf8d4204ba533264f8db06e72001216f96c",
+      "generation": {
+        "id": "elder_treant",
+        "prompt": "Character ID:elder_treant. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Stout tree creature walks on two thick root legs, short dense trunk, enlarge expressive face, retain full canopy. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-f1c77bcf-b2af-4e6d-a4d6-63231d022dac.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/elder_treant/anim.json",
+          "sha256": "03771f359c9a2a1177fb7be5bd6e37f574218e5f7f3ea4003662c306c8225b10"
+        },
+        {
+          "path": "art/anim/monsters/elder_treant/elder_treant_move.png",
+          "sha256": "c06d10048d743d6ef8a29db3e9623986f65caf0c675515225d135d7b20d21b03"
+        },
+        {
+          "path": "art/monsters/elder_treant.png",
+          "sha256": "f791f14b522c8b0c729c662367554aa7e197d8e0df115fe6676acf35391a04d5"
+        }
+      ]
+    },
+    {
+      "id": "ember_imp",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/ember_imp.png",
+      "source_sha256": "39f596026e78b8470542fa5072e47aa32f74162441142c9f301a3f23b3bb9724",
+      "generation": {
+        "id": "ember_imp",
+        "path": "art/concepts/monsters/ember_imp.png",
+        "prompt": "Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement: small biped walking in place, alternating left and right short legs and counter-swinging arms; flames flicker subtly.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-f69a531e-c683-4730-9eab-d1a3e992a65d.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/ember_imp/anim.json",
+          "sha256": "2c6ceddec38745a64e0a6993d5fca30f409b42175e27d4e090ddf603cafb0a74"
+        },
+        {
+          "path": "art/anim/monsters/ember_imp/ember_imp_move.png",
+          "sha256": "e5cfaa8de4d6115ef121ac35026626924e97f95761427da437a96fcc2337205e"
+        },
+        {
+          "path": "art/monsters/ember_imp.png",
+          "sha256": "75bc548ac213279add8aaec73f3f68be5930b232c6dca4e4b6bd8b7ac76c0e04"
+        }
+      ]
+    },
+    {
+      "id": "flame_dragon",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/flame_dragon.png",
+      "source_sha256": "d7eba7e93bc70dd989257ffce335bafd42ed9db2557348d08907f564549d7c94",
+      "generation": {
+        "id": "flame_dragon",
+        "prompt": "Character ID:flame_dragon. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:A compact large-headed dragon flying in place, 8 chronological wing up/down phases, retain four short legs and tail, full broad wings safely inside cell. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-4aeb91cd-becb-4110-85b2-5d1979ed17f2.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/flame_dragon/anim.json",
+          "sha256": "83e40e206ec3bcfcfdc0a6389bed9fc7171d7c0cb4e6af4b91df93fa9f55f3ac"
+        },
+        {
+          "path": "art/anim/monsters/flame_dragon/flame_dragon_move.png",
+          "sha256": "f9383b1917f1d4b053dd5560fed77740fc92088202990d98770536def40e3d23"
+        },
+        {
+          "path": "art/monsters/flame_dragon.png",
+          "sha256": "7abe0315455b803a737f5fb4883f9f938340bd55b0e022372567bce1bf056f7f"
+        }
+      ]
+    },
+    {
+      "id": "frost_imp",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/frost_imp.png",
+      "source_sha256": "6804971cab4a1452303452cbf4c364acb361bd77c511f0eee01b86b18dff1b4a",
+      "generation": {
+        "id": "frost_imp",
+        "prompt": "Character ID:frost_imp. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Small biped walks in place, alternate short thick ice legs. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-9821576f-7e41-49d4-b1b4-83f6ad375fe8.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/frost_imp/anim.json",
+          "sha256": "d1e79fea521d5466c786d62c3b76f3d9e8f79564f5ef0b351cac8c3c2b074907"
+        },
+        {
+          "path": "art/anim/monsters/frost_imp/frost_imp_move.png",
+          "sha256": "b937743db146bd603054eea985aa95b738736f7bf3820f9f2b619fe1c04f654d"
+        },
+        {
+          "path": "art/monsters/frost_imp.png",
+          "sha256": "36c3a4a55a3db55a1edf8c6925a2f66e2cc2046fe7ece5b436e87e7c1d93ef23"
+        }
+      ]
+    },
+    {
+      "id": "glacier_dragon",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/glacier_dragon.png",
+      "source_sha256": "f056d80e291b62f8c048258e0b2dcc4bd737151d36643672873d9fa752f07909",
+      "generation": {
+        "id": "glacier_dragon",
+        "prompt": "Character ID:glacier_dragon. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:A compact large-headed ice dragon flying in place, 8 chronological wing up/down phases, retain four short legs and tail, full broad wings safely inside cell. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-6038d543-ce48-47b4-8114-a37a445e9b7f.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/glacier_dragon/anim.json",
+          "sha256": "afdc9912e14b39135227a9b208c7356e4da91a31b84452b77348a444e43ef1a3"
+        },
+        {
+          "path": "art/anim/monsters/glacier_dragon/glacier_dragon_move.png",
+          "sha256": "fbb09dac20b35e7ff87509716517beb2a30cb4c791661a38cfa542d051c3f812"
+        },
+        {
+          "path": "art/monsters/glacier_dragon.png",
+          "sha256": "d28397c35f18863322c1d3ab77f4bd4ddd33e20686b864913d0d6abb1fbbabd9"
+        }
+      ]
+    },
+    {
+      "id": "glacier_titan",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/glacier_titan.png",
+      "source_sha256": "d5cfb7a699f9f18a9dc3abc26a6e1afde08050d3efca52f9b4df81210b8712db",
+      "generation": {
+        "id": "glacier_titan",
+        "prompt": "Character ID:glacier_titan. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Heavy ice biped marches in place, bigger face, shorter thicker legs and forearms. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-9b0e95d6-b4ee-42d5-bc59-986379e14189.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/glacier_titan/anim.json",
+          "sha256": "eef40cba225445394cd3b61cf4660708c284bfe3cf5635029a31e3dfb155b1f0"
+        },
+        {
+          "path": "art/anim/monsters/glacier_titan/glacier_titan_move.png",
+          "sha256": "4cf0d0f70d5478c65016ac5412396d1d46899a7abbc80b6c1e967985ed452c85"
+        },
+        {
+          "path": "art/monsters/glacier_titan.png",
+          "sha256": "3170226107927d09b8ba863166e2bd06a264f1baa388da262501de6a2a9f9f88"
+        }
+      ]
+    },
+    {
+      "id": "jelly_seer",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/jelly_seer.png",
+      "source_sha256": "d5857af9349646c7be6c49d9dcec32fad462cdd1771a39b1712e4ea06fa928d8",
+      "generation": {
+        "id": "jelly_seer",
+        "prompt": "Character ID:jelly_seer. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Float in place, broad jelly bell cap and larger face, short thick tentacles curl subtly. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-e689b4af-3c86-42ed-9454-e688ce1d081b.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/jelly_seer/anim.json",
+          "sha256": "f7b90fc2a036f308ce55d613124b0e0a21aa74443aafc80a12f8ff8c355673f8"
+        },
+        {
+          "path": "art/anim/monsters/jelly_seer/jelly_seer_move.png",
+          "sha256": "7b7a9370f1159e6553b7483af664f229b3823e476f3c4cbd5a9a1701ff98c2a5"
+        },
+        {
+          "path": "art/monsters/jelly_seer.png",
+          "sha256": "7303a4295c366f559115175c07ce12545e62fa978ce1a8dce093fe8b4c065b89"
+        }
+      ]
+    },
+    {
+      "id": "magma_brute",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/magma_brute.png",
+      "source_sha256": "d492532b02a254e52c0b0b42dec5fe6cc12aa9044f52aaaf5535896582a561f0",
+      "generation": {
+        "id": "magma_brute",
+        "prompt": "Character ID:magma_brute. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Heavy quadruped walks in place, four stout legs and larger horned face. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-14662007-74bd-4081-8e3b-75766dac0a02.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/magma_brute/anim.json",
+          "sha256": "341df83230f11323f9d0da62123ca2e9231551f7bd46c33ae7b13f4012111c3d"
+        },
+        {
+          "path": "art/anim/monsters/magma_brute/magma_brute_move.png",
+          "sha256": "8f189ae9b148d1fd62f15973b12e1b5b5e69d1772fd25e7cead4035ecb5816e8"
+        },
+        {
+          "path": "art/monsters/magma_brute.png",
+          "sha256": "c87d11b46cdfbcd5dd3493c0a2d434ce113997c5619d6f821b3cfd6654adf486"
+        }
+      ]
+    },
+    {
+      "id": "pebble_imp",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/pebble_imp.png",
+      "source_sha256": "a5980f0e6b0adedd6cec15acecbf358035ca80a448e6f451d7288956d5e7aebd",
+      "generation": {
+        "id": "pebble_imp",
+        "prompt": "Character ID:pebble_imp. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Small round stone biped walks in place on short thick legs. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-06e8d4bc-9de2-4853-a256-96108e6f3a9d.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/pebble_imp/anim.json",
+          "sha256": "a792c682d55ff7b66ad8d5100aeb34cc11881f24cc156bd0936f51039b7fc886"
+        },
+        {
+          "path": "art/anim/monsters/pebble_imp/pebble_imp_move.png",
+          "sha256": "fd7e1a1a69bfa1ed4c5b209e1f41198bedf37884b1611921081e12f4034edadf"
+        },
+        {
+          "path": "art/monsters/pebble_imp.png",
+          "sha256": "c91efa23a376d3129e6594f0c9ca3d6af8550cc2f10fbaf90403105aa2f7c927"
+        }
+      ]
+    },
+    {
+      "id": "pyre_priest",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/pyre_priest.png",
+      "source_sha256": "e0fec0bc3953e352e9763d9e80cc4ecd4ede55fbe971fdf3c8d811eccc695848",
+      "generation": {
+        "id": "pyre_priest",
+        "prompt": "Character ID:pyre_priest. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Compact robed biped walks in place, enormous recognizable horned mask/face, short broad robe and arms, retain staff and turquoise hand fire. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-1ada0250-9fb2-4fa8-879f-b589028da705.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/pyre_priest/anim.json",
+          "sha256": "5683f280f060ae45be7279407388d8acd17fca1a676f4e8c2cb238917af94810"
+        },
+        {
+          "path": "art/anim/monsters/pyre_priest/pyre_priest_move.png",
+          "sha256": "0c3afa4cb667f8c5197e11a6b127160a77510eff5df89ce31faee5551115465f"
+        },
+        {
+          "path": "art/monsters/pyre_priest.png",
+          "sha256": "3e65226ba8bcfccf61d2666c2381ca63f9bb1e420c1b725e6e1132fd0d78ce3e"
+        }
+      ]
+    },
+    {
+      "id": "rapid_ray",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/rapid_ray.png",
+      "source_sha256": "688c4a60c772ab612df6a6ed56801ea326e5418e18f6d7c719dc00950f4c8ed6",
+      "generation": {
+        "id": "rapid_ray",
+        "prompt": "Character ID:rapid_ray. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Wide round manta ray flies/swims in place, alternate raised and lowered broad fins, bigger happy face and compact tail; no added legs. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-c8760659-6ee3-4f40-b362-8c863959e61f.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/rapid_ray/anim.json",
+          "sha256": "786e3d25a5131c2d2dd6e91803798b7299c8f1774d5873ae0a8cebefd4001cd0"
+        },
+        {
+          "path": "art/anim/monsters/rapid_ray/rapid_ray_move.png",
+          "sha256": "eba11361fe900d81dae984f7d27c5a511cf48ffe01e86f2e03a1c4e265f4e699"
+        },
+        {
+          "path": "art/monsters/rapid_ray.png",
+          "sha256": "cdb0170fa2b408e24f41ee3f094d6f643232ba92992ff3d629fe8040eba37954"
+        }
+      ]
+    },
+    {
+      "id": "rime_witch",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/rime_witch.png",
+      "source_sha256": "786972b9c30cb333e2886d8761cd1a3d04fb9e78532d9bf8e878ef28436953ea",
+      "generation": {
+        "id": "rime_witch",
+        "prompt": "Character ID:rime_witch. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Compact robed ice witch walks in place, large face under ice crown, SHORT full robe and short thick arms, preserve ice staff and navy colors. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-5cb66f7d-dad7-466c-96f0-078f761f6989.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/rime_witch/anim.json",
+          "sha256": "44f83c541bad1e2066cbe134d0044cacd453d6feb2428f5d90153d2ff9a5137a"
+        },
+        {
+          "path": "art/anim/monsters/rime_witch/rime_witch_move.png",
+          "sha256": "c285fc9098cc5d4a6324f9ea15c1b8314b66481ad4a040509157300a14bfe24b"
+        },
+        {
+          "path": "art/monsters/rime_witch.png",
+          "sha256": "f85a2d6ae31404350b51b4be64ad31c412f45e0e0e0f6e01f60ed04d10dff040"
+        }
+      ]
+    },
+    {
+      "id": "runestone_idol",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/runestone_idol.png",
+      "source_sha256": "16f949f1f7b8d7a8fdd815d797a6996f3f27b61343e7d8f37e58d8a26cee8967",
+      "generation": {
+        "id": "runestone_idol",
+        "prompt": "Character ID:runestone_idol. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Compact broad stone totem floats in place, enlarge carved face and eyes, short stacked base; levitating crystal bob, no new arms or legs. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-d113659d-7bbe-45a9-be5a-a31ccffa1c17.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/runestone_idol/anim.json",
+          "sha256": "3e72b1c4ad5d34d3f7cfb7d8d47fe4733cdf6243a434b8e846e38f4cd0a9b7f4"
+        },
+        {
+          "path": "art/anim/monsters/runestone_idol/runestone_idol_move.png",
+          "sha256": "7a0bfb560eb36987fc545397107a9a1a09a4e5911416734a472e2549c5e4c3a3"
+        },
+        {
+          "path": "art/monsters/runestone_idol.png",
+          "sha256": "735d67a92833a355583d720242222513e28d39af884648d096bee89782036db4"
+        }
+      ]
+    },
+    {
+      "id": "spore_cap",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/spore_cap.png",
+      "source_sha256": "74a27f9cfc8ae664b63aced50e485cde834e674118b3a857d5417883cffdc271",
+      "generation": {
+        "id": "spore_cap",
+        "prompt": "Character ID:spore_cap. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Stout mushroom biped walks in place, alternate short thick legs, huge broad spotted cap and larger eyes. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-655b18d6-58bf-4a23-b1a1-fa86fa15e104.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/spore_cap/anim.json",
+          "sha256": "d1b325108a09f8e5552f10b354d19a3cce9cbbd7315321704a2b7fc79ddae407"
+        },
+        {
+          "path": "art/anim/monsters/spore_cap/spore_cap_move.png",
+          "sha256": "c29c12cc6162378d880cbb8bb4a3b043620547a1855635d552aa647496e42474"
+        },
+        {
+          "path": "art/monsters/spore_cap.png",
+          "sha256": "c0a4fed1bc5a9050ff796943921042b205c55922cebb1f863cc679253644828c"
+        }
+      ]
+    },
+    {
+      "id": "stone_golem",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/stone_golem.png",
+      "source_sha256": "2d9f43893a260c9e49fe32869be07f43eff73892567492c1a9be4364ef4ada4e",
+      "generation": {
+        "id": "stone_golem",
+        "prompt": "Character ID:stone_golem. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Chunky amber rock biped walks in place, very large expressive face, shorter wider body and arms. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-36df916e-2344-4876-976c-7894aff07aaa.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/stone_golem/anim.json",
+          "sha256": "247de45d114a15d65479e7cd952f391840c3ba081e51cd211be45773b6afca9e"
+        },
+        {
+          "path": "art/anim/monsters/stone_golem/stone_golem_move.png",
+          "sha256": "cea8b1e10f469c0866345ae13aaa5420e688be1d87dd99c2b470dd3fea500f11"
+        },
+        {
+          "path": "art/monsters/stone_golem.png",
+          "sha256": "3cd1e2338cfbbaa2a478fe43b71b6256fd4bbe7fb93c312df5c1fc75676c7005"
+        }
+      ]
+    },
+    {
+      "id": "titan_bloom",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/titan_bloom.png",
+      "source_sha256": "be88aaa4116b4286ad5ae76011430dcaf1a6cbfc5efbdce3b4d5c49c235fab0e",
+      "generation": {
+        "id": "titan_bloom",
+        "prompt": "Character ID:titan_bloom. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Compact wide monstrous flower walks in place on chunky roots, larger toothy flower face with intact pink petals, short dense leafy body, no tall thin stalk. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-0c015ec2-b59f-4b9b-a3cd-b3df64ef2c3e.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/titan_bloom/anim.json",
+          "sha256": "0ca4ced0fa69878d6b8974a7dfee1bab17c1ccc9896d0b284102ce902102b234"
+        },
+        {
+          "path": "art/anim/monsters/titan_bloom/titan_bloom_move.png",
+          "sha256": "e107b46832c7eb910c0433e7de87e24faeb0fff470cb15ad24f68a3c41826993"
+        },
+        {
+          "path": "art/monsters/titan_bloom.png",
+          "sha256": "2b2653d1c9d231c9226c693b22ed651da0fa582dca97b3ddfd51ff227501aa87"
+        }
+      ]
+    },
+    {
+      "id": "vine_lynx",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/vine_lynx.png",
+      "source_sha256": "b4bfe7917353c2e159afb4b51b97f894c1a45a4f968d2f83e9ef61ba4aa5c25c",
+      "generation": {
+        "id": "vine_lynx",
+        "prompt": "Character ID:vine_lynx. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Quadruped walks in place, four SHORT stout legs, very large feline mask face, stocky compact body, retain green mane and striped vines. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-21902826-4935-46ab-b5a0-2c86b3aa619f.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/vine_lynx/anim.json",
+          "sha256": "1492d2798b49190bffef8a276e8b1efd47a4ca6ef1a08806a26b5b7b182516bf"
+        },
+        {
+          "path": "art/anim/monsters/vine_lynx/vine_lynx_move.png",
+          "sha256": "635413d44cc0207e84ea8042123a3f78cc1e32eed7f3a4323d69041a95ca39d9"
+        },
+        {
+          "path": "art/monsters/vine_lynx.png",
+          "sha256": "3841dc13f5078272011de599738f46dff71c95ffe14f15e4cd5e362a708caff0"
+        }
+      ]
+    },
+    {
+      "id": "wave_giant",
+      "kind": "monster",
+      "source": "art/animation/chibi_v1/source/wave_giant.png",
+      "source_sha256": "fc934f6151a290bc5e431b71052286e0f3a2e87edb09c4d937ad570b7d9de04f",
+      "generation": {
+        "id": "wave_giant",
+        "prompt": "Character ID:wave_giant. Use case: identity-preserve. EDIT the supplied EXISTING monster design into a chunky chibi game sprite atlas, not a new species. Preserve its distinctive colors, mask/head/face, horns, eyes, elemental material, equipment and number/type of limbs. Make its existing head or facial mass 30-40% larger relative to a compact broad body, shorten thin limbs and neck by one third, thicken extremities. Keep a dense squat silhouette, clear readable features at 48px game size, not a tall thin silhouette. Crisp handcrafted 2D pixel art, dark clustered outlines, sharp flat shading, no smooth painterly texture. SAME character proportions and palette in all frames, consistent 3/4 RIGHT-facing view. EXACT grid of 4 columns x 2 rows, total EIGHT sequential phases of ONE seamless full movement cycle, read left-to-right top-to-bottom. Each frame full body, centered on same ground/hover origin, small natural rhythmic movement only, no running across the cell, no growth/shrink between frames. Each cell has generous 48px transparent gutter on ALL sides and limbs fully contained, NEVER touch any neighboring sprite. Output1536x1024, genuine TRANSPARENT background and internal gaps, no white/magenta/checkerboard, ground shadow, scene, labels, grid, or text. Movement:Heavy water biped walks in place, clearly LARGER visible head/face, broad compact watery torso and very short thick legs, dark blue body with pale aqua wave edges. Render character itself only, NO ambient aura or diffuse glow outside solid pixel outline.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-a70a4eac-3f66-4b4f-8b94-3a24cecd43ad.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/anim/monsters/wave_giant/anim.json",
+          "sha256": "6ab22090a64153806f5ff400478ea9f0c0303a5a81fd75b12eb98c7dd4768eac"
+        },
+        {
+          "path": "art/anim/monsters/wave_giant/wave_giant_move.png",
+          "sha256": "16917d16a33cf6f56486599956c8cee2c5f94eff2de3ca8352126f61f0a809b3"
+        },
+        {
+          "path": "art/monsters/wave_giant.png",
+          "sha256": "52f381a2b06e976e63a45b3bc26848c96dfdd4113052e5abeab781560008303e"
+        }
+      ]
+    },
+    {
+      "id": "dealer",
+      "kind": "npc",
+      "source": "art/animation/chibi_v1/source/dealer.png",
+      "source_sha256": "98055f75eac8f282697ee51226c0ae5ba4cc922243b7d55db0fd44058975bfe5",
+      "generation": {
+        "id": "dealer",
+        "path": "art/ui/dealer/witch.png",
+        "prompt": "Use case: identity-preserve. EDIT this existing fantasy witch guide portrait, keep her recognizable mature adult face, silver bob hair, purple eyes, purple pointed wide-brim hat with golden crescent and star pin, navy-gold robe and purple lining, earrings, crystal brooch and four suit cards in left hand. Redraw in chunky chibi proportions: face/head about 35 percent LARGER relative to torso, rounder face, short thick forearms, squat broad compact torso, no thin long arms. Same waist-up composition and friendly knowing smile, similar existing visual style with crisp pixel clusters. Face should dominate and be clearly readable inside a small circular portrait. Keep complete hat and hands inside image with generous transparent margin, no clipping. Genuine transparent background, no text, scenery or frame, no checkerboard. Preserve the four cards' suit symbols and two-hand pose, do not add extra props. Output square 1280x1280.",
+        "generated": "/home/dgxmaruta/.codex/generated_images/01a111d8-1a7d-7513-b3f2-6da0fde93056/exec-6ca57e6e-6f74-4cc2-906a-baca3ae28e60.png",
+        "status": "generated"
+      },
+      "outputs": [
+        {
+          "path": "art/ui/dealer/witch.png",
+          "sha256": "98055f75eac8f282697ee51226c0ae5ba4cc922243b7d55db0fd44058975bfe5"
+        }
+      ]
+    }
+  ]
+}

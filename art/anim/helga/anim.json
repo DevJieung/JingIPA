@@ -2,10 +2,10 @@
   "name": "helga_roster_v1",
   "ko": "헬가",
   "elem": "ice",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
-    "w": 256,
-    "h": 256
+    "w": 320,
+    "h": 320
   },
   "static": {
     "w": 65,
@@ -17,8 +17,8 @@
   },
   "scale": 0.7636363636363637,
   "muzzle_at": {
-    "x": 104,
-    "y": -120
+    "x": 111,
+    "y": -104
   },
   "hit_ms": 500.0,
   "face": 1,
@@ -40,10 +40,10 @@
       "total_ms": 666.6666666666666,
       "loop": true,
       "cell": {
-        "w": 256,
-        "h": 256
+        "w": 320,
+        "h": 320
       },
-      "sha256": "5bcc0c6e3ad0e0363ca1fca1af4fb84ed162e911d76d0f2be2486feee7e0f48b"
+      "sha256": "6cda4e1fa0585b68ef14948e27dcf3ada5623a9974cd02859484f64ff5c32f57"
     },
     "attack": {
       "frames": 12,
@@ -64,10 +64,10 @@
       "total_ms": 1000.0,
       "loop": false,
       "cell": {
-        "w": 256,
-        "h": 256
+        "w": 320,
+        "h": 320
       },
-      "sha256": "8f6a8d24402efe80fdecbf0aa0ed095693eee651f96cf4d900c80682ad174494",
+      "sha256": "acca09737e78bc618885596b18099aaeb22f8ac4752690de4a9d40b70a52a33f",
       "hit_frame": 6
     },
     "effect": {
@@ -114,140 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/helga.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/helga.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        48,
         0,
+        309,
+        414
+      ],
+      [
+        409,
         0,
-        362,
-        362
+        672,
+        414
       ],
       [
-        362,
+        765,
         0,
-        724,
-        362
+        1033,
+        414
       ],
       [
-        724,
+        1132,
         0,
-        1086,
-        362
+        1395,
+        414
       ],
       [
-        1086,
-        0,
-        1448,
-        362
+        17,
+        414,
+        315,
+        785
       ],
       [
-        0,
-        362,
-        362,
-        725
+        370,
+        414,
+        698,
+        785
       ],
       [
-        362,
-        362,
-        724,
-        725
+        732,
+        414,
+        1152,
+        785
       ],
       [
-        724,
-        362,
-        1120,
-        725
+        1083,
+        414,
+        1417,
+        785
       ],
       [
-        1120,
-        362,
-        1448,
-        725
-      ],
-      [
-        0,
-        725,
-        362,
+        36,
+        785,
+        334,
         1086
       ],
       [
-        362,
-        725,
-        724,
+        407,
+        785,
+        706,
         1086
       ],
       [
-        724,
-        725,
-        1086,
+        774,
+        785,
+        1058,
         1086
       ],
       [
-        1086,
-        725,
-        1448,
+        1115,
+        785,
+        1420,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.4796511627906977,
+        "factor": 0.4984894259818731,
         "offset": [
-          53,
-          50
+          67,
+          18
         ]
       },
       {
-        "factor": 0.4796511627906977,
+        "factor": 0.4984894259818731,
         "offset": [
-          56,
-          50
+          67,
+          18
         ]
       },
       {
-        "factor": 0.4796511627906977,
+        "factor": 0.4984894259818731,
         "offset": [
-          56,
-          50
+          65,
+          18
         ]
       },
       {
-        "factor": 0.4796511627906977,
+        "factor": 0.4984894259818731,
         "offset": [
-          57,
-          51
+          66,
+          18
         ]
       },
       {
-        "factor": 0.4796511627906977,
+        "factor": 0.4984894259818731,
         "offset": [
-          31,
-          50
+          36,
+          39
         ]
       },
       {
-        "factor": 0.4796511627906977,
+        "factor": 0.4984894259818731,
         "offset": [
-          31,
-          50
+          22,
+          39
         ]
       },
       {
-        "factor": 0.4796511627906977,
+        "factor": 0.4984894259818731,
         "offset": [
-          60,
-          50
+          55,
+          39
         ]
       },
       {
-        "factor": 0.4796511627906977,
+        "factor": 0.4984894259818731,
         "offset": [
-          72,
-          50
+          30,
+          40
         ]
       }
+    ],
+    "source_muzzle": [
+      1102,
+      577
     ]
   },
   "portrait_id": "helga"

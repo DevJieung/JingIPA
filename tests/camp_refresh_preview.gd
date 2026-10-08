@@ -25,7 +25,7 @@ func _ready() -> void:
 	for language in ["ko", "en"]:
 		I18n.set_locale(language)
 		Save.best_wave = 100
-		Save.best_hand = 9
+		Save.best_tier = 9
 		Save.seen_units.clear()
 		Save.cur_run = {}
 		Run.running = false
@@ -45,7 +45,8 @@ func _ready() -> void:
 			await capture(language + "_collection_" + element)
 			var entries: Array = main.screen.collection.heroes()
 			for index in range(1, entries.size()):
-				check(int(entries[index - 1]["tier"]) >= int(entries[index]["tier"]), "collection descends by rarity")
+				# 등급은 영웅 한 장의 것이라 캐릭터를 줄 세우는 기준이 아니다 — 속성 탭 안에서는 이름 순이다.
+				check(Look.unit_name(entries[index - 1]) <= Look.unit_name(entries[index]), "collection lists heroes by name")
 		main.screen.collection.close()
 		Save.cur_run = {"wave": 40}
 		await capture(language + "_title_records")

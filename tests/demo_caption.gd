@@ -74,7 +74,7 @@ func _draw_card() -> void:
 	# 조금 커지면서 나타난다.
 	var k := 0.965 + 0.035 * a
 	draw_set_transform(Vector2(cx, cy), 0.0, Vector2(k, k))
-	# ★ 금색 줄은 68px 글자의 **아래 상자 밖**에 둔다. 14px 에 그었더니 「올인 디펜스」의
+	# ★ 금색 줄은 68px 글자의 **아래 상자 밖**에 둔다. 14px 에 그었더니 「스텔라 디펜스」의
 	#   받침을 가로질러서 밑줄 그은 것처럼 보였다.
 	Look.text_center(self, Vector2(0, -26), t, 68, Color(Look.GOLD, a))
 	draw_rect(Rect2(-150.0, 32.0, 300.0, 2.0), Color(Look.GOLD_DEEP, 0.9 * a))

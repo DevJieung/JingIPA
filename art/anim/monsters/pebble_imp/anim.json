@@ -10,7 +10,7 @@
   },
   "scale": 0.3023255813953488,
   "movement": "walk",
-  "source": "Krea 2 Turbo + MiniMax H3",
+  "source": "imagegen_chibi_v1",
   "clips": {
     "move": {
       "frames": 16,
@@ -32,19 +32,94 @@
         83.33333333333333,
         83.33333333333333
       ],
-      "loop": true
+      "loop": true,
+      "cell": {
+        "w": 192,
+        "h": 192
+      },
+      "sha256": "fd7e1a1a69bfa1ed4c5b209e1f41198bedf37884b1611921081e12f4034edadf"
     }
   },
   "qc": {
     "canvas_clipping": false,
     "source_clipping": false,
-    "unique_poses": 16,
+    "unique_poses": 8,
     "forward_only": true,
     "fixed_scale": true,
-    "foot_patches": false,
-    "translation_range": [
+    "foot_patches": false
+  },
+  "palette_colors": 96,
+  "readability": {
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/pebble_imp.png",
+    "source_cells": [
+      [
+        38,
+        0,
+        374,
+        512
+      ],
+      [
+        419,
+        0,
+        747,
+        512
+      ],
+      [
+        796,
+        0,
+        1118,
+        512
+      ],
+      [
+        1158,
+        0,
+        1499,
+        512
+      ],
+      [
+        42,
+        512,
+        385,
+        1024
+      ],
+      [
+        419,
+        512,
+        756,
+        1024
+      ],
+      [
+        793,
+        512,
+        1128,
+        1024
+      ],
+      [
+        1164,
+        512,
+        1493,
+        1024
+      ]
+    ],
+    "phase_map": [
+      0,
+      0,
+      1,
+      1,
+      2,
+      2,
       3,
-      6
-    ]
+      3,
+      4,
+      4,
+      5,
+      5,
+      6,
+      6,
+      7,
+      7
+    ],
+    "method": "imagegen chibi movement repaint; alpha threshold, extraction, nearest sampling and shared palette only"
   }
 }

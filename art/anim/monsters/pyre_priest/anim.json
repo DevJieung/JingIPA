@@ -6,11 +6,11 @@
   },
   "anchor": {
     "x": 96,
-    "y": 182
+    "y": 183
   },
   "scale": 0.3372093023255814,
   "movement": "walk",
-  "source": "Krea 2 Turbo + MiniMax H3",
+  "source": "imagegen_chibi_v1",
   "clips": {
     "move": {
       "frames": 20,
@@ -36,19 +36,98 @@
         83.33333333333333,
         83.33333333333333
       ],
-      "loop": true
+      "loop": true,
+      "cell": {
+        "w": 192,
+        "h": 192
+      },
+      "sha256": "0c3afa4cb667f8c5197e11a6b127160a77510eff5df89ce31faee5551115465f"
     }
   },
   "qc": {
     "canvas_clipping": false,
     "source_clipping": false,
-    "unique_poses": 20,
+    "unique_poses": 8,
     "forward_only": true,
     "fixed_scale": true,
-    "foot_patches": false,
-    "translation_range": [
+    "foot_patches": false
+  },
+  "palette_colors": 96,
+  "readability": {
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/pyre_priest.png",
+    "source_cells": [
+      [
+        58,
+        0,
+        373,
+        512
+      ],
+      [
+        429,
+        0,
+        753,
+        512
+      ],
+      [
+        801,
+        0,
+        1125,
+        512
+      ],
+      [
+        1177,
+        0,
+        1502,
+        512
+      ],
+      [
+        46,
+        512,
+        372,
+        1024
+      ],
+      [
+        428,
+        512,
+        756,
+        1024
+      ],
+      [
+        801,
+        512,
+        1131,
+        1024
+      ],
+      [
+        1178,
+        512,
+        1510,
+        1024
+      ]
+    ],
+    "phase_map": [
+      0,
+      0,
+      0,
+      1,
+      1,
+      2,
+      2,
+      2,
+      3,
+      3,
       4,
-      4
-    ]
+      4,
+      4,
+      5,
+      5,
+      6,
+      6,
+      6,
+      7,
+      7
+    ],
+    "method": "imagegen chibi movement repaint; alpha threshold, extraction, nearest sampling and shared palette only"
   }
 }

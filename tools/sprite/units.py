@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """쉰 명 — `tools/roster.json` 을 그대로 읽는다.
 
-설계서 `pokerdefense_world_characters_v2.md` 의 50캐릭(5속성 x 10등급)이 그대로
+설계서 `stellardefense_world_characters_v2.md` 의 50캐릭(5속성 x 10등급)이 그대로
 게임의 로스터라, 이 파이프라인이 도는 대상도 그 쉰 명 전부다.
 
 ★ 이 표는 `tools/roster.json` 을 **안 베낀다** — id 로 그때그때 읽는다.

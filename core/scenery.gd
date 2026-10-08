@@ -77,33 +77,9 @@ static func rnd(seed_value: float, i: float) -> float:
 ## 배경 한 장. rect 를 통째로 채운다.
 static func draw_backdrop(ci: CanvasItem, theme: Dictionary, rect: Rect2,
 		t: float) -> void:
-	if theme.is_empty():
-		ci.draw_rect(rect, Look.BG)
-		return
-	# 진짜 그림이 있으면 그쪽이 먼저다.
-	if Art.draw_fill(ci, String(theme.get("art_bg", "")), rect):
-		return
-	var cols := sky(theme)
-	var top: Color = cols[0]
-	var bot: Color = cols[1]
-	var hz: float = rect.position.y + rect.size.y * horizon(theme)
-	var bh: float = rect.size.y / float(BANDS)
-	for i in range(BANDS):
-		var y: float = rect.position.y + bh * float(i)
-		var k: float = float(i) / float(BANDS - 1)
-		# 지평선 아래는 땅이다 — 한 번 더 어둡게 눌러서 하늘과 갈라 놓는다.
-		var c: Color = top.lerp(bot, pow(k, 0.75))
-		if y > hz:
-			c = c.darkened(0.34)
-		ci.draw_rect(Rect2(rect.position.x, y, rect.size.x, bh + 1.0), c)
-	var sd := seed_of(theme)
-	var body := String(theme.get("main_body", "rock"))
-	_stars(ci, rect, hz, sd, body)
-	_ridge(ci, rect, hz, sd, body, bot)
-	_ground(ci, rect, hz, sd, body, bot, t)
+	StellarBackdrop.draw(ci, rect, theme, t)
 
 
-## 하늘의 점 — 별·불티·홀씨. 몸마다 뜻이 다르지만 그리는 값은 같다.
 static func _stars(ci: CanvasItem, rect: Rect2, hz: float, sd: float,
 		body: String) -> void:
 	var col := Color(1, 1, 1, 0.30)

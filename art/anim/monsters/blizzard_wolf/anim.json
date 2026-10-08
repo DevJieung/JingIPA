@@ -10,7 +10,7 @@
   },
   "scale": 0.35555555555555557,
   "movement": "walk",
-  "source": "Krea 2 Turbo + MiniMax H3",
+  "source": "imagegen_chibi_v1",
   "clips": {
     "move": {
       "frames": 14,
@@ -30,19 +30,92 @@
         83.33333333333333,
         83.33333333333333
       ],
-      "loop": true
+      "loop": true,
+      "cell": {
+        "w": 192,
+        "h": 192
+      },
+      "sha256": "f1eab60ba5ecfa30e8900f75ef25ccdd9bfafbcdb4ed65fb19617648ea022632"
     }
   },
   "qc": {
     "canvas_clipping": false,
     "source_clipping": false,
-    "unique_poses": 14,
+    "unique_poses": 8,
     "forward_only": true,
     "fixed_scale": true,
-    "foot_patches": false,
-    "translation_range": [
+    "foot_patches": false
+  },
+  "palette_colors": 96,
+  "readability": {
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/blizzard_wolf.png",
+    "source_cells": [
+      [
+        10,
+        0,
+        373,
+        512
+      ],
+      [
+        394,
+        0,
+        757,
+        512
+      ],
+      [
+        784,
+        0,
+        1134,
+        512
+      ],
+      [
+        1163,
+        0,
+        1518,
+        512
+      ],
+      [
+        10,
+        512,
+        373,
+        1024
+      ],
+      [
+        394,
+        512,
+        755,
+        1024
+      ],
+      [
+        773,
+        512,
+        1141,
+        1024
+      ],
+      [
+        1164,
+        512,
+        1519,
+        1024
+      ]
+    ],
+    "phase_map": [
+      0,
+      0,
+      1,
+      1,
       2,
+      2,
+      3,
+      4,
+      4,
+      5,
+      5,
+      6,
+      6,
       7
-    ]
+    ],
+    "method": "imagegen chibi movement repaint; alpha threshold, extraction, nearest sampling and shared palette only"
   }
 }

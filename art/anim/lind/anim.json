@@ -2,7 +2,7 @@
   "name": "lind_roster_v1",
   "ko": "린드",
   "elem": "ice",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
     "w": 256,
     "h": 256
@@ -17,8 +17,8 @@
   },
   "scale": 0.5217391304347826,
   "muzzle_at": {
-    "x": 83,
-    "y": -121
+    "x": 76,
+    "y": -102
   },
   "hit_ms": 500.0,
   "face": 1,
@@ -43,7 +43,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "db3cec5b96a4f3f46cd4d204466a5dcb217fafe3c4528e50aed0ea97764d3afe"
+      "sha256": "c7bc56707867f02fb3d6a45daadeb95fb050ee9c7543f4c4a452d2b9d66bea99"
     },
     "attack": {
       "frames": 12,
@@ -67,7 +67,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "ebdfbbd542125dc1738b123144f0d123349a1f196f55062309f8417102a9e549",
+      "sha256": "1a5a7c4161e50723ac160667d1a5fe6ffe9344cd90b2abca5cf89fa2c16488af",
       "hit_frame": 6
     },
     "shot": {
@@ -89,140 +89,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/lind.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/lind.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        49,
         0,
+        290,
+        432
+      ],
+      [
+        412,
         0,
-        362,
-        363
+        650,
+        432
       ],
       [
-        362,
+        774,
         0,
-        724,
-        363
+        1012,
+        432
       ],
       [
-        724,
+        1136,
         0,
-        1086,
-        363
+        1374,
+        432
       ],
       [
-        1086,
-        0,
-        1448,
-        363
+        29,
+        432,
+        330,
+        816
       ],
       [
-        0,
-        363,
-        362,
-        730
+        385,
+        432,
+        696,
+        816
       ],
       [
-        362,
-        363,
-        724,
-        730
+        755,
+        432,
+        1120,
+        816
       ],
       [
-        724,
-        363,
-        1086,
-        730
+        1072,
+        432,
+        1379,
+        816
       ],
       [
-        1086,
-        363,
-        1448,
-        730
-      ],
-      [
-        0,
-        730,
-        362,
+        60,
+        816,
+        316,
         1086
       ],
       [
-        362,
-        730,
-        724,
+        411,
+        816,
+        703,
         1086
       ],
       [
-        724,
-        730,
-        1086,
+        774,
+        816,
+        1056,
         1086
       ],
       [
-        1086,
-        730,
-        1448,
+        1143,
+        816,
+        1393,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.5287356321839081,
+        "factor": 0.5125348189415042,
         "offset": [
-          40,
-          32
+          57,
+          3
         ]
       },
       {
-        "factor": 0.5287356321839081,
+        "factor": 0.5125348189415042,
         "offset": [
-          40,
-          32
+          57,
+          3
         ]
       },
       {
-        "factor": 0.5287356321839081,
+        "factor": 0.5125348189415042,
         "offset": [
-          40,
-          32
+          57,
+          3
         ]
       },
       {
-        "factor": 0.5287356321839081,
+        "factor": 0.5125348189415042,
         "offset": [
-          40,
-          32
+          57,
+          3
         ]
       },
       {
-        "factor": 0.5287356321839081,
+        "factor": 0.5125348189415042,
         "offset": [
           30,
-          30
+          27
         ]
       },
       {
-        "factor": 0.5287356321839081,
+        "factor": 0.5125348189415042,
         "offset": [
-          32,
-          30
+          29,
+          27
         ]
       },
       {
-        "factor": 0.5287356321839081,
+        "factor": 0.5125348189415042,
         "offset": [
-          50,
-          30
+          54,
+          27
         ]
       },
       {
-        "factor": 0.5287356321839081,
+        "factor": 0.5125348189415042,
         "offset": [
-          40,
-          30
+          23,
+          27
         ]
       }
+    ],
+    "source_muzzle": [
+      1047,
+      618
     ]
   },
   "portrait_id": "lind"

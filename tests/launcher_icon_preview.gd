@@ -40,7 +40,7 @@ func _ready() -> void:
 
 func _draw() -> void:
 	draw_rect(Look.SCREEN, Color("#17242b"))
-	Look.text_center(self, Vector2(640, 48), "ALL-IN DEFENSE · LAUNCHER ICON", 30, Look.INK)
+	Look.text_center(self, Vector2(640, 48), "STELLAR DEFENSE · LAUNCHER ICON", 30, Look.INK)
 	var labels := ["Legacy", "Adaptive · rounded", "Adaptive · circle", "Themed · circle"]
 	for mode in range(4):
 		Look.text_center(self, Vector2(168 + mode * 312, 109), labels[mode], 22, Look.GOLD)

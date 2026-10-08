@@ -8,11 +8,10 @@ func _ready() -> void:
 	Save._readonly=true
 	output=arg("--out",output)
 	DirAccess.make_dir_recursive_absolute(output)
-	Save.card_mode="sigil"
 	Fixture.fresh(20261006)
 	Run.heroes.clear()
 	for unit in Roster.fusion_units(9):
-		Run.gain_hero(unit,9,false,true,{"awakened":true,"awakening_mult":1.35,"value":Poker.detail(Fixture.hands()[9])})
+		Run.gain_hero(unit,9,false,true,{"awakened":true,"awakening_mult":1.35})
 	Run.wave=12
 	Run.phase=Run.Phase.BATTLE
 	var main=load("res://game/main.gd").new()

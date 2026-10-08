@@ -10,9 +10,10 @@ func _ready() -> void:
 			_check_field(unit)
 			_check_field(unit, ["mortar"])
 	check(area_count == 10, "all ten area heroes have boundary and enhanced-radius checks")
-	for tier in range(10):
+	# 등급(희귀도)은 영웅 한 장의 것이다 — 열 칸을 다 세워 본다. 캐릭터는 칸마다 다른 얼굴을 쓴다.
+	for tier in range(Balance.TIER_MAX + 1):
 		Fixture.fresh(14092026)
-		Run.gain_hero(Roster.units_of_tier(tier)[0], tier)
+		Run.gain_hero(Roster.UNITS[(tier * 7) % Roster.UNITS.size()], tier)
 		var screen := BattleScreen.new()
 		screen.sim.setup(Run, 1)
 		var at := Vector2(350, 350)

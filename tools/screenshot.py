@@ -6,7 +6,7 @@
 테스트로 안 잡힌다 — 눈으로 봐야 한다.**
 
     python3 tools/screenshot.py                       # 기본 한 벌
-    python3 tools/screenshot.py title theme:11 draw:5 reveal:9 swap:24 shopp:14
+    python3 tools/screenshot.py title theme:11 draw:5 spin:5 reveal:5 rite swap:24 shopp:14
     python3 tools/screenshot.py battle:12 frost:12 shop:8 over
     python3 tools/screenshot.py --portrait battle:12  # 세로 화면으로
     python3 tools/screenshot.py --setup               # Xvfb 만 준비
@@ -26,7 +26,7 @@ from godot_env import ROOT, GODOT, XVFB_HOME, ensure_xvfb, xvfb  # noqa: F401
 
 DISPLAY_NUM = 93
 
-DEFAULT = ["title", "draw:6", "reveal:1", "reveal:6", "reveal:9",
+DEFAULT = ["title", "draw:6", "spin:6", "reveal:2", "reveal:4", "reveal:5", "rite",
            "battle:1", "battle:14", "frost:12", "stun:12", "battle:30",
            # 장판은 사거리 상한(6단계)에 닿는 40탄에서야 원반이 제일 커진다.
            "zone:16", "zone:40",

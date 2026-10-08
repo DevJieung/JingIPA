@@ -8,16 +8,16 @@ static func valid(d: Dictionary, version: int) -> bool:
 			return false
 	if d.get("v", 0) != version or d.get("wave", 0) < 1 or d["wave"] > Balance.LAST_WAVE:
 		return false
-	# Phase의 저장 번호는 기존 v7과 호환한다: DRAW, BATTLE, SHOP, SWAP.
+	# Phase의 저장 번호: DRAW 1 · BATTLE 2 · SHOP 3 · OVER 4 · SWAP 6.
 	if not d.get("phase", -1) in [1, 2, 3, 4, 6]:
 		return false
 	if d.get("lives", 0) < (0 if d["phase"] == 4 else 1) or d["lives"] > Balance.MAX_LIVES:
 		return false
 	if d.get("gold", 0) < 0 or d.get("kills", 0) < 0 or d.get("repairs", 0) < 0:
 		return false
-	if not d.get("best_hand", -1) is int or d.get("best_hand", -1) < -1 or d.get("best_hand", -1) > 9:
+	if not d.get("best_tier", -1) is int or d.get("best_tier", -1) < -1 or d.get("best_tier", -1) > Balance.TIER_MAX:
 		return false
-	for key in ["heroes", "bench", "themes", "cards", "rerolled", "paid", "piles", "at", "passives", "offer"]:
+	for key in ["heroes", "bench", "themes", "passives", "offer"]:
 		if not d.get(key) is Array:
 			return false
 	if not d.get("levels") is Dictionary or not d.get("last", {}) is Dictionary:
@@ -54,7 +54,7 @@ static func valid(d: Dictionary, version: int) -> bool:
 			for key in ["t", "w", "n"]:
 				if not h.get(key) is int:
 					return false
-			if h["t"] < 0 or h["t"] > 9 or h["n"] < 1 or h["n"] > 10000 or h["w"] < 1:
+			if h["t"] < 0 or h["t"] > Balance.TIER_MAX or h["n"] < 1 or h["n"] > 10000 or h["w"] < 1:
 				return false
 			if not hero_value_valid(h):
 				return false
@@ -98,14 +98,14 @@ static func valid(d: Dictionary, version: int) -> bool:
 		if not id is String or Roster.unit_by_id(id).is_empty() or not damage[id] is Dictionary:
 			return false
 		var entry: Dictionary = damage[id]
-		if not entry.get("tier") is int or entry["tier"] < 0 or entry["tier"] > 9:
+		if not entry.get("tier") is int or entry["tier"] < 0 or entry["tier"] > Balance.TIER_MAX:
 			return false
 		var amount: Variant = entry.get("damage")
 		if not (amount is float or amount is int) or not is_finite(float(amount)) or amount < 0:
 			return false
 	if not rewards_valid(d, version):
 		return false
-	if not piles_valid(d):
+	if not rite_valid(d):
 		return false
 	var last: Dictionary = d.get("last", {})
 	if not last.is_empty():
@@ -121,11 +121,17 @@ static func valid(d: Dictionary, version: int) -> bool:
 			return false
 		if not last.get("gold", 0) is int or last.get("gold", 0) < 0:
 			return false
-		if not last.get("hand") is int or last["hand"] < 0 or last["hand"] > 9:
+		if not last.get("tier") is int or last["tier"] < 0 or last["tier"] > Balance.TIER_MAX:
 			return false
-		if not cards_valid(last.get("cards"), 5) or not cards_valid(last.get("key")):
+		if not last.get("stars") is int or last["stars"] < Rite.MIN_STARS or last["stars"] > Rite.MAX_STARS:
 			return false
-		for key in ["joker", "slot", "n"]:
+		# 부활 보상은 의식 없이 받는다 — 그때만 별 자리가 비어 있다.
+		var last_orbit: Variant = last.get("orbit")
+		if not (Rite.valid(last_orbit) or (gold_only and last_orbit is Array and last_orbit.is_empty())):
+			return false
+		if not last.get("joker", -1) is int or last.get("joker", -1) < -1 or last.get("joker", -1) >= Rite.RINGS:
+			return false
+		for key in ["slot", "n"]:
 			if not last.get(key, 0) is int:
 				return false
 		for key in ["revived", "reward_pending", "gold_only", "duplicate"]:
@@ -134,85 +140,32 @@ static func valid(d: Dictionary, version: int) -> bool:
 	return true
 
 
+## 각성 여부와 각성 위력. 위력은 1.0 밑으로 내려갈 수 없다.
 static func hero_value_valid(h: Dictionary) -> bool:
-	if not h.get("variant", "") is String or not h.get("awakened", false) is bool:
+	if not h.get("awakened", false) is bool:
 		return false
 	var power: Variant = h.get("awakening_mult", 1.0)
-	if not (power is float or power is int) or not is_finite(float(power)) or power < 1.0:
-		return false
-	var value: Variant = h.get("value", {})
-	if not value is Dictionary:
-		return false
-	if value.is_empty():
-		return true
-	if not value.get("hand") is int or value["hand"] < 0 or value["hand"] > 9 \
-			or not value.get("ranks") is Array or value["ranks"].is_empty() or value["ranks"].size() > 5 \
-			or not value.get("key") is String:
-		return false
-	var encoded := 0
-	var parts := PackedStringArray()
-	for rank in value["ranks"]:
-		if not rank is int or rank < 2 or rank > 14:
-			return false
-		parts.append(str(rank))
-	for i in range(5):
-		encoded = encoded * 15 + (int(value["ranks"][i]) if i < value["ranks"].size() else 0)
-	var mult: Variant = value.get("value_mult", 1.0 + 0.30 * float(encoded) / 759374.0)
-	return (mult is float or mult is int) and is_finite(float(mult)) \
-		and is_equal_approx(float(mult), 1.0 + 0.30 * float(encoded) / 759374.0) \
-		and value["key"] == "%d:%s" % [int(value["hand"]), "-".join(parts)]
+	return (power is float or power is int) and is_finite(float(power)) and power >= 1.0
 
 
-static func cards_valid(value: Variant, count: int = -1) -> bool:
-	if not value is Array or (count >= 0 and value.size() != count):
+## 별맞춤 의식의 상태 — 별 다섯의 자리와 이번 탄에 돌린 횟수.
+const RITE_COUNT_MAX := 1000
+static func rite_valid(d: Dictionary) -> bool:
+	if d.get("rules_v", 0) != 3:
 		return false
-	var seen := {}
-	for c in value:
-		if not c is int or c < 0 or c >= 52 or seen.has(c):
-			return false
-		seen[c] = true
-	return true
-
-
-static func piles_valid(d: Dictionary) -> bool:
-	if int(d.get("rules_v", 0)) == 2:
-		if not cards_valid(d.get("cards"), 5):
-			return false
-		for key in ["rerolled", "paid"]:
-			if not d.get(key) is Array or d[key].size() != 5:
-				return false
-			for value in d[key]:
-				if not value is int or value < 0:
-					return false
-		for i in range(5):
-			if d["paid"][i] > d["rerolled"][i]:
-				return false
-		return true
-	for key in ["cards", "rerolled", "paid", "piles", "at"]:
-		if not d.get(key) is Array or d[key].size() != 5:
-			return false
-	if not cards_valid(d["cards"], 5):
+	var rite: Variant = d.get("rite")
+	if not rite is Dictionary or not Rite.valid(rite.get("orbit")):
 		return false
-	var seen := {}
-	for i in range(5):
-		var pile: Variant = d["piles"][i]
-		if not cards_valid(pile, 11 if i < 2 else 10):
+	# 한 탄에 돌릴 수 있는 횟수는 무료 일곱 번과 골드가 닿는 유료 스무 번 남짓이다.
+	# 그 수십 배를 넘는 값은 규칙으로는 못 만든다 — 손댄 파일이다.
+	for key in ["spins", "paid", "pulls"]:
+		if not rite.get(key) is int or rite[key] < 0 or rite[key] > RITE_COUNT_MAX:
 			return false
-		for c in pile:
-			if seen.has(c):
-				return false
-			seen[c] = true
-		for key in ["at", "rerolled", "paid"]:
-			if not d[key][i] is int or d[key][i] < 0:
-				return false
-		if d["at"][i] >= pile.size() or pile[d["at"][i]] != d["cards"][i]:
-			return false
-		if d["paid"][i] > d["rerolled"][i] or d["at"][i] != d["rerolled"][i] % pile.size():
-			return false
-	return seen.size() == 52
+	return rite["paid"] <= rite["spins"]
+
 
 static func rewards_valid(d: Dictionary, version: int) -> bool:
-	if not d.get("rules_v", 0) is int or not d.get("rules_v", 0) in [0, 2]:
+	if not d.get("rules_v", 0) is int or d.get("rules_v", 0) != 3:
 		return false
 	if not d.get("continue_used", false) is bool or not d.get("fusion_serial", 0) is int \
 			or not d.get("retry_wave", false) is bool:
@@ -240,7 +193,7 @@ static func rewards_valid(d: Dictionary, version: int) -> bool:
 		return false
 	if not fusion.get("unit") is String or Roster.unit_by_id(fusion["unit"]).is_empty():
 		return false
-	if not fusion.get("tier") is int or fusion["tier"] < 0 or fusion["tier"] > 9:
+	if not fusion.get("tier") is int or fusion["tier"] < 0 or fusion["tier"] > Balance.TIER_MAX:
 		return false
 	var before := d.duplicate(true)
 	before["heroes"] = fusion.get("before_h")

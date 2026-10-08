@@ -7,7 +7,7 @@ extends Node
 ##   cur      **지금 하던 판 통째로** — 이것이 자동 저장이다
 ##   opt      설정(배속처럼 판이 바뀌어도 남아야 하는 것)
 ##
-## ★ POCKER_NO_SAVE=1 이면 읽기만 하고 절대 쓰지 않는다.
+## ★ STELLARDEFENSE_NO_SAVE=1 이면 읽기만 하고 절대 쓰지 않는다.
 ##   검사기를 돌릴 때마다 저장이 덮여서 "내 기록"이라고 믿던 값이 사실은 테스트가 만든
 ##   값이던 일이 rogame 에서 실제로 있었다. 같은 실수를 반복하지 않으려고 처음부터 넣는다.
 
@@ -15,14 +15,26 @@ const PATH := "user://save.cfg"
 var storage_path: String = PATH
 var last_error: Error = OK
 var recovered_backup: bool = false
+## 이름 전환 때 접근 가능한 이전 데스크톱 저장을 읽는다. 원본은 수정하지 않는다.
+var legacy_loaded: bool = false
+var legacy_storage_paths: PackedStringArray = []
 
 var best_wave: int = 0          ## 여태 간 가장 높은 탄
 var runs: int = 0               ## 시작한 판 수
 var clears: int = 0             ## 100탄까지 끝낸 판 수
 var total_kills: int = 0
-var best_hand: int = -1         ## 여태 만든 가장 높은 족보 (Poker.Hand)
+## 여태 뽑은 가장 높은 등급(반 별 칸 0~9 · Balance.TIER_ATK).
+## ★ 저장 파일의 열쇠는 옛 이름 `best_hand` 그대로다 — 포커 시절의 족보 번호도 같은
+##   0~9 였으므로 평생 기록이 그대로 이어진다.
+var best_tier: int = -1
 var seen_units: Dictionary = {} ## 도감: 한 번이라도 나온 캐릭터 id -> true
-var seen_hands: Dictionary = {} ## 족보별 만든 횟수 (int -> int)
+var seen_tiers: Dictionary = {} ## 등급별 뽑은 횟수 (int -> int). 파일의 열쇠는 옛 이름 `hands` 다.
+## 도감: 캐릭터마다 **여태 얻은 가장 높은 등급**(id -> 반 별 칸 0~9).
+## ★ 캐릭터에는 정해진 등급이 없다(Balance.TIER_ATK 의 ★). 그래서 도감이 「이 캐릭터는
+##   몇 성」이라고 말할 수 있는 것은 **내가 어디까지 얻어 봤는가**뿐이다.
+## ★ 포커 시절에 만난 캐릭터는 seen_units 에만 있고 여기에는 없다 — 그때의 등급은 지금의
+##   별과 뜻이 달라서 옮기지 않는다. 그런 캐릭터는 best_of() 가 -1 을 준다.
+var unit_best: Dictionary = {}
 
 ## 하다 만 판. 비어 있으면 이어 할 것이 없다.
 var cur_run: Dictionary = {}
@@ -34,7 +46,6 @@ var speed: float = 1.0
 var sfx: bool = true
 var music: bool = true
 var language: String = "ko"
-var card_mode: String = "sigil"
 
 var _readonly: bool = false
 ## ★ 자동 저장은 **탄마다** 불린다. 값이 하나도 안 바뀌었는데 파일을 다시 쓰면
@@ -43,7 +54,7 @@ var _last_written: String = ""
 
 
 func _ready() -> void:
-	_readonly = OS.get_environment("POCKER_NO_SAVE") == "1"
+	_readonly = OS.get_environment("STELLARDEFENSE_NO_SAVE") == "1"
 	load_file()
 	# ★ 안드로이드는 홈 버튼 한 번으로 앱이 통째로 사라질 수 있다. 그때 저장을 못 하면
 	#   "게임이 자동저장이 안 된다"가 된다 — 사용자가 제일 급하다고 한 것이 이것이다.
@@ -82,29 +93,52 @@ func _flush() -> void:
 func load_file() -> void:
 	var cf := ConfigFile.new()
 	recovered_backup = false
+	legacy_loaded = false
 	if not _load_checked(cf, storage_path):
 		cf = ConfigFile.new()
 		if not _load_checked(cf, storage_path + ".bak"):
-			return
-		recovered_backup = true
+			var found := false
+			for source in _legacy_candidates():
+				cf = ConfigFile.new()
+				if _load_checked(cf, source):
+					found = true
+					legacy_loaded = true
+					break
+			if not found:
+				return
+		else:
+			recovered_backup = true
 	_last_written = ""
 	best_wave = cf.get_value("run", "best_wave", 0)
 	runs = cf.get_value("run", "runs", 0)
 	clears = cf.get_value("run", "clears", 0)
 	total_kills = cf.get_value("run", "total_kills", 0)
-	best_hand = cf.get_value("run", "best_hand", -1)
+	best_tier = cf.get_value("run", "best_hand", -1)
 	seen_units = cf.get_value("book", "units", {})
-	seen_hands = cf.get_value("book", "hands", {})
+	seen_tiers = cf.get_value("book", "hands", {})
+	unit_best = cf.get_value("book", "best", {})
 	cur_run = cf.get_value("cur", "state", {})
 	speed = clampf(float(cf.get_value("opt", "speed", 1.0)), 1.0, 3.0)
 	sfx = bool(cf.get_value("opt", "sfx", true))
 	music = bool(cf.get_value("opt", "music", true))
 	language = String(cf.get_value("opt", "language", "ko"))
-	card_mode = String(cf.get_value("opt", "card_mode", "sigil"))
-	if card_mode not in ["sigil", "poker"]:
-		card_mode = "sigil"
 	if language not in ["ko", "en"]:
 		language = "ko"
+
+
+func _legacy_candidates() -> PackedStringArray:
+	if not legacy_storage_paths.is_empty():
+		return legacy_storage_paths
+	if storage_path != PATH or OS.has_feature("mobile"):
+		return []
+	var parent := OS.get_user_data_dir().get_base_dir()
+	var sources := PackedStringArray()
+	# These names are retained only as migration sources for previous installations.
+	for folder in ["pokerdefense", "allindefense", "AllInDefense"]:
+		var source := parent.path_join(folder).path_join("save.cfg")
+		sources.append(source)
+		sources.append(source + ".bak")
+	return sources
 
 
 func save_file() -> bool:
@@ -115,15 +149,15 @@ func save_file() -> bool:
 	cf.set_value("run", "runs", runs)
 	cf.set_value("run", "clears", clears)
 	cf.set_value("run", "total_kills", total_kills)
-	cf.set_value("run", "best_hand", best_hand)
+	cf.set_value("run", "best_hand", best_tier)
 	cf.set_value("book", "units", seen_units)
-	cf.set_value("book", "hands", seen_hands)
+	cf.set_value("book", "hands", seen_tiers)
+	cf.set_value("book", "best", unit_best)
 	cf.set_value("cur", "state", cur_run)
 	cf.set_value("opt", "speed", speed)
 	cf.set_value("opt", "sfx", sfx)
 	cf.set_value("opt", "music", music)
 	cf.set_value("opt", "language", language)
-	cf.set_value("opt", "card_mode", card_mode)
 	var text := cf.encode_to_text()
 	if text == _last_written and last_error == OK:
 		return true
@@ -158,7 +192,7 @@ func _load_checked(cf: ConfigFile, path: String) -> bool:
 	var hand: int = cf.get_value("run", "best_hand", -1)
 	if hand < -1 or hand > 9:
 		return false
-	for key in ["units", "hands"]:
+	for key in ["units", "hands", "best"]:
 		if not cf.get_value("book", key, {}) is Dictionary:
 			return false
 	var state: Variant = cf.get_value("cur", "state", {})
@@ -214,13 +248,6 @@ func set_speed(v: float) -> void:
 	save_file()
 
 
-func set_card_mode(mode: String) -> void:
-	if mode not in ["sigil", "poker"] or card_mode == mode:
-		return
-	card_mode = mode
-	save_file()
-
-
 func set_sfx(on: bool) -> void:
 	if on == sfx:
 		return
@@ -269,11 +296,26 @@ func seen_count() -> int:
 	return n
 
 
-func record_hand(hand: int, unit_id: String, persist: bool = true) -> void:
-	if hand > best_hand:
-		best_hand = hand
-	seen_hands[hand] = int(seen_hands.get(hand, 0)) + 1
-	if unit_id != "":
-		seen_units[unit_id] = true
+## 영웅 하나를 뽑았다. 등급 기록과 도감을 함께 올린다.
+func record_summon(tier: int, unit_id: String, persist: bool = true) -> void:
+	if tier > best_tier:
+		best_tier = tier
+	seen_tiers[tier] = int(seen_tiers.get(tier, 0)) + 1
+	note_unit(unit_id, tier)
 	if persist:
 		save_file()
+
+
+## 그 캐릭터를 이 등급으로 가져 봤다(소환 · 지원 소환 · 합성 · 승급). 파일은 안 쓴다 —
+## 부르는 쪽이 곧 자동 저장을 하므로 거기에 같이 담긴다.
+func note_unit(unit_id: String, tier: int) -> void:
+	if unit_id == "":
+		return
+	seen_units[unit_id] = true
+	unit_best[unit_id] = maxi(best_of(unit_id), clampi(tier, 0, Balance.TIER_MAX))
+
+
+## 그 캐릭터로 여태 얻은 가장 높은 등급(반 별 칸). 기록이 없으면 -1.
+func best_of(unit_id: String) -> int:
+	var value: Variant = unit_best.get(unit_id, -1)
+	return int(value) if value is int or value is float else -1

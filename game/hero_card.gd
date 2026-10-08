@@ -2,32 +2,36 @@ extends RefCounted
 class_name HeroCard
 
 
+## ★ 등급은 **영웅 한 장의 것**이다(hero["tier"]). 캐릭터 표의 tier(원화 격)를 넣으면 안 된다.
+##   등급이 음수면 별을 그리지 않는다 — 도감에서 「만났지만 등급 기록이 없는」 캐릭터가 그렇다.
 static func draw(ci: CanvasItem, rect: Rect2, hero: Dictionary, selected: bool = false,
 		caption: String = "", locked: bool = false) -> void:
 	var unit: Dictionary = hero["unit"]
-	var tier := int(hero["tier"])
+	var tier := int(hero.get("tier", -1))
 	var element := String(unit.get("elem", "none"))
 	var color := Balance.elem_color(element)
 	Look.hero_card_panel(ci, rect, element)
 	var portrait_tint := Color(0.60, 0.60, 0.60, 1.0) if locked else Color.WHITE
 	# Cards carry identity only. Combat values live in the Hero Info detail panel.
 	if rect.size.x > rect.size.y * 1.7:
-		Art.draw_unit_fit(ci, unit, Rect2(rect.position + Vector2(8, 8), Vector2(46, rect.size.y - 16)), portrait_tint)
+		Art.draw_unit_fit(ci, unit, Rect2(rect.position + Vector2(8, 8), Vector2(46, rect.size.y - 16)), portrait_tint, maxi(0, tier))
 		var x := rect.position.x + 64
 		_text_left_fit(ci, Vector2(x, rect.position.y + 23), Look.unit_name(unit), 20, Look.INK, rect.end.x - x - 8)
 		Look.draw_elem(ci, Vector2(x + 9, rect.end.y - 22), 9, element)
-		Look.draw_rarity_fit(ci, Rect2(x + 25, rect.end.y - 32, minf(76, rect.end.x - x - 35), 20), tier, 5.2)
+		if tier >= 0:
+			Look.draw_rarity_fit(ci, Rect2(x + 25, rect.end.y - 32, minf(76, rect.end.x - x - 35), 20), tier, 5.2)
 		if caption != "":
 			_text_left_fit(ci, Vector2(x + 110, rect.end.y - 22), caption, 15, color, rect.end.x - x - 120)
 	else:
 		var narrow := rect.size.x < 110
 		Look.draw_elem(ci, rect.position + Vector2(13, 14), 8 if narrow else 9, element)
-		Look.draw_rarity_fit(ci, Rect2(rect.position + Vector2(25, 4), Vector2(rect.size.x - 31, 20)), tier, 5.0)
+		if tier >= 0:
+			Look.draw_rarity_fit(ci, Rect2(rect.position + Vector2(25, 4), Vector2(rect.size.x - 31, 20)), tier, 5.0)
 		var caption_h := 23.0 if caption != "" or locked else 0.0
 		var name_h := 44.0 if narrow else 32.0
 		var name_box := Rect2(rect.position.x + 6, rect.end.y - name_h - caption_h - 5, rect.size.x - 12, name_h)
 		var portrait := Rect2(rect.position + Vector2(12, 29), Vector2(rect.size.x - 24, maxf(18, name_box.position.y - rect.position.y - 35)))
-		Art.draw_unit_fit(ci, unit, portrait, portrait_tint)
+		Art.draw_unit_fit(ci, unit, portrait, portrait_tint, maxi(0, tier))
 		if narrow:
 			var lines := Look.wrapped_lines(Look.unit_name(unit), name_box.size.x, 18)
 			var height := lines.size() * Look.line_height(18)
@@ -49,7 +53,7 @@ static func draw(ci: CanvasItem, rect: Rect2, hero: Dictionary, selected: bool =
 		ci.draw_line(badge.position + Vector2(5, 11), badge.position + Vector2(10, 16), Look.BG_DEEP, 3)
 		ci.draw_line(badge.position + Vector2(10, 16), badge.position + Vector2(19, 6), Look.BG_DEEP, 3)
 	var crest_at := rect.position + Vector2(26, 46) if rect.size.x > rect.size.y * 1.7 else Vector2(rect.end.x - 21, rect.position.y + minf(67, rect.size.y * 0.42))
-	Look.draw_value_crest(ci, crest_at, hero, 12 if rect.size.x > rect.size.y * 1.7 else 14)
+	Look.draw_awakened_mark(ci, crest_at, hero, 12 if rect.size.x > rect.size.y * 1.7 else 14)
 
 
 static func _draw_locked(ci: CanvasItem, rect: Rect2, caption: String) -> void:

@@ -2,14 +2,22 @@
   "generator": "built-in image_gen",
   "assets": [
     {
+      "path": "art/chibi-manifest.json",
+      "generator": "built-in image_gen edits",
+      "manifest": "art/chibi-manifest.json",
+      "scope": "50 heroes, 25 monsters, 1 guide NPC; supersedes earlier actor/portrait images, preserving existing shot/effect sprites",
+      "source": "art/animation/chibi_v1/source/",
+      "postprocessing": "Alpha threshold, atlas extraction, shared game palette, nearest scaling and foot-origin alignment. High-resolution idle source pixels are used separately for portraits. Prompts, source references and all 326 active output hashes are recorded in the manifest."
+    },
+    {
       "path": "art/ui/launcher_main.png",
       "outputs": [
         "art/ui/launcher_main.png",
         "art/ui/launcher_adaptive.png"
       ],
-      "generator": "built-in image_gen",
+      "generator": "Godot 4.7.1 actual Node3D / MeshInstance3D / Camera3D viewport capture",
       "manifest": "art/ui/launcher_manifest.json",
-      "postprocessing": "Original generated pixels preserved; Android launcher resolutions are exported by Godot. Separate adaptive source includes mask-safe margins."
+      "postprocessing": "Direct Godot viewport capture; five-star crystal crest, alpha adaptive foreground, native SVG monochrome."
     },
     {
       "path": "art/terrain/biome_materials.png",
@@ -590,9 +598,9 @@
       "postprocessing": "None. Original RGBA preserved. Godot draws source regions with portrait-only linear sampling."
     },
     {
-      "path": "art/ui/title_allin_courtyard.png",
+      "path": "art/ui/title_stellar_courtyard.png",
       "generator": "built-in image_gen",
-      "manifest": "art/ui/title_allin_manifest.json",
+      "manifest": "art/ui/title_stellar_manifest.json",
       "postprocessing": "Original generated pixels preserved. Actual hero portraits, poker cards and localized titles are drawn by Godot."
     },
     {
@@ -600,6 +608,17 @@
       "generator": "built-in image_gen",
       "manifest": "art/portraits/sources/brasa-head-repair/manifest.json",
       "postprocessing": "Generated RGBA copied unchanged. core/art.gd uses the authored visible source rectangle from the manifest to ignore almost-transparent edge dust while keeping all visible hair, equipment and feet."
+    },
+    {
+      "path": "art/models/portraits",
+      "outputs": {
+        "heroes": 550,
+        "monsters": 25
+      },
+      "generator": "Godot 4.7.1 actual Node3D / MeshInstance3D / Camera3D viewport capture",
+      "manifest": "art/models/generated-assets.json",
+      "source": "art/models/manifest.json",
+      "notes": "Every half-star tier uses the same actual 3D battle rig with additional equipment; per-model camera bounds fit."
     }
   ]
 }

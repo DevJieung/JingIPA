@@ -7,8 +7,9 @@ var main = null
 var ui := Ui.new()
 var collection := CollectionView.new()
 var t: float = 0.0
-## 부채꼴로 펼쳐진 카드 다섯 장 — 이 게임이 무슨 게임인지 한눈에 보이게.
-var fan: Array[int] = []
+## 타이틀 한가운데의 의식판 — 이 게임이 무슨 게임인지 한눈에 보이게.
+const EMBLEM := Vector2(640, 472)
+const EMBLEM_SC := 0.84
 ## 시작을 두 번 눌러 판이 두 번 시작되지 않게.
 var _started: bool = false
 var _wordmark := Wordmark.new()
@@ -17,12 +18,6 @@ var _wordmark := Wordmark.new()
 func _ready() -> void:
 	# 글자 자체는 번들 글꼴로 유지하고 금속색·입체 테두리만 별도 캔버스에 그린다.
 	add_child(_wordmark)
-	var rng := RandomNumberGenerator.new()
-	rng.randomize()
-	# 로열 스트레이트 플러시를 보여 준다. 타이틀에서까지 하이카드를 보여 줄 이유가 없다.
-	var suit := rng.randi_range(0, 3)
-	for r in [10, 11, 12, 13, 14]:
-		fan.append(Poker.code(r, suit))
 	set_process(true)
 
 
@@ -61,36 +56,46 @@ func _draw() -> void:
 	var H := 800.0
 	ui.begin()
 
-	# ★ draw_at 은 원래 크기 그대로 놓기 때문에 위아래에 검은 띠가 남았다. 꽉 채운다.
-	if not Art.draw_fill(self, Roster.ART.get("title_art", ""), Rect2(0, 0, W, H),
-			Color.WHITE):
-		draw_rect(Rect2(0, 0, W, H), Look.BG)
-	draw_rect(Rect2(0, 0, W, H), Color(Look.BG_DEEP.r, Look.BG_DEEP.g, Look.BG_DEEP.b, 0.10))
+	StellarBackdrop.draw(self, Look.SCREEN, Run.theme_for(1), t, true)
 
-	# 실제 영웅 원화를 배경 양쪽에 배치해 카드와 방어의 두 축을 함께 보여 준다.
-	Art.draw_unit_fit(self, Roster.unit_by_id("brasa"), Rect2(32, 248, 218, 328))
+	# 실제 영웅 원화를 배경 양쪽에 배치해 소환과 방어의 두 축을 함께 보여 준다.
+	Art.draw_unit_fit(self, Roster.unit_by_id("brasa"), Rect2(32, 248, 218, 328), Color.WHITE, 9)
 	draw_set_transform(Vector2(1280, 0), 0, Vector2(-1, 1))
-	Art.draw_unit_fit(self, Roster.unit_by_id("thalassa"), Rect2(34, 248, 214, 328))
+	Art.draw_unit_fit(self, Roster.unit_by_id("thalassa"), Rect2(34, 248, 214, 328), Color.WHITE, 9)
 	draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
 
-	# 부채꼴 카드
+	# 별맞춤 의식판 — 다섯 별이 모두 빛의 문 안에 줄지어 선 5성의 순간을 보여 준다.
+	# (타이틀에서까지 문 밖의 별을 보여 줄 이유가 없다.) 기록 줄 위에 올라앉은 **반원의 관측의**다 —
+	# 판 전체를 놓을 자리가 없고, 문은 어차피 위쪽에만 있다.
 	var cx := W * 0.5
-	var cy := 353.0
-	for i in range(fan.size()):
-		var k := float(i) - 2.0
-		var ang := k * 0.16
-		var pos := Vector2(cx + k * 96.0, cy + abs(k) * 15.0 + sin(t * 1.6 + k) * 5.0)
-		draw_set_transform(pos, ang, Vector2.ONE)
-		Look.draw_card(self, Vector2(-Look.CARD_W * 0.5, -Look.CARD_H * 0.5), fan[i], 1.0, true)
-		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	# 판 둘레의 빛무리 — 어두운 판이 밝은 배경에 구멍처럼 뚫려 보이지 않게, 금빛이 한 겹 번진다.
+	var halo := RiteBoard.EXTENT * EMBLEM_SC
+	for layer in range(3):
+		draw_arc(EMBLEM, halo + 7.0 + float(layer) * 11.0, PI, TAU, 64,
+				Color(RiteBoard.LIGHT, (0.20 - float(layer) * 0.06) * (0.85 + 0.15 * sin(t * 1.4))), 12.0, true)
+	var orbit := RiteBoard.sample_orbit(Rite.MAX_STARS)
+	RiteBoard.draw_base(self, EMBLEM, EMBLEM_SC, t, true)
+	# 타이틀의 판은 장식이다 — 궤도를 황동 고리로 한 번 더 그어 관측의로 보이게 한다.
+	for ring in range(Rite.RINGS):
+		draw_arc(EMBLEM, RiteBoard.orbit_radius(ring, EMBLEM_SC), PI, TAU, 64, Color(Look.GOLD_DEEP, 0.55), 2.0, true)
+	RiteBoard.draw_gate(self, EMBLEM, EMBLEM_SC, t)
+	RiteBoard.draw_core(self, EMBLEM, EMBLEM_SC, t, 0.0, true)
+	for ring in range(Rite.RINGS):
+		var star := RiteBoard.slot_point(EMBLEM, ring, orbit[ring], EMBLEM_SC)
+		# 별이 안쪽부터 차례로 한 번씩 반짝인다 — 「하나, 둘, 셋…」 세는 박자다.
+		var wave := fposmod(t * 0.4 - float(ring) * 0.07, 1.0)
+		if Rite.anchored(ring):
+			RiteBoard.draw_tether(self, EMBLEM, star, EMBLEM_SC, t)
+		RiteBoard.draw_star(self, star, RiteBoard.look_of(ring, orbit[ring]), 0.84, t, clampf(1.0 - wave * 6.0, 0.0, 1.0))
 
 	# 도감이 열렸을 때 제목 장식이 모달 위로 나오지 않게 한다.
 	_wordmark.visible = not collection.opened
 	_wordmark.queue_redraw()
 
+	# 최고 등급은 여태 뽑은 가장 높은 별이다(Save.best_tier). 별 배지와 숫자를 나란히 적는다.
 	var records := [
 		["최고 탄수", "%d" % Save.best_wave, Look.CRYSTAL],
-		["최고 조합" if Save.card_mode == "sigil" else "최고 족보", Look.hand_name(Save.best_hand) if Save.best_hand >= 0 else "-", Look.GOLD],
+		["최고 등급", Look.star_label(Save.best_tier) if Save.best_tier >= 0 else "-", Look.GOLD],
 		["만난 영웅", "%d / %d" % [Save.seen_count(), Roster.UNITS.size()], Look.GREEN],
 	]
 	for index in range(records.size()):
@@ -98,7 +103,11 @@ func _draw() -> void:
 		var rect := Rect2(220 + index * 286, 482, 270, 100)
 		Look.material_panel(self, rect, Look.PANEL, record[2])
 		Look.text_center(self, rect.position + Vector2(135, 26), record[0], 20, Look.INK_DIM)
-		Look.text_center_fit(self, rect.position + Vector2(135, 67), record[1], 31, record[2], 238, 20)
+		if index == 1 and Save.best_tier >= 0:
+			Look.draw_rarity(self, rect.position + Vector2(90, 67), Save.best_tier, 8.0)
+			Look.text_box(self, Rect2(rect.position.x + 150, rect.position.y + 48, 106, 38), record[1], 30, record[2])
+		else:
+			Look.text_center_fit(self, rect.position + Vector2(135, 67), record[1], 31, record[2], 238, 20)
 		if index == 2:
 			Look.text_right(self, rect.position + Vector2(254, 26), "›", 24, Look.GREEN)
 			ui.zone(rect, "collection")
@@ -115,12 +124,12 @@ func _draw() -> void:
 				Look.GOLD, 38)
 
 	Look.fill_round(self, Rect2(266, 745, 748, 40), 4, Color(Look.BG_DEEP, 0.85))
-	Look.text_box(self, Rect2(276, 748, 728, 34), "균열 군단이 생명 수정을 노린다. 문장으로 수호자를 불러 마을을 지켜라!", 20, Look.CRYSTAL)
+	Look.text_box(self, Rect2(276, 748, 728, 34), "균열 군단이 생명 수정을 노린다. 별을 맞춰 수호자를 불러 마을을 지켜라!", 20, Look.CRYSTAL)
 	collection.draw(self, ui)
 
 
-## 배경과 카드의 색은 건드리지 않는 별도 워드아트 캔버스.
-## 실제 글리프 위 금색 램프와 청동 입체면, 포커 문장으로 타이틀을 구성한다.
+## 배경과 의식판의 색은 건드리지 않는 별도 워드아트 캔버스.
+## 실제 글리프 위 금색 램프와 청동 입체면, 별 방패 문장으로 타이틀을 구성한다.
 class Wordmark extends Node2D:
 	const METAL_SHADER := preload("res://art/ui/title_wordmark.gdshader")
 
@@ -140,17 +149,20 @@ class Wordmark extends Node2D:
 		var edge := Color("#e0ae4e")
 		var light := Color("#fff0b0")
 		var center := Vector2(640, 144)
-		var title := I18n.t("올인 디펜스")
+		var title := I18n.t("스텔라 디펜스")
 		var size := 94 if I18n.locale == "ko" else 80
 		var font := Look.font(size)
 		var width := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
 		var at := Look._baseline(font, center - Vector2(width * 0.5, 0), size)
 
-		# 세 장의 카드와 스페이드 방패. 작은 문장만으로 포커와 방어를 함께 표현한다.
-		for index in [-1, 1]:
-			draw_set_transform(Vector2(640 + index * 14, 62), index * 0.23)
-			Look.px_panel(self, Rect2(-17, -25, 34, 50), dark, edge)
-			draw_set_transform(Vector2.ZERO)
+		# 궤도 위의 별 셋과 별 방패. 작은 문장만으로 별맞춤 의식과 방어를 함께 표현한다.
+		var crown := Vector2(640, 70)
+		draw_arc(crown, 41, PI * 1.14, PI * 1.86, 24, dark, 6.0, true)
+		draw_arc(crown, 41, PI * 1.14, PI * 1.86, 24, edge, 2.5, true)
+		for index in [-1, 0, 1]:
+			var star := crown + Vector2.from_angle(-PI * 0.5 + float(index) * 0.78) * 41.0
+			draw_colored_polygon(Look.star_points(star, 8.5, 0.44), dark)
+			draw_colored_polygon(Look.star_points(star, 6.0, 0.44), light)
 		var shield := PackedVector2Array([Vector2(620, 37), Vector2(660, 37),
 			Vector2(660, 63), Vector2(654, 77), Vector2(640, 89),
 			Vector2(626, 77), Vector2(620, 63)])
@@ -158,8 +170,8 @@ class Wordmark extends Node2D:
 		var border := shield.duplicate()
 		border.append(shield[0])
 		draw_polyline(border, edge, 3.0)
-		Look.draw_suit(self, Vector2(640, 57), 13, 0, light)
-		_diamond(Vector2(640, 76), Vector2(3, 4), Look.CRYSTAL)
+		draw_colored_polygon(Look.star_points(Vector2(640, 57), 13.0), light)
+		_diamond(Vector2(640, 77), Vector2(3, 4), Look.CRYSTAL)
 
 		# 그림자 → 청동 측면 → 얇은 금 테두리 → 밝은 안쪽 베벨 → 금속 전면.
 		draw_string_outline(font, at + Vector2(0, 8), title, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 13, Color(dark, 0.8))
@@ -174,7 +186,7 @@ class Wordmark extends Node2D:
 		Look._audit_raw(self, title, center - Vector2(width * 0.5, font.get_height(size) * 0.5), size)
 
 		# 얇은 양쪽 장식은 글자보다 뒤로 물러나고, 부제는 두 언어의 브랜드를 함께 보여 준다.
-		var subtitle := "ALL-IN DEFENSE" if I18n.locale == "ko" else "올인 디펜스"
+		var subtitle := "STELLAR DEFENSE" if I18n.locale == "ko" else "스텔라 디펜스"
 		var sub_size := 23
 		var sub_width := font.get_string_size(subtitle, HORIZONTAL_ALIGNMENT_LEFT, -1, sub_size).x
 		var subtitle_pos := Vector2(640 - sub_width * 0.5, 212)

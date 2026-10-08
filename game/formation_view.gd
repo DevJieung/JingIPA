@@ -4,6 +4,7 @@ class_name FormationView
 ## Filtering preserves the actual card indices used for deployment and saving.
 const ELEMENTS := ["fire", "ice", "water", "elec", "none"]
 const PAGE_SIZE := 4
+var view_3d := StellarView.new()
 var selected: int = -1
 var bench_selected: int = -1
 var page: int = 0
@@ -61,53 +62,26 @@ func draw(ci: CanvasItem, ui: Ui, box: Rect2, time: float) -> void:
 	if bench_selected >= Run.bench.size():
 		bench_selected = -1
 	var map_box := Rect2(box.position, Vector2(box.size.x - 342, box.size.y - 16))
-	var scale := Vector2(map_box.size.x / 832.0, map_box.size.y / 644.0)
-	var origin := map_box.position - Vector2(0, 100) * scale
-	ci.draw_set_transform(origin, 0, scale)
-	Battlefield.draw_map(ci, time)
-	if selected >= 0:
-		var hero: Dictionary = Run.heroes[selected]
-		Battlefield.draw_range(ci, Balance.post_position(int(hero["post"])), float(Run.hero_stats(hero)["range"]), Look.GOLD)
-	Look.px_panel(ci, Rect2(Balance.ARENA_CENTER - Vector2(48, 32), Vector2(96, 64)), Color("#253e48"), Look.CRYSTAL_DEEP, 0.2)
-	for i in range(Run.lives):
-		Look.draw_crystal(ci, Balance.ARENA_CENTER + Balance.crystal_slot(i), 9, true)
-	for post in range(Balance.POST_SLOTS):
-		var index := Run.hero_at_post(post)
-		Battlefield.draw_post(ci, post, index >= 0 and index == selected, selected >= 0 or bench_selected >= 0)
-	ci.draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
+	view_3d.draw(ci, map_box, time, Run.heroes, selected, selected >= 0 or bench_selected >= 0)
 	post_rects.clear()
 	for post in range(Balance.POST_SLOTS):
-		var p := origin + Balance.post_position(post) * scale
-		# The central pair keeps separate name plates; smaller portraits free vertical room.
-		if post in [4, 6]:
-			p.x -= 7
-		elif post in [5, 7]:
-			p.x += 7
+		var p := view_3d.project(Balance.post_position(post), 0.26)
+		var head := view_3d.project(Balance.post_position(post), 2.02)
 		var index := Run.hero_at_post(post)
-		var hit := Rect2(p - Vector2(42, 65), Vector2(84, 84))
+		var hit := Rect2(Vector2(p.x - 26, head.y - 9), Vector2(52, maxf(52, p.y - head.y + 26)))
 		post_rects.append(hit)
 		ui.zone(hit, "post:%d" % post)
 		if index >= 0:
 			var hero: Dictionary = Run.heroes[index]
-			Look.fill_round(ci, Rect2(p - Vector2(30, 49), Vector2(60, 46)), 4, Color(0.035, 0.075, 0.085, 0.76))
-			Art.draw_deployed_fit(ci, hero["unit"], Rect2(p - Vector2(26, 46), Vector2(52, 42)))
-			Look.draw_rarity_fit(ci, Rect2(p - Vector2(34, 65), Vector2(68, 16)), int(hero["tier"]), 4.0)
-			Look.draw_elem(ci, p + Vector2(-29, -39), 7, String(hero["unit"].get("elem", "none")))
-			Look.fill_round(ci, Rect2(p + Vector2(-42, -2), Vector2(84, 23)), 3, Color(0.03, 0.07, 0.09, 0.94))
-			Look.text_center_fit(ci, p + Vector2(0, 9), Look.unit_name(hero["unit"]), 17, Look.INK, 80, 14)
+			Look.draw_rarity_fit(ci, Rect2(head - Vector2(29, 10), Vector2(58, 14)), int(hero["tier"]), 3.6)
+			Look.fill_round(ci, Rect2(p + Vector2(-35, 4), Vector2(70, 20)), 3, Color(0.03, 0.07, 0.09, 0.94))
+			Look.text_center_fit(ci, p + Vector2(0, 14), Look.unit_name(hero["unit"]), 15, Look.INK, 67, 11)
 			if is_new(hero):
-				Look.fill_round(ci, Rect2(p + Vector2(9, -22), Vector2(34, 17)), 3, Look.GOLD)
-				Look.text_center(ci, p + Vector2(26, -14), "NEW", 11, Look.BG_DEEP)
+				Look.fill_round(ci, Rect2(p + Vector2(8, -17), Vector2(29, 15)), 3, Look.GOLD)
+				Look.text_center(ci, p + Vector2(22, -10), "NEW", 10, Look.BG_DEEP)
 			if index == selected:
-				var border := hit.grow(5)
-				ci.draw_rect(border.grow(3), Look.BG_DEEP, false, 7)
-				ci.draw_rect(border, Look.INK, false, 3)
-				Look.draw_brackets(ci, border.grow(3), 17, Look.GOLD, 5)
-				var badge := Rect2(border.end.x - 21, border.position.y + 17, 21, 21)
-				Look.fill_round(ci, badge, 3, Look.GOLD)
-				ci.draw_line(badge.position + Vector2(4, 10), badge.position + Vector2(9, 15), Look.BG_DEEP, 3)
-				ci.draw_line(badge.position + Vector2(9, 15), badge.position + Vector2(17, 5), Look.BG_DEEP, 3)
-
+				Look.draw_brackets(ci, hit.grow(2), 12, Look.GOLD, 3)
+	view_3d.controls(ci, ui, Vector2(map_box.position.x + 8, map_box.end.y - 29))
 
 	_side = Rect2(box.end.x - 326, box.position.y, 326, box.size.y)
 	Look.material_panel(ci, _side, Look.PANEL, Look.PANEL_EDGE)
@@ -151,12 +125,17 @@ func draw(ci: CanvasItem, ui: Ui, box: Rect2, time: float) -> void:
 		Look.text_center_fit(ci, Vector2(map_box.get_center().x, box.end.y - 12), note, 18, Look.CRYSTAL, map_box.size.x - 20, 14)
 
 func post_at(p: Vector2) -> int:
+	if view_3d.world != null:
+		return view_3d.post_at(p)
 	for i in range(post_rects.size()):
 		if post_rects[i].has_point(p):
 			return i
 	return -1
 
 func input(e: InputEvent, ui: Ui) -> bool:
+	if view_3d.camera_input(e):
+		_pressed_post = -1
+		return true
 	if not e is InputEventMouseButton:
 		return false
 	if e.pressed and _side.has_point(e.position) and e.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
@@ -210,6 +189,8 @@ func _place(post: int) -> void:
 	bench_selected = -1
 
 func tap(id: String) -> bool:
+	if view_3d.camera_button(id):
+		return true
 	if id.begins_with("element:"):
 		var el := id.get_slice(":", 1)
 		if not ELEMENTS.has(el):

@@ -46,8 +46,8 @@ func _ready() -> void:
 	_check_attack_sync()
 	_check_shop()
 	_check_names()
-	_check_suits()
-	_check_piles()
+	_check_tier_names()
+	_check_rite()
 	_check_save()
 	_check_autosave_sites()
 	_check_sfx(strict)
@@ -65,25 +65,24 @@ func _bad(msg: String) -> void:
 	fail += 1
 
 
-## 상세창에 작은 애니메이션 프레임이 다시 연결되는 회귀를 막는다.
+## 모든 영웅과 등급이 해당 3D 렌더 초상화를 쓰는지 확인한다.
 func _check_portrait_routing() -> void:
 	var checked := 0
 	for u in Roster.UNITS:
-		var path := "res://art/portraits/%s.png" % String(u["id"])
-		if not ResourceLoader.exists(path):
-			continue
-		var p := Art.unit_preview(u)
-		if p.is_empty() or not p["tex"] is CanvasTexture:
-			_bad("전용 원화를 사용하지 않음: " + String(u["id"]))
-			continue
-		var t: CanvasTexture = p["tex"]
-		if t.diffuse_texture.resource_path != path or t.texture_filter != CanvasItem.TEXTURE_FILTER_LINEAR:
-			_bad("원화 경로/축소 필터 불일치: " + String(u["id"]))
-		for size in [Vector2(206, 264), Vector2(80, 60), Vector2(54, 84)]:
-			var area := Rect2(Vector2.ZERO, size)
-			if not area.grow(0.01).encloses(Art.fit_rect(p["src"].size, area)):
-				_bad("원화가 프레임을 넘침: " + String(u["id"]))
-		checked += 1
+		for grade in range(Balance.TIER_MAX + 1):
+			var path := "res://art/models/portraits/%s/%02d.png" % [String(u["id"]), grade]
+			var p := Art.unit_preview(u, grade)
+			if p.is_empty() or not p["tex"] is CanvasTexture:
+				_bad("3D 초상화를 사용하지 않음: " + path)
+				continue
+			var t: CanvasTexture = p["tex"]
+			if t.diffuse_texture.resource_path != path or t.texture_filter != CanvasItem.TEXTURE_FILTER_LINEAR:
+				_bad("3D 초상화 경로/축소 필터 불일치: " + path)
+			for size in [Vector2(206, 264), Vector2(80, 60), Vector2(54, 84)]:
+				var area := Rect2(Vector2.ZERO, size)
+				if not area.grow(0.01).encloses(Art.fit_rect(p["src"].size, area)):
+					_bad("3D 초상화가 프레임을 넘침: " + path)
+			checked += 1
 	# 다른 id를 쓰면 전용 원화가 없어도 실제 idle 시트로 대체되어야 한다.
 	var fallback: Dictionary = Roster.UNITS[0].duplicate()
 	fallback["id"] = "__portrait_fallback_probe__"
@@ -91,7 +90,7 @@ func _check_portrait_routing() -> void:
 	var preview := Art.unit_preview(fallback)
 	if not clip.is_empty() and (preview.is_empty() or preview["tex"] != clip["tex"]):
 		_bad("원화가 없을 때 idle 대체 실패")
-	print("  전용 원화 경로·필터·프레임 경계: %d명" % checked)
+	print("  3D 초상화 경로·필터·프레임 경계: %d장" % checked)
 
 
 ## 실제 화면의 배속·프레임 지연에서도 발사와 모션이 같은 시계를 쓰는가.
@@ -102,7 +101,7 @@ func _check_attack_sync() -> void:
 			for rapid in [false, true]:
 				Run.start_run(4245)
 				Run.begin_draw()
-				Run.confirm_hand()
+				Run.confirm_summon()
 				var screen := AttackSyncProbe.new()
 				screen.sim.setup(Run, 6, 31337)
 				screen.speed = playback
@@ -180,36 +179,43 @@ func _check_roster() -> void:
 			_bad("%s 의 profile 이 표에 없다: %s" % [id, u["profile"]])
 		if not Balance.BULLET.has(String(u["bullet"])):
 			_bad("%s 의 bullet 이 표에 없다: %s" % [id, u["bullet"]])
+		# ★ 표의 tier 는 **원화의 격**(그림 높이)이다 — 능력치가 아니다(Balance.TIER_ATK 의 ★).
+		#   영웅의 등급은 영웅 한 장이 갖고, 쉰 명 누구든 어느 등급으로든 뽑힌다. 그래도 격은
+		#   등급과 같은 열 칸이어야 한다: 합성 전용 수호자가 **결과 등급과 같은 격의 원화**를
+		#   빌려 입기 때문이다(Roster.fusion_units).
 		var t := int(u["tier"])
-		if t < 0 or t > 9:
-			_bad("%s 의 등급이 0~9 밖이다: %d" % [id, t])
+		if t < 0 or t > Balance.TIER_MAX:
+			_bad("%s 의 원화 격이 0~%d 밖이다: %d" % [id, Balance.TIER_MAX, t])
 		per_tier[t] = int(per_tier.get(t, 0)) + 1
 		if not Color.html_is_valid(String(u["color"])):
 			_bad("%s 의 색이 이상하다: %s" % [id, u["color"]])
-	# ★★ **등급마다 정확히 다섯이고, 다섯은 속성 다섯 x 무기 다섯이다.**
-	#   (설계서 `pokerdefense_world_characters_v2.md` §4 의 배치 행렬 그대로 —
-	#    「각 등급마다 5속성이 1명씩」 · 「각 등급 내에서 무기 5종도 1개씩」)
+	# ★★ **원화 격마다 정확히 다섯이고, 다섯은 속성 다섯 x 무기 다섯이다.**
+	#   (설계서 `stellardefense_world_characters_v2.md` §4 의 배치 행렬 그대로 —
+	#    「각 등급마다 5속성이 1명씩」 · 「각 등급 내에서 무기 5종도 1개씩」. 설계서가
+	#    말하던 「등급」이 지금의 원화 격이다 — 표는 그대로이고 뜻만 바뀌었다.)
 	#
 	#   재는 것이 넷이다:
 	#     1. **다섯인가** — 더도 덜도 아니다.
-	#     2. **속성 다섯이 저마다 하나씩인가** — 하나라도 겹치면 그 등급에서 어떤
-	#        속성 하나를 아예 못 뽑는다. 상성이 규칙의 전부인 게임에서 그것은
-	#        「그 등급을 뽑으면 저 몬스터에게는 손도 못 댄다」가 된다.
+	#     2. **속성 다섯이 저마다 하나씩인가** — 하나라도 겹치면 그 격에서 속성 하나가
+	#        빈다. 뽑기는 쉰 명에서 고르게 뽑으므로(Roster.pick_unit) 격마다 하나씩이라야
+	#        **다섯 속성이 같은 확률로 나오고**, 합성 수호자(결과 등급의 격에서 모습을
+	#        빌린다 · Roster.fusion_units)도 어느 등급에서든 다섯 속성이 다 나온다.
 	#     3. **무기 다섯이 저마다 하나씩인가** — 무기가 곧 자세이고(gen_art.pose_for)
 	#        전당 판에 다섯이 나란히 서므로, 둘이 같은 무기면 그 판에서 한 사람으로
 	#        보인다. 얼굴이 눈 두 점뿐인 화풍이라 실루엣이 겹치는 것이 곧 캐릭터가
 	#        겹치는 것이다.
-	#     4. **역할 넷이 전부 있는가** — 하나라도 빠지면 그 등급에서 그 역할을
-	#        아예 못 뽑는다. 다섯 자리에 역할이 넷이라 하나는 둘이다(무기가 정한다:
+	#     4. **역할 넷이 전부 있는가** — 하나라도 빠지면 합성 수호자가 그 등급에서 그
+	#        역할로는 아예 안 나온다. 다섯 자리에 역할이 넷이라 하나는 둘이다(무기가 정한다:
 	#        검·총=일격 · 활=도탄 · 채찍=특효 · 광역=광역 → 일격이 둘).
 	#
-	# ★ 속성이 등급마다 하나씩이므로 **역할 x 속성은 저절로 안 겹친다** — 예전
+	# ★ 속성이 격마다 하나씩이므로 **역할 x 속성은 저절로 안 겹친다** — 예전
 	#   여든 명 체제에서 따로 재던 검사가 여기서는 산수로 참이다.
 	var want_per := 5
-	for t in range(10):
+	for t in range(Balance.TIER_MAX + 1):
+		var grade := "원화 %d격" % (t + 1)
 		if int(per_tier.get(t, 0)) != want_per:
-			_bad("%s 등급의 캐릭터가 %d명이다 (다섯이어야 한다)"
-					% [Poker.HAND_KO[t], int(per_tier.get(t, 0))])
+			_bad("%s 의 캐릭터가 %d명이다 (다섯이어야 한다)"
+					% [grade, int(per_tier.get(t, 0))])
 		var tu: Array = Roster.units_of_tier(t)
 		var roles := {}
 		var weaps := {}
@@ -223,21 +229,35 @@ func _check_roster() -> void:
 			if wp == "":
 				_bad("%s 에 weapon 이 없다 — 자세가 여기서 나온다(gen_art.pose_for)" % u3["id"])
 			elif weaps.has(wp):
-				_bad("%s 등급에 %s 무기가 둘이다 (%s · %s) — 다섯이 한 판에 나란히 선다"
-						% [Poker.HAND_KO[t], wp, weaps[wp], u3["id"]])
+				_bad("%s 에 %s 무기가 둘이다 (%s · %s) — 다섯이 한 판에 나란히 선다"
+						% [grade, wp, weaps[wp], u3["id"]])
 			weaps[wp] = String(u3["id"])
 			var el := String(u3.get("elem", ""))
 			if elems.has(el):
-				_bad("%s 등급에 %s 속성이 둘이다 (%s · %s) — 등급마다 속성 다섯이 하나씩이다"
-						% [Poker.HAND_KO[t], el, elems[el], u3["id"]])
+				_bad("%s 에 %s 속성이 둘이다 (%s · %s) — 격마다 속성 다섯이 하나씩이다"
+						% [grade, el, elems[el], u3["id"]])
 			elems[el] = String(u3["id"])
 		for e2 in Balance.ELEM_ORDER:
 			if not elems.has(String(e2)):
-				_bad("%s 등급에 %s 속성이 없다" % [Poker.HAND_KO[t], Balance.elem_ko(String(e2))])
+				_bad("%s 에 %s 속성이 없다" % [grade, Balance.elem_ko(String(e2))])
 		for ro2 in Balance.ROLE_ORDER:
 			if int(roles.get(ro2, 0)) < 1:
-				_bad("%s 등급에 「%s」 역할이 하나도 없다"
-						% [Poker.HAND_KO[t], Balance.role_ko(String(ro2))])
+				_bad("%s 에 「%s」 역할이 하나도 없다"
+						% [grade, Balance.role_ko(String(ro2))])
+		# ★ 합성 전용 수호자는 **결과 등급과 같은 격**에서 모습을 빌린다. 격 하나가 비면
+		#   그 등급으로 합성되는 순간 고를 것이 없어 판이 멈춘다(pick_fusion_unit).
+		var fused: Array = Roster.fusion_units(t)
+		if fused.size() != tu.size() or fused.is_empty():
+			_bad("%s 의 합성 수호자가 %d명이다 (그 격의 캐릭터 %d명과 같아야 한다)"
+					% [grade, fused.size(), tu.size()])
+		for fu in fused:
+			var fid := String(fu.get("id", ""))
+			if not bool(fu.get("fusion_only", false)):
+				_bad("합성 수호자 %s 에 fusion_only 가 없다 — 뽑기와 섞인다" % fid)
+			if ids.has(fid):
+				_bad("합성 수호자 id 가 뽑기 캐릭터와 겹친다: %s" % fid)
+			if Roster.unit_by_id(fid) != fu:
+				_bad("합성 수호자 %s 를 id 로 되찾지 못한다 — 저장했다 읽으면 그 영웅이 사라진다" % fid)
 	# ★ **무기가 역할을 정한다 — 쉰 줄이 다 같은 규칙을 따라야 한다.**
 	#   설계서 §2 의 「무기는 전부 카드를 다루는 손동작에서 나왔다」가 곧 이 표다.
 	#   한 줄이라도 어긋나면 「같은 검인데 누구는 일격이고 누구는 광역」이 되어,
@@ -281,8 +301,13 @@ func _check_roster() -> void:
 		if Roster.boss_of_body(String(b)).is_empty():
 			_bad("%s 몸의 보스가 없다 — 그 테마의 보스맵에 보스가 안 나온다"
 					% Balance.body_ko(String(b)))
-	if Roster.TIER_KO.size() != 10:
-		_bad("등급 이름이 10개가 아니다")
+	if Roster.TIER_KO.size() != Balance.TIER_MAX + 1:
+		_bad("등급 이름이 %d개가 아니다 (%d개)" % [Balance.TIER_MAX + 1, Roster.TIER_KO.size()])
+	# ★ **뽑기에는 합성 전용 수호자가 섞이지 않는다.** pick_unit 은 UNITS 한 표만 본다 —
+	#   그 표에 fusion_only 가 한 줄이라도 들어오면 「합성으로만 만난다」가 거짓말이 된다.
+	for u6 in Roster.UNITS:
+		if bool(u6.get("fusion_only", false)) or String(u6["id"]).begins_with("awakened_"):
+			_bad("%s 는 합성 전용인데 뽑기 표(UNITS)에 들어 있다" % u6["id"])
 
 
 ## 속성 표 — 다섯 공격 속성과 몬스터의 다섯 몸.
@@ -471,12 +496,18 @@ func _check_elem() -> void:
 			# 하나뿐이면 그 캐릭터가 안 나오는 판에서는 그 속성이 아예 없는 것과 같다.
 			_bad("%s 속성 영웅이 %d명뿐이다 (둘 이상)"
 					% [Balance.elem_ko(es), int(hero_n.get(es, 0))])
-		# ★ **속성이 등급 구간에 고루 퍼져야 한다.** 전기가 앞 등급에만 있으면 후반에
-		#   전기를 뽑을 길이 없고, 뒤 등급에만 있으면 전기로 전반을 날 수가 없다.
+		# ★ **속성이 원화 격 구간에 고루 퍼져야 한다.** 뽑기는 격을 안 가리지만(누구든 어느
+		#   등급으로든 나온다) **합성 수호자는 결과 등급의 격에서 모습을 빌린다** — 전기가 낮은
+		#   격에만 있으면 높은 등급으로 합성한 수호자 가운데 전기가 영영 없다.
 		var bands: Dictionary = hero_band.get(es, {})
 		if bands.size() < 3:
-			_bad("%s 속성 영웅이 등급 구간 %d곳에만 있다 (앞0-3·중4-6·뒤7-9 모두에 있어야 한다)"
+			_bad("%s 속성 영웅이 원화 격 구간 %d곳에만 있다 (앞0-3·중4-6·뒤7-9 모두에 있어야 한다)"
 					% [Balance.elem_ko(es), bands.size()])
+		# ★ **뽑기는 쉰 명에서 고르게 뽑는다**(Roster.pick_unit). 그래서 속성마다의 인원이 곧
+		#   그 속성이 뽑힐 확률이다 — 한 속성만 많으면 모든 판의 편성이 그쪽으로 기운다.
+		if int(hero_n.get(es, 0)) * Balance.ELEM_ORDER.size() != Roster.UNITS.size():
+			_bad("%s 속성 영웅이 %d명이다 — 뽑기가 고르므로 다섯 속성이 같은 수(%d명)여야 같은 확률로 나온다"
+					% [Balance.elem_ko(es), int(hero_n.get(es, 0)), Roster.UNITS.size() / Balance.ELEM_ORDER.size()])
 		if es == "none":
 			continue
 		if int(weak_n.get(es, 0)) < 1:
@@ -681,15 +712,16 @@ func _check_wave_plan() -> void:
 
 func _check_balance() -> void:
 	for arr in [Balance.TIER_ATK, Balance.TIER_RATE]:
-		if arr.size() != 10:
-			_bad("등급별 표의 길이가 10이 아니다")
-	# 등급이 오르면 초당 피해가 반드시 올라야 한다. 하나라도 뒤집히면 족보를 맞출 이유가 없다.
+		if arr.size() != Balance.TIER_MAX + 1:
+			_bad("등급별 표의 길이가 %d 이 아니다" % (Balance.TIER_MAX + 1))
+	# 등급(반 별 한 칸)이 오르면 초당 피해가 반드시 올라야 한다. 하나라도 뒤집히면 별을 더
+	# 맞출 이유도, 승급·합성으로 반 별을 올릴 이유도 없다.
 	var prev := 0.0
-	for t in range(10):
+	for t in range(mini(Balance.TIER_ATK.size(), Balance.TIER_RATE.size())):
 		var dps: float = float(Balance.TIER_ATK[t]) * float(Balance.TIER_RATE[t])
 		if dps <= prev:
-			_bad("%s 등급의 초당 피해가 아래 등급보다 크지 않다 (%.1f -> %.1f)"
-					% [Poker.HAND_KO[t], prev, dps])
+			_bad("%s 의 초당 피해가 아래 등급보다 크지 않다 (%.1f -> %.1f)"
+					% [Roster.TIER_KO[clampi(t, 0, Roster.TIER_KO.size() - 1)], prev, dps])
 		prev = dps
 	# 같은 등급 안의 결(프로필)은 초당 피해가 비슷해야 한다 — 하나만 정답이면 나머지는 꽝이다.
 	var lo := 9.9
@@ -926,7 +958,7 @@ func _check_no_range() -> void:
 	#   남아 있으면 화면이 그 값으로 원반과 사거리 고리를 계속 그린다.
 	Run.start_run(31415)
 	Run.begin_draw()
-	Run.confirm_hand()
+	Run.confirm_summon()
 	var sim := BattleSim.new()
 	sim.setup(Run, 1, 4242)
 	if sim.heroes.is_empty():
@@ -980,8 +1012,8 @@ func _check_roster_slots() -> void:
 	var given := 0
 	for i in range(Balance.LAST_WAVE):
 		Run.wave = i + 1
-		var tier: int = i % 10
-		Run.gain_hero(Roster.pick_unit(tier, rng), tier)
+		var tier: int = i % (Balance.TIER_MAX + 1)
+		Run.gain_hero(Roster.pick_unit(rng), tier)
 		given += 1
 		if Run.heroes.size() > Balance.HERO_SLOTS:
 			_bad("성역에 %d명이 섰다 (%d명까지다)" % [Run.heroes.size(), Balance.HERO_SLOTS])
@@ -1012,14 +1044,35 @@ func _check_roster_slots() -> void:
 	var a3: float = float(s3["atk"]) * float(s3.get("shots", 1))
 	if absf(a3 - a1) > 0.01:
 		_bad("이전 중첩 값이 현재 1인 화력을 바꾼다 (%.2f -> %.2f)" % [a1, a3])
-	# 자리바꿈: 성역 0번과 전당 0번을 맞바꿔도 둘 다 그대로 있어야 한다
-	if not Run.bench.is_empty():
-		var f0 := String(Run.heroes[0]["unit"]["id"])
-		var b0 := String(Run.bench[0]["unit"]["id"])
-		if not Run.swap_field_bench(0, 0):
+	# 자리바꿈: 성역 0번과 전당의 한 자리를 맞바꿔도 둘 다 그대로 있어야 한다.
+	# ★ 뽑기가 쉰 명에서 고르므로 전당에는 **성역에 이미 선 캐릭터의 복사본**이 섞여 있다.
+	#   그 복사본은 다른 자리로 못 올라온다(중복 출전 금지) — 그래서 두 갈래를 다 본다:
+	#   성역에 없는 캐릭터는 맞바뀌고, 다른 자리에 선 캐릭터의 복사본은 거절된다.
+	var f0 := String(Run.heroes[0]["unit"]["id"])
+	var swap_b := -1
+	var dup_b := -1
+	for bi in range(Run.bench.size()):
+		var bid := String(Run.bench[bi]["unit"]["id"])
+		if bid == f0:
+			continue
+		if Run.can_deploy(Run.bench[bi]["unit"], 0):
+			if swap_b < 0:
+				swap_b = bi
+		elif dup_b < 0:
+			dup_b = bi
+	if dup_b < 0 or swap_b < 0:
+		_bad("영웅 %d명을 받았는데 전당에 맞바꿀 캐릭터(%d)나 복사본(%d)이 없다 — 검사가 뜻이 없어졌다"
+				% [given, swap_b, dup_b])
+	else:
+		var dup_id := String(Run.bench[dup_b]["unit"]["id"])
+		if Run.swap_field_bench(0, dup_b) or String(Run.heroes[0]["unit"]["id"]) != f0 \
+				or String(Run.bench[dup_b]["unit"]["id"]) != dup_id:
+			_bad("다른 자리에 이미 선 %s 의 복사본이 성역 0번으로 올라왔다 — 같은 캐릭터가 두 자리에 선다" % dup_id)
+		var b0 := String(Run.bench[swap_b]["unit"]["id"])
+		if not Run.swap_field_bench(0, swap_b):
 			_bad("성역과 전당을 맞바꾸지 못했다")
 		elif String(Run.heroes[0]["unit"]["id"]) != b0 \
-				or String(Run.bench[0]["unit"]["id"]) != f0:
+				or String(Run.bench[swap_b]["unit"]["id"]) != f0:
 			_bad("맞바꿨는데 자리가 안 바뀌었다")
 		if Run.hero_total() != given:
 			_bad("자리를 바꿨더니 영웅 수가 %d 로 바뀌었다 (%d 이어야 한다)"
@@ -1049,7 +1102,7 @@ func _check_battle() -> void:
 
 	# 2) 영웅 없이 한 탄을 돌린다 — 전부 크리스탈까지 온다
 	Run.start_run(4243)
-	Run.begin_draw()          # 영웅은 안 세운다(confirm_hand 를 안 부른다)
+	Run.begin_draw()          # 영웅은 안 세운다(confirm_summon 을 안 부른다)
 	var sim := BattleSim.new()
 	sim.setup(Run, 1, 99)
 	var guard := 0
@@ -1100,7 +1153,7 @@ func _check_battle() -> void:
 func _check_fire_events() -> void:
 	Run.start_run(4245)
 	Run.begin_draw()
-	Run.confirm_hand()
+	Run.confirm_summon()
 	var sim := BattleSim.new()
 	sim.setup(Run, 6, 31337)
 	if sim.heroes.is_empty():
@@ -1249,13 +1302,15 @@ func _check_shop() -> void:
 	for u2 in Balance.UPGRADES:
 		if String(u2["id"]) == "life":
 			_bad("「크리스탈 +1」 업그레이드가 남아 있다 — 최대치는 안 는다")
-	# 리롤 값은 반드시 올라야 한다 — 안 오르면 "한 번만 공짜"라는 규칙이 무너진다.
+	# 다시 돌리기 값은 반드시 올라야 한다 — 안 오르면 "한 번만 공짜"라는 규칙이 무너진다.
 	var prev := -1
 	for n in range(5):
 		var c := Balance.reroll_cost(n)
 		if c <= prev:
-			_bad("유료 리롤 값이 오르지 않는다: %d번째 %d" % [n, c])
+			_bad("유료 다시 돌리기 값이 오르지 않는다: %d번째 %d" % [n, c])
 		prev = c
+	if Balance.reroll_cost(0) <= 0:
+		_bad("첫 유료 다시 돌리기가 공짜다 (%d) — 무료 횟수가 뜻이 없어진다" % Balance.reroll_cost(0))
 
 	# --- 상점이 적는 **누적 값**이 썩지 않게 (「Lv 3」이 아니라 「x1.52 (+52%)」다) ---
 	# ★ 왜 세 겹이나 거는가: 새 업그레이드 한 줄을 넣을 때 `Run.up_at()` 의 match 에 그
@@ -1319,31 +1374,141 @@ func _check_shop() -> void:
 			% Balance.UPGRADES.size())
 
 
-## 무작위 카드 교체: 중복 없이 다른 네 슬롯을 보존한다.
-func _check_piles() -> void:
-	# Current rerolls choose randomly from all cards outside the current five.
+## 별맞춤 의식의 **표**가 서로 맞는가 — 문 너비(Balance) · 규칙(Rite) · 등급 표 · 패시브 설명.
+##
+## ★ 규칙 자체(문의 경계 · 확률표와 실제 굴림 · 다시 돌리기)는 tests/rite_check 가 잰다.
+##   여기서 보는 것은 **표끼리의 이음매**다: 문 너비 한 줄을 다섯에서 넷으로 줄였는데 궤도
+##   수는 그대로라든가, 등급 표를 한 칸 줄였는데 5성이 여전히 옛 꼭대기 칸을 가리킨다든가.
+##   그런 어긋남은 「문 안에 다섯이 섰는데 4.5성이 나오는」 식으로만 드러난다.
+func _check_rite() -> void:
+	if Balance.RITE_GATE.size() != Rite.RINGS:
+		_bad("문 너비가 %d줄인데 궤도는 %d개다" % [Balance.RITE_GATE.size(), Rite.RINGS])
+	if Rite.slots() != Balance.RITE_SLOTS or Rite.slots() < 2:
+		_bad("한 궤도의 칸 수가 표(%d)와 규칙(%d)에서 다르다" % [Balance.RITE_SLOTS, Rite.slots()])
+	if Balance.RITE_ANCHORED < 1 or Balance.RITE_ANCHORED >= Rite.RINGS:
+		_bad("붙들린 별이 %d개다 — 하나도 없으면 0성이 나오고, 전부면 뽑기가 아니다" % Balance.RITE_ANCHORED)
+	for ring in range(mini(Rite.RINGS, Balance.RITE_GATE.size())):
+		var gate := int(Balance.RITE_GATE[ring])
+		if Rite.gate(ring) != gate:
+			_bad("%d번 궤도의 문 너비가 표(%d)와 규칙(%d)에서 다르다" % [ring, gate, Rite.gate(ring)])
+		if gate < 1 or gate > Rite.slots():
+			_bad("%d번 궤도의 문 너비(%d)가 한 궤도(%d칸)를 벗어난다" % [ring, gate, Rite.slots()])
+		# 문 밖에 설 자리가 한 칸도 없는 궤도는 붙들린 별과 같다 — 표에 그렇게 적어야 한다.
+		if not Rite.anchored(ring) and gate >= Rite.slots():
+			_bad("%d번 궤도는 문이 한 바퀴 전부다 — 언제나 드는 별이면 RITE_ANCHORED 에 넣어야 한다" % ring)
+	# 별 수 ↔ 등급 표. 다섯 별이 등급 표의 꼭대기에, 한 별이 표 안에 떨어져야 한다.
+	if Rite.MAX_STARS != Rite.RINGS:
+		_bad("최고 별 수(%d)가 궤도 수(%d)와 다르다" % [Rite.MAX_STARS, Rite.RINGS])
+	if Rite.tier_of(Rite.MAX_STARS) != Balance.TIER_MAX:
+		_bad("%d성이 등급 표의 꼭대기(%d)가 아니라 %d 칸을 가리킨다"
+				% [Rite.MAX_STARS, Balance.TIER_MAX, Rite.tier_of(Rite.MAX_STARS)])
+	var last_tier := -1
+	for stars in range(Rite.MIN_STARS, Rite.MAX_STARS + 1):
+		var tier := Rite.tier_of(stars)
+		if tier < 0 or tier > Balance.TIER_MAX or tier <= last_tier:
+			_bad("%d성의 등급 칸(%d)이 표 밖이거나 아래 별보다 높지 않다" % [stars, tier])
+		# 온 별 사이에 반 별 한 칸이 있어야 승급·합성이 오를 자리가 있다(사용자가 정한 「0.5성 단위」).
+		if last_tier >= 0 and tier - last_tier != 2:
+			_bad("%d성과 그 아래 별 사이가 %d칸이다 (반 별 한 칸이 끼어 두 칸이어야 한다)" % [stars, tier - last_tier])
+		if not is_equal_approx(Rite.tier_stars(tier), float(stars)):
+			_bad("등급 %d 를 별로 되읽으면 %.1f성이다 (%d성이어야 한다)" % [tier, Rite.tier_stars(tier), stars])
+		last_tier = tier
+	if Balance.RITE_FIRST_STARS < Rite.MIN_STARS or Balance.RITE_FIRST_STARS > Rite.MAX_STARS:
+		_bad("첫 의식이 보장하는 별 수(%d)가 %d~%d 밖이다"
+				% [Balance.RITE_FIRST_STARS, Rite.MIN_STARS, Rite.MAX_STARS])
+	# 화려한 연출의 문턱 — 의식이 실제로 닿는 등급이어야 하고, 전부가 화려하면 화려한 것이 없다.
+	if Balance.SHOWY_TIER <= Rite.tier_of(Rite.MIN_STARS) or Balance.SHOWY_TIER > Balance.TIER_MAX:
+		_bad("화려한 연출의 문턱(%d)이 의식이 주는 등급(%d~%d) 밖이거나 맨 아래다"
+				% [Balance.SHOWY_TIER, Rite.tier_of(Rite.MIN_STARS), Balance.TIER_MAX])
+	# 확률표 — 화면의 안내가 읽는 표다. 합이 1 이고 0성은 없어야 한다.
+	for spin_count in [1, 1 + Balance.FREE_REROLL]:
+		var odds := Rite.odds(spin_count)
+		var total := 0.0
+		for p in odds:
+			total += p
+		if odds.size() != Rite.RINGS + 1 or absf(total - 1.0) > 1e-9 or not is_zero_approx(odds[0]):
+			_bad("확률표(%d번 돌림)가 성하지 않다: %s" % [spin_count, str(odds)])
+	# 무료 횟수 · 큰손 — 상점이 적는 수와 의식이 주는 수가 같은 표에서 나오는가.
+	if Balance.FREE_REROLL < 0 or Balance.PASSIVE_DEAL < 1:
+		_bad("무료 다시 돌리기(%d)나 큰손(+%d)의 값이 이상하다" % [Balance.FREE_REROLL, Balance.PASSIVE_DEAL])
+	# ★ 패시브 설명에 적힌 숫자가 실제 값과 같은가. 설명은 글자이고 값은 상수라, 한쪽만 고치면
+	#   상점에는 「18%」라고 적혀 있는데 실제로는 다른 확률이 걸린다.
+	var eye := Balance.passive_by_id("eye")
+	var deal := Balance.passive_by_id("deal")
+	var joker := Balance.passive_by_id("joker")
+	if eye.is_empty() or deal.is_empty() or joker.is_empty():
+		_bad("의식에 걸리는 패시브(눈 · 큰손 · 조커)가 표에 없다")
+	else:
+		var pct := "%d%%" % roundi(Balance.PASSIVE_EYE_P * 100.0)
+		if not String(eye["desc"]).contains(pct):
+			_bad("도박꾼의 눈 설명 「%s」이 실제 확률(%s)과 다르다" % [eye["desc"], pct])
+		if not String(deal["desc"]).contains("+%d" % Balance.PASSIVE_DEAL):
+			_bad("큰손 설명 「%s」이 실제 값(+%d)과 다르다" % [deal["desc"], Balance.PASSIVE_DEAL])
+		if Balance.PASSIVE_EYE_P <= 0.0 or Balance.PASSIVE_EYE_P >= 1.0:
+			_bad("도박꾼의 눈 확률(%.2f)이 0~1 밖이다" % Balance.PASSIVE_EYE_P)
+		for p2 in [eye, deal, joker]:
+			for word in ["카드", "족보", "교체"]:
+				if String(p2["desc"]).contains(word) or String(p2["ko"]).contains(word):
+					_bad("패시브 %s 의 설명에 없어진 말(%s)이 남아 있다: 「%s」" % [p2["id"], word, p2["desc"]])
+	var reroll := Balance.upgrade_by_id("reroll")
+	for word2 in ["카드", "교체"]:
+		if String(reroll.get("ko", "")).contains(word2) or String(reroll.get("desc", "")).contains(word2):
+			_bad("상점 「%s」 줄에 없어진 말(%s)이 남아 있다" % [reroll.get("ko", ""), word2])
+
+	# **판의 첫 의식만** 별을 보장한다(Balance.RITE_FIRST_STARS) — 씨앗 마흔 개로 본다.
+	# 2탄부터는 보정이 없으므로 그보다 적은 별이 흔히 나와야 한다. 2탄에도 한 번도 안 나오면
+	# 보정이 첫 탄 밖으로 새고 있는 것이다.
+	var first_low := 0
+	var later_low := 0
+	var seeds := 40
+	for i in range(seeds):
+		Run.start_run(20260900 + i)
+		Run.begin_draw()
+		if Run.rite_stars() < Balance.RITE_FIRST_STARS:
+			first_low += 1
+		Run.begin_draw()
+		if Run.rite_stars() < Balance.RITE_FIRST_STARS:
+			later_low += 1
+	if first_low > 0:
+		_bad("판의 첫 의식 %d번 중 %d번이 %d성 밑으로 열렸다" % [seeds, first_low, Balance.RITE_FIRST_STARS])
+	var p_low := 0.0
+	for stars2 in range(Rite.MIN_STARS, mini(Balance.RITE_FIRST_STARS, Rite.MAX_STARS + 1)):
+		p_low += Rite.odds(1)[stars2]
+	if later_low == 0 and pow(1.0 - p_low, float(seeds)) < 1e-6:
+		_bad("2탄의 의식 %d번이 전부 %d성 이상이다 — 첫 의식의 보정이 다음 탄까지 새고 있다(한 번 돌려 그 밑일 확률 %.0f%%)"
+				% [seeds, Balance.RITE_FIRST_STARS, p_low * 100.0])
+
+	# 판(Run)이 같은 표를 쓰는가 — 세 탄을 열어 실제로 돌려 본다.
 	Run.start_run(20260828)
 	for wave in range(3):
 		Run.begin_draw()
-		if Run.cards.size() != 5 or Poker.evaluate(Run.cards) < 0:
-			_bad("새 손패는 서로 다른 정상 카드 다섯 장이어야 한다")
-		var seen := {}
-		for turn in range(512):
+		if not Rite.valid(Run.orbit) or Run.rite_stars() != Rite.stars(Run.orbit):
+			_bad("새 의식의 별 자리가 규칙 밖이다: %s" % str(Run.orbit))
+			continue
+		if Run.respins_left() != Balance.FREE_REROLL or Run.respin_cost() != 0:
+			_bad("강화도 패시브도 없는데 무료 다시 돌리기가 %d번이다 (%d번이어야 한다)"
+					% [Run.respins_left(), Balance.FREE_REROLL])
+		for turn in range(64):
 			Run.gold = 999999
-			Run.paid[0] = 0
-			var before := Run.cards.duplicate()
-			if not Run.reroll(0):
-				_bad("골드가 충분한 교체가 차단되었다")
+			Run.paid_spins = 0
+			var before: Array[int] = Run.orbit.duplicate()
+			var missed := Rite.misses(before)
+			var moved := Run.respin()
+			if missed.is_empty():
+				if not moved.is_empty() or Run.gold != 999999:
+					_bad("다 든 의식에서 다시 돌리기가 돌거나 골드를 받았다")
 				break
-			if before.has(Run.cards[0]) or Poker.evaluate(Run.cards) < 0:
-				_bad("교체 결과는 이전 손패와 중복되면 안 된다")
-			for slot in range(1, 5):
-				if Run.cards[slot] != before[slot]:
-					_bad("한 장 교체가 다른 슬롯까지 바꿨다")
-			seen[Run.cards[0]] = true
-		if seen.size() != 48:
-			_bad("교체 슬롯은 다른 네 장을 제외한 48장 모두에 도달해야 한다")
-	print("  카드 교체 정상 (다섯 장 중복 금지 · 다른 슬롯 보존 · 48장 선택 가능)")
+			if moved != missed:
+				_bad("다시 돈 별(%s)이 문 밖의 별(%s)과 다르다" % [str(moved), str(missed)])
+				break
+			for ring2 in range(Rite.RINGS):
+				if not missed.has(ring2) and Run.orbit[ring2] != before[ring2]:
+					_bad("다시 돌렸더니 문 안의 %d번 별이 움직였다" % ring2)
+			if Run.rite_stars() < Rite.stars(before):
+				_bad("다시 돌렸더니 별이 줄었다 (%d → %d)" % [Rite.stars(before), Run.rite_stars()])
+	print("  별맞춤 의식 표 정상 (문 %s / %d칸 · 붙들린 별 %d · 첫 의식 %d성 · 화려한 연출 %s부터)"
+			% [str(Balance.RITE_GATE), Rite.slots(), Balance.RITE_ANCHORED, Balance.RITE_FIRST_STARS,
+				Roster.TIER_KO[clampi(Balance.SHOWY_TIER, 0, Roster.TIER_KO.size() - 1)]])
 
 
 ## **판을 담은 것이 파일에 그대로 들어갔다 나오는가.**
@@ -1360,14 +1525,17 @@ const SAVE_TMP := "user://_ns_savecheck.tmp"
 func _check_save() -> void:
 	Run.start_run(20260828)
 	Run.begin_draw()
-	Run.confirm_hand()
+	# 별 둘이 든 의식에서 한 번 다시 돌리고 확정한 판 — 별 자리 · 돌린 횟수 · 확정 결과가 다 담긴다.
+	Fixture.stack(2)
+	if Run.respin().is_empty():
+		_bad("자동 저장: 검사용 의식을 다시 돌리지 못했다")
+	Run.confirm_summon()
 	Run.gold = 1234
 	Run.lives = 15
 	Run.levels["atk"] = 4
 	Run.passives.clear()
 	Run.passives.append(String(Balance.PASSIVES[0]["id"]))
 	Run.roll_shop()
-	Run.reroll(0)
 	var snap := Run.snapshot()
 
 	var cf := ConfigFile.new()
@@ -1390,14 +1558,23 @@ func _check_save() -> void:
 		if not back.has(k):
 			_bad("자동 저장: 파일을 거치니 '%s' 가 사라졌다" % String(k))
 	var want_gold := int(snap["gold"])
-	var want_cards: Array = Array(snap["cards"])
+	var want_rite: Dictionary = (snap["rite"] as Dictionary).duplicate(true)
+	var want_last: Dictionary = (snap["last"] as Dictionary).duplicate(true)
+	# ★ 별 자리는 **정수 그대로** 돌아와야 한다. 파일을 거치며 실수(3.0)가 되면 Rite.valid 가
+	#   거절해서, 게임에서는 멀쩡한데 앱을 껐다 켠 다음에만 판이 통째로 버려진다.
+	for pos in Array((back.get("rite", {}) as Dictionary).get("orbit", [])):
+		if not pos is int:
+			_bad("자동 저장: 별 자리가 파일을 거치며 정수가 아니게 됐다 (%s)" % str(pos))
 	if not Run.restore(back):
 		_bad("자동 저장: 파일에서 돌아온 것을 되돌리지 못했다")
 		return
 	if Run.gold != want_gold:
 		_bad("자동 저장: 골드가 %d → %d" % [want_gold, Run.gold])
-	if Array(Run.cards) != want_cards:
-		_bad("자동 저장: 카드 다섯 장이 파일을 거치며 달라졌다")
+	if Run.snapshot()["rite"] != want_rite or Run.spins != 1 or not Rite.valid(Run.orbit):
+		_bad("자동 저장: 별 자리와 다시 돌린 횟수가 파일을 거치며 달라졌다 (%s → %s)"
+				% [str(want_rite), str(Run.snapshot()["rite"])])
+	if Run.snapshot()["last"] != want_last or Run.last_tier != int(want_last.get("tier", -2)):
+		_bad("자동 저장: 확정 결과(등급 · 별 수 · 별 자리)가 파일을 거치며 달라졌다")
 	if Run.passives.size() != 1:
 		_bad("자동 저장: 패시브가 파일을 거치며 %d개가 됐다" % Run.passives.size())
 	if Run.lv("atk") != 4:
@@ -1407,6 +1584,13 @@ func _check_save() -> void:
 	stale["v"] = int(snap["v"]) - 1
 	if Run.restore(stale):
 		_bad("자동 저장: 판 번호가 다른 저장을 받아들였다 — 옛 저장이 새 규칙에 섞인다")
+	# 포커 시절의 열쇠는 더 이상 담지 않는다. 남아 있으면 옛 값이 새 판에 실려 다닌다.
+	for gone in ["cards", "rerolled", "paid", "piles", "at", "best_hand"]:
+		if snap.has(gone):
+			_bad("자동 저장: 없어진 열쇠 '%s' 가 아직 담긴다" % gone)
+	for h in Array(snap.get("heroes", [])) + Array(snap.get("bench", [])):
+		if (h as Dictionary).has("value") or (h as Dictionary).has("variant"):
+			_bad("자동 저장: 영웅에 포커 문장 값이 아직 담긴다")
 	print("  자동 저장 정상 (파일을 거쳐 %d개 키가 그대로 돌아옴)" % snap.size())
 
 
@@ -1478,8 +1662,8 @@ func _check_sfx(strict: bool) -> void:
 		want[Sfx.shot_id("none", k)] = "Sfx.shot_id"
 	for em in [2.0, 1.0, 0.5, 0.0]:
 		want[Sfx.hit_id(em)] = "Sfx.hit_id"
-	# 족보 열 등급의 확정음.
-	for i in range(10):
+	# 등급 열 칸(0.5성~5성)의 확정음.
+	for i in range(Balance.TIER_MAX + 1):
 		want["reveal%d" % i] = "draw_screen"
 	var miss: Array[String] = []
 	for id in want:
@@ -1568,59 +1752,57 @@ func _check_autosave_sites() -> void:
 	print("  자동 저장을 부르는 곳 %d곳 %s" % [hits.size(), str(hits.keys())])
 
 
-## **카드 무늬 도트판** — `Look.SUIT_PX` 는 무늬마다 한 장씩, 줄 길이가 같은 문자열 배열이다.
+## **등급의 이름과 색** — 등급을 적는 표가 여럿이다. 서로 같은 말을 하는가.
 ##
-## ★ 실제로 나갔던 버그가 여기다: **스페이드 자리에 하트가, 하트 자리에 스페이드가**
-##   들어 있어서 화면에 **검은 하트와 빨간 스페이드**가 찍혔다. 색은 무늬 번호로 고르고
-##   모양은 이 표에서 고르는데, 두 장만 뒤바뀌면 양쪽 다 "그럴듯한 무늬"로 그려져서
-##   눈으로도 한참을 못 본다.
-## ★ 그래서 이름이 아니라 **실루엣의 뜻**으로 잰다:
-##     스페이드 — 꼭대기가 하나로 뾰족하고(첫 줄 잉크 덩어리 **하나**) 밑에 자루가 붙는다
-##                (마지막 줄에 잉크가 **있다**)
-##     하트     — 꼭대기가 두 봉우리이고(첫 줄 잉크 덩어리 **둘**) 밑은 한 점에서 끝난다
-##                (마지막 줄이 **비어 있다**)
-func _check_suits() -> void:
-	var swapped := "스페이드 자리에 하트가, 하트 자리에 스페이드가 들어 있으면 이렇게 된다 — 화면에 검은 하트와 빨간 스페이드가 찍힌다"
-	for s in [Poker.Suit.SPADE, Poker.Suit.HEART, Poker.Suit.DIAMOND, Poker.Suit.CLUB]:
-		if not Look.SUIT_PX.has(s):
-			# ★ 없는 무늬는 draw_suit_px 가 **스페이드로 대신 그린다.** 빠진 것이
-			#   화면에서는 "스페이드가 넷"으로 보여서 영영 안 잡힌다.
-			_bad("무늬 도트판에 %d번 무늬가 없다 — 없는 무늬는 스페이드로 그려진다" % int(s))
-			continue
-		var rows: Array = Look.SUIT_PX[s]
-		if rows.is_empty():
-			_bad("%d번 무늬의 도트판이 비었다" % int(s))
-			continue
-		var w: int = String(rows[0]).length()
-		for r in range(rows.size()):
-			var ln := String(rows[r])
-			if ln.length() != w:
-				_bad("%d번 무늬 도트판의 %d번째 줄이 %d칸이다 (%d칸이어야 한다) — 줄 길이가 다르면 무늬가 기울어 찍힌다"
-						% [int(s), r, ln.length(), w])
-	if not (Look.SUIT_PX.has(Poker.Suit.SPADE) and Look.SUIT_PX.has(Poker.Suit.HEART)):
+## ★ 포커 시절에는 여기서 카드 무늬 도트판(스페이드 자리에 하트가 들어 있던 버그)을 쟀다.
+##   카드가 없어졌으므로 그 표도 없다. 지금 「그림과 뜻이 어긋날 수 있는 표」는 등급이다:
+##     Roster.TIER_KO   — 검사 출력 · 도감이 읽는 이름("0.5성"…"5성")
+##     Rite.star_text   — 별 수를 적는 규칙("2" · "2.5")
+##     Look.star_label  — 화면이 적는 이름
+##     Look.TIER_COLOR  — 등급 색(없는 칸은 맨 끝 색으로 **조용히** 뭉개진다)
+##   넷 중 하나만 한 칸 밀리면 화면에는 「3성」이라고 적힌 영웅이 2.5성의 세기로 싸운다.
+## ★ **Look 은 반사로 읽는다**(없앤 상수를 코드로 적으면 이 파일이 파스부터 깨진다 —
+##   _check_no_range 와 같은 이유다). 화면 쪽 이름이 바뀌면 여기서 한 줄로 알려 준다.
+func _check_tier_names() -> void:
+	var seen := {}
+	for tier in range(Roster.TIER_KO.size()):
+		var name := String(Roster.TIER_KO[tier])
+		if seen.has(name):
+			_bad("등급 이름이 겹친다: %s" % name)
+		seen[name] = true
+		if name != Rite.star_text(tier) + "성":
+			_bad("등급 %d 의 이름이 「%s」다 (별 수로는 「%s성」이어야 한다)" % [tier, name, Rite.star_text(tier)])
+	for stars in range(Rite.MIN_STARS, Rite.MAX_STARS + 1):
+		var whole := Rite.tier_of(stars)
+		if whole < Roster.TIER_KO.size() and String(Roster.TIER_KO[whole]) != "%d성" % stars:
+			_bad("문 안의 별 %d개가 「%s」로 적힌다 (「%d성」이어야 한다)" % [stars, Roster.TIER_KO[whole], stars])
+	var look := load("res://core/look.gd") as GDScript
+	if look == null:
+		_bad("core/look.gd 를 못 읽었다")
 		return
-	var sp: Array = Look.SUIT_PX[Poker.Suit.SPADE]
-	var he: Array = Look.SUIT_PX[Poker.Suit.HEART]
-	if _ink_runs(String(sp[sp.size() - 1])) < 1:
-		_bad("스페이드 도트판의 마지막 줄이 비었다 (자루가 없다). %s" % swapped)
-	if _ink_runs(String(he[he.size() - 1])) != 0:
-		_bad("하트 도트판의 마지막 줄에 잉크가 있다 (하트는 한 점에서 끝난다). %s" % swapped)
-	if _ink_runs(String(sp[0])) != 1:
-		_bad("스페이드 도트판의 첫 줄에 잉크 덩어리가 %d개다 (꼭대기 하나여야 한다). %s"
-				% [_ink_runs(String(sp[0])), swapped])
-	if _ink_runs(String(he[0])) != 2:
-		_bad("하트 도트판의 첫 줄에 잉크 덩어리가 %d개다 (두 봉우리여야 한다). %s"
-				% [_ink_runs(String(he[0])), swapped])
-	print("  무늬 도트판 %d장 정상 (스페이드=자루 있음 · 하트=두 봉우리)" % Look.SUIT_PX.size())
-
-
-## 한 줄에 잉크(#) 덩어리가 몇 개인가. 무늬를 **이름 없이** 재는 자다.
-func _ink_runs(line: String) -> int:
-	var n := 0
-	var on := false
-	for i in range(line.length()):
-		var ink: bool = line[i] == "#"
-		if ink and not on:
-			n += 1
-		on = ink
-	return n
+	var consts := look.get_script_constant_map()
+	if not consts.has("TIER_COLOR"):
+		_bad("Look.TIER_COLOR 가 없다 — 등급 색을 정하는 표가 사라졌다")
+	else:
+		var colors: Array = consts["TIER_COLOR"]
+		if colors.size() != Balance.TIER_MAX + 1:
+			_bad("등급 색이 %d개다 (등급은 %d칸) — 모자란 칸은 맨 끝 색으로 조용히 뭉개진다"
+					% [colors.size(), Balance.TIER_MAX + 1])
+		for i in range(colors.size()):
+			for j in range(i + 1, colors.size()):
+				if Color(colors[i]).is_equal_approx(Color(colors[j])):
+					_bad("등급 %d 와 %d 의 색이 같다 — 색으로는 두 등급을 못 가른다" % [i, j])
+	var has_label := false
+	for method in look.get_script_method_list():
+		if String(method["name"]) == "star_label":
+			has_label = true
+	if not has_label:
+		_bad("Look.star_label() 이 없다 — 화면이 등급 이름을 적는 한 곳이 사라졌다(이름을 바꿨으면 이 검사도 같이 바꿔라)")
+	else:
+		for tier2 in range(Balance.TIER_MAX + 1):
+			var shown := String(look.call("star_label", tier2))
+			if tier2 < Roster.TIER_KO.size() and shown != String(Roster.TIER_KO[tier2]):
+				_bad("등급 %d 를 화면은 「%s」로, 표는 「%s」로 적는다" % [tier2, shown, Roster.TIER_KO[tier2]])
+	print("  등급 이름·색 정상 (%s … %s · 색 %d칸)"
+			% [Roster.TIER_KO[0], Roster.TIER_KO[Roster.TIER_KO.size() - 1],
+				(consts.get("TIER_COLOR", []) as Array).size()])

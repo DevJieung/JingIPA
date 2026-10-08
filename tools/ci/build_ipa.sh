@@ -2,7 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 mkdir -p build/ipa build/ci
-app=AllInDefense
+app=StellarDefense
 project="build/ios/$app.xcodeproj"
 keychain="$RUNNER_TEMP/pokerdefense.keychain-db"
 profile_path=""
@@ -47,7 +47,7 @@ import datetime, fnmatch, os, plistlib
 from pathlib import Path
 profile = plistlib.loads((Path(os.environ['RUNNER_TEMP']) / 'profile.plist').read_bytes())
 team = os.environ['IOS_TEAM_ID']
-bundle = os.environ.get('IOS_BUNDLE_ID') or 'com.devjieung.pokerdefense'
+bundle = os.environ.get('IOS_BUNDLE_ID') or 'com.devjieung.stellardefense'
 assert team in profile['TeamIdentifier'], 'Provisioning profile belongs to a different team'
 identifier = profile['Entitlements']['application-identifier'].split('.', 1)[1]
 assert fnmatch.fnmatchcase(bundle, identifier), 'Provisioning profile does not cover this game bundle ID'
@@ -77,7 +77,7 @@ PY
     python3 - <<'PY'
 import os, plistlib
 from pathlib import Path
-bundle = os.environ.get('IOS_BUNDLE_ID') or 'com.devjieung.pokerdefense'
+bundle = os.environ.get('IOS_BUNDLE_ID') or 'com.devjieung.stellardefense'
 options = dict(method=os.environ.get('IOS_EXPORT_METHOD') or 'debugging', teamID=os.environ['IOS_TEAM_ID'],
                signingStyle='manual', signingCertificate=os.environ['SIGN_IDENTITY'], stripSwiftSymbols=True,
                provisioningProfiles={bundle: os.environ['PROFILE_NAME']})
@@ -91,15 +91,17 @@ python3 - <<'PY'
 import plistlib, zipfile
 with zipfile.ZipFile('build/ipa/pokerdefense.ipa') as archive:
     assert archive.testzip() is None
-    root = 'Payload/AllInDefense.app/'
+    root = 'Payload/StellarDefense.app/'
     info = plistlib.loads(archive.read(root + 'Info.plist'))
     assert archive.getinfo(root + info['CFBundleExecutable']).file_size > 0
     assert any(n.startswith(root) and n.endswith('.pck') for n in archive.namelist())
     assert not any('/.env' in n for n in archive.namelist())
     print('IPA verified:', info['CFBundleIdentifier'])
 PY
+# The data DB (data/game.db) is authoring-only and must never ship.
+python3 tools/ci/check_no_db.py build/ipa/pokerdefense.ipa
 {
-    echo '### 올인 디펜스 IPA'
+    echo '### 스텔라 디펜스 IPA'
     echo "- 파일: pokerdefense.ipa ($signing)"
     if [ "$signing" = unsigned ]; then
         echo '- 서명 없는 IPA입니다. AltStore / Sideloadly에서 본인 Apple ID로 서명하여 설치하세요.'

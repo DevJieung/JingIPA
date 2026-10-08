@@ -62,7 +62,7 @@ func _draw() -> void:
 		var element := String(unit.get("elem", "none"))
 		SummonArt.seal(self, Vector2(640, 339), 126, t * 0.22, Balance.elem_color(element), 0.33)
 		Look.fill_round(self, Rect2(484, 449, 312, 20), 4, Look.GOLD_DEEP)
-		Art.draw_unit_fit(self, unit, Rect2(488, 208, 304, 258))
+		Art.draw_unit_fit(self, unit, Rect2(488, 208, 304, 258), Color.WHITE, int(best.get("tier", 9)))
 		Look.draw_rarity(self, Vector2(640, 485), int(best["tier"]), 9)
 		Look.text_center_fit(self, Vector2(640, 521), Look.unit_name(unit), 30, Look.INK, 410, 23)
 		Look.text_center(self, Vector2(640, 575), "누적 피해 %s" % _damage_text(float(best["damage"])), 23, Look.INK_DIM)

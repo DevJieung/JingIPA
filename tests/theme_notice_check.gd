@@ -52,7 +52,7 @@ func _test_preview() -> void:
 				actual[body]["ids"].sort()
 				check(ids == actual[body]["ids"], "monster list contains exactly the actual species: " + body)
 			check(percent == 100, "displayed percentages sum to 100")
-		check(Run.snapshot() == saved, "preview leaves cards, rewards, RNG and save state untouched")
+		check(Run.snapshot() == saved, "preview leaves the rite, rewards, RNG and save state untouched")
 		check(Run.theme_preview(10)["end_wave"] == 10, "partial block does not spill into the next theme")
 		check(Run.theme_preview(100)["end_wave"] == 100, "last-wave preview stays within the run")
 

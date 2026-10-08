@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Collect All-in Defense's Android ad logs and summarize SDK load failures."""
+"""Collect Stellar Defense's Android ad logs and summarize SDK load failures."""
 
 import argparse
 import json
@@ -11,7 +11,7 @@ import subprocess
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PACKAGE = "com.devjieung.pokerdefense"
+PACKAGE = "com.devjieung.stellardefense"
 ERROR_MARKER = "AdMob load failed: "
 
 
@@ -61,7 +61,7 @@ def explain(error: dict) -> str:
 
 def summarize(log: str) -> str:
     errors = load_errors(log)
-    lines = ["올인 디펜스 광고 진단", "수집 구간의 기록입니다. 과거 실패 뒤 성공한 기록도 함께 포함될 수 있습니다."]
+    lines = ["스텔라 디펜스 광고 진단", "수집 구간의 기록입니다. 과거 실패 뒤 성공한 기록도 함께 포함될 수 있습니다."]
     events = [line for line in log.splitlines() if "AdMob " in line or "Rewarded ad show failed:" in line]
     if events:
         lines.extend(["", "최근 광고 이벤트 (최대 15줄):", *events[-15:]])
@@ -125,9 +125,9 @@ def collect(args: argparse.Namespace) -> str:
     try:
         pids = run([*command, "shell", "pidof", PACKAGE]).split()
     except RuntimeError as error:
-        raise RuntimeError("올인 디펜스를 폰에서 실행한 뒤 다시 수집하세요.") from error
+        raise RuntimeError("스텔라 디펜스를 폰에서 실행한 뒤 다시 수집하세요.") from error
     if len(pids) != 1 or not pids[0].isdigit():
-        raise RuntimeError("올인 디펜스를 폰에서 실행한 뒤 다시 수집하세요.")
+        raise RuntimeError("스텔라 디펜스를 폰에서 실행한 뒤 다시 수집하세요.")
     # Read only this game's process and relevant tags. Preserve device log buffers.
     logcat = [*command, "logcat", "--pid=" + pids[0], "-v", "threadtime",
               "godot:V", "Ads:V", "AndroidRuntime:E", "*:S"]

@@ -39,7 +39,7 @@ func _ready() -> void:
 		await capture_chart(language, "title")
 		Fixture.prepare(20, 16092026)
 		Run.begin_draw()
-		Run.confirm_hand()
+		Run.confirm_summon()
 		Run.prepare_battle()
 		main._swap(BattleScreen.new())
 		await capture_chart(language, "battle")

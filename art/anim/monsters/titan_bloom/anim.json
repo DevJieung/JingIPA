@@ -10,7 +10,7 @@
   },
   "scale": 0.7951807228915663,
   "movement": "walk",
-  "source": "Krea 2 Turbo + MiniMax H3",
+  "source": "imagegen_chibi_v1",
   "clips": {
     "move": {
       "frames": 14,
@@ -30,19 +30,92 @@
         83.33333333333333,
         83.33333333333333
       ],
-      "loop": true
+      "loop": true,
+      "cell": {
+        "w": 192,
+        "h": 192
+      },
+      "sha256": "e107b46832c7eb910c0433e7de87e24faeb0fff470cb15ad24f68a3c41826993"
     }
   },
   "qc": {
     "canvas_clipping": false,
     "source_clipping": false,
-    "unique_poses": 14,
+    "unique_poses": 8,
     "forward_only": true,
     "fixed_scale": true,
-    "foot_patches": false,
-    "translation_range": [
+    "foot_patches": false
+  },
+  "palette_colors": 96,
+  "readability": {
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/titan_bloom.png",
+    "source_cells": [
+      [
+        27,
+        0,
+        388,
+        512
+      ],
+      [
+        423,
+        0,
+        768,
+        512
+      ],
+      [
+        793,
+        0,
+        1137,
+        512
+      ],
+      [
+        1174,
+        0,
+        1505,
+        512
+      ],
+      [
+        27,
+        512,
+        380,
+        1024
+      ],
+      [
+        411,
+        512,
+        762,
+        1024
+      ],
+      [
+        800,
+        512,
+        1137,
+        1024
+      ],
+      [
+        1172,
+        512,
+        1524,
+        1024
+      ]
+    ],
+    "phase_map": [
+      0,
+      0,
+      1,
+      1,
+      2,
+      2,
       3,
-      6
-    ]
+      4,
+      4,
+      5,
+      5,
+      6,
+      6,
+      7
+    ],
+    "method": "imagegen chibi movement repaint; alpha threshold, extraction, nearest sampling and shared palette only"
   }
 }

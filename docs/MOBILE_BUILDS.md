@@ -8,7 +8,7 @@
 
 ## 매번 빌드하기
 
-변경을 커밋한 뒤 `git push`하면 **올인 디펜스 APK + IPA**가 자동으로 실행된다.
+변경을 커밋한 뒤 `git push`하면 **스텔라 디펜스 APK + IPA**가 자동으로 실행된다.
 명시적으로 푸시하려면 `git push origin HEAD:pokerdefense`를 사용한다.
 워크플로 파일은 `.github/workflows/pokerdefense.yml`이다.
 워크플로를 수정하면 수동 실행용 `main`의 동일 파일도 동기화한다.
@@ -55,8 +55,8 @@ Apple ID로 서명하여 설치한다. 이 파일은 App Store/TestFlight 업로
 
 인증서·프로파일·팀 설정이 일부만 있으면 실패 원인을 표시하고 중단한다.
 다른 게임의 프로파일을 잘못 쓰지 않도록 팀·번들 ID·만료일을 확인한다.
-기본 번들 ID는 `com.devjieung.pokerdefense`이며 필요하면 Repository Variable
-`POKERDEFENSE_IOS_BUNDLE_ID`로 지정한다. 기존 게임의 `IOS_BUNDLE_ID`는 쓰지 않는다.
+기본 번들 ID는 `com.devjieung.stellardefense`이며 필요하면 Repository Variable
+`STELLARDEFENSE_IOS_BUNDLE_ID`로 지정한다. 기존 게임의 `IOS_BUNDLE_ID`는 쓰지 않는다.
 `POKERDEFENSE_IOS_EXPORT_METHOD` 기본값은 `debugging`이다. 배포 목적에 맞는
 프로파일과 `release-testing`/`app-store-connect` 등을 함께 설정해야 한다.
 기기 설치 가능 여부는 프로파일의 배포 방식과 등록 기기에 따른다.
@@ -72,3 +72,10 @@ Apple ID로 서명하여 설치한다. 이 파일은 App Store/TestFlight 업로
 생성 도구의 대용량 원본(`art/animation`, `art/concepts`, `art/audio_sources`,
 `art/portraits/sources`), 빌드 캐시, SDK, 인증서는 Git에서 제외한다.
 실제 게임이 사용하는 스프라이트·배경·UI·음악·폰트는 저장소에 포함한다.
+
+## Stellar Defense 이름 전환
+
+앱 표시 이름은 `스텔라 디펜스` / `Stellar Defense`, Android 패키지와 iOS 기본 번들 ID는
+`com.devjieung.stellardefense`, Xcode 프로젝트·앱은 `StellarDefense`다. 기존 패키지의
+앱과 별도로 설치된다. iOS 서명 프로파일은 새 번들 ID를 포함해야 한다. Secrets·브랜치·
+워크플로 경로·다운로드 파일은 지정된 기존 이름을 유지한다. 로컬 고정 APK 경로도 같다.

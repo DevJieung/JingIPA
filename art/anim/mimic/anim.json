@@ -2,7 +2,7 @@
   "name": "mimic_roster_v1",
   "ko": "미믹",
   "elem": "none",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
     "w": 256,
     "h": 256
@@ -17,8 +17,8 @@
   },
   "scale": 0.5260416666666666,
   "muzzle_at": {
-    "x": 36,
-    "y": -124
+    "x": 33,
+    "y": -104
   },
   "hit_ms": 500.0,
   "face": 1,
@@ -43,7 +43,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "b9796ece17c23806aa82a106c6679ef6afa739bb4c600a02db14fbdeb66a19a8"
+      "sha256": "4c9eea227a07919e17390bb33b19c7df42010c1d46561fa14f8f0753b1aacd5f"
     },
     "attack": {
       "frames": 12,
@@ -67,7 +67,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "fe969f73136d499e52acddfebde322427625c5bec558ae513a2bbdf80b538a9a",
+      "sha256": "fe09a1c8289398d98f098757ed96fafd9a550860188cbb976d6f5419c0104b4f",
       "hit_frame": 6
     },
     "effect": {
@@ -114,140 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/mimic.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/mimic.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        43,
         0,
+        323,
+        424
+      ],
+      [
+        407,
         0,
-        362,
-        367
+        687,
+        424
       ],
       [
-        362,
+        769,
         0,
-        724,
-        367
+        1049,
+        424
       ],
       [
-        724,
+        1130,
         0,
-        1086,
-        367
+        1411,
+        424
       ],
       [
-        1086,
-        0,
-        1448,
-        367
+        43,
+        424,
+        335,
+        796
       ],
       [
-        0,
-        367,
-        362,
-        731
+        424,
+        424,
+        695,
+        796
       ],
       [
-        362,
-        367,
-        724,
-        731
+        779,
+        424,
+        1096,
+        796
       ],
       [
-        724,
-        367,
-        1086,
-        731
+        1131,
+        424,
+        1411,
+        796
       ],
       [
-        1086,
-        367,
-        1448,
-        731
-      ],
-      [
-        0,
-        731,
-        362,
+        81,
+        796,
+        281,
         1086
       ],
       [
-        362,
-        731,
-        724,
+        422,
+        796,
+        700,
         1086
       ],
       [
-        724,
-        731,
-        1086,
+        761,
+        796,
+        1081,
         1086
       ],
       [
-        1086,
-        731,
-        1448,
+        1138,
+        796,
+        1409,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.5647058823529412,
+        "factor": 0.5748502994011976,
         "offset": [
-          22,
-          17
+          42,
+          -20
         ]
       },
       {
-        "factor": 0.5647058823529412,
+        "factor": 0.5748502994011976,
         "offset": [
-          22,
-          17
+          43,
+          -20
         ]
       },
       {
-        "factor": 0.5647058823529412,
+        "factor": 0.5748502994011976,
         "offset": [
-          21,
-          17
+          43,
+          -20
         ]
       },
       {
-        "factor": 0.5647058823529412,
+        "factor": 0.5748502994011976,
         "offset": [
-          20,
-          17
+          43,
+          -20
         ]
       },
       {
-        "factor": 0.5647058823529412,
+        "factor": 0.5748502994011976,
         "offset": [
-          22,
-          18
+          45,
+          10
         ]
       },
       {
-        "factor": 0.5647058823529412,
+        "factor": 0.5748502994011976,
         "offset": [
-          22,
-          18
+          48,
+          10
         ]
       },
       {
-        "factor": 0.5647058823529412,
+        "factor": 0.5748502994011976,
         "offset": [
-          21,
-          18
+          49,
+          10
         ]
       },
       {
-        "factor": 0.5647058823529412,
+        "factor": 0.5748502994011976,
         "offset": [
-          20,
-          18
+          43,
+          10
         ]
       }
+    ],
+    "source_muzzle": [
+      974,
+      615
     ]
   },
   "portrait_id": "mimic"

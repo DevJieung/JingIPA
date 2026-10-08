@@ -74,5 +74,5 @@ grep -n "\"$ID\"" -A2 core/roster.gd | grep -E "muz|wind" | head -4
 
 # 5) 게임의 자기 검사기
 say "5. ns_check --strict"
-POCKER_NO_SAVE=1 stdbuf -oL timeout 600 "$GODOT" --headless --path . \
+STELLARDEFENSE_NO_SAVE=1 stdbuf -oL timeout 600 "$GODOT" --headless --path . \
 	res://tests/ns_check.tscn -- --strict 2>&1 | tail -40

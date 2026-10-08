@@ -15,6 +15,7 @@ const DMG_KEYS := ["dw", "dn", "dr"]
 const DMG_KO := ["2배", "보통", "반감"]
 const DMG_COL := [Look.DMG_WEAK, Look.DMG_NORMAL, Look.DMG_RESIST]
 
+var view_3d := StellarView.new()
 var main = null
 var ui := Ui.new()
 var fx := Fx.new()
@@ -153,6 +154,10 @@ func _process(dt: float) -> void:
 
 
 func _input(e: InputEvent) -> void:
+	if not Ads.busy and not sim.support_pending and support_result.is_empty() and view_3d.camera_input(e):
+		_post_press = -1
+		get_viewport().set_input_as_handled()
+		return
 	if Ads.busy:
 		return
 	if sim.support_pending or not support_result.is_empty():
@@ -180,6 +185,8 @@ func _input(e: InputEvent) -> void:
 			_leave()
 		return
 	var id := ui.hit(e.position)
+	if view_3d.camera_button(id):
+		return
 	if id.begins_with("sp"):
 		speed = float(id.substr(2))
 		# ★ 설정에 바로 적는다. 다음 탄에도, 앱을 껐다 켜도 그대로다.
@@ -188,6 +195,8 @@ func _input(e: InputEvent) -> void:
 
 
 func _post_at(p: Vector2) -> int:
+	if view_3d.world != null:
+		return view_3d.post_at(p)
 	for post in range(Balance.POST_SLOTS):
 		var at := Balance.post_position(post) + _sh
 		if Rect2(at - Vector2(30, 78), Vector2(60, 108)).has_point(p):
@@ -304,6 +313,8 @@ func _settle() -> void:
 ##   "무슨 일이 있었다"만 적는다. 그래서 헤드리스로 100탄을 수백 번 돌릴 수 있다.
 func _drain() -> void:
 	for e in sim.events:
+		if view_3d.world != null:
+			view_3d.world.event(e)
 		var p: Vector2 = e.get("p", Vector2.ZERO)
 		match String(e["t"]):
 			"support":
@@ -631,28 +642,13 @@ func _unit_impact(p: Vector2, src: int, radius: float, em: float) -> bool:
 # --------------------------------------------------------------------------- #
 func _draw() -> void:
 	ui.begin()
-	_sh = fx.shake_offset()
-	_draw_bg()
-	draw_set_transform(_sh, 0.0, Vector2.ONE)
-	_draw_arena()
-	_draw_altar()
-	# 장판의 **시전 발판**(누가 깔고 있는가) — 배우 아래다.
-	# ★ 그리고 **실제로 깔린 원**(어디를 때리고 있는가). 둘은 다른 것이다 —
-	#   발판은 시전자 발밑에 붙어 있고, 원은 시전자와 멀리 떨어진 무리 위에 깔린다.
-	_draw_zones_ground()
-	fx.draw_back(self)
-	_draw_actor_effects()
-	area_fx.draw_front(self)
-	_draw_crystals()
-	_draw_bullets()
-	fx.draw(self)
-	_draw_weather()
-	# 모든 효과와 섬광 뒤에 캐릭터를 그린다. 메뉴/결과 UI는 그보다 위다.
-	fx.draw_flash(self, Rect2(-40, -40, 1360, 880))
-	_draw_actors()
+	_sh = Vector2.ZERO
+	draw_rect(Look.SCREEN, Color("#101e2c"))
+	view_3d.draw(self, Rect2(12, 106, 808, 632), sim.elapsed, sim.heroes, selected_hero,
+		selected_hero >= 0, sim, sim.support_pending or not support_result.is_empty() or Dbg.paused)
 	_draw_hp_bars()
 	_draw_hero_tags()
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	view_3d.controls(self, ui, Vector2(22, 748))
 	_draw_panel()
 	_draw_topbar()
 	_draw_boss_bar()
@@ -915,9 +911,9 @@ func _draw_hero_tags() -> void:
 	var sc := Balance.hero_scale(sim.heroes.size())
 	for he in sim.heroes:
 		var h: Dictionary = he["h"]
-		var pos: Vector2 = he["pos"]
-		var dh := Art.unit_h(h["unit"], sc)
-		Look.draw_rarity(self, pos - Vector2(0, dh + 14), int(h["tier"]), 4.5)
+		var pos: Vector2 = view_3d.project(he["pos"], 2.25 if int(h["tier"]) >= 7 else 1.95)
+		var dh := 0.0
+		Look.draw_rarity(self, pos - Vector2(0, dh + 7), int(h["tier"]), 4.5)
 		var n := int(h.get("n", 1))
 		if n > 1:
 			Look.text_center_out(self, pos - Vector2(0, dh + 40), "x%d" % n, 20, Look.GOLD, Look.BG_DEEP, 2)
@@ -1215,11 +1211,11 @@ func _tick_ghosts(sdt: float) -> void:
 func _draw_hp_bars() -> void:
 	for mo in sim.monsters:
 		var mh: float = float(mo["h"])
-		var p := BattleSim.mpos(mo)
+		var p := view_3d.project(BattleSim.mpos(mo), 1.75 if String(mo["kind"]) == "boss" else 1.30 if String(mo["kind"]) == "tank" else 1.15 if String(mo["kind"]) == "caster" else 0.74)
 		var hp: float = clampf(float(mo["hp"]) / maxf(0.001, float(mo["max"])), 0.0, 1.0)
 		var ghost: float = clampf(float(mo.get("ghost", hp)), hp, 1.0)
 		var w: float = clampf(mh * 0.80, 32.0, 86.0)
-		var y: float = p.y - mh * 0.84
+		var y: float = p.y - 8
 		# ★ 보스는 키가 132 라 바깥 길 꼭대기에 서면 머리 위 막대가 y≈10 이 된다. 아래로
 		#   밀면 제 몸 위에 얹혀서 고장 난 것처럼 보이는데, 보스는 위쪽에 제 띠가 따로
 		#   있으니(_draw_boss_bar) 그냥 접는다 — 잃는 정보가 없다.
@@ -1652,7 +1648,7 @@ func _draw_dmg_row(rr: Rect2, he: Dictionary, denom: float) -> void:
 
 	# 얼굴 — 칸 왼쪽. **Art.draw_unit** 이라야 그림 크기 보정(sc)이 들어간다(CLAUDE.md 4-1).
 	var fh: float = clampf(rr.size.y - 20.0, 30.0, 84.0)
-	Art.draw_unit_fit(self, u, Rect2(rr.position.x + 8, rr.end.y - fh - 4, 54, fh))
+	Art.draw_unit_fit(self, u, Rect2(rr.position.x + 8, rr.end.y - fh - 4, 54, fh), Color.WHITE, int(he["h"]["tier"]))
 
 	var tx: float = rr.position.x + 68.0
 	var right: float = rr.position.x + rr.size.x - 10.0
@@ -1740,7 +1736,7 @@ func _draw_result() -> void:
 		Look.fill_round(self, row, 5, Look.BG_DEEP)
 		if dmg > 0:
 			Look.fill_round(self, Rect2(row.position, Vector2(row.size.x * dmg / best, row.size.y)), 5, Color(Look.tier_color(tier), 0.15))
-		Art.draw_unit_fit(self, unit, Rect2(row.position + Vector2(8, 3), Vector2(53, 48)))
+		Art.draw_unit_fit(self, unit, Rect2(row.position + Vector2(8, 3), Vector2(53, 48)), Color.WHITE, tier)
 		Look.draw_elem(self, row.position + Vector2(75, 25), 10, String(unit.get("elem", "none")))
 		var name_width := width - 198
 		Look.text_center_fit(self, row.position + Vector2(94 + name_width * 0.5, 18), Look.unit_name(unit), 22, Look.INK, name_width, 15)
@@ -1793,22 +1789,25 @@ func _draw_support() -> void:
 		var unit: Dictionary = support_result.get("unit", {})
 		var tier := int(support_result.get("tier", 0))
 		Look.hero_card_panel(self, Rect2(172, 242, 338, 360), String(unit.get("elem", "none")))
-		Art.draw_unit_fit(self, unit, Rect2(202, 262, 278, 276))
+		Art.draw_unit_fit(self, unit, Rect2(202, 262, 278, 276), Color.WHITE, tier)
 		Look.draw_rarity(self, Vector2(340, 570), tier, 11)
 		SummonArt.hero_info(self, unit, tier, Rect2(558, 250, 548, 330), false, support_result)
-		var note := "무료 소환 · 전당에 보관되었습니다" if String(support_result.get("where", "field")) == "bench" else "무료 소환 · 전장에 합류했습니다"
 		if String(support_result.get("choice", "")) == "promote":
-			note = "5성 유지 · 각성 위력 상승" if int(support_result.get("before_tier", 0)) == 9 else "승급 완료 · +0.5성"
-		Look.text_box(self, Rect2(558, 546, 548, 50), note, 26, Look.CRYSTAL)
+			var promoted := "5성 유지 · 각성 위력 상승" if int(support_result.get("before_tier", 0)) == Balance.TIER_MAX else "승급 완료 · +0.5성"
+			Look.text_box(self, Rect2(558, 546, 548, 50), promoted, 26, Look.CRYSTAL)
+		else:
+			# 지원 소환은 별맞춤 한 번이다 — 그때 별이 선 자리와 문 안의 별 수를 그대로 보여 준다.
+			RiteBoard.draw_still(self, Vector2(632, 532), 0.25, support_result.get("orbit", []), support_age, 0.5)
+			Look.text_box(self, Rect2(716, 466, 390, 28), "문 안의 별 %d개" % int(support_result.get("stars", 0)), 21, Look.INK_DIM, HORIZONTAL_ALIGNMENT_LEFT)
+			Look.text_box(self, Rect2(716, 496, 390, 52), Look.star_label(tier), 44, Look.tier_color(tier).lightened(0.15), HORIZONTAL_ALIGNMENT_LEFT)
+			Look.text_box(self, Rect2(716, 554, 390, 36), "무료 소환 · 전당에 보관되었습니다" if String(support_result.get("where", "field")) == "bench" else "무료 소환 · 전장에 합류했습니다", 22, Look.CRYSTAL, HORIZONTAL_ALIGNMENT_LEFT)
 		ui.button(self, Rect2(392, 648, 496, 54), "후반 공세 시작", "support:continue", support_age >= 0.65, Look.GOLD, 28)
 		return
 	Look.material_panel(self, Rect2(152, 236, 326, 389), Look.BG_DEEP, Look.CRYSTAL)
-	SummonArt.seal(self, Vector2(315, 375), 94, support_age * 0.5, Look.CRYSTAL, 0.6)
-	for index in range(3):
-		var at := Vector2(232 + index * 46, 306 + abs(index - 1) * 15)
-		Look.draw_card(self, at, Poker.code(10 + index, index), 0.60, true)
+	# 무료 소환의 그림 — 작은 의식판. 문 안의 별이 곧 등급이라는 것을 여기서도 같은 그림으로 말한다.
+	RiteBoard.draw_still(self, Vector2(315, 350), 0.34, RiteBoard.sample_orbit(3), support_age, 0.56)
 	Look.text_box(self, Rect2(168, 454, 294, 42), "무료 영웅 소환", 27, Look.CRYSTAL)
-	Look.wrap_text(self, "새로운 5장 조합으로 영웅 한 명을 부릅니다. 전장이 가득 차면 전당에 보관합니다.", Rect2(176, 510, 278, 84), 20, Look.INK_DIM, true)
+	Look.wrap_text(self, "별맞춤 한 번으로 영웅 한 명을 부릅니다(다시 돌리기 없음). 전장이 가득 차면 전당에 보관합니다.", Rect2(176, 506, 278, 96), 20, Look.INK_DIM, true)
 	Look.text_box(self, Rect2(506, 236, 620, 38), "승급할 전장 영웅 선택", 25, Look.GOLD)
 	_support_index = clampi(_support_index, 0, maxi(0, Run.heroes.size() - 1))
 	for index in range(Run.heroes.size()):
@@ -1816,5 +1815,5 @@ func _draw_support() -> void:
 		HeroCard.draw(self, rect, Run.heroes[index], index == _support_index)
 		ui.zone(rect, "support:hero:%d" % index)
 	ui.button(self, Rect2(152, 648, 326, 54), "무료 소환 받기", "support:summon", true, Look.CRYSTAL, 25)
-	var max_tier := not Run.heroes.is_empty() and int(Run.heroes[_support_index]["tier"]) == 9
+	var max_tier := not Run.heroes.is_empty() and int(Run.heroes[_support_index]["tier"]) == Balance.TIER_MAX
 	ui.button(self, Rect2(508, 648, 620, 54), "선택 영웅 각성 위력 상승" if max_tier else "선택 영웅 +0.5성 승급", "support:promote", not Run.heroes.is_empty(), Look.GOLD, 26)

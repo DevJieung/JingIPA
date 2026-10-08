@@ -30,12 +30,12 @@ func finish(title: String) -> void:
 	get_tree().quit(0 if failures == 0 else 1)
 
 
-## POCKER_NO_SAVE=1 없이 돌면 검사가 만든 판이 「내 기록」이 된다. 그러면 여기서 세운다.
+## STELLARDEFENSE_NO_SAVE=1 없이 돌면 검사가 만든 판이 「내 기록」이 된다. 그러면 여기서 세운다.
 ## 통과하면 참, 아니면 `code` 로 끝내고 거짓.
 func require_no_save(code: int = 1) -> bool:
-	if OS.get_environment("POCKER_NO_SAVE") == "1":
+	if OS.get_environment("STELLARDEFENSE_NO_SAVE") == "1":
 		return true
-	printerr("POCKER_NO_SAVE=1로 실행하세요. 실제 기록을 보호합니다.")
+	printerr("STELLARDEFENSE_NO_SAVE=1로 실행하세요. 실제 기록을 보호합니다.")
 	get_tree().quit(code)
 	return false
 

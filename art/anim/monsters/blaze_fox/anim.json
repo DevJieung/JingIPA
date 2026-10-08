@@ -10,7 +10,7 @@
   },
   "scale": 0.3356643356643357,
   "movement": "walk",
-  "source": "Krea 2 Turbo + MiniMax H3",
+  "source": "imagegen_chibi_v1",
   "clips": {
     "move": {
       "frames": 17,
@@ -33,19 +33,95 @@
         83.33333333333333,
         83.33333333333333
       ],
-      "loop": true
+      "loop": true,
+      "cell": {
+        "w": 192,
+        "h": 192
+      },
+      "sha256": "279043ce649139dc4ccae3a8ead29b7fe3c73d7719b82ca09312ec711d2eea0e"
     }
   },
   "qc": {
     "canvas_clipping": false,
     "source_clipping": false,
-    "unique_poses": 17,
+    "unique_poses": 8,
     "forward_only": true,
     "fixed_scale": true,
-    "foot_patches": false,
-    "translation_range": [
+    "foot_patches": false
+  },
+  "palette_colors": 96,
+  "readability": {
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/blaze_fox.png",
+    "source_cells": [
+      [
+        16,
+        0,
+        370,
+        512
+      ],
+      [
+        408,
+        0,
+        759,
+        512
+      ],
+      [
+        791,
+        0,
+        1142,
+        512
+      ],
+      [
+        1178,
+        0,
+        1531,
+        512
+      ],
+      [
+        16,
+        512,
+        377,
+        1024
+      ],
+      [
+        399,
+        512,
+        759,
+        1024
+      ],
+      [
+        783,
+        512,
+        1141,
+        1024
+      ],
+      [
+        1168,
+        512,
+        1524,
+        1024
+      ]
+    ],
+    "phase_map": [
+      0,
+      0,
+      0,
+      1,
+      1,
+      2,
+      2,
+      3,
+      3,
       4,
-      6
-    ]
+      4,
+      5,
+      5,
+      6,
+      6,
+      7,
+      7
+    ],
+    "method": "imagegen chibi movement repaint; alpha threshold, extraction, nearest sampling and shared palette only"
   }
 }

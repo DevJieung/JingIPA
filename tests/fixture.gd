@@ -1,31 +1,28 @@
 extends RefCounted
 class_name Fixture
 
-## 검사·촬영이 세우는 **판**. 「n탄까지 간 판」 · 「원하는 족보가 나오는 손패」 —
+## 검사·촬영이 세우는 **판**. 「n탄까지 간 판」 · 「원하는 별 수가 나오는 의식」 —
 ## shot.gd 와 demo.gd 가 같은 손으로 베껴 쓰던 것을 한 곳에 둔다.
 ##
 ## ★ 배열을 직접 만지는 것은 tests/ 라서 괜찮다. 화면에서 그러면 안 된다(CLAUDE.md 14-3).
 
-## 원하는 족보가 나오는 손패. 인덱스는 Poker.Hand 값이다.
-## ★ `const` 로 못 둔다 — Poker.code() 호출은 상수식이 아니라서 파스가 깨진다.
-##   (`var c := Poker.code` 처럼 static 함수를 변수에 담아 c(...) 로 부르는 것도 같은
-##   이유로 깨진다. 그냥 풀어 쓴다.)
-static func hands() -> Dictionary:
-	return {
-		0: [Poker.code(14, 0), Poker.code(10, 1), Poker.code(7, 2), Poker.code(5, 3), Poker.code(3, 0)],
-		1: [Poker.code(11, 0), Poker.code(11, 1), Poker.code(7, 2), Poker.code(5, 3), Poker.code(3, 0)],
-		2: [Poker.code(11, 0), Poker.code(11, 1), Poker.code(7, 2), Poker.code(7, 3), Poker.code(3, 0)],
-		3: [Poker.code(9, 0), Poker.code(9, 1), Poker.code(9, 2), Poker.code(5, 3), Poker.code(3, 0)],
-		4: [Poker.code(9, 0), Poker.code(8, 1), Poker.code(7, 2), Poker.code(6, 3), Poker.code(5, 0)],
-		5: [Poker.code(14, 2), Poker.code(10, 2), Poker.code(8, 2), Poker.code(5, 2), Poker.code(3, 2)],
-		6: [Poker.code(12, 0), Poker.code(12, 1), Poker.code(12, 2), Poker.code(6, 3), Poker.code(6, 0)],
-		7: [Poker.code(8, 0), Poker.code(8, 1), Poker.code(8, 2), Poker.code(8, 3), Poker.code(13, 0)],
-		8: [Poker.code(9, 1), Poker.code(8, 1), Poker.code(7, 1), Poker.code(6, 1), Poker.code(5, 1)],
-		9: [Poker.code(14, 0), Poker.code(13, 0), Poker.code(12, 0), Poker.code(11, 0), Poker.code(10, 0)],
-	}
+## 문 안에 별이 정확히 `star_count` 개 서는 별 자리(1~5). 안쪽 궤도부터 문 안에 세운다.
+## 문 안의 별은 문 한가운데에, 문 밖의 별은 문 맞은편에 선다 — 문 너비를 다시 잡아도
+## (Balance.RITE_GATE) 경계에 걸리지 않는다.
+static func orbit_for(star_count: int) -> Array[int]:
+	var want := clampi(star_count, Rite.MIN_STARS, Rite.MAX_STARS)
+	var orbit: Array[int] = []
+	for ring in range(Rite.RINGS):
+		if ring < want:
+			orbit.append(Rite.gate(ring) / 2)
+		else:
+			orbit.append(Rite.gate(ring) + (Rite.slots() - Rite.gate(ring)) / 2)
+	return orbit
 
 
-## 새 판을 열고 첫 탄의 카드를 돌린다. `count` 명이면 표의 앞에서부터 그만큼 영웅을 준다.
+## 새 판을 열고 첫 탄의 의식을 연다. `count` 명이면 표의 앞에서부터 그만큼 영웅을 준다.
+## ★ 등급은 캐릭터의 것이 아니지만(Balance.TIER_ATK 의 ★) 여기서는 표의 원화 격을 그대로
+##   등급으로 준다 — 검사가 0.5성부터 5성까지 고루 섞인 편성을 보게 하려는 것이다.
 static func fresh(seed_value: int, count: int = 0) -> void:
 	Run.start_run(seed_value)
 	Run.begin_draw()
@@ -41,7 +38,7 @@ static func prepare(wave: int, seed_value: int) -> void:
 	Run.gold = 400 + wave * 90
 	for i in range(maxi(0, wave - 1)):
 		Run.begin_draw()
-		Run.confirm_hand()
+		Run.confirm_summon()
 	# ★ 성역은 자리가 정해져 있다. 사람이라면 센 쪽을 세워 두므로 검사 정책과 같은 손으로
 	#   정리해 둔다 — 안 그러면 사진 속 성역이 "먼저 뽑은 것들"이라 실제 화면과 다르다.
 	PlayPolicy.arrange(Run)
@@ -71,11 +68,10 @@ static func prepare(wave: int, seed_value: int) -> void:
 	Run.roll_shop()
 
 
-## 원하는 족보가 나오도록 카드를 손으로 깔아 준다.
-static func stack(hand: int) -> void:
-	var cards: Array[int] = []
-	for x in hands()[hand]:
-		cards.append(int(x))
-	Run.cards = cards
-	Run.rerolled = [0, 0, 0, 0, 0]
-	Run.paid = [0, 0, 0, 0, 0]
+## 문 안에 별이 `star_count` 개 서도록 이번 탄의 의식을 손으로 깔아 준다(1~5).
+## 다시 돌린 횟수도 처음으로 되돌린다.
+static func stack(star_count: int) -> void:
+	Run.orbit.assign(orbit_for(star_count))
+	Run.spins = 0
+	Run.paid_spins = 0
+	Run.pulls = 0

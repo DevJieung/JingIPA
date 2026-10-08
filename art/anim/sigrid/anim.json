@@ -2,33 +2,27 @@
   "name": "sigrid_aoe_v1",
   "ko": "시그리드",
   "elem": "ice",
-  "source": "imagegen_element_aoe_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
-    "w": 256,
-    "h": 256
+    "w": 320,
+    "h": 320
   },
   "static": {
     "w": 113,
     "h": 192
   },
   "anchor": {
-    "x": 128,
+    "x": 146,
     "y": 224
   },
   "scale": 0.6822916666666666,
   "muzzle_at": {
-    "x": 19,
-    "y": -119
+    "x": 25,
+    "y": -102
   },
   "hit_ms": 583.3333333333333,
   "face": 1,
-  "fixed_feet": true,
-  "foot_pin_box": [
-    72,
-    202,
-    184,
-    229
-  ],
+  "fixed_feet": false,
   "palette_colors": 96,
   "clips": {
     "idle": {
@@ -46,10 +40,10 @@
       "total_ms": 666.6666666666666,
       "loop": true,
       "cell": {
-        "w": 256,
-        "h": 256
+        "w": 320,
+        "h": 320
       },
-      "sha256": "de43b3e668b1c49b486fd0dcec547770a4119e629f3525409edba3a3b7b3df39"
+      "sha256": "bd6dbc559cf0b16219ebb6139a4c428a3fe34aab8717d0dab94483b098ab480b"
     },
     "attack": {
       "frames": 12,
@@ -70,10 +64,10 @@
       "total_ms": 1000.0,
       "loop": false,
       "cell": {
-        "w": 256,
-        "h": 256
+        "w": 320,
+        "h": 320
       },
-      "sha256": "fa3b386214a13dd36432fffc26e76ae84d15e4eeac57af31e14d1574314a3acf",
+      "sha256": "0f0e62951baeeff077dcc7b7814f01592e098296ed05b100a1798c0c8583eefe",
       "hit_frame": 7
     },
     "effect": {
@@ -120,82 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/element_aoe_v1/source/sigrid.png",
-    "method": "image_gen source > keyed matte > aligned native cells > shared palette > pinned boots",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/sigrid.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        34,
         0,
-        0,
-        362,
-        383
+        312,
+        402
       ],
       [
-        362,
+        397,
         0,
-        724,
-        383
+        675,
+        402
       ],
       [
-        724,
+        759,
         0,
-        1086,
-        383
+        1036,
+        402
       ],
       [
-        1086,
+        1121,
         0,
-        1448,
-        383
+        1398,
+        402
       ],
       [
-        0,
-        383,
-        362,
+        32,
+        402,
+        337,
         765
       ],
       [
-        362,
-        383,
-        724,
+        393,
+        402,
+        712,
         765
       ],
       [
-        724,
-        383,
-        1108,
+        753,
+        402,
+        1123,
         765
       ],
       [
-        1108,
-        383,
-        1448,
+        1062,
+        402,
+        1404,
         765
       ],
       [
-        0,
+        66,
         765,
-        362,
+        315,
         1086
       ],
       [
-        362,
+        413,
         765,
-        724,
+        704,
         1086
       ],
       [
-        724,
+        761,
         765,
         1086,
         1086
       ],
       [
-        1086,
+        1153,
         765,
-        1448,
+        1401,
         1086
       ]
+    ],
+    "source_transforms": [
+      {
+        "factor": 0.5818181818181818,
+        "offset": [
+          39,
+          -10
+        ]
+      },
+      {
+        "factor": 0.5818181818181818,
+        "offset": [
+          40,
+          -10
+        ]
+      },
+      {
+        "factor": 0.5818181818181818,
+        "offset": [
+          40,
+          -10
+        ]
+      },
+      {
+        "factor": 0.5818181818181818,
+        "offset": [
+          40,
+          -10
+        ]
+      },
+      {
+        "factor": 0.5818181818181818,
+        "offset": [
+          39,
+          13
+        ]
+      },
+      {
+        "factor": 0.5818181818181818,
+        "offset": [
+          38,
+          13
+        ]
+      },
+      {
+        "factor": 0.5818181818181818,
+        "offset": [
+          38,
+          13
+        ]
+      },
+      {
+        "factor": 0.5818181818181818,
+        "offset": [
+          5,
+          13
+        ]
+      }
+    ],
+    "source_muzzle": [
+      982,
+      590
     ]
   },
   "portrait_id": "sigrid"

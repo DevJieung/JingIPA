@@ -49,14 +49,14 @@ def ensure_xvfb() -> Path:
 def godot_env(display: int) -> dict[str, str]:
     """Xvfb 위에서 Godot 을 돌릴 환경 변수.
 
-    ★ POCKER_NO_SAVE=1 이 언제나 들어간다 — 촬영·검사가 아이의 저장 파일을 덮어쓰지 않게
+    ★ STELLARDEFENSE_NO_SAVE=1 이 언제나 들어간다 — 촬영·검사가 아이의 저장 파일을 덮어쓰지 않게
       (CLAUDE.md 21).
     """
     env = dict(os.environ)
     env["DISPLAY"] = f":{display}"
     env["LD_LIBRARY_PATH"] = str(XVFB_HOME / "usr/lib/aarch64-linux-gnu") + ":" + \
         env.get("LD_LIBRARY_PATH", "")
-    env["POCKER_NO_SAVE"] = "1"
+    env["STELLARDEFENSE_NO_SAVE"] = "1"
     return env
 
 

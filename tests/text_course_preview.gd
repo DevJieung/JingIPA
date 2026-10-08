@@ -66,7 +66,7 @@ func _ready() -> void:
 	for locale in ["ko", "en"]:
 		I18n.set_locale(locale)
 		Save.best_wave = 100
-		Save.best_hand = 9
+		Save.best_tier = 9
 		Save.cur_run = {"wave": 100}
 		for unit in Roster.UNITS:
 			Save.seen_units[String(unit["id"])] = true
@@ -83,16 +83,19 @@ func _ready() -> void:
 		Run.gold = 99999999
 		var draw := DrawScreen.new()
 		swap(draw)
-		for hand in range(10):
-			Fixture.stack(hand)
-			await review(locale + "_draw_%d" % hand, hand == 9)
-		draw.card_choice.opened = true
-		draw.card_choice.slot = 0
-		await review(locale + "_card_choice")
-		draw.card_choice.opened = false
-		Run.rerolled.fill(4)
-		Run.paid.fill(8)
+		# 별맞춤 의식 — 문 안의 별 1~5개. 큰 골드 · 여러 번 낸 유료 값에서도 글자가 칸 안에 든다.
+		for stars in range(Rite.MIN_STARS, Rite.MAX_STARS + 1):
+			Fixture.stack(stars)
+			draw.skip_spin()
+			await review(locale + "_draw_%d" % stars, stars == Rite.MAX_STARS)
+		Fixture.stack(2)
+		Run.spins = Run.free_rerolls() + 8
+		Run.paid_spins = 8
+		Run.owned_passives.assign(["joker", "eye", "deal"])
+		Run.passives.assign(["joker", "eye", "deal"])
 		await review(locale + "_draw_paid")
+		Run.owned_passives.clear()
+		Run.passives.clear()
 		if focused:
 			continue
 		Run.phase = Run.Phase.SHOP
@@ -143,7 +146,7 @@ func _ready() -> void:
 		await review(locale + "_fusion")
 		shop.fusion.opened = false
 		main.menu.open()
-		for page in ["menu", "rules", "hands", "elements"]:
+		for page in ["menu", "rules", "rite", "elements"]:
 			main.menu.page = page
 			await review(locale + "_menu_" + page)
 		main.menu.close()

@@ -10,7 +10,7 @@
   },
   "scale": 0.3023255813953488,
   "movement": "walk",
-  "source": "Krea 2 Turbo + MiniMax H3",
+  "source": "imagegen_chibi_v1",
   "clips": {
     "move": {
       "frames": 21,
@@ -37,19 +37,99 @@
         83.33333333333333,
         83.33333333333333
       ],
-      "loop": true
+      "loop": true,
+      "cell": {
+        "w": 192,
+        "h": 192
+      },
+      "sha256": "a824e9536cb2bd5bf61e0befcc8b260709808b1c35d0b7b81b8662fda5e1d06e"
     }
   },
   "qc": {
     "canvas_clipping": false,
     "source_clipping": false,
-    "unique_poses": 21,
+    "unique_poses": 8,
     "forward_only": true,
     "fixed_scale": true,
-    "foot_patches": false,
-    "translation_range": [
+    "foot_patches": false
+  },
+  "palette_colors": 96,
+  "readability": {
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/bramble_imp.png",
+    "source_cells": [
+      [
+        17,
+        0,
+        382,
+        512
+      ],
+      [
+        396,
+        0,
+        761,
+        512
+      ],
+      [
+        778,
+        0,
+        1131,
+        512
+      ],
+      [
+        1164,
+        0,
+        1520,
+        512
+      ],
+      [
+        16,
+        512,
+        364,
+        1024
+      ],
+      [
+        388,
+        512,
+        764,
+        1024
+      ],
+      [
+        778,
+        512,
+        1150,
+        1024
+      ],
+      [
+        1155,
+        512,
+        1526,
+        1024
+      ]
+    ],
+    "phase_map": [
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
       2,
-      5
-    ]
+      2,
+      3,
+      3,
+      3,
+      4,
+      4,
+      4,
+      5,
+      5,
+      6,
+      6,
+      6,
+      7,
+      7
+    ],
+    "method": "imagegen chibi movement repaint; alpha threshold, extraction, nearest sampling and shared palette only"
   }
 }

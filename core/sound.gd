@@ -72,7 +72,7 @@ func battle_music_id(w: int) -> String:
 func _ready() -> void:
 	# ★ 화면이 없는 기기(이 개발 머신·CI)에서는 아예 안 켠다. 더미 오디오 드라이버에
 	#   플레이어 열넷을 매달아 봐야 얻는 것이 없고, 검사기만 느려진다.
-	if DisplayServer.get_name() == "headless" and OS.get_environment("POCKER_AUDIO_TEST") != "1":
+	if DisplayServer.get_name() == "headless" and OS.get_environment("STELLARDEFENSE_AUDIO_TEST") != "1":
 		return
 	_on = true
 	for i in range(VOICES):

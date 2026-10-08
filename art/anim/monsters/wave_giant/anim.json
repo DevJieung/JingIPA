@@ -10,7 +10,7 @@
   },
   "scale": 0.3953488372093023,
   "movement": "walk",
-  "source": "Krea 2 Turbo + MiniMax H3",
+  "source": "imagegen_chibi_v1",
   "clips": {
     "move": {
       "frames": 20,
@@ -36,19 +36,98 @@
         83.33333333333333,
         83.33333333333333
       ],
-      "loop": true
+      "loop": true,
+      "cell": {
+        "w": 192,
+        "h": 192
+      },
+      "sha256": "16917d16a33cf6f56486599956c8cee2c5f94eff2de3ca8352126f61f0a809b3"
     }
   },
   "qc": {
     "canvas_clipping": false,
     "source_clipping": false,
-    "unique_poses": 20,
+    "unique_poses": 8,
     "forward_only": true,
     "fixed_scale": true,
-    "foot_patches": false,
-    "translation_range": [
-      8,
-      5
-    ]
+    "foot_patches": false
+  },
+  "palette_colors": 96,
+  "readability": {
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/wave_giant.png",
+    "source_cells": [
+      [
+        20,
+        0,
+        417,
+        512
+      ],
+      [
+        426,
+        0,
+        786,
+        512
+      ],
+      [
+        799,
+        0,
+        1139,
+        512
+      ],
+      [
+        1148,
+        0,
+        1522,
+        512
+      ],
+      [
+        14,
+        512,
+        404,
+        1024
+      ],
+      [
+        416,
+        512,
+        771,
+        1024
+      ],
+      [
+        778,
+        512,
+        1139,
+        1024
+      ],
+      [
+        1148,
+        512,
+        1530,
+        1024
+      ]
+    ],
+    "phase_map": [
+      0,
+      0,
+      0,
+      1,
+      1,
+      2,
+      2,
+      2,
+      3,
+      3,
+      4,
+      4,
+      4,
+      5,
+      5,
+      6,
+      6,
+      6,
+      7,
+      7
+    ],
+    "method": "imagegen chibi movement repaint; alpha threshold, extraction, nearest sampling and shared palette only"
   }
 }

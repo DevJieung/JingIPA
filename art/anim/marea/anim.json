@@ -2,23 +2,23 @@
   "name": "marea_roster_v1",
   "ko": "마레아",
   "elem": "water",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
-    "w": 256,
-    "h": 256
+    "w": 320,
+    "h": 320
   },
   "static": {
     "w": 51,
     "h": 193
   },
   "anchor": {
-    "x": 128,
+    "x": 138,
     "y": 224
   },
   "scale": 0.5751295336787565,
   "muzzle_at": {
-    "x": 83,
-    "y": -135
+    "x": 90,
+    "y": -104
   },
   "hit_ms": 583.3333333333333,
   "face": 1,
@@ -40,10 +40,10 @@
       "total_ms": 666.6666666666666,
       "loop": true,
       "cell": {
-        "w": 256,
-        "h": 256
+        "w": 320,
+        "h": 320
       },
-      "sha256": "85ea487be32794e7a9c5ebdb732da5e396d2251001fe06c70d9fa6aa10d5f03a"
+      "sha256": "b8b2d8be18479cfc32200d48b73705f9ca966e5b24d0e08c44eea339393e8a5f"
     },
     "attack": {
       "frames": 12,
@@ -64,10 +64,10 @@
       "total_ms": 1000.0,
       "loop": false,
       "cell": {
-        "w": 256,
-        "h": 256
+        "w": 320,
+        "h": 320
       },
-      "sha256": "01266d679abb25808735da8de4efb1d117932db504e34f3fdad6e2e774637a1f",
+      "sha256": "536b2b69447715af6413aa42f6cf097cd25a192e6d5580b3f8451035e434f508",
       "hit_frame": 7
     },
     "effect": {
@@ -114,140 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/marea.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/marea.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        57,
         0,
+        279,
+        394
+      ],
+      [
+        430,
         0,
-        362,
-        362
+        652,
+        394
       ],
       [
-        362,
+        792,
         0,
-        724,
-        362
+        1012,
+        394
       ],
       [
-        724,
+        1163,
         0,
-        1086,
-        362
+        1383,
+        394
       ],
       [
-        1086,
-        0,
-        1448,
-        362
+        48,
+        394,
+        285,
+        749
       ],
       [
-        0,
-        362,
-        362,
-        724
+        407,
+        394,
+        639,
+        749
       ],
       [
-        362,
-        362,
-        724,
-        724
+        759,
+        394,
+        1137,
+        749
       ],
       [
-        724,
-        362,
-        1091,
-        724
+        1074,
+        394,
+        1386,
+        749
       ],
       [
-        1091,
-        362,
-        1448,
-        724
-      ],
-      [
-        0,
-        724,
-        362,
+        45,
+        749,
+        309,
         1086
       ],
       [
-        362,
-        724,
-        724,
+        400,
+        749,
+        685,
         1086
       ],
       [
-        724,
-        724,
-        1086,
+        763,
+        749,
+        1063,
         1086
       ],
       [
-        1086,
-        724,
-        1448,
+        1149,
+        749,
+        1409,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.5938461538461538,
+        "factor": 0.6185897435897436,
         "offset": [
-          19,
-          11
+          57,
+          -20
         ]
       },
       {
-        "factor": 0.5938461538461538,
+        "factor": 0.6185897435897436,
         "offset": [
-          19,
-          11
+          59,
+          -20
         ]
       },
       {
-        "factor": 0.5938461538461538,
+        "factor": 0.6185897435897436,
         "offset": [
-          19,
-          11
+          63,
+          -20
         ]
       },
       {
-        "factor": 0.5938461538461538,
+        "factor": 0.6185897435897436,
         "offset": [
-          19,
-          11
+          59,
+          -20
         ]
       },
       {
-        "factor": 0.5938461538461538,
+        "factor": 0.6185897435897436,
         "offset": [
-          22,
-          14
+          56,
+          4
         ]
       },
       {
-        "factor": 0.5938461538461538,
+        "factor": 0.6185897435897436,
         "offset": [
-          24,
-          14
+          55,
+          4
         ]
       },
       {
-        "factor": 0.5938461538461538,
+        "factor": 0.6185897435897436,
         "offset": [
-          22,
-          14
+          52,
+          4
         ]
       },
       {
-        "factor": 0.5938461538461538,
+        "factor": 0.6185897435897436,
         "offset": [
-          22,
-          14
+          4,
+          4
         ]
       }
+    ],
+    "source_muzzle": [
+      1043,
+      582
     ]
   },
   "portrait_id": "marea"

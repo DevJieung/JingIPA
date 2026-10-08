@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Review sigil/value/fusion/support UI, all 50 terrains, and combat motion in Godot."""
+"""Review the star rite, fusion/support UI, all 50 terrains, and combat motion in Godot."""
 import subprocess
 from godot_env import ROOT, GODOT, xvfb
 

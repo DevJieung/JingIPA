@@ -11,53 +11,6 @@ class_name PlayPolicy
 ##   그래서 정책은 **평범하게** 둔다 — 사람이 쉽게 떠올릴 만한 수준으로만.
 
 
-## 버릴 카드를 고른다. 되도록 큰 짝을 남기고 나머지를 바꾼다.
-static func discard_plan(cards: Array) -> Array:
-	var rank_n := {}
-	var suit_n := {}
-	for c in cards:
-		var r := Poker.rank_of(int(c))
-		var s := Poker.suit_of(int(c))
-		rank_n[r] = int(rank_n.get(r, 0)) + 1
-		suit_n[s] = int(suit_n.get(s, 0)) + 1
-
-	# 플러시가 눈앞이면(같은 무늬 4장) 그쪽으로 간다 — 기대값이 짝보다 훨씬 크다.
-	var best_suit := -1
-	var best_sn := 0
-	for s in suit_n:
-		if int(suit_n[s]) > best_sn:
-			best_sn = int(suit_n[s])
-			best_suit = int(s)
-	if best_sn >= 4:
-		var keep_s: Array = []
-		for i in range(cards.size()):
-			keep_s.append(Poker.suit_of(int(cards[i])) != best_suit)
-		return keep_s
-
-	# 짝이 하나라도 있으면 짝을 전부 남긴다.
-	var has_pair := false
-	for r in rank_n:
-		if int(rank_n[r]) >= 2:
-			has_pair = true
-	var out: Array = []
-	if has_pair:
-		for i in range(cards.size()):
-			out.append(int(rank_n[Poker.rank_of(int(cards[i]))]) < 2)
-		return out
-
-	# 아무것도 없으면 제일 높은 한 장만 남기고 넷을 다 바꾼다.
-	var top := -1
-	var top_r := -1
-	for i in range(cards.size()):
-		var r := Poker.rank_of(int(cards[i]))
-		if r > top_r:
-			top_r = r
-			top = i
-	for i in range(cards.size()):
-		out.append(i != top)
-	return out
-
-
 ## 영웅 하나가 성역에서 내는 초당 피해(단일 대상). 자리 다툼을 이 값으로 매긴다.
 ##
 ## ★ 광역·연쇄·장판이 여럿을 동시에 때리는 몫은 여기 안 들어간다(Run.total_dps 와 같은
@@ -118,21 +71,19 @@ static func arrange(run) -> void:
 	run.bench = all.slice(keep, all.size())
 
 
-## 카드를 다시 뽑는다. 공짜는 다 쓰고, 골드가 넉넉할 때만 돈을 낸다.
+## 문 밖의 별을 다시 돌린다. 공짜는 다 쓰고, 골드가 넉넉할 때만 돈을 낸다.
+##
+## ★ 다시 돌려서 손해 보는 일이 없으므로(문 안의 별은 잠긴다) 공짜를 남길 까닭이 없다.
+##   고를 것은 「골드를 낼 것인가」 하나뿐이다 — 값이 두 배씩 오르므로 지갑에 견줘 끊는다.
 static func do_rerolls(run) -> void:
-	for _pass in range(3):
-		var plan := discard_plan(run.cards)
-		var did := false
-		for i in range(run.cards.size()):
-			if not bool(plan[i]):
-				continue
-			var cost: int = run.reroll_cost_of(i)
-			# 유료 리롤은 지갑의 8% 를 넘지 않을 때만. 상점 살 돈을 다 태우면 안 된다.
-			if cost > 0 and (run.gold < 300 or cost > int(run.gold * 0.08)):
-				continue
-			if run.reroll(i):
-				did = true
-		if not did:
+	var guard := 0
+	while run.can_respin() and guard < 64:
+		guard += 1
+		var cost: int = run.respin_cost()
+		# 유료는 지갑의 8% 를 넘지 않을 때만. 상점 살 돈을 다 태우면 안 된다.
+		if cost > 0 and (run.gold < 300 or cost > int(run.gold * 0.08)):
+			break
+		if run.respin().is_empty():
 			break
 
 

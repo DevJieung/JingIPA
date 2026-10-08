@@ -2,7 +2,7 @@
   "name": "conor_roster_v1",
   "ko": "코너",
   "elem": "elec",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
     "w": 256,
     "h": 256
@@ -17,8 +17,8 @@
   },
   "scale": 0.5948717948717949,
   "muzzle_at": {
-    "x": 67,
-    "y": -160
+    "x": 78,
+    "y": -130
   },
   "hit_ms": 416.66666666666663,
   "face": 1,
@@ -43,7 +43,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "2f6169ff1a38e9dec814b1456d6e374c3317bbf7785267b88382b31e1a95a4ae"
+      "sha256": "d99c639a9d4d1fc5538279f4e420b5bcf0ffce8bfc6434431011ffad26521163"
     },
     "attack": {
       "frames": 12,
@@ -67,7 +67,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "4bb6c5748efd4de497fc8fe9abde276f5c0d87c0329bd713d33f6e8af7901391",
+      "sha256": "497d7c48e381eec5add8444868a47574258b59055d45de2fa0e65074e07f6bea",
       "hit_frame": 5
     },
     "shot": {
@@ -114,140 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/conor.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/conor.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        68,
         0,
+        303,
+        432
+      ],
+      [
+        417,
         0,
-        362,
-        390
+        650,
+        432
       ],
       [
-        362,
+        779,
         0,
-        724,
-        390
+        1012,
+        432
       ],
       [
-        724,
+        1132,
         0,
-        1086,
-        390
+        1366,
+        432
       ],
       [
-        1086,
-        0,
-        1448,
-        390
+        71,
+        432,
+        353,
+        812
       ],
       [
-        0,
-        390,
-        362,
-        770
+        429,
+        432,
+        706,
+        812
       ],
       [
-        362,
-        390,
-        724,
-        770
+        788,
+        432,
+        1115,
+        812
       ],
       [
-        724,
-        390,
-        1086,
-        770
+        1080,
+        432,
+        1379,
+        812
       ],
       [
-        1086,
-        390,
-        1448,
-        770
-      ],
-      [
-        0,
-        770,
-        362,
+        49,
+        812,
+        326,
         1086
       ],
       [
-        362,
-        770,
-        724,
+        408,
+        812,
+        677,
         1086
       ],
       [
-        724,
-        770,
-        1086,
+        761,
+        812,
+        1038,
         1086
       ],
       [
-        1086,
-        770,
-        1448,
+        1114,
+        812,
+        1392,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.5386740331491713,
+        "factor": 0.5327868852459017,
         "offset": [
-          29,
-          14
+          59,
+          -6
         ]
       },
       {
-        "factor": 0.5386740331491713,
+        "factor": 0.5327868852459017,
         "offset": [
-          31,
-          14
+          58,
+          -6
         ]
       },
       {
-        "factor": 0.5386740331491713,
+        "factor": 0.5327868852459017,
         "offset": [
-          31,
-          14
+          58,
+          -6
         ]
       },
       {
-        "factor": 0.5386740331491713,
+        "factor": 0.5327868852459017,
         "offset": [
-          31,
-          14
+          60,
+          -6
         ]
       },
       {
-        "factor": 0.5386740331491713,
+        "factor": 0.5327868852459017,
         "offset": [
-          34,
-          19
+          70,
+          22
         ]
       },
       {
-        "factor": 0.5386740331491713,
+        "factor": 0.5327868852459017,
         "offset": [
-          34,
-          19
+          70,
+          22
         ]
       },
       {
-        "factor": 0.5386740331491713,
+        "factor": 0.5327868852459017,
         "offset": [
-          37,
-          19
+          71,
+          22
         ]
       },
       {
-        "factor": 0.5386740331491713,
+        "factor": 0.5327868852459017,
         "offset": [
-          30,
-          19
+          23,
+          22
         ]
       }
+    ],
+    "source_muzzle": [
+      1042,
+      567
     ]
   },
   "portrait_id": "conor"

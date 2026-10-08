@@ -1,0 +1,506 @@
+{
+  "version": 1,
+  "style": "rounded industrial fantasy, moonlight and amber lanterns",
+  "heroes": {
+    "limne": {
+      "kit": "reservoir",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "heavy",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 0,
+      "coat": "#256b85"
+    },
+    "chispa": {
+      "kit": "gauntlet",
+      "skin": "#e2b798",
+      "hair": "#ed652f",
+      "build": "normal",
+      "hair_style": "tail",
+      "source": "tools/roster.json:prompt",
+      "index": 1,
+      "coat": "#bc6537"
+    },
+    "lind": {
+      "kit": "reel",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "slim",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 2,
+      "coat": "#5793a7"
+    },
+    "brigid": {
+      "kit": "electrode_bow",
+      "skin": "#e2b798",
+      "hair": "#8f79bb",
+      "build": "normal",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 3,
+      "coat": "#7c8590"
+    },
+    "pip": {
+      "kit": "gear",
+      "skin": "#dbd7c8",
+      "hair": "#2d3547",
+      "build": "normal",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 4,
+      "coat": "#b6aa93"
+    },
+    "phorkys": {
+      "kit": "revolver",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "heavy",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 5,
+      "coat": "#344e74"
+    },
+    "solana": {
+      "kit": "sun_bow",
+      "skin": "#e2b798",
+      "hair": "#ed652f",
+      "build": "slim",
+      "hair_style": "tail",
+      "source": "tools/roster.json:prompt",
+      "index": 6,
+      "coat": "#b65337"
+    },
+    "jokull": {
+      "kit": "polar",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "heavy",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 7,
+      "coat": "#82aeb7"
+    },
+    "rhiannon": {
+      "kit": "cables",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "slim",
+      "hair_style": "tail",
+      "source": "tools/roster.json:prompt",
+      "index": 8,
+      "coat": "#6b6484"
+    },
+    "mimic": {
+      "kit": "press",
+      "skin": "#dbd7c8",
+      "hair": "#2d3547",
+      "build": "heavy",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 9,
+      "coat": "#b3b3a7"
+    },
+    "protea": {
+      "kit": "fan_bow",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "slim",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 10,
+      "coat": "#3c8b89"
+    },
+    "ceniza": {
+      "kit": "bristles",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "normal",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 11,
+      "coat": "#a85541"
+    },
+    "vidarr": {
+      "kit": "stamp",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "normal",
+      "hair_style": "bald",
+      "source": "tools/roster.json:prompt",
+      "index": 12,
+      "coat": "#77a6af"
+    },
+    "finn": {
+      "kit": "batteries",
+      "skin": "#e2b798",
+      "hair": "#b8cc60",
+      "build": "normal",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 13,
+      "coat": "#6c6492"
+    },
+    "dummy": {
+      "kit": "pneumatic",
+      "skin": "#dbd7c8",
+      "hair": "#2d3547",
+      "build": "slim",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 14,
+      "coat": "#b0b1a8"
+    },
+    "marea": {
+      "kit": "life_ring",
+      "skin": "#c78e6f",
+      "hair": "#ed652f",
+      "build": "normal",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 15,
+      "coat": "#36758a"
+    },
+    "igni": {
+      "kit": "heatshield",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "slim",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 16,
+      "coat": "#a34236"
+    },
+    "kari": {
+      "kit": "shotgun",
+      "skin": "#e2b798",
+      "hair": "#d9e6ea",
+      "build": "slim",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 17,
+      "coat": "#6c9cac"
+    },
+    "donn": {
+      "kit": "antenna",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "normal",
+      "hair_style": "tail",
+      "source": "tools/roster.json:prompt",
+      "index": 18,
+      "coat": "#706386"
+    },
+    "echo": {
+      "kit": "double_bow",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "slim",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 19,
+      "coat": "#b3b9bc"
+    },
+    "glaukos": {
+      "kit": "cleaver",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "heavy",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 20,
+      "coat": "#307d7c"
+    },
+    "volcan": {
+      "kit": "furnace",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "normal",
+      "hair_style": "bald",
+      "source": "tools/roster.json:prompt",
+      "index": 21,
+      "coat": "#a75234"
+    },
+    "eira": {
+      "kit": "snowflake",
+      "skin": "#e2b798",
+      "hair": "#d9e6ea",
+      "build": "slim",
+      "hair_style": "braids",
+      "source": "tools/roster.json:prompt",
+      "index": 22,
+      "coat": "#abc7d4"
+    },
+    "conor": {
+      "kit": "meter",
+      "skin": "#7a4638",
+      "hair": "#2d3547",
+      "build": "normal",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 23,
+      "coat": "#666b7d"
+    },
+    "shift": {
+      "kit": "segments",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "slim",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 24,
+      "coat": "#7d8592"
+    },
+    "thalassa": {
+      "kit": "irrigation",
+      "skin": "#e2b798",
+      "hair": "#d9e6ea",
+      "build": "normal",
+      "hair_style": "tail",
+      "source": "tools/roster.json:prompt",
+      "index": 25,
+      "coat": "#38658c"
+    },
+    "carmen": {
+      "kit": "dual_pistol",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "normal",
+      "hair_style": "tail",
+      "source": "tools/roster.json:prompt",
+      "index": 26,
+      "coat": "#b84636"
+    },
+    "snorri": {
+      "kit": "anchor",
+      "skin": "#e2b798",
+      "hair": "#c99747",
+      "build": "heavy",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 27,
+      "coat": "#79a7bc"
+    },
+    "niamh": {
+      "kit": "triangle",
+      "skin": "#e2b798",
+      "hair": "#d9e6ea",
+      "build": "normal",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 28,
+      "coat": "#796d87"
+    },
+    "phantom": {
+      "kit": "counterweight",
+      "skin": "#e2b798",
+      "hair": "#d9e6ea",
+      "build": "slim",
+      "hair_style": "tail",
+      "source": "tools/roster.json:prompt",
+      "index": 29,
+      "coat": "#8896a1"
+    },
+    "triton": {
+      "kit": "conch",
+      "skin": "#7a4638",
+      "hair": "#2d3547",
+      "build": "normal",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 30,
+      "coat": "#375984"
+    },
+    "saeta": {
+      "kit": "rockets",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "slim",
+      "hair_style": "tail",
+      "source": "tools/roster.json:prompt",
+      "index": 31,
+      "coat": "#9c5136"
+    },
+    "helga": {
+      "kit": "crossframe",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "slim",
+      "hair_style": "braids",
+      "source": "tools/roster.json:prompt",
+      "index": 32,
+      "coat": "#81b5c5"
+    },
+    "morrigan": {
+      "kit": "safety",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "heavy",
+      "hair_style": "braids",
+      "source": "tools/roster.json:prompt",
+      "index": 33,
+      "coat": "#675484"
+    },
+    "blank": {
+      "kit": "bulwark",
+      "skin": "#e2b798",
+      "hair": "#d9e6ea",
+      "build": "heavy",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 34,
+      "coat": "#cad1ca"
+    },
+    "keto": {
+      "kit": "sharkfin",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "normal",
+      "hair_style": "tail",
+      "source": "tools/roster.json:prompt",
+      "index": 35,
+      "coat": "#345775"
+    },
+    "candela": {
+      "kit": "burner",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "normal",
+      "hair_style": "bald",
+      "source": "tools/roster.json:prompt",
+      "index": 36,
+      "coat": "#a44335"
+    },
+    "sigrid": {
+      "kit": "hexframe",
+      "skin": "#e2b798",
+      "hair": "#d9e6ea",
+      "build": "normal",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 37,
+      "coat": "#a4c9d0"
+    },
+    "caden": {
+      "kit": "capacitors",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "slim",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 38,
+      "coat": "#6d6b92"
+    },
+    "grey": {
+      "kit": "pendulum",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "normal",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 39,
+      "coat": "#6e7c87"
+    },
+    "galene": {
+      "kit": "twin_tanks",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "normal",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 40,
+      "coat": "#3f718b"
+    },
+    "estoque": {
+      "kit": "piston",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "slim",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 41,
+      "coat": "#ae463c"
+    },
+    "frosti": {
+      "kit": "sniper",
+      "skin": "#e2b798",
+      "hair": "#d9e6ea",
+      "build": "slim",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 42,
+      "coat": "#a3c5d3"
+    },
+    "lugh": {
+      "kit": "transmission",
+      "skin": "#e2b798",
+      "hair": "#c99747",
+      "build": "normal",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 43,
+      "coat": "#6b658c"
+    },
+    "null": {
+      "kit": "tension",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "slim",
+      "hair_style": "bald",
+      "source": "tools/roster.json:prompt",
+      "index": 44,
+      "coat": "#acb9bc"
+    },
+    "nerea": {
+      "kit": "sluice",
+      "skin": "#e2b798",
+      "hair": "#d9e6ea",
+      "build": "normal",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 45,
+      "coat": "#3d607b"
+    },
+    "brasa": {
+      "kit": "petals",
+      "skin": "#e2b798",
+      "hair": "#d9e6ea",
+      "build": "heavy",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 46,
+      "coat": "#a44c3e"
+    },
+    "isa": {
+      "kit": "columns",
+      "skin": "#e2b798",
+      "hair": "#d9e6ea",
+      "build": "normal",
+      "hair_style": "tail",
+      "source": "tools/roster.json:prompt",
+      "index": 47,
+      "coat": "#8eafb7"
+    },
+    "brian": {
+      "kit": "railgun",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "normal",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 48,
+      "coat": "#695e92"
+    },
+    "zero": {
+      "kit": "patchpanel",
+      "skin": "#e2b798",
+      "hair": "#2d3547",
+      "build": "normal",
+      "hair_style": "short",
+      "source": "tools/roster.json:prompt",
+      "index": 49,
+      "coat": "#a2afb6"
+    }
+  }
+}

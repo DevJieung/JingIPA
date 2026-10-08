@@ -109,7 +109,7 @@ def run_engine(tag: str) -> dict:
     exe = EC.ensure_xvfb()
     env = dict(os.environ)
     env["DISPLAY"] = ":%d" % (EC.DISPLAY_NUM + 1)
-    env["POCKER_NO_SAVE"] = "1"
+    env["STELLARDEFENSE_NO_SAVE"] = "1"
     env["LD_LIBRARY_PATH"] = str(EC.XVFB_HOME / "usr/lib/aarch64-linux-gnu") + ":" + \
         env.get("LD_LIBRARY_PATH", "")
     xv = subprocess.Popen([str(exe), env["DISPLAY"], "-screen", "0", "1180x700x24",

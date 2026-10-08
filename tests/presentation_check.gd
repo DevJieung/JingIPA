@@ -16,11 +16,35 @@ func _ready() -> void:
 		return
 	main = load("res://game/main.gd").new()
 	add_child(main)
+	# 확정 연출은 0.7초 뒤부터 아무 데나 눌러 넘긴다(화면과의 약속). 그 전의 터치는 흘린다 —
+	# 넘어가 버리면 무엇이 나왔는지 못 보고 지나간다. 시계는 손으로 돌린다(_process).
+	fresh()
+	var early := DrawScreen.new()
+	main._swap(early)
+	early.set_process(false)
+	await paint(early)
+	check(early.state == DrawScreen.PICK and tap(early, "go") and early.state == DrawScreen.REVEAL,
+			"the summon button starts the reveal")
+	var summoned := Run.hero_total()
+	mouse(early, Vector2(640, 760), true)
+	mouse(early, Vector2(640, 760), false)
+	check(early.state == DrawScreen.REVEAL, "a touch at the very start does not skip the reveal")
+	early._process(0.6)
+	mouse(early, Vector2(640, 760), true)
+	mouse(early, Vector2(640, 760), false)
+	check(early.state == DrawScreen.REVEAL, "the reveal cannot be skipped before 0.7 seconds")
+	early._process(0.2)
+	check(early.state == DrawScreen.REVEAL, "the reveal does not advance by itself")
+	mouse(early, Vector2(640, 760), true)
+	mouse(early, Vector2(640, 760), false)
+	check(early.state == DrawScreen.SWAP and Run.hero_total() == summoned, "after 0.7 seconds a touch anywhere advances to formation")
+
 	fresh()
 	var d := DrawScreen.new()
 	main._swap(d)
 	d.set_process(false)
-	d._confirm()
+	await paint(d)
+	check(tap(d, "go"), "summon button reachable")
 	var count := Run.hero_total()
 	d._process(30.0)
 	check(d.state == DrawScreen.REVEAL, "reveal waits indefinitely for a user touch")
@@ -45,8 +69,10 @@ func _ready() -> void:
 	Run.wave = 24
 	var unit := Roster.UNITS[0]
 	var got := Run.gain_hero(unit, int(unit["tier"]))
-	Run.last_result = {"unit": unit, "hand": int(unit["tier"]), "where": got["where"], "slot": got["slot"],
-		"cards": Array(Run.cards), "key": [], "n": 1}
+	# 그 복사본을 방금 의식으로 받은 것처럼 확정 결과를 붙인다(등급 · 별 수 · 별 자리).
+	Run.last_result = {"unit": unit, "tier": int(unit["tier"]), "stars": Rite.MIN_STARS,
+		"orbit": Array(Fixture.orbit_for(Rite.MIN_STARS)), "bumped": false, "joker": -1,
+		"where": got["where"], "slot": got["slot"], "n": 1}
 	Run.phase = Run.Phase.SWAP
 	d = DrawScreen.new()
 	main._swap(d)
@@ -140,17 +166,38 @@ func _ready() -> void:
 	check(not b.fx.items.any(func(it): return it["t"] == "text" and String(it["s"]).contains("배")), "double damage has no multiplier word")
 	b.free()
 
-	var low := DrawScreen.new()
-	low.result = {"hand": 0}
-	low.rt = 1.8
-	low._reveal_beats()
-	var low_count := low.fx.items.size()
-	var high := DrawScreen.new()
-	high.result = {"hand": 9}
-	high.showy = true
-	high.rt = 1.8
-	high._reveal_beats()
-	check(high.fx.items.size() > low_count * 2 and high.fx.shake > low.fx.shake, "higher poker hands have stronger and richer reveal effects")
-	low.free()
-	high.free()
+	# 별이 많을수록 확정 연출이 크고 풍성하다 — 실제로 1성 · 3성 · 5성을 소환해서 잰다.
+	var low := await reveal_weight(Rite.MIN_STARS)
+	var mid := await reveal_weight(3)
+	var high := await reveal_weight(Rite.MAX_STARS)
+	check(not low.is_empty() and not mid.is_empty() and not high.is_empty(), "all three reveals played")
+	if not low.is_empty() and not mid.is_empty() and not high.is_empty():
+		check(int(high["items"]) > int(low["items"]) * 2 and float(high["shake"]) > float(low["shake"]),
+				"more stars in the gate have stronger and richer reveal effects (%d → %d pieces)" % [int(low["items"]), int(high["items"])])
+		check(int(mid["items"]) > int(low["items"]) and int(high["items"]) > int(mid["items"])
+				and float(mid["shake"]) > float(low["shake"]) and float(high["shake"]) > float(mid["shake"]),
+				"the reveal grows with every star")
+		check(not bool(low["showy"]) and bool(high["showy"]), "the showy reveal belongs to the high tiers only")
 	finish("화면 개선 회귀 검사")
+
+
+## 문 안에 별이 `stars` 개 선 의식을 실제로 확정해서, 그 확정 연출이 낸 효과의 양을 잰다.
+## 돌려주는 것: {"items": 효과 조각 수, "shake": 흔들림 세기, "showy": 화려한 연출인가}. 못 했으면 {}.
+##
+## ★ 화면 안쪽의 연출 함수를 직접 부르지 않는다 — 소환 단추를 누르고 시계만 손으로 돌린다.
+##   (연출이 한 박자에 다 터지도록 3초를 한 번에 넘긴다. 눌러 넘기지는 않는다.)
+func reveal_weight(stars: int) -> Dictionary:
+	fresh()
+	Fixture.stack(stars)
+	var screen := DrawScreen.new()
+	main._swap(screen)
+	screen.set_process(false)
+	await paint(screen)
+	if not tap(screen, "go") or screen.state != DrawScreen.REVEAL:
+		return {}
+	var result: Dictionary = Run.last_result
+	if int(result.get("stars", 0)) != stars or int(result.get("tier", -1)) != Rite.tier_of(stars):
+		return {}
+	screen._process(3.0)
+	await paint(screen)
+	return {"items": screen.fx.items.size(), "shake": screen.fx.shake, "showy": bool(result.get("showy", false))}

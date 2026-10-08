@@ -2099,11 +2099,11 @@
   },
   {
    "id": "title_art",
-   "art": "res://art/ui/title_allin_courtyard.png",
    "ko": "타이틀 그림",
    "cut": false,
    "prompt": "five playing cards fanned wide across the foreground, a lone armored hero silhouetted above them raising a glowing sword, a swarm of small monster shapes swirling behind, dramatic backlight, filling the whole frame",
-   "color": "#F2C14E"
+   "color": "#F2C14E",
+   "art": "res://art/ui/title_stellar_courtyard.png"
   },
   {
    "id": "coin",
@@ -2143,9 +2143,9 @@
   },
   {
    "id": "fx_fire",
+   "ko": "불 효과",
    "cut": true,
    "fx": true,
-   "ko": "불 효과",
    "prompt": "a single upright tongue of flame, a white hot base rising into thick yellow then orange then deep red licks with sharp chunky tips, a few round embers breaking off the top",
    "color": "#FF7A1E"
   },

@@ -42,7 +42,7 @@ func update(dt: float) -> void:
 		Sfx.play("fusion_burst")
 		_fx.rays(at, col, 30, 580, 0.9)
 		_fx.burst(at, Look.GOLD, 90, 420, 1.0, 5, 120)
-		_fx.shards(Rect2(at - Vector2(45, 60), Vector2(90, 120)), Look.CARD_BG, 30)
+		_fx.shards(Rect2(at - Vector2(45, 60), Vector2(90, 120)), Look.INK, 30)
 		for i in range(4):
 			_fx.ring(at, col.lightened(0.15 * i), 20, 160 + i * 60, 0.8, 6)
 		_fx.do_flash(Color(1, 0.95, 0.78, 0.48), 0.26)
@@ -166,8 +166,8 @@ func draw(ci: CanvasItem, ui: Ui) -> void:
 	var highest := -1
 	for hero in materials:
 		highest = maxi(highest, int(hero["tier"]))
-	var minimum := mini(9, highest + 1)
-	var guarantee := "5성 유지 · 각성 위력 상승" if highest == 9 else ("결과 보장: %.1f성 이상" % ((minimum + 1) * 0.5) if materials.size() == 5 else "최고 재료 +0.5성")
+	var minimum := mini(Balance.TIER_MAX, highest + 1)
+	var guarantee := "5성 유지 · 각성 위력 상승" if highest == Balance.TIER_MAX else ("결과 보장: %.1f성 이상" % ((minimum + 1) * 0.5) if materials.size() == 5 else "최고 재료 +0.5성")
 	Look.text_box(ci, Rect2(928, 308, 288, 38), guarantee, 18, Look.GOLD)
 	ui.button(ci, Rect2(928, 212, 288, 44), "%d / 5장 · 합성" % selected.size(), "fusion:go", selected.size() == 5 and materials.size() == 5, Look.GOLD, 24)
 	ui.button(ci, Rect2(928, 260, 288, 44), "선택 초기화", "fusion:clear", not selected.is_empty(), Look.PANEL_EDGE, 20)
@@ -257,13 +257,7 @@ func _draw_result(ci: CanvasItem, ui: Ui) -> void:
 	var result := Run.fusion_pending
 	var unit := Roster.unit_by_id(String(result["unit"]))
 	var tier := int(result["tier"])
-	var inherited_value: Dictionary = result.get("value", {})
-	if inherited_value.is_empty():
-		for material in _materials:
-			var candidate: Dictionary = material.get("value", {})
-			if float(candidate.get("value_mult", 1.0)) > float(inherited_value.get("value_mult", 1.0)):
-				inherited_value = candidate
-	var identity := {"unit": unit, "value": inherited_value, "awakened": bool(unit.get("fusion_only", false))}
+	var identity := {"unit": unit, "tier": tier, "awakened": bool(unit.get("fusion_only", false))}
 	if reveal_age >= 0 and reveal_age < 1.35:
 		var k := clampf(reveal_age / 1.1, 0, 1)
 		var at := Vector2(640, 406).lerp(Vector2(350, 418), clampf((reveal_age - 0.95) / 0.4, 0, 1))
@@ -280,10 +274,10 @@ func _draw_result(ci: CanvasItem, ui: Ui) -> void:
 	Look.hero_card_panel(ci, Rect2(174, 188, 352, 424), element)
 	SummonArt.seal(ci, Vector2(350, 418), 168, maxf(0, reveal_age) * 0.5, Balance.elem_color(element), 0.40)
 	var pop := clampf((reveal_age - 1.35) / 0.3, 0, 1) if reveal_age >= 0 else 1.0
-	Art.draw_unit_fit(ci, unit, Rect2(180, 208 + (1 - pop) * 45, 340, 342), Color(1, 1, 1, pop))
+	Art.draw_unit_fit(ci, unit, Rect2(180, 208 + (1 - pop) * 45, 340, 342), Color(1, 1, 1, pop), tier)
 	Look.draw_rarity(ci, Vector2(350, 586), tier, 15)
 	SummonArt.hero_info(ci, unit, tier, Rect2(606, 200, 530, 370), false, identity)
-	Look.draw_value_crest(ci, Vector2(496, 238), identity, 20)
+	Look.draw_awakened_mark(ci, Vector2(496, 238), identity, 20)
 	Look.text_box(ci, Rect2(606, 519, 530, 42), "각성 위력 x%.2f" % float(result.get("awakening_mult", 1.35)) if bool(unit.get("fusion_only", false)) else "승급 성공 · 최소 +0.5성", 25, Look.GOLD)
 	_fx.draw(ci)
 	_fx.draw_flash(ci, Look.SCREEN)

@@ -91,7 +91,10 @@ static func unit_h(u: Dictionary, sc: float = 1.0) -> float:
 ## 목록/상세창은 전용 원화의 불투명 영역을 가로·세로 모두 맞춘다.
 ## 작은 전투 프레임을 확대하면 얼굴과 외곽이 깨지므로 원본에서 따로 만든다.
 ## 전용 원화가 없는 개발 환경에서는 idle 첫 프레임과 정지 그림을 차례로 쓴다.
-static func unit_preview(u: Dictionary) -> Dictionary:
+static func unit_preview(u: Dictionary, grade: int = 0) -> Dictionary:
+	var rendered := StellarPortraits.preview(u, grade)
+	if not rendered.is_empty():
+		return rendered
 	var t := tex("res://art/portraits/%s.png" % String(u.get("id", "")))
 	if t == null and u.has("base_id"):
 		t = tex("res://art/portraits/%s.png" % String(u["base_id"]))
@@ -137,10 +140,10 @@ static func fit_rect(source: Vector2, box: Rect2) -> Rect2:
 
 
 static func draw_unit_fit(ci: CanvasItem, u: Dictionary, box: Rect2,
-		mod: Color = Color.WHITE) -> void:
+		mod: Color = Color.WHITE, grade: int = 0) -> void:
 	if not box.has_area():
 		return
-	var preview := unit_preview(u)
+	var preview := unit_preview(u, grade)
 	if not preview.is_empty():
 		var src: Rect2 = preview["src"]
 		ci.draw_texture_rect_region(preview["tex"], fit_rect(src.size, box), src, mod)

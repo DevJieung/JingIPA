@@ -1,17 +1,17 @@
 extends Node2D
 
 ## 화면을 갈아 끼우는 곳. 게임의 진행 순서가 여기 한 줄로 보인다:
-##   타이틀 → [테마 판] → (카드 뽑기 → 전투 → 상점) 반복 → 끝
+##   타이틀 → [테마 판] → (별맞춤 의식 → 전투 → 상점) 반복 → 끝
 ##
 ## 화면들은 .tscn 없이 코드로 만든다. 화면 하나가 파일 하나(.gd)라 옮기고 지우기 쉽고,
 ## 헤드리스 검사기가 씬 파일 없이 화면을 그대로 세워 볼 수 있다.
 ##
 ## ★ **단계가 바뀔 때의 자동 저장은 여기서 건다.** 화면마다 저장을 부르면 언젠가 한 곳을
 ##   빠뜨린다 — 그러면 "그 화면에서만 안 저장되는" 버그가 된다.
-## ★ 다만 **되돌릴 수 없는 것을 얻거나 쓴 순간**은 단계가 안 바뀐다 — 리롤·족보 확정·
+## ★ 다만 **되돌릴 수 없는 것을 얻거나 쓴 순간**은 단계가 안 바뀐다 — 다시 돌리기·의식 확정·
 ##   영웅 자리 바꾸기·상점 구매가 그렇다. 그 자리는 **core/run.gd 안**에 있다
 ##   (CLAUDE.md 15-4). 여기만 걸었더니 뽑기 화면 전체가 저장 밖이라, 앱을 껐다 켜면
-##   공짜 리롤과 골드가 환불되고 홈 버튼을 누르면 영웅이 복제됐다.
+##   공짜 다시 돌리기와 골드가 환불되고 홈 버튼을 누르면 영웅이 복제됐다.
 
 var screen: Node2D = null
 ## 화면 사이 페이드. 0 이면 안 보이고 1 이면 새까맣다.
@@ -111,7 +111,7 @@ func screen_modal_open() -> bool:
 	if screen is TitleScreen:
 		return screen.collection.opened
 	if screen is DrawScreen:
-		return screen.state == DrawScreen.REVIVE_REWARD or screen.fusion.active() or screen.hv.info >= 0 or screen.card_choice.opened
+		return screen.state == DrawScreen.REVIVE_REWARD or screen.fusion.active() or screen.hv.info >= 0
 	if screen is ShopScreen:
 		return screen.fusion.active() or screen.hv.info >= 0
 	if screen is BattleScreen:
@@ -125,10 +125,6 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
 		if screen is TitleScreen and screen.collection.opened:
 			screen.collection.close()
-			return
-		if screen is DrawScreen and screen.card_choice.opened:
-			if not Ads.busy:
-				screen.card_choice.close()
 			return
 		if menu.opened:
 			menu.close()
@@ -198,14 +194,14 @@ func go_draw() -> void:
 	_swap(DrawScreen.new())
 
 
-## 카드를 **다시 뽑지 않고** 뽑기 화면만 세운다. 이어 하기에서만 쓴다 —
-## ★ go_draw() 를 쓰면 begin_draw() 가 탄을 하나 더 올리고 카드를 새로 돌려서,
-##   이어 할 때마다 탄이 하나씩 건너뛰고 리롤이 공짜로 되살아난다.
+## 별을 **다시 돌리지 않고** 의식 화면만 세운다. 이어 하기에서만 쓴다 —
+## ★ go_draw() 를 쓰면 begin_draw() 가 탄을 하나 더 올리고 별을 새로 돌려서,
+##   이어 할 때마다 탄이 하나씩 건너뛰고 무료 다시 돌리기가 공짜로 되살아난다.
 func show_draw() -> void:
 	if not Run.running:
 		show_title()
 		return
-	if Run.cards.size() != 5 and Run.phase != Run.Phase.SWAP:
+	if not Rite.valid(Run.orbit) and Run.phase != Run.Phase.SWAP:
 		go_draw()
 		return
 	_swap(DrawScreen.new())
@@ -216,7 +212,7 @@ func go_battle() -> void:
 	# ★ 이번 탄이 끝나면 상점 진열을 새로 굴린다는 표시. 여기서 비워 두면 상점이
 	#   들어올 때 한 번만 굴리게 되어, **이어 하기로 돌아와도 같은 진열**이 뜬다.
 	#   (상점에 들어올 때마다 굴리면 앱을 껐다 켤 때마다 진열이 달라져서, 아껴 둔
-	#    카드를 사려고 돌아온 사람이 그 카드를 영영 못 본다)
+	#    패시브를 사려고 돌아온 사람이 그 패시브를 영영 못 본다)
 	Run.shop_offer.clear()
 	Run.autosave()
 	_swap(BattleScreen.new())

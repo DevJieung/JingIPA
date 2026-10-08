@@ -131,7 +131,7 @@ func _ready() -> void:
 	service._process(0)
 	check(not service.busy and Run.lives == 1, "load timeout gives no reward and unlocks input")
 	check(service.complete_load(index).destroyed, "late load after timeout is destroyed")
-	check_card_choice_ads(service, ids["card"])
+	check_star_pull_ads(service, ids["card"])
 	check_load_recovery(service)
 	check_interstitial_rewards(service)
 	check_repeated_revive_ads(service)
@@ -152,8 +152,8 @@ func check_interstitial_rewards(service: FakeAds) -> void:
 	var ad := service.complete_load(service.loads.size() - 1)
 	check(ad is FakeInterstitial and ad.shown, "revive shows rewarded interstitial")
 	ad.listener.on_user_earned_reward.call(null)
-	check(Run.running and Run.lives == Run.max_lives() and Run.last_result["gold"] == 1_000_000,
-			"interstitial earned callback restores all crystals and grants one million gold")
+	check(Run.running and Run.lives == Run.max_lives() and Run.last_result["gold"] == Balance.REVIVE_GOLD,
+			"interstitial earned callback restores all crystals and grants the revival gold")
 	check(Run.snapshot()["heroes"] == before_revive["heroes"] and Run.bench.size() == before_revive["bench"].size(),
 			"earned gold reward leaves all heroes untouched")
 	check(Run.last_result["reward_pending"], "earned reward waits for the player to see and confirm its identity")
@@ -162,9 +162,10 @@ func check_interstitial_rewards(service: FakeAds) -> void:
 	check(Run.snapshot() == rewarded, "duplicate earned callback cannot grant a second hero")
 	ad.full_screen_content_callback.on_ad_dismissed_full_screen_content.call()
 	Fixture.fresh(708, 1)
-	var rare: Dictionary = Roster.units_of_tier(9)[0]
+	# 5성 영웅 일곱 장(등급은 영웅 한 장의 것이라 누구든 5성일 수 있다).
+	var rare: Dictionary = Roster.UNITS[Roster.UNITS.size() - 1]
 	for i in range(7):
-		Run.gain_hero(rare, 9, false)
+		Run.gain_hero(rare, Balance.TIER_MAX, false)
 	Run.phase = Run.Phase.SHOP
 	var before := Run.snapshot()
 	var result := Run.fuse_heroes([Run.FUSION_BENCH, Run.FUSION_BENCH + 1,
@@ -228,7 +229,7 @@ func check_repeated_revive_ads(service: FakeAds) -> void:
 				"each new ad completion revives the same wave")
 		check(Run.snapshot()["heroes"] == before["heroes"] and Run.bench.size() == before["bench"].size(),
 				"each new ad preserves all heroes")
-		check(Run.gold == before["gold"] + 1_000_000, "every ad grants exactly one million gold")
+		check(Run.gold == before["gold"] + Balance.REVIVE_GOLD, "every ad grants exactly the revival gold")
 		var rewarded := Run.snapshot()
 		ad.listener.on_user_earned_reward.call(null)
 		check(Run.snapshot() == rewarded, "duplicate completion cannot grant another revival reward")
@@ -245,7 +246,7 @@ func fail_load(service: FakeAds, index: int, code: int, domain := "com.google.an
 
 func check_repeated_fusion_ads(service: FakeAds) -> void:
 	Fixture.fresh(91208, 1)
-	var material: Dictionary = Roster.units_of_tier(0)[0]
+	var material: Dictionary = Roster.UNITS[0]
 	for i in range(7):
 		Run.gain_hero(material, 0, false, false)
 	Run.phase = Run.Phase.SHOP
@@ -303,56 +304,58 @@ func check_repeated_fusion_ads(service: FakeAds) -> void:
 
 func check_load_recovery(service: FakeAds) -> void:
 	Fixture.fresh(99123)
+	Fixture.stack(1)          # 문 밖에 별 넷 — 끌어올 별이 넉넉하다
 	Run.running = false
-	check(service._preload_kind() == "card", "first card placement is preloaded at the title")
+	check(service._preload_kind() == "card", "the star-pull placement is preloaded at the title")
 	Run.running = true
-	var before := Run.cards.duplicate()
-	var counts := Run.rerolled.duplicate()
-	service.request_reward("card", card_request(0))
+	var before := rite_state()
+	service.request_reward("card", pull_request())
 	var intended := service._request.duplicate(true)
 	var index := service.loads.size() - 1
 	fail_load(service, index, 2)
 	check(service.busy and service._request_retry_at > 0, "temporary network failure schedules recovery")
 	check(service.loads.size() == index + 1, "failure callback does not recursively load")
-	check(Run.cards == before and Run.rerolled == counts, "retry does not replace a card or consume a reward")
+	check(rite_state() == before, "retry does not pull a star or consume a reward")
 	check(service.last_error.get("code") == 2, "SDK diagnostic preserves actual error code")
 	var stale := service.complete_load(index)
 	check(stale.destroyed, "failed load cannot later populate the retry cache")
 	service._request_retry_at = Time.get_ticks_msec() - 1
 	service._process(0)
-	check(service.loads.size() == index + 2 and service._request == intended, "delayed retry preserves the exact requested choice")
+	check(service.loads.size() == index + 2 and service._request == intended, "delayed retry preserves the exact requested pull")
 	var ad := service.complete_load(index + 1)
-	check(ad.shown and Run.cards == before, "recovered ad plays before granting any reward")
+	check(ad.shown and rite_state() == before, "recovered ad plays before granting any reward")
 	ad.listener.on_user_earned_reward.call(null)
-	check(Run.cards[0] == int(intended["data"]["card"]), "recovered ad grants the selected card after earned callback")
+	var ring := int(intended["data"]["slot"])
+	check(ring == Rite.RINGS - 1 and Rite.in_gate(ring, Run.orbit[ring]) and Run.rite_stars() == 2 and Run.pulls == 1,
+			"recovered ad pulls the requested star after the earned callback")
 	ad.full_screen_content_callback.on_ad_dismissed_full_screen_content.call()
 	check(not service.busy and service.last_error.is_empty(), "successful recovery clears the error and unlocks input")
 
-	before = Run.cards.duplicate()
-	service.request_reward("card", card_request(0))
+	before = rite_state()
+	service.request_reward("card", pull_request())
 	index = service.loads.size() - 1
 	fail_load(service, index, 2)
 	service._request_retry_at = Time.get_ticks_msec() - 1
 	service._process(0)
 	fail_load(service, index + 1, 2)
-	check(not service.busy and service._request_retry_at == 0 and Run.cards == before, "second failure stops retrying without a reward")
+	check(not service.busy and service._request_retry_at == 0 and rite_state() == before, "second failure stops retrying without a reward")
 	check(service.message == "인터넷 연결을 확인한 뒤 다시 시도하세요.", "network failure is not mislabeled as no inventory")
 
 	for code in [1, 3, 8, 9]:
-		service.request_reward("card", card_request(0))
+		service.request_reward("card", pull_request())
 		index = service.loads.size() - 1
 		fail_load(service, index, code)
 		check(not service.busy and service.loads.size() == index + 1, "configuration/no-fill errors do not spin in foreground: " + str(code))
 		check(service.message == ("지금 표시할 광고가 없습니다. 잠시 후 다시 시도하세요." if code in [3, 9] \
 				else "광고를 사용할 수 없습니다. 잠시 후 다시 시도하세요."), "specific failure category: " + str(code))
-	check(Run.cards == before, "no-fill and configuration failures preserve the hand")
+	check(rite_state() == before, "no-fill and configuration failures preserve the rite")
 	service._process(0)
 	check(service.loads.size() == index + 1, "background preloading respects the failure cooldown")
 	check(service._load_error_message(LoadAdError.new(null, 2, "mediation.vendor", "vendor code", null)) \
 			== "광고를 불러오지 못했습니다. 잠시 후 다시 시도하세요.", "third-party codes are not mistaken for Google's network code")
 	check(not service._load_error_message(null).is_empty(), "missing SDK details still produce a failure notice")
 
-	service.request_reward("card", card_request(0))
+	service.request_reward("card", pull_request())
 	index = service.loads.size() - 1
 	fail_load(service, index, 0)
 	check(service.busy and service._request_retry_at > 0, "internal SDK failure also permits one delayed retry")
@@ -360,74 +363,128 @@ func check_load_recovery(service: FakeAds) -> void:
 	service._process(0)
 	check(not service.busy and service.loads.size() == index + 1, "cancel during retry delay prevents the retry")
 
-	service.request_reward("card", card_request(0))
+	service.request_reward("card", pull_request())
 	index = service.loads.size() - 1
 	fail_load(service, index, 2)
 	service._request_deadline = 1
 	service._process(0)
 	check(not service.busy and service._request_retry_at == 0 and service.loads.size() == index + 1,
 			"overall request deadline includes recovery delay")
+	check(rite_state() == before, "every failed or cancelled request leaves the rite untouched")
 
 
-func card_request(slot: int) -> Dictionary:
-	var desired := 0
-	while Run.cards.has(desired):
-		desired += 1
-	return {"slot": slot, "card": desired, "expected": Run.cards[slot]}
+## 지금 끌어올 별(문 밖의 가장 바깥 별)을 겨눈 광고 요청. 화면의 「별 끌어오기」가 보내는 꼴 그대로다.
+func pull_request() -> Dictionary:
+	return {"slot": Run.pull_target()}
 
 
-func check_card_choice_ads(service: FakeAds, unit_id: String) -> void:
+## 의식의 상태 통째 — 별 다섯의 자리 · 다시 돌린 횟수 · 유료 횟수 · 끌어온 횟수.
+## 「광고가 아무것도 안 바꿨다」를 이것 하나로 잰다.
+func rite_state() -> Dictionary:
+	return (Run.snapshot()["rite"] as Dictionary).duplicate(true)
+
+
+## 보상형 광고 「별 끌어오기」 — 광고 단위는 예전 「원하는 카드」의 것을 그대로 쓴다(kind "card").
+##
+## ★ 지키는 것은 포커 시절과 같다: 요청만으로는 아무것도 안 바뀐다 / 끝까지 본 광고만 준다 /
+##   한 광고는 한 번만 준다 / 광고를 보는 사이에 상태가 바뀌었으면 그 보상은 거절한다.
+##   「상태가 바뀌었다」가 지금은 **의식의 판 번호**(다시 돌린 횟수 + 끌어온 횟수)다.
+func check_star_pull_ads(service: FakeAds, unit_id: String) -> void:
 	Fixture.fresh(87234)
+	Fixture.stack(2)          # 문 안 0 · 1번, 문 밖 2 · 3 · 4번
 	Run.gold = 0
-	var before := Run.cards.duplicate()
-	var counts := Run.rerolled.duplicate()
-	var request := card_request(3)
-	check(service._preload_kind() == "card", "draw phase preloads the direct-choice placement")
-	check(service.request_reward("card", request), "direct choice starts a real SDK request")
-	check(service.loads.back()["unit"] == unit_id, "direct choice uses ADMOB_REWARD_CARD_CHANGE_ID mapping")
+	var before := rite_state()
+	var request := pull_request()
+	check(service._preload_kind() == "card", "the rite preloads the star-pull placement")
+	check(service.request_reward("card", request), "a star pull starts a real SDK request")
+	check(service.loads.back()["unit"] == unit_id, "star pull uses the ADMOB_REWARD_CARD_CHANGE_ID mapping")
 	var index := service.loads.size() - 1
-	check(Run.cards == before and Run.rerolled == counts, "request does not change hand or spend a replacement")
-	check(int(service._request["data"]["revision"]) == counts[3], "request records slot revision")
-	request["card"] = before[0]
+	check(rite_state() == before, "the request moves no star and spends no re-spin")
+	check(int(service._request["data"]["revision"]) == Run.rite_revision()
+			and int(service._request["data"]["seed"]) == Run.run_seed
+			and int(service._request["data"]["wave"]) == Run.wave, "the request records the rite revision, the run and the wave")
+	# 요청한 쪽의 사전을 나중에 바꿔도 잡아 둔 요청은 안 바뀐다.
+	request["slot"] = 2
 	var ad := service.complete_load(index)
-	var intended := int(service._request["data"]["card"])
-	check(ad.shown and Run.cards == before, "loading and showing preserve the original hand")
+	var intended := int(service._request["data"]["slot"])
+	check(intended == Rite.RINGS - 1 and ad.shown and rite_state() == before, "loading and showing preserve the stars and the captured ring")
 	ad.listener.on_user_earned_reward.call(null)
-	check(Run.cards[3] == intended and Run.gold == 0, "earned callback applies the captured choice at no gold cost")
-	check(Run.rerolled[3] == counts[3] + 1, "earned choice counts one replacement")
+	check(Rite.in_gate(intended, Run.orbit[intended]) and Run.rite_stars() == 3 and Run.gold == 0,
+			"the earned callback pulls the captured star at no gold cost")
+	for other in range(Rite.RINGS):
+		if other != intended:
+			check(Run.orbit[other] == int(before["orbit"][other]), "the other stars stay where they stopped")
+	check(Run.pulls == 1 and Run.spins == 0 and Run.paid_spins == 0 and Run.respins_left() == Run.free_rerolls(),
+			"an earned pull is counted once and spends no re-spin")
+	var pulled := rite_state()
 	ad.listener.on_user_earned_reward.call(null)
-	check(Run.rerolled[3] == counts[3] + 1, "duplicate earned choice does not count twice")
+	check(rite_state() == pulled, "a duplicate earned callback does not pull twice")
 	ad.full_screen_content_callback.on_ad_dismissed_full_screen_content.call()
-	check(not service.busy, "choice ad close unlocks the draw")
+	check(not service.busy, "closing the star-pull ad unlocks the rite")
+	var first_ad := ad
 
-	before = Run.cards.duplicate()
-	counts = Run.rerolled.duplicate()
-	service.request_reward("card", card_request(0))
+	before = rite_state()
+	check(Run.pull_target() == Rite.RINGS - 2, "the next pull aims at the next outermost star")
+	service.request_reward("card", pull_request())
 	ad = service.complete_load(service.loads.size() - 1)
+	# 앞선 광고의 콜백이 늦게 다시 와도 지금 열린 요청의 별은 끌려오지 않는다.
+	first_ad.listener.on_user_earned_reward.call(null)
+	check(rite_state() == before and service.busy, "an earlier ad's callback cannot pull the star of the current request")
 	ad.full_screen_content_callback.on_ad_dismissed_full_screen_content.call()
-	check(Run.cards == before and Run.rerolled == counts, "early close preserves card and replacement count")
-	service.request_reward("card", card_request(0))
+	check(rite_state() == before and not service.busy, "early close preserves the stars and the pull count")
+	service.request_reward("card", pull_request())
 	index = service.loads.size() - 1
 	service._finish(false, "cancel")
-	check(service.complete_load(index).destroyed and Run.cards == before, "cancelled choice discards late ad without changing hand")
+	check(service.complete_load(index).destroyed and rite_state() == before, "a cancelled pull discards the late ad without moving a star")
 
-	service.request_reward("card", card_request(0))
+	service.request_reward("card", pull_request())
 	index = service.loads.size() - 1
 	Run.phase = Run.Phase.SWAP
 	ad = service.complete_load(index)
-	check(not ad.shown and ad.destroyed and not service.busy, "confirmed hand cancels the pending choice before display")
+	check(not ad.shown and ad.destroyed and not service.busy, "a confirmed rite cancels the pending pull before display")
 	Run.phase = Run.Phase.DRAW
-	service.request_reward("card", card_request(0))
+	check(rite_state() == before, "the cancelled pull changed nothing")
+
+	# 광고를 보는 사이에 다시 돌렸다 — 그 별이 여전히 문 밖에 서 있어도 옛 보상은 거절한다.
+	service.request_reward("card", pull_request())
 	ad = service.complete_load(service.loads.size() - 1)
-	Run.rerolled[0] += 1
+	var aimed := int(service._request["data"]["slot"])
+	check(not Run.respin().is_empty(), "the rite is re-spun while the ad is open")
+	Run.orbit.assign(Fixture.orbit_for(2))
+	before = rite_state()
+	check(Run.can_pull(aimed), "the aimed star still stands outside the gate")
 	ad.listener.on_user_earned_reward.call(null)
-	check(Run.cards == before, "changed slot revision rejects a late earned choice")
+	check(rite_state() == before, "a re-spin after the request rejects the late earned pull")
+	ad.full_screen_content_callback.on_ad_dismissed_full_screen_content.call()
+	check(not service.busy, "the rejected pull still unlocks the rite")
+
+	# 그 별이 이미 문 안에 섰다면(다른 길로 들어왔다) 광고가 끝나도 한 번 더 세지 않는다.
+	service.request_reward("card", pull_request())
+	ad = service.complete_load(service.loads.size() - 1)
+	aimed = int(service._request["data"]["slot"])
+	Run.orbit[aimed] = Fixture.orbit_for(Rite.RINGS)[aimed]
+	var current := rite_state()
+	ad.listener.on_user_earned_reward.call(null)
+	check(rite_state() == current, "a star that already stands inside the gate is not pulled or counted again")
 	ad.full_screen_content_callback.on_ad_dismissed_full_screen_content.call()
 
-	service.request_reward("card", card_request(0))
+	# 끌어올 별이 없으면(5성) 광고를 아예 청하지 않는다.
+	Fixture.stack(Rite.MAX_STARS)
+	var loads := service.loads.size()
+	check(Run.pull_target() == -1 and not service.request_reward("card", pull_request())
+			and not service.request_reward("card", {"slot": Rite.RINGS - 1}) and not service.busy
+			and service.loads.size() == loads, "with five stars in the gate no star-pull ad is requested")
+	# 조커가 확정 때 끌어올 별도, 광고로 먼저 끌어오면 그 다음 바깥 별로 넘어간다.
+	Fixture.stack(3)
+	Run.owned_passives.assign(["joker"])
+	Run.passives.assign(["joker"])
+	check(service.request_reward("card", pull_request()), "a pull can be requested while the joker is active")
 	ad = service.complete_load(service.loads.size() - 1)
-	Run.cards[1] = int(service._request["data"]["card"])
-	var current := Run.cards.duplicate()
 	ad.listener.on_user_earned_reward.call(null)
-	check(Run.cards == current, "choice that would duplicate another current card is rejected")
 	ad.full_screen_content_callback.on_ad_dismissed_full_screen_content.call()
+	var preview := Run.rite_preview()
+	check(Run.rite_stars() == 4 and int(preview["stars"]) == 5 and int(preview["joker"]) == Rite.RINGS - 2,
+			"after the ad pulled the outermost star the joker aims at the next one")
+	var summoned := Run.confirm_summon()
+	check(int(summoned["stars"]) == Rite.MAX_STARS and int(summoned["tier"]) == Balance.TIER_MAX
+			and int(summoned["joker"]) == Rite.RINGS - 2, "ad pull and joker stack into five stars")

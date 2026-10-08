@@ -61,18 +61,14 @@ def muzzle_of(u: dict, art_h: int) -> tuple[float, float, float]:
 
 
 HELPERS = '''
-## 그 등급의 캐릭터 중 하나를 무작위로. **같은 족보라도 매번 다른 얼굴이 나오게** 하는 것이
-## 이 게임에서 카드를 뽑는 재미의 절반이다.
-static func pick_unit(tier: int, rng: RandomNumberGenerator) -> Dictionary:
-	var pool: Array = []
-	for u in UNITS:
-		if int(u["tier"]) == tier:
-			pool.append(u)
-	if pool.is_empty():
-		return UNITS[0]
-	return pool[rng.randi_range(0, pool.size() - 1)]
+## 쉰 명 중 하나를 무작위로. **등급은 여기서 안 정한다** — 별맞춤 의식(core/rite.gd)이
+## 정한 등급을 `Run.gain_hero()` 가 영웅 한 장에 적는다. 그래서 같은 캐릭터가 1성으로도
+## 5성으로도 나오고, 「누가 나오는가」는 「얼마나 센가」와 서로 상관이 없다.
+static func pick_unit(rng: RandomNumberGenerator) -> Dictionary:
+	return UNITS[rng.randi_range(0, UNITS.size() - 1)]
 
 
+## 그 격으로 그려진 원화의 캐릭터들. 합성 전용 수호자가 빌려 입을 모습을 고를 때만 쓴다.
 static func units_of_tier(tier: int) -> Array:
 	var pool: Array = []
 	for u in UNITS:
@@ -376,15 +372,21 @@ def main() -> int:
 	w("## 원본은 tools/roster.json 이고, `python3 tools/gen_roster.py` 가 이 파일을 찍어 낸다.")
 	w("## h(그림 높이)는 tools/gen_art.py 가 실제로 저장하는 크기와 같은 값이다.")
 	w("")
-	w("## 등급별 이름. 인덱스가 Poker.Hand 값과 같다.")
-	tier_ko = ", ".join('"%s"' % esc(t["ko"]) for t in r["tiers"])
+	w("## 등급별 이름. 등급은 반 별 단위의 열 칸이다(Balance.TIER_ATK) — 0 이 0.5성, 9 가 5성.")
+	tier_ko = ", ".join('"%s성"' % (("%d" % ((ti + 1) // 2)) if ti % 2 else ("%.1f" % ((ti + 1) / 2)))
+			for ti in range(len(r["tiers"])))
 	w("const TIER_KO := [%s]" % tier_ko)
 	w("")
 
 	n_units = sum(len(t["units"]) for t in r["tiers"])
 	per = sorted({len(t["units"]) for t in r["tiers"]})
-	w("## 캐릭터 %d명(등급마다 %s). tier 는 Poker.Hand 값이다."
+	w("## 캐릭터 %d명(원화 격마다 %s)."
 	  % (n_units, "여덟" if per == [8] else "·".join(str(x) for x in per)))
+	w("##")
+	w("## ★ **tier 는 능력치가 아니다 — 그 원화가 그려진 격(그림 높이 h)일 뿐이다.**")
+	w("##   영웅의 등급은 캐릭터가 아니라 **영웅 한 장**이 갖는다(Run.heroes 의 tier).")
+	w("##   쉰 명 누구든 1성부터 5성까지 어느 등급으로든 나온다(Balance.TIER_ATK 의 ★).")
+	w("##   여기 tier 를 읽는 곳은 그림 크기와, 합성 전용 수호자가 빌려 입을 모습뿐이다.")
 	w("##")
 	w("## sc 는 **그림 크기 보정**이다. gen_art.py 는 그림을 등급마다 같은 높이로 저장하는데,")
 	w("## 그 높이는 지팡이·꼬리·회오리까지 포함한 **테두리 상자**의 높이다. 그래서 소품이 큰")
@@ -424,7 +426,7 @@ def main() -> int:
 	w("## 전에 탄이 나가서 몸짓과 사건이 따로 논다.")
 	w("const UNITS := [")
 	for ti, t in enumerate(r["tiers"]):
-		w("\t# --- %s ---" % t["ko"])
+		w("\t# --- 원화 %d격 (그림 높이 %dpx) ---" % (ti + 1, gen_art.unit_h(ti)))
 		for u in t["units"]:
 			anim = 'res://art/anim/%s/' % u["id"] if u.get("anim", False) else ""
 			mx, my, wind = muzzle_of(u, gen_art.unit_h(ti))

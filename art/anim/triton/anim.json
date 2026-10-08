@@ -2,7 +2,7 @@
   "name": "triton_roster_v1",
   "ko": "트리톤",
   "elem": "water",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
     "w": 256,
     "h": 256
@@ -17,8 +17,8 @@
   },
   "scale": 0.6331658291457286,
   "muzzle_at": {
-    "x": 68,
-    "y": -121
+    "x": 67,
+    "y": -105
   },
   "hit_ms": 416.66666666666663,
   "face": 1,
@@ -43,7 +43,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "782ae504a0d8520e72e564f650b1553ebaed3fda8ba767e221c5d6d321bd6382"
+      "sha256": "65c1c4b13172f875cf73a2f939cd790d31076bbd6898602cd73ac833a1d3f71f"
     },
     "attack": {
       "frames": 12,
@@ -67,7 +67,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "cf279c0c293079808ebc42b9f4576404bbbe9f4e6eb1c603941fd7ac70baf944",
+      "sha256": "b199022b498d4f28a085f25c77452ad288d48afd4e4162c749737cdeb0f5ea4b",
       "hit_frame": 5
     },
     "shot": {
@@ -89,140 +89,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/triton.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/triton.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        29,
         0,
+        307,
+        450
+      ],
+      [
+        393,
         0,
-        362,
-        405
+        666,
+        450
       ],
       [
-        362,
+        750,
         0,
-        724,
-        405
+        1020,
+        450
       ],
       [
-        724,
+        1116,
         0,
-        1086,
-        405
+        1384,
+        450
       ],
       [
-        1086,
-        0,
-        1448,
-        405
+        28,
+        450,
+        367,
+        819
       ],
       [
-        0,
-        405,
-        362,
-        771
+        391,
+        450,
+        730,
+        819
       ],
       [
-        362,
-        405,
-        724,
-        771
+        749,
+        450,
+        1105,
+        819
       ],
       [
-        724,
-        405,
-        1086,
-        771
+        1113,
+        450,
+        1421,
+        819
       ],
       [
-        1086,
-        405,
-        1448,
-        771
-      ],
-      [
-        0,
-        771,
-        362,
+        39,
+        819,
+        346,
         1086
       ],
       [
-        362,
-        771,
-        724,
+        386,
+        819,
+        704,
         1086
       ],
       [
-        724,
-        771,
-        1086,
+        750,
+        819,
+        1061,
         1086
       ],
       [
-        1086,
-        771,
-        1448,
+        1105,
+        819,
+        1416,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.5407608695652174,
-        "offset": [
-          22,
-          5
-        ]
-      },
-      {
-        "factor": 0.5407608695652174,
-        "offset": [
-          25,
-          5
-        ]
-      },
-      {
-        "factor": 0.5407608695652174,
-        "offset": [
-          28,
-          5
-        ]
-      },
-      {
-        "factor": 0.5407608695652174,
-        "offset": [
-          29,
-          5
-        ]
-      },
-      {
-        "factor": 0.5407608695652174,
-        "offset": [
-          31,
-          26
-        ]
-      },
-      {
-        "factor": 0.5407608695652174,
-        "offset": [
-          33,
-          26
-        ]
-      },
-      {
-        "factor": 0.5407608695652174,
+        "factor": 0.5335120643431636,
         "offset": [
           34,
-          26
+          -15
         ]
       },
       {
-        "factor": 0.5407608695652174,
+        "factor": 0.5335120643431636,
         "offset": [
           36,
-          26
+          -16
+        ]
+      },
+      {
+        "factor": 0.5335120643431636,
+        "offset": [
+          39,
+          -15
+        ]
+      },
+      {
+        "factor": 0.5335120643431636,
+        "offset": [
+          36,
+          -16
+        ]
+      },
+      {
+        "factor": 0.5335120643431636,
+        "offset": [
+          42,
+          28
+        ]
+      },
+      {
+        "factor": 0.5335120643431636,
+        "offset": [
+          45,
+          27
+        ]
+      },
+      {
+        "factor": 0.5335120643431636,
+        "offset": [
+          46,
+          27
+        ]
+      },
+      {
+        "factor": 0.5335120643431636,
+        "offset": [
+          45,
+          27
         ]
       }
+    ],
+    "source_muzzle": [
+      1028,
+      622
     ]
   },
   "portrait_id": "triton"

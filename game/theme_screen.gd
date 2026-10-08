@@ -99,7 +99,7 @@ func _draw_body_column(row: Dictionary, x: float, width: float) -> void:
 
 
 func _draw_monster_art(monster: Dictionary, box: Rect2) -> void:
-	var path := String(monster.get("art", ""))
+	var path := "res://art/models/monsters/%s.png" % String(monster.get("id", ""))
 	var texture := Art.tex(path)
 	if texture == null:
 		Look.draw_body(self, box.get_center(), 18, String(monster.get("body", "")))

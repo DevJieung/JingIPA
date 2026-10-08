@@ -2,7 +2,7 @@
   "name": "volcan_roster_v1",
   "ko": "볼칸",
   "elem": "fire",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
     "w": 256,
     "h": 256
@@ -17,8 +17,8 @@
   },
   "scale": 0.6105263157894737,
   "muzzle_at": {
-    "x": 53,
-    "y": -118
+    "x": 49,
+    "y": -93
   },
   "hit_ms": 666.6666666666666,
   "face": 1,
@@ -43,7 +43,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "039775011b9cd33de1593de3ea86ec18de81d3d41b08327876affc89c1fd6666"
+      "sha256": "0bfce609be19bac9ba647dd10bd072d5512d79afb72228e1bd9c5bed4fc8426f"
     },
     "attack": {
       "frames": 12,
@@ -67,7 +67,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "1529e99d782aa14c88eb234d6ea16dcb8158c4da2174b179cbe092df04ac2c80",
+      "sha256": "c77a832e3ef3626235c7ce440a47639447f41cac01745cddc228de5c8af54118",
       "hit_frame": 8
     },
     "effect": {
@@ -114,140 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/volcan.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/volcan.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        57,
         0,
+        340,
+        420
+      ],
+      [
+        407,
         0,
-        362,
-        370
+        693,
+        420
       ],
       [
-        362,
+        763,
         0,
-        724,
-        370
+        1049,
+        420
       ],
       [
-        724,
+        1135,
         0,
-        1086,
-        370
+        1415,
+        420
       ],
       [
-        1086,
-        0,
-        1448,
-        370
+        52,
+        420,
+        339,
+        802
       ],
       [
-        0,
-        370,
-        362,
-        738
+        408,
+        420,
+        732,
+        802
       ],
       [
-        362,
-        370,
-        724,
-        738
+        752,
+        420,
+        1119,
+        802
       ],
       [
-        724,
-        370,
-        1107,
-        738
+        1062,
+        420,
+        1421,
+        802
       ],
       [
-        1107,
-        370,
-        1448,
-        738
-      ],
-      [
-        0,
-        738,
-        362,
+        59,
+        802,
+        319,
         1086
       ],
       [
-        362,
-        738,
-        724,
+        388,
+        802,
+        718,
         1086
       ],
       [
-        724,
-        738,
-        1086,
+        746,
+        802,
+        1069,
         1086
       ],
       [
-        1086,
-        738,
-        1448,
+        1142,
+        802,
+        1423,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.5491329479768786,
+        "factor": 0.5039787798408488,
         "offset": [
-          28,
-          21
+          51,
+          15
         ]
       },
       {
-        "factor": 0.5491329479768786,
+        "factor": 0.5039787798408488,
         "offset": [
-          27,
-          21
+          50,
+          15
         ]
       },
       {
-        "factor": 0.5491329479768786,
+        "factor": 0.5039787798408488,
         "offset": [
-          32,
-          21
+          51,
+          15
         ]
       },
       {
-        "factor": 0.5491329479768786,
+        "factor": 0.5039787798408488,
         "offset": [
-          27,
-          21
+          52,
+          15
         ]
       },
       {
-        "factor": 0.5491329479768786,
+        "factor": 0.5039787798408488,
         "offset": [
-          29,
-          22
+          61,
+          37
         ]
       },
       {
-        "factor": 0.5491329479768786,
+        "factor": 0.5039787798408488,
         "offset": [
-          29,
-          22
+          55,
+          31
         ]
       },
       {
-        "factor": 0.5491329479768786,
+        "factor": 0.5039787798408488,
         "offset": [
-          34,
-          22
+          56,
+          37
         ]
       },
       {
-        "factor": 0.5491329479768786,
+        "factor": 0.5039787798408488,
         "offset": [
-          38,
-          22
+          15,
+          34
         ]
       }
+    ],
+    "source_muzzle": [
+      992,
+      606
     ]
   },
   "portrait_id": "volcan"

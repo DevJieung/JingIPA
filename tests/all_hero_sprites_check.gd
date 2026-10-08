@@ -12,11 +12,10 @@ func _ready() -> void:
 	Save._readonly = true
 	var contract: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(
 			"res://tests/all_hero_sprites_contract.json"))
-	var muzzle_map: Dictionary = {}
-	var muzzle_path := "res://art/animation/roster_v1/muzzle_map.json"
-	if FileAccess.file_exists(muzzle_path):
-		muzzle_map = JSON.parse_string(FileAccess.get_file_as_string(muzzle_path))
+	var chibi_contract: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(
+			"res://tests/chibi_sprites_contract.json"))
 	check(Roster.UNITS.size() == 50 and contract.size() == 50, "all 50 heroes covered")
+	check(chibi_contract.size() == 50, "all 50 chibi origins approved")
 	var only := PackedStringArray()
 	if arg("--only", "") != "":
 		only = arg("--only", "").split(",")
@@ -34,18 +33,15 @@ func _ready() -> void:
 		check(unit["elem"] == baseline["elem"] and kind == baseline["bullet"]
 				and unit["weapon"] == baseline["weapon"], id + ": identity and attack type preserved")
 		var meta := Anim._meta(String(unit["anim"]))
-		var source := "imagegen_element_aoe_v1" if id in APPROVED else "imagegen_roster_v1"
-		check(meta.get("source", "") == source, id + ": new approved art style installed")
+		var approved: Dictionary = chibi_contract.get(id, {})
+		check(meta.get("source", "") == "imagegen_chibi_v1", id + ": new approved art style installed")
 		check(absf(Anim.hit_time(unit) * 1000.0 - float(baseline["hit_ms"])) < 0.001,
 				id + ": attack release timing preserved")
 		check(is_equal_approx(float(meta.get("scale", 0)), float(baseline["scale"])),
 				id + ": world actor scale preserved")
-		check(meta.get("anchor", {}) == baseline["anchor"], id + ": planted actor origin preserved")
-		if id in APPROVED:
-			check(meta.get("muzzle_at", {}) == baseline["muzzle_at"], id + ": approved muzzle preserved")
-		else:
-			check(muzzle_map.has(id) and meta.get("muzzle_at", {}) == muzzle_map.get(id, {}),
-					id + ": release origin matches the artist's measured weapon tip")
+		check(meta.get("anchor", {}) == approved.get("anchor", {}), id + ": approved transparent padding origin")
+		check(meta.get("muzzle_at", {}) == approved.get("muzzle_at", {}),
+				id + ": release origin matches the artist's measured weapon tip")
 		_check_muzzle(unit, meta)
 		for name in ["idle", "attack", "shot"]:
 			var clip := Anim.clip(unit, name)
@@ -59,8 +55,8 @@ func _ready() -> void:
 			check(int(clip["tex"].get_width()) == count * int(clip["w"]),
 					id + ": " + name + " sheet divides into complete cells")
 			if name != "shot":
-				check(is_equal_approx(float(clip["ax"]) * float(clip["w"]), float(baseline["anchor"]["x"]))
-						and is_equal_approx(float(clip["ay"]) * float(clip["h"]), float(baseline["anchor"]["y"])),
+				check(is_equal_approx(float(clip["ax"]) * float(clip["w"]), float(approved["anchor"]["x"]))
+						and is_equal_approx(float(clip["ay"]) * float(clip["h"]), float(approved["anchor"]["y"])),
 						id + ": padded cell keeps the same pixel origin")
 			var looping: bool = name == "idle" or (name == "shot" and kind in TRAVELING)
 			check(bool(clip["loop"]) == looping, id + ": " + name + " loop behavior")

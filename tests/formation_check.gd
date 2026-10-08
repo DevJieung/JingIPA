@@ -35,8 +35,10 @@ func _ready() -> void:
 	legacy.erase("formation_v")
 	# Legacy stacks become separate cards; all 12 deployed heroes retain their posts.
 	legacy["heroes"][6]["n"] = 3
-	legacy["last"] = {"unit": legacy["heroes"][6]["u"], "hand": legacy["heroes"][6]["t"],
-		"cards": legacy["cards"].duplicate(), "key": [], "where": "field", "slot": 6, "n": 3}
+	# 그 영웅을 방금 의식으로 받은 것처럼 확정 결과를 붙인다(등급 · 별 수 · 별 자리).
+	var last_stars := clampi((int(legacy["heroes"][6]["t"]) + 1) / 2, Rite.MIN_STARS, Rite.MAX_STARS)
+	legacy["last"] = {"unit": legacy["heroes"][6]["u"], "tier": legacy["heroes"][6]["t"], "stars": last_stars,
+		"orbit": Array(Fixture.orbit_for(last_stars)), "joker": -1, "where": "field", "slot": 6, "n": 3}
 	check(Run.restore(legacy) and Run.heroes.size() == 12 and Run.bench.size() == 3, "기존 12인 저장 유지 및 중첩 카드를 전당에 분리")
 	check(Run.last_result["where"] == "field" and Run.heroes[Run.last_result["slot"]]["unit"]["id"] == legacy["last"]["unit"], "중첩 분리 후 기존 출전 영웅의 상세 위치 유지")
 	var all_before := {}
@@ -96,7 +98,7 @@ func _ready() -> void:
 		check(sim.heroes[0][key] == pre[key], "이동 중 전투 상태 유지: " + key)
 	check(sim.heroes[0]["pos"] == Balance.post_position(11), "시뮬레이터/총구 원점 동기화")
 	check(sim._pending.size() == 1 and sim.bullets.size() == 1, "진행 중 공격/탄 유지")
-	for key in ["gold", "kills", "lives", "rng", "cards", "phase"]:
+	for key in ["gold", "kills", "lives", "rng", "rite", "phase"]:
 		check(Save.cur_run[key] == baseline[key], "이동 저장이 탄 시작 스냅샷을 훼손하지 않음: " + key)
 	check(Save.cur_run["heroes"][0]["post"] == 11, "전투 배치만 자동 저장")
 	check(Run.restore(Save.cur_run) and Run.heroes[0]["post"] == 11, "전투 이어하기 위치 유지")
@@ -129,13 +131,15 @@ func _ready() -> void:
 	check(Run.heroes[moving]["post"] == 11, "정비 화면 실제 드래그")
 	fresh(3)
 	Run.phase = Run.Phase.DRAW
-	Run.confirm_hand()
+	Run.confirm_summon()
 	main.show_draw()
 	main.screen.set_process(false)
 	await paint(main.screen)
-	check(main.screen.state == DrawScreen.SWAP and main.screen.formation_tab, "포커 확정/복원 후 배치 팝업")
-	check(tap(main.screen, "post:4"), "포커 후 영웅 선택")
-	check(tap(main.screen, "post:11"), "포커 후 위치 변경")
+	check(main.screen.state == DrawScreen.SWAP and main.screen.formation_tab, "의식 확정/복원 후 배치 팝업")
+	check(zone_of(main.screen, "go").is_empty() and zone_of(main.screen, "rite:respin").is_empty()
+			and zone_of(main.screen, "rite:pull").is_empty(), "확정한 탄의 배치 판에는 의식 단추가 없음")
+	check(tap(main.screen, "post:4"), "의식 후 영웅 선택")
+	check(tap(main.screen, "post:11"), "의식 후 위치 변경")
 	check(main.screen.state == DrawScreen.SWAP, "배치 중 자동 전투 진입 없음")
 	check(tap(main.screen, "formation:roster"), "영웅 정보 탭 유지")
 	await paint(main.screen)
@@ -152,17 +156,17 @@ func _ready() -> void:
 	moving = 0
 	from = int(Run.heroes[moving]["post"])
 	# Click followed by click, then drag, then dropping outside the map.
-	var at := Balance.post_position(from) - Vector2(0, 24)
+	var at := battle.view_3d.project(Balance.post_position(from), 0.3)
 	mouse(battle, at, true)
 	mouse(battle, at, false)
-	var target := Balance.post_position(2) - Vector2(0, 24)
+	var target := battle.view_3d.project(Balance.post_position(2), 0.3)
 	mouse(battle, target, true)
 	mouse(battle, target, false)
 	check(Run.heroes[moving]["post"] == 2, "실전 클릭-클릭 이동")
 	mouse(battle, target, true)
-	mouse(battle, Balance.post_position(10), false)
+	mouse(battle, battle.view_3d.project(Balance.post_position(10), 0.3), false)
 	check(Run.heroes[moving]["post"] == 10, "실전 드래그 이동")
-	mouse(battle, Balance.post_position(10), true)
+	mouse(battle, battle.view_3d.project(Balance.post_position(10), 0.3), true)
 	mouse(battle, Vector2(1200, 600), false)
 	check(Run.heroes[moving]["post"] == 10, "맵 밖 드롭 취소")
 	main.menu.open()
@@ -179,7 +183,7 @@ func check_field_first_exchange() -> void:
 			main.screen.tab = "f"
 		else:
 			Run.phase = Run.Phase.DRAW
-			Run.confirm_hand()
+			Run.confirm_summon()
 			main.show_draw()
 		main.screen.set_process(false)
 		var view: FormationView = main.screen.formation

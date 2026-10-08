@@ -84,7 +84,7 @@ python3 tools/blender3d/spec.py --unit jokull            # 0단계 — 스펙 + 
 # 1단계 (선택) — 턴어라운드. ★GPU 는 반드시 gpujob 으로
 gpujob run b3d-turn python3 -m krea2 image "<턴어라운드 프롬프트>" --size 1536x512 -n 4 -o …
 
-cd /home/dgxmaruta/pjt/pocker
+cd /home/dgxmaruta/pjt/stellardefense
 env -u DISPLAY bl -b --factory-startup --python tools/blender3d/<후보>/build.py  -- --unit jokull
 env -u DISPLAY bl -b --factory-startup --python tools/blender3d/<후보>/render.py -- --unit jokull
 python3 tools/blender3d/post.py --unit jokull            # 6단계

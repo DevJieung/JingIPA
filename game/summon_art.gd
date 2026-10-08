@@ -1,39 +1,62 @@
 extends RefCounted
 class_name SummonArt
 
-## Dealer art is a portrait-only filtered texture; combat sprites keep Nearest.
+## 의식의 안내자(마녀) 원화는 초상화 전용 필터 텍스처다. 전투 스프라이트는 Nearest 를 지킨다.
 static var _dealer: CanvasTexture
-static var _source := Rect2()
 
-static func dealer(ci: CanvasItem, box: Rect2, time: float, message: String = "", casting: float = 0.0) -> void:
+## 마녀 원화(art/ui/dealer/witch.png, 1254x1254)에서 얼굴과 모자의 달 장식이 들어오는 원.
+## ★ 원화의 왼손에는 포커 시절의 트럼프 카드가 들려 있다. 원화를 고치지 않고 **얼굴 둘레만**
+##   둥글게 잘라 쓴다 — 카드를 든 손(x < 340)과 치켜든 손(x > 1000)은 원 밖이다.
+## ★ 이 원은 **두 구도에 다 맞춘 값**이다 — 2026-09-14 의 원화(얼굴이 위쪽 · 작다)와 2026-10-07 에
+##   작업 트리에 들어온 큰 머리 판(얼굴이 아래쪽 · 크다). 두 그림 모두 눈 · 입 · 모자의 달 장식이
+##   들어오고 카드는 안 들어온다(두 그림에 직접 대어 확인했다). 한쪽 그림에만 맞추면
+##   (예: 큰 머리 판의 얼굴에 맞춘 (628, 625) · 260) 다른 그림에서는 이마가 잘리고 가슴께가 들어온다.
+##   원화를 다시 그리면 이 두 줄을 그 그림에 맞춰 다시 잡고, tools/rite_design_review.py 의
+##   의식판 촬영에서 왼쪽 아래 메달을 눈으로 확인한다.
+const GUIDE_CENTER := Vector2(628, 512)
+const GUIDE_RADIUS := 300.0
+
+
+## 의식의 안내자 — 황동 테를 두른 둥근 초상. 그림이 없으면 별 하나짜리 빈 메달이다.
+static func guide(ci: CanvasItem, center: Vector2, radius: float, time: float = 0.0) -> void:
 	if _dealer == null:
 		var texture := Art.tex("res://art/ui/dealer/witch.png")
-		if texture == null:
-			return
-		var img := texture.get_image()
-		if img.is_compressed():
-			img.decompress()
-		_source = Rect2(img.get_used_rect())
-		_dealer = CanvasTexture.new()
-		_dealer.diffuse_texture = texture
-		_dealer.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	var motion := Vector2(sin(time * 2.6) * casting * 5, sin(time * 2) * 2)
-	var target := Art.fit_rect(_source.size, Rect2(box.position + motion, box.size))
-	ci.draw_texture_rect_region(_dealer, target, _source)
-	if casting > 0:
-		var hand := target.position + target.size * Vector2(0.85, 0.59)
-		seal(ci, hand, 25 + casting * 15, time * 2.2, Look.CRYSTAL, casting)
-	if not message.is_empty():
-		var bubble := Rect2(box.end.x + 16, box.position.y + 36, 350, 110)
-		Look.fill_round(ci, Rect2(bubble.position + Vector2(0, 4), bubble.size), 5, Color(0, 0, 0, 0.28))
-		Look.fill_round(ci, bubble, 5, Color("#958569"))
-		Look.fill_round(ci, bubble.grow(-1), 4, Color("#1d2c31"))
-		var tail := bubble.position + Vector2(0, 46)
-		ci.draw_colored_polygon(PackedVector2Array([tail + Vector2(1, -8), tail + Vector2(-13, 8), tail + Vector2(1, 7)]), Color("#958569"))
-		ci.draw_colored_polygon(PackedVector2Array([tail + Vector2(2, -5), tail + Vector2(-9, 6), tail + Vector2(2, 5)]), Color("#1d2c31"))
-		ci.draw_line(bubble.position + Vector2(19, 15), bubble.position + Vector2(53, 15), Look.GOLD_DEEP, 1)
-		ci.draw_colored_polygon(Look.star_points(bubble.position + Vector2(62, 15), 3, 0.4), Look.GOLD)
-		Look.wrap_text(ci, message, Rect2(bubble.position + Vector2(20, 23), bubble.size - Vector2(40, 28)), 20, Look.INK, true)
+		if texture != null:
+			_dealer = CanvasTexture.new()
+			_dealer.diffuse_texture = texture
+			_dealer.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	ci.draw_circle(center + Vector2(0, 3), radius + 5, Color(0, 0, 0, 0.35))
+	ci.draw_circle(center, radius + 5, Look.GOLD_DEEP)
+	ci.draw_circle(center, radius + 2, Look.BG_DEEP)
+	ci.draw_circle(center, radius, Color("#1b2a3a"))
+	if _dealer == null:
+		ci.draw_colored_polygon(Look.star_points(center, radius * 0.5), Look.GOLD)
+		return
+	var size := Vector2(_dealer.get_width(), _dealer.get_height())
+	var points := PackedVector2Array()
+	var uvs := PackedVector2Array()
+	for i in range(40):
+		var direction := Vector2.from_angle(TAU * float(i) / 40.0)
+		points.append(center + direction * radius)
+		uvs.append((GUIDE_CENTER + direction * GUIDE_RADIUS) / size)
+	ci.draw_polygon(points, PackedColorArray([Color.WHITE]), uvs, _dealer)
+	# 테 위의 작은 별 하나가 느리게 돈다 — 살아 있는 메달로 보이게 하는 한 점.
+	var orbit := center + Vector2.from_angle(time * 0.6 - PI * 0.5) * (radius + 3.5)
+	ci.draw_colored_polygon(Look.star_points(orbit, 5.5, 0.42), Look.BG_DEEP)
+	ci.draw_colored_polygon(Look.star_points(orbit, 4.0, 0.42), Look.GOLD)
+
+
+## 안내자의 말풍선. 꼬리는 아래(안내자 쪽)를 향한다. 글은 상자 안에서 줄을 바꾼다.
+static func bubble(ci: CanvasItem, box: Rect2, message: String, tail_x: float) -> void:
+	Look.fill_round(ci, Rect2(box.position + Vector2(0, 4), box.size), 5, Color(0, 0, 0, 0.28))
+	Look.fill_round(ci, box, 5, Color("#958569"))
+	Look.fill_round(ci, box.grow(-1), 4, Color("#1d2c31"))
+	var tail := Vector2(clampf(tail_x, box.position.x + 20, box.end.x - 20), box.end.y)
+	ci.draw_colored_polygon(PackedVector2Array([tail + Vector2(-9, -1), tail + Vector2(9, -1), tail + Vector2(0, 12)]), Color("#958569"))
+	ci.draw_colored_polygon(PackedVector2Array([tail + Vector2(-7, -2), tail + Vector2(7, -2), tail + Vector2(0, 9)]), Color("#1d2c31"))
+	ci.draw_line(box.position + Vector2(14, 12), box.position + Vector2(44, 12), Look.GOLD_DEEP, 1)
+	ci.draw_colored_polygon(Look.star_points(box.position + Vector2(53, 12), 3, 0.4), Look.GOLD)
+	Look.wrap_text(ci, message, Rect2(box.position + Vector2(14, 20), box.size - Vector2(28, 26)), 19, Look.INK, true)
 
 
 static func seal(ci: CanvasItem, at: Vector2, radius: float, time: float, color: Color, alpha: float = 1) -> void:
@@ -60,13 +83,8 @@ static func hero_info(ci: CanvasItem, unit: Dictionary, tier: int, box: Rect2,
 	Look.text_left(ci, Vector2(element_x + 30, y + 28), element_label, 22, Balance.elem_color(element))
 	var concept := I18n.hero_concept(String(unit.get("base_id", unit.get("id", ""))))
 	Look.wrap_text(ci, concept, Rect2(x, y + 69, box.size.x, 68), 22, Look.INK_DIM, true)
-	var value: Dictionary = hero.get("value", {})
-	if not value.is_empty():
-		Look.text_box(ci, Rect2(x, y + 129, box.size.x, 30), Poker.detail_label(value), 18, Look.CRYSTAL, HORIZONTAL_ALIGNMENT_LEFT)
 	if bool(unit.get("fusion_only", false)):
 		Look.text_box(ci, Rect2(x, y + 210, box.size.x, 30), "합성 전용 · 각성 수호자", 20, Look.GOLD, HORIZONTAL_ALIGNMENT_LEFT)
-	elif not value.is_empty():
-		Look.text_box(ci, Rect2(x, y + 210, box.size.x, 30), "문장 위력 x%.3f" % float(value.get("value_mult", 1.0)), 20, Look.CRYSTAL, HORIZONTAL_ALIGNMENT_LEFT)
 	var chips := trait_labels(unit)
 	var chip_x := x
 	var chip_y := y + 166

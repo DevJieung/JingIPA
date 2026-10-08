@@ -2,10 +2,10 @@
   "name": "blank_aoe_v1",
   "ko": "블랭크",
   "elem": "none",
-  "source": "imagegen_element_aoe_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
-    "w": 256,
-    "h": 256
+    "w": 320,
+    "h": 320
   },
   "static": {
     "w": 74,
@@ -17,18 +17,12 @@
   },
   "scale": 0.65625,
   "muzzle_at": {
-    "x": 19,
-    "y": -119
+    "x": 52,
+    "y": -109
   },
   "hit_ms": 500.0,
   "face": 1,
-  "fixed_feet": true,
-  "foot_pin_box": [
-    72,
-    202,
-    184,
-    229
-  ],
+  "fixed_feet": false,
   "palette_colors": 96,
   "clips": {
     "idle": {
@@ -46,10 +40,10 @@
       "total_ms": 666.6666666666666,
       "loop": true,
       "cell": {
-        "w": 256,
-        "h": 256
+        "w": 320,
+        "h": 320
       },
-      "sha256": "2e8782f194777e27d2a0bdddbbaf98da926ba90943ea77642802a327ecd5c705"
+      "sha256": "091c9e93f1429751682a54fdac38adb36c7768aa1ae2d3cc1aa5d603ffb1232b"
     },
     "attack": {
       "frames": 12,
@@ -70,10 +64,10 @@
       "total_ms": 1000.0,
       "loop": false,
       "cell": {
-        "w": 256,
-        "h": 256
+        "w": 320,
+        "h": 320
       },
-      "sha256": "5c4749e12b806cc9eb56d823c105ab265cc730536b852384251ff25e053e90cb",
+      "sha256": "0f4eacf9f43bd3b69d169deb46750ad8e5cad61324cb1f505cd5cbb79d594879",
       "hit_frame": 6
     },
     "effect": {
@@ -120,82 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/element_aoe_v1/source/blank.png",
-    "method": "image_gen source > keyed matte > aligned native cells > shared palette > pinned boots",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/blank.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        36,
         0,
+        296,
+        385
+      ],
+      [
+        396,
         0,
-        362,
-        362
+        657,
+        385
       ],
       [
-        362,
+        758,
         0,
-        724,
-        362
+        1019,
+        385
       ],
       [
-        724,
+        1121,
         0,
-        1086,
-        362
+        1382,
+        385
       ],
       [
-        1086,
-        0,
-        1448,
-        362
+        36,
+        385,
+        307,
+        747
       ],
       [
-        0,
-        362,
-        362,
-        724
+        397,
+        385,
+        671,
+        747
       ],
       [
-        362,
-        362,
-        724,
-        724
+        732,
+        385,
+        1105,
+        747
       ],
       [
-        724,
-        362,
-        1086,
-        724
+        1121,
+        385,
+        1382,
+        747
       ],
       [
-        1086,
-        362,
-        1448,
-        724
-      ],
-      [
-        0,
-        724,
-        362,
+        83,
+        747,
+        279,
         1086
       ],
       [
-        362,
-        724,
-        724,
+        370,
+        747,
+        716,
         1086
       ],
       [
-        724,
-        724,
-        1086,
+        735,
+        747,
+        1073,
         1086
       ],
       [
-        1086,
-        724,
-        1448,
+        1107,
+        747,
+        1420,
         1086
       ]
+    ],
+    "source_transforms": [
+      {
+        "factor": 0.5765765765765766,
+        "offset": [
+          40,
+          2
+        ]
+      },
+      {
+        "factor": 0.5765765765765766,
+        "offset": [
+          39,
+          2
+        ]
+      },
+      {
+        "factor": 0.5765765765765766,
+        "offset": [
+          39,
+          2
+        ]
+      },
+      {
+        "factor": 0.5765765765765766,
+        "offset": [
+          39,
+          2
+        ]
+      },
+      {
+        "factor": 0.5765765765765766,
+        "offset": [
+          40,
+          15
+        ]
+      },
+      {
+        "factor": 0.5765765765765766,
+        "offset": [
+          40,
+          15
+        ]
+      },
+      {
+        "factor": 0.5765765765765766,
+        "offset": [
+          40,
+          15
+        ]
+      },
+      {
+        "factor": 0.5765765765765766,
+        "offset": [
+          39,
+          15
+        ]
+      }
+    ],
+    "source_muzzle": [
+      975,
+      558
     ]
   },
   "portrait_id": "blank"

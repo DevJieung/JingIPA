@@ -10,7 +10,7 @@
   },
   "scale": 0.3023255813953488,
   "movement": "walk",
-  "source": "Krea 2 Turbo + MiniMax H3",
+  "source": "imagegen_chibi_v1",
   "clips": {
     "move": {
       "frames": 13,
@@ -29,19 +29,91 @@
         83.33333333333333,
         83.33333333333333
       ],
-      "loop": true
+      "loop": true,
+      "cell": {
+        "w": 192,
+        "h": 192
+      },
+      "sha256": "e5cfaa8de4d6115ef121ac35026626924e97f95761427da437a96fcc2337205e"
     }
   },
   "qc": {
     "canvas_clipping": false,
     "source_clipping": false,
-    "unique_poses": 13,
+    "unique_poses": 8,
     "forward_only": true,
     "fixed_scale": true,
-    "foot_patches": false,
-    "translation_range": [
+    "foot_patches": false
+  },
+  "palette_colors": 96,
+  "readability": {
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/ember_imp.png",
+    "source_cells": [
+      [
+        25,
+        0,
+        377,
+        512
+      ],
+      [
+        426,
+        0,
+        763,
+        512
+      ],
+      [
+        803,
+        0,
+        1135,
+        512
+      ],
+      [
+        1172,
+        0,
+        1510,
+        512
+      ],
+      [
+        30,
+        512,
+        388,
+        1024
+      ],
+      [
+        421,
+        512,
+        758,
+        1024
+      ],
+      [
+        794,
+        512,
+        1134,
+        1024
+      ],
+      [
+        1168,
+        512,
+        1518,
+        1024
+      ]
+    ],
+    "phase_map": [
+      0,
+      0,
       1,
-      6
-    ]
+      1,
+      2,
+      3,
+      3,
+      4,
+      4,
+      5,
+      6,
+      6,
+      7
+    ],
+    "method": "imagegen chibi movement repaint; alpha threshold, extraction, nearest sampling and shared palette only"
   }
 }

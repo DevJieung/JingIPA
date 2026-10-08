@@ -43,17 +43,21 @@ func _test_storage() -> void:
 func _test_messages() -> void:
 	I18n.set_locale("en")
 	var examples := {
-		"올인 디펜스": "All-in Defense",
+		"스텔라 디펜스": "Stellar Defense",
 		"이어하기 — 25탄": "Continue — Wave 25",
-		"교체 (무료 3)": "Redraw (3 free)",
-		"교체 123G": "Redraw 123G",
+		# 별맞춤 의식의 단추 — 남은 무료 횟수 칸과, 등급 이름이 끼워진 소환 단추.
+		"무료 3": "Free 3",
+		"5성 소환": "Summon 5-Star",
+		"2.5성 소환": "Summon 2.5-Star",
+		"별 끌어오기": "Pull a star",
 		"불 속성이 많이 등장합니다. 물 영웅을 준비하세요.": "Many Fire enemies ahead. Prepare Water heroes.",
 		"명중 시 2.0초 동안 이동속도 22% 감소": "Hits slow by 22% for 2.0s",
 		"명중 시 3.0초 화상 · 초당 타격 피해의 18%": "Burns for 3.0s · 18% of hit damage per second",
-		"최고 25탄   ·   최고 족보 스트레이트 플러시   ·   만난 영웅 10 / 50": "Best: Wave 25   ·   Best hand: Straight Flush   ·   Heroes found: 10 / 50",
+		"최고 등급": "Best rank",
+		"문 안의 별 3개 = 3성": "Stars in the gate: 3 = 3-Star",
 		"효과음  켜짐": "Sound  On",
 		"배경음악  꺼짐": "Music  Off",
-		"Lv 0 / 4 · 다음 2번": "Lv 0 / 4 · Next: 2 redraws",
+		"Lv 0 / 4 · 다음 2번": "Lv 0 / 4 · Next: 2 re-spins",
 		"능력치": "Upgrades",
 		"선택됨": "Selected",
 		"최종 획득 Gold": "Gold earned",
@@ -62,6 +66,16 @@ func _test_messages() -> void:
 		var result := I18n.t(source)
 		check(result == examples[source], "영문 표시: %s -> %s" % [source, result])
 		check(I18n.t(result) == result, "측정·그리기의 반복 번역 결과 유지")
+	# 등급 이름(0.5성 … 5성) — 포커 시절의 등급 이름 열 개가 서 있던 자리다. 영어 화면에 한글
+	# 「성」이 남으면 안 되고, 별 수는 그대로 보여야 한다. 문장에 끼워 넣어도 같아야 한다.
+	for tier in range(Roster.TIER_KO.size()):
+		var name := String(Roster.TIER_KO[tier])
+		var shown := I18n.t(name)
+		check(I18n._hangul.search(shown) == null and shown.contains(Rite.star_text(tier)),
+				"영문 등급 이름: %s -> %s" % [name, shown])
+		check(I18n.t(shown) == shown, "등급 이름의 반복 번역 결과 유지: " + shown)
+		var summon := I18n.t("%s 소환" % name)
+		check(I18n._hangul.search(summon) == null and summon.contains(shown), "영문 소환 단추: %s -> %s" % [name, summon])
 	for unit in Roster.UNITS:
 		check(I18n.hero_name(unit["id"]) == unit["en"], "영문 영웅 이름 " + unit["id"])
 		check(not I18n.hero_concept(unit["id"]).is_empty(), "영문 컨셉 누락 " + unit["id"])
@@ -98,14 +112,14 @@ func _test_controls() -> void:
 	await paint(main.menu)
 	check(tap(main.menu, "language:en"), "공통 상단 Eng 선택")
 	check(I18n.locale == "en" and Save.language == "en", "영어 선택 즉시 적용 및 설정 보존")
-	check(get_window().title == "All-in Defense", "영문 창 이름 반영")
+	check(get_window().title == "Stellar Defense", "영문 창 이름 반영")
 	await paint(main.menu)
 	check(tap(main.menu, "language:en") and I18n.locale == "en", "선택된 영어를 다시 눌러도 영어 유지")
 	await paint(main.screen)
 	await paint(main.menu)
 	check(tap(main.menu, "language:ko"), "공통 상단 Kor 선택")
 	check(I18n.locale == "ko" and Save.language == "ko", "한국어 선택 즉시 적용")
-	check(get_window().title == "올인 디펜스", "한국어 창 이름 반영")
+	check(get_window().title == "스텔라 디펜스", "한국어 창 이름 반영")
 	Fixture.prepare(12, 15092026)
 	Run.phase = Run.Phase.SHOP
 	main._swap(ShopScreen.new())

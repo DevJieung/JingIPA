@@ -159,8 +159,8 @@ func _run() -> void:
 	Save.clear_run()
 	main._swap(TitleScreen.new())
 	await frames(4)
-	card_t = "올인 디펜스"
-	card_s = "트럼프 다섯 장으로 영웅을 뽑아 몬스터를 막는다"
+	card_t = "스텔라 디펜스"
+	card_s = "별을 맞춰 영웅을 부르고 몬스터를 막는다"
 	await _ramp("card_a", 1.0, 0.7)
 	await _hold(1.9)
 	await _ramp("card_a", 0.0, 0.5)
@@ -179,34 +179,34 @@ func _run() -> void:
 			"열 탄의 이름 · 다섯 몸의 등장 확률 · 보스 · 약점 2배와 면역이 이 한 장에",
 			3.2, 3.4)
 
-	# ── 2. 카드 다섯 장 · 리롤 ──────────────────────────────────────────
+	# ── 2. 별맞춤 의식 · 다시 돌리기 ────────────────────────────────────
 	await _cut_out()
 	Fixture.prepare(12, SEED)
 	Run.begin_draw()
 	main._swap(DrawScreen.new())
 	await frames(4)
 	await _cut_in()
-	await _say(3, "카드 다섯 장을 받는다",
-			"맘에 안 드는 카드는 한 번 공짜로 · 그 뒤로는 15 → 30 → 60 골드")
+	await _say(3, "별 다섯이 수정을 돈다",
+			"빛의 문 안에 멈춘 별의 수가 곧 등급 · 문 밖의 별만 다시 돌린다")
 	await _hold(2.6)
 	await _hush()
-	# 두 장을 실제로 다시 뽑는다 — 카드가 뒤집히는 것이 이 게임의 첫 손맛이다.
-	_tap("re1")
-	await _hold(1.3)
-	_tap("re3")
+	# 문 밖의 별을 실제로 다시 돌린다 — 별이 문 앞에서 기어가다 멈추는 것이 이 게임의 첫 손맛이다.
+	_tap("rite:respin")
+	await _hold(1.8)
+	_tap("rite:respin")
 	await _hold(2.2)
 
-	# ── 3. 족보 확정 연출 (로열) ────────────────────────────────────────
+	# ── 3. 확정 연출 (5성) ──────────────────────────────────────────────
 	await _cut_out()
 	Fixture.prepare(12, SEED)
 	Run.begin_draw()
-	Fixture.stack(9)
+	Fixture.stack(Rite.MAX_STARS)
 	var d := DrawScreen.new()
 	main._swap(d)
 	await frames(4)
 	await _cut_in()
-	await _say(4, "족보가 곧 등급이다",
-			"로열 플러시 — 열 등급의 맨 위. 그 등급의 다섯 중 하나가 무작위로 나온다")
+	await _say(4, "문 안의 별이 곧 등급이다",
+			"다섯 별이 모두 들면 5성 — 쉰 명 중 하나가 그 등급으로 나온다")
 	await _hold(2.0)
 	await _hush()
 	d._confirm()
@@ -216,8 +216,8 @@ func _run() -> void:
 	await _cut_out()
 	Fixture.prepare(24, SEED)
 	Run.begin_draw()
-	Run.confirm_hand()
-	# ★ `confirm_hand()` 이 phase 를 SWAP 으로 올리고 `last_result` 를 남기므로,
+	Run.confirm_summon()
+	# ★ `confirm_summon()` 이 phase 를 SWAP 으로 올리고 `last_result` 를 남기므로,
 	#   DrawScreen 이 스스로 **편성 판부터** 연다(draw_screen._ready).
 	main._swap(DrawScreen.new())
 	await frames(4)
@@ -230,7 +230,7 @@ func _run() -> void:
 	await _cut_out()
 	Fixture.prepare(16, SEED)
 	Run.begin_draw()
-	Run.confirm_hand()
+	Run.confirm_summon()
 	PlayPolicy.arrange(Run)
 	Run.wave = 16
 	main._swap(BattleScreen.new())
@@ -245,7 +245,7 @@ func _run() -> void:
 	await _cut_out()
 	Fixture.prepare(40, SEED)
 	Run.begin_draw()
-	Run.confirm_hand()
+	Run.confirm_summon()
 	Run.heroes.clear()
 	Run.bench.clear()
 	# 장판(광역) 영웅만 넷 세운다 — 원이 여럿 깔리는 것이 이 장의 요점이다.
@@ -269,7 +269,7 @@ func _run() -> void:
 	await _cut_out()
 	Fixture.prepare(30, SEED)
 	Run.begin_draw()
-	Run.confirm_hand()
+	Run.confirm_summon()
 	PlayPolicy.arrange(Run)
 	Run.wave = 30
 	main._swap(BattleScreen.new())
@@ -299,7 +299,7 @@ func _run() -> void:
 
 	# ── 닫는 판 ─────────────────────────────────────────────────────────
 	await _cut_out()
-	card_t = "올인 디펜스"
+	card_t = "스텔라 디펜스"
 	card_s = "Godot 4.7 · 안드로이드 · 캐릭터 50 · 몬스터 25 · 테마 50 · 100탄"
 	await _ramp("card_a", 1.0, 0.7)
 	await _hold(2.8)

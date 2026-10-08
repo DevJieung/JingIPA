@@ -132,8 +132,8 @@ func _preload_kind() -> String:
 		return "fusion_undo"
 	if Run.reward_allowed("continue"):
 		return "continue"
-	# Prepare the first card ad while the title is open, before the first draw.
-	if Run.can_choose_card(0) or not Run.running:
+	# Prepare the star-pull ad while the title is open, and while a rite is still open.
+	if (Run.running and Run.phase == Run.Phase.DRAW) or not Run.running:
 		return "card"
 	return ""
 
@@ -194,7 +194,7 @@ func request_reward(kind: String, data: Dictionary = {}) -> bool:
 	_request["data"]["seed"] = Run.run_seed
 	_request["data"]["wave"] = Run.wave
 	if kind == "card":
-		_request["data"]["revision"] = Run.rerolled[int(data["slot"])]
+		_request["data"]["revision"] = Run.rite_revision()
 	busy = true
 	_awarded = false
 	_request_deadline = Time.get_ticks_msec() + REQUEST_TIMEOUT_MSEC
@@ -358,8 +358,10 @@ func _finish(rewarded: bool, text: String) -> void:
 	notify(text)
 	_reward_notice = rewarded
 	if rewarded:
-		# 카드 복구·부활은 전용 획득 연출이 완료 사실을 안내한다.
-		_reward_notice = kind not in ["continue", "fusion_undo"]
+		# 합성 복구·부활·별 끌어오기는 전용 연출이 완료 사실을 안내한다.
+		# ★ 별 끌어오기(card)에 일반 알림을 띄우면 3초 동안 의식판의 문 꼭대기를 덮어서,
+		#   방금 끌려온 별이 문 안에 서는 바로 그 장면이 가려진다.
+		_reward_notice = kind not in ["continue", "fusion_undo", "card"]
 		_message_left = 3.0 if _reward_notice else 0.0
 	completed.emit(kind, rewarded)
 

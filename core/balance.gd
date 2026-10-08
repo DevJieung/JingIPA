@@ -109,22 +109,50 @@ static func spawn_window(w: int) -> float:
 	return 72.0 if is_boss_wave(w) else SPAWN_WINDOW
 
 # --------------------------------------------------------------------------- #
-# 족보 등급별 기본 능력치 — 인덱스가 Poker.Hand 값과 같다
+# 등급별 기본 능력치 — 등급은 **반 별 단위의 열 칸**이다
+#   0 = 0.5성 · 1 = 1성 · 2 = 1.5성 · 3 = 2성 … 9 = 5성   (별 수 = (등급 + 1) / 2)
 #   atk   한 대 데미지
 #   rate  초당 공격 횟수
-# 등급 하나 올라갈 때 DPS 가 약 1.6배씩 오른다. 이 배수를 키우면 로열 한 방에
-# 게임이 끝나 버리고, 줄이면 족보를 맞춘 보람이 없어진다.
+#
+# ★ **캐릭터에는 등급이 없다. 등급은 영웅 한 장이 갖는다.**
+#   사용자가 정한 것(2026-10-07): 「캐릭터별로 이미 몇 성인지 정해 두지 말고, 캐릭터마다
+#   1~5성이 모두 존재하게. 1성이 기본이고 5성으로 갈수록 같은 캐릭터인데 더 강해지게」.
+#   그래서 쉰 명 누구든 어느 등급으로든 나온다 — 같은 림네라도 1성 림네와 5성 림네가 있다.
+#   캐릭터 표의 `tier` 는 이제 **그 원화가 그려진 격**(그림 높이)일 뿐이고 능력치와 무관하다.
+# ★ 뽑기(별맞춤 의식 · core/rite.gd)는 **온 별만** 준다 — 1성(1) · 2성(3) · 3성(5) ·
+#   4성(7) · 5성(9). 사이의 반 별(0.5성 단위)은 전투 중 승급과 합성으로만 오른다.
+#   0.5성(0)은 새 판에서는 나오지 않는다(옛 저장과 표의 자리를 지키려고 남겨 둔 칸이다).
+# 등급 하나(반 별) 올라갈 때 DPS 가 약 1.73배씩, 별 하나에 세 배씩 오른다. 이 배수를
+# 키우면 5성 한 장에 게임이 끝나 버리고, 줄이면 별을 맞춘 보람이 없어진다.
 # --------------------------------------------------------------------------- #
-const TIER_ATK  := [5.0, 8.0, 13.0, 21.0, 33.0, 52.0, 82.0, 128.0, 200.0, 320.0]
+## ★ **별 하나에 세 배다**(반 별에 약 1.73배). 2026-10-07 에 다시 잡은 표다:
+##     1성 6 · 2성 18 · 3성 54 · 4성 162 · 5성 486   (초당 피해 = atk x rate)
+##   - **5성은 포커 시절의 최고 등급(로열 플러시 480)과 같은 세기**이고,
+##     **1성은 그때의 최저 등급(하이카드에 문장 값을 얹은 약 6)과 같다.**
+##     예전 열 등급이 걸쳐 있던 폭을 다섯 별이 그대로 덮는다 — 그래서 별 하나의 값이 크다.
+##   - 포커 시절에는 영웅마다 문장 값(x1.00~1.30)이 따로 곱해졌다. 그 곱은 없어졌고
+##     표가 그 몫을 품는다.
+##   - 실측(자동 플레이 24판 · 같은 씨앗 · 12판씩 두 묶음): 포커 규칙의 도달 중간값
+##     82 · 78탄(최소 59) / 이 표와 지금 문 너비 82 · 85탄(최소 75). 1~6탄 손실은 둘 다 0.
+##     난이도는 그대로 두고 뽑기만 바꾼 것이다 — 클리어는 양쪽 다 0판이다.
+const TIER_ATK  := [3.5, 5.7, 9.4, 15.7, 26.0, 43.2, 72.0, 120.0, 200.0, 324.0]
 const TIER_RATE := [1.00, 1.05, 1.10, 1.15, 1.20, 1.25, 1.30, 1.35, 1.40, 1.50]
+## 가장 높은 등급(5성). 이 위로는 등급이 아니라 각성 위력이 오른다.
+const TIER_MAX := 9
+## 이 등급부터 소환 연출이 화려해진다 — 4성 이상.
+## ★ 사용자가 포커 시절에 정한 것이 「풀하우스 이상이면 화려하게」(열 등급 중 위 넷)였다.
+##   의식은 온 별만 주므로 다섯 등급 중 위 둘(4성 · 5성)이 그 자리다.
+const SHOWY_TIER := 7
 # --------------------------------------------------------------------------- #
 ## 사거리는 영웅 발판에서 몬스터 중심까지의 거리다.
 ## 무기·공격 성향·희귀도에 따라 달라지며 공격력 강화로 늘어나지 않는다.
 const WEAPON_RANGE := {"sword": 170.0, "whip": 205.0, "deck": 235.0, "gun": 285.0, "bow": 320.0}
 const PROFILE_RANGE := {"rapid": 0.93, "balance": 1.0, "heavy": 0.97, "sniper": 1.10}
 
+## ★ `tier` 는 **영웅 한 장의 등급**이다. 캐릭터 표의 tier(원화 격)를 넣으면 안 된다 —
+##   등급을 안 주면 1성으로 친다(도감처럼 영웅 없이 캐릭터만 보여 주는 자리).
 static func attack_range(unit: Dictionary, tier: int = -1) -> float:
-	var rank := clampi(int(unit.get("tier", 0)) if tier < 0 else tier, 0, 9)
+	var rank := clampi(tier if tier >= 0 else 1, 0, TIER_MAX)
 	var base: float = WEAPON_RANGE.get(String(unit.get("weapon", "deck")), 235.0)
 	var multiplier: float = PROFILE_RANGE.get(String(unit.get("profile", "balance")), 1.0)
 	return clampf(roundf((base + rank * 6.0) * multiplier), 160.0, 400.0)
@@ -676,13 +704,47 @@ static func post_position(post: int) -> Vector2:
 	return POST_POINTS[clampi(post, 0, POST_SLOTS - 1)]
 
 # --------------------------------------------------------------------------- #
-# 카드 리롤 — "한 번 리롤한 카드는 추가 골드를 내야 더 리롤할 수 있다"
+# 별맞춤 의식 — 영웅을 뽑는 규칙의 숫자 (규칙 자체는 core/rite.gd)
 # --------------------------------------------------------------------------- #
-## 카드 한 장당 무료 교체 횟수(기본). 상점에서 늘릴 수 있다.
+## 한 궤도를 나눈 칸 수. 별이 멈춘 자리는 0..RITE_SLOTS-1 이다.
+const RITE_SLOTS := 360
+## 궤도마다의 「빛의 문」 너비(칸). 안쪽 궤도부터다. **문 너비 / RITE_SLOTS 가 곧 그 별이
+## 한 번 돌아서 문 안에 멈출 확률**이고, 화면은 이 너비 그대로 문을 그린다.
+##
+## ★ 빛기둥은 폭이 일정해서 바깥 궤도일수록 문이 좁다 — 안쪽 별은 잘 들고 바깥 별은
+##   어렵다. 그래서 2성은 흔하고 5성은 귀하다.
+## ★ 0번(가장 안쪽)은 수정이 붙드는 별이라 **언제나 문 안**에 선다(RITE_ANCHORED).
+##   그 칸의 값은 확률이 아니라 그 별이 문 안에서 설 수 있는 폭이다.
+## ★ **이 줄을 건드리면 반드시 tests/rite_check 와 tests/balance_check 를 다시 돌려라.**
+##   영웅이 얼마나 센 채로 나오는가가 통째로 여기서 정해진다.
+## ★ **출시 뒤에 바꿀 때는 Run.SAVE_VERSION 도 올려라.** 하던 판은 별이 선 「칸 번호」를
+##   그대로 담고 있어서, 문 너비가 달라지면 같은 저장이 다른 별 수로 읽힌다(0번 궤도를
+##   좁히면 붙들린 별이 문 밖에 선 꼴이 되어 그 저장이 통째로 거절된다).
+## ★ 지금 값은 25% · 15% · 7.5% · 2.5% 다. 자동 플레이 24판에서 뽑힌 별의 비율이
+##   1성 5% · 2성 23% · 3성 41% · 4성 24% · 5성 6% 였다(무료 횟수 강화와 유료 다시 돌리기를
+##   다 쓴 값이라 `Rite.odds()` 의 기본 줄보다 훨씬 후하다 — 처음 열 탄은 1성 18% ·
+##   2성 48% 쯤이다). 문을 넓히면 5성이 흔해진다: 30% · 20% · 12.5% · 7.5% 로 두었을 때
+##   31탄 뒤로 뽑기 셋 중 하나가 5성이었다.
+const RITE_GATE := [120, 90, 54, 27, 9]
+## 수정이 붙드는 별의 수(안쪽부터). 이 별들은 다시 돌 일이 없다 — 최소 1성이 여기서 나온다.
+const RITE_ANCHORED := 1
+## **판의 첫 의식**은 문 안에 별을 이만큼 세운 채로 열린다(안쪽 별부터).
+##
+## ★ 1탄에는 영웅이 그 한 명뿐이다. 쉰 명 누구든 1성으로 나올 수 있게 되면서, 사거리가
+##   짧고 한 대가 느린 캐릭터(검 · 일격)가 1성으로 혼자 서는 판이 생겼다 — 그 판은 1탄부터
+##   크리스탈이 깨진다(자동 플레이 12판에서 1탄 평균 -0.17~-0.33). 게임을 켜자마자 벌을
+##   받는 셈이라, 첫 영웅만은 2성을 보장한다. 2탄부터는 보정이 없다.
+const RITE_FIRST_STARS := 2
+## 탄마다 무료로 다시 돌리는 횟수(기본). 상점에서 늘릴 수 있다.
+## ★ 한 번 다시 돌리면 **문 밖의 별 전부**가 돈다. 문 안에 든 별은 잠긴다.
 const FREE_REROLL := 1
-## 공짜를 다 쓴 뒤 n 번째 유료 리롤의 값 (n 은 1부터).
+## 공짜를 다 쓴 뒤 n 번째 유료 다시 돌리기의 값 (n 은 0부터). 두 배씩 오른다.
+## ★ 지수에 뚜껑을 씌운다. 두 배가 예순 번쯤 쌓이면 정수 범위를 넘는데, 손으로 고친
+##   저장 파일이 그 횟수를 들고 올 수 있다 — 마흔 번이면 이미 누구도 낼 수 없는 값이다.
+const REROLL_COST := 30.0
+const REROLL_DOUBLINGS_MAX := 40
 static func reroll_cost(paid_times: int) -> int:
-	return int(15 * pow(2.0, float(paid_times)))
+	return int(REROLL_COST * pow(2.0, float(clampi(paid_times, 0, REROLL_DOUBLINGS_MAX))))
 
 # --------------------------------------------------------------------------- #
 # 상점 1 — 값이 오르는 능력치. lv 은 지금까지 산 횟수.
@@ -704,7 +766,7 @@ const UPGRADES := [
 	{"id": "crit",   "ko": "치명타 확률", "desc": "치명타 발생 확률",        "show": "pct",   "base": 60,  "grow": 1.40, "cap": 15},
 	{"id": "critx",  "ko": "치명타 배율", "desc": "치명타 피해 배율",       "show": "x",     "base": 70,  "grow": 1.42, "cap": 20},
 	{"id": "gold",   "ko": "골드 획득량",   "desc": "몬스터 처치 골드",   "show": "mult",  "base": 55,  "grow": 1.45, "cap": 0},
-	{"id": "reroll", "ko": "카드 무료 교체 횟수",   "desc": "카드마다 무료 교체",        "show": "count", "base": 100, "grow": 1.65, "cap": 4},
+	{"id": "reroll", "ko": "무료 다시 돌리기",   "desc": "별맞춤 의식의 무료 횟수",        "show": "count", "base": 100, "grow": 1.65, "cap": 4},
 	# ★ 제한 시간이 없어졌으므로(크리스탈이 곧 목숨이다) 그 자리에 「길」을 산다.
 	#   몬스터가 느려지면 그만큼 오래 얻어맞는다 — 예전 「제한 시간 +2초」와 같은 자리다.
 	{"id": "mire",   "ko": "몬스터 이동속도",    "desc": "몬스터의 이동속도",         "show": "slow",  "base": 95,  "grow": 1.55, "cap": 5},
@@ -788,7 +850,7 @@ const PASSIVES := [
 	{"id": "scope", "ko": "조준경", "desc": "치명타 확률 x0.10 추가", "cost": 270, "rank": 1, "icon": "eye", "tint": "#4AA3FF", "crit": 0.10},
 	{"id": "midas", "ko": "황금손", "desc": "처치 골드 x1.28", "cost": 263, "rank": 1, "icon": "coin", "tint": "#F6C445", "gold": 1.28},
 	{"id": "first", "ko": "첫 격돌", "desc": "라운드 첫 5초 공격력 x2.00", "cost": 285, "rank": 1, "icon": "flag", "tint": "#FF6A2A"},
-	{"id": "deal", "ko": "큰손", "desc": "카드마다 무료 교체 +2", "cost": 255, "rank": 1, "icon": "card", "tint": "#A56CF0"},
+	{"id": "deal", "ko": "큰손", "desc": "무료 다시 돌리기 +2", "cost": 255, "rank": 1, "icon": "card", "tint": "#A56CF0"},
 	{"id": "frost", "ko": "서리 부적", "desc": "명중 시 2초간 적 이동속도 x0.78", "cost": 293, "rank": 1, "icon": "snow", "tint": "#7BDCFF", "slow": 0.22, "slow_sec": 2.0},
 	# --- rank 2 : 중반부터 ---
 	{"id": "flame", "ko": "화염 부적", "desc": "모든 공격에 3초간 화상", "cost": 480, "rank": 2, "icon": "flame", "tint": "#FF6A2A"},
@@ -808,8 +870,8 @@ const PASSIVES := [
 	{"id": "resonance", "ko": "속성 공명", "desc": "동일 속성 2명 이상: 해당 속성 피해 x1.25", "cost": 930, "rank": 3, "icon": "rune", "tint": "#A56CF0"},
 	{"id": "antibody", "ko": "상극 파훼", "desc": "저항 대상 피해 x0.50 > x0.80", "cost": 960, "rank": 3, "icon": "yin", "tint": "#5AD07A"},
 	{"id": "echo", "ko": "잔향", "desc": "중복 영웅 획득 시 합성 재료 1장 추가", "cost": 1050, "rank": 3, "icon": "echo", "tint": "#5FE6FF"},
-	{"id": "eye", "ko": "도박꾼의 눈", "desc": "18% 확률로 족보 +1단계", "cost": 1020, "rank": 3, "icon": "dice", "tint": "#FF7AC0"},
-	{"id": "joker", "ko": "조커", "desc": "카드 1장 자동 교체 · 최적 족보", "cost": 1650, "rank": 3, "icon": "joker", "tint": "#FFF0B8"},
+	{"id": "eye", "ko": "도박꾼의 눈", "desc": "18% 확률로 등급 +0.5성", "cost": 1020, "rank": 3, "icon": "dice", "tint": "#FF7AC0"},
+	{"id": "joker", "ko": "조커", "desc": "확정할 때 문 밖의 별 하나를 문 안으로", "cost": 1650, "rank": 3, "icon": "joker", "tint": "#FFF0B8"},
 ]
 
 static func passive_by_id(id: String) -> Dictionary:
@@ -863,7 +925,7 @@ const PASSIVE_CHAIN_JUMPS := 2
 ## 「들불」 — 타는 적이 죽을 때 둘레로 옮아 붙는 반경과, 남은 화상의 몇 배로 옮는가.
 const PASSIVE_WILDFIRE_R := 96.0
 const PASSIVE_WILDFIRE := 0.7
-## 「큰손」 — 무료 교체이 이만큼 는다.
+## 「큰손」 — 무료 다시 돌리기가 이만큼 는다.
 const PASSIVE_DEAL := 2
 
 const CRIT_BASE_MULT := 2.0
@@ -931,13 +993,24 @@ static func hero_scale(_n: int) -> float:
 	return 0.70
 
 
+## 각성 위력. 합성으로 얻은 수호자는 이 값에서 시작한다.
+const AWAKEN_BASE := 1.35
+## 5성에서 더 승급하거나 각성한 재료를 다시 합성할 때 오르는 한 걸음.
+const AWAKEN_STEP := 0.15
+
+## 한 걸음 오른 각성 위력. 소수 둘째 자리에 맞춘다 — 0.15 를 수십 번 더하면 부동소수
+## 오차가 쌓여서, 저장했다 읽은 값과 방금 계산한 값이 어긋난다.
+static func awaken_step(mult: float) -> float:
+	return float(roundi(mult * 100.0) + roundi(AWAKEN_STEP * 100.0)) / 100.0
+
+
 ## Higher rarity raises the upper tail; results below the promotion floor are impossible.
 static func fusion_probabilities(score: int, minimum_tier: int = -1) -> Array[float]:
 	var center := float(clampi(score, 5, 50)) / 5.0 - 0.35
-	var floor_tier := clampi(minimum_tier if minimum_tier >= 0 else ceili(float(clampi(score, 5, 50)) / 5.0), 1, 9)
+	var floor_tier := clampi(minimum_tier if minimum_tier >= 0 else ceili(float(clampi(score, 5, 50)) / 5.0), 1, TIER_MAX)
 	var weights: Array[float] = []
 	var total := 0.0
-	for tier in range(10):
+	for tier in range(TIER_MAX + 1):
 		var weight := exp(-0.5 * pow((float(tier) - center) / 1.6, 2.0)) if tier >= floor_tier else 0.0
 		weights.append(weight)
 		total += weight

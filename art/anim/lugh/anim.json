@@ -2,10 +2,10 @@
   "name": "lugh_aoe_v1",
   "ko": "루흐",
   "elem": "elec",
-  "source": "imagegen_element_aoe_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
-    "w": 256,
-    "h": 256
+    "w": 320,
+    "h": 320
   },
   "static": {
     "w": 86,
@@ -17,18 +17,12 @@
   },
   "scale": 0.7010309278350515,
   "muzzle_at": {
-    "x": 19,
-    "y": -120
+    "x": 59,
+    "y": -94
   },
   "hit_ms": 500.0,
   "face": 1,
-  "fixed_feet": true,
-  "foot_pin_box": [
-    72,
-    202,
-    184,
-    229
-  ],
+  "fixed_feet": false,
   "palette_colors": 96,
   "clips": {
     "idle": {
@@ -46,10 +40,10 @@
       "total_ms": 666.6666666666666,
       "loop": true,
       "cell": {
-        "w": 256,
-        "h": 256
+        "w": 320,
+        "h": 320
       },
-      "sha256": "15b8fa8513486af574986af330ea4998eefaf12148e89e6575039d70efbfd4f5"
+      "sha256": "e29644fb5a8d2f3f10af2c26104125ac31e0b7416b07f2c7598ce34ac63a2bbd"
     },
     "attack": {
       "frames": 12,
@@ -70,10 +64,10 @@
       "total_ms": 1000.0,
       "loop": false,
       "cell": {
-        "w": 256,
-        "h": 256
+        "w": 320,
+        "h": 320
       },
-      "sha256": "59e3438c95c922ab355364c7c9e0cd650b9b6277c72688f6bec220c34a1bd1bc",
+      "sha256": "241f335597cb58cd427c357ac3b7bc30fccc10bbb7fd7639054bdca653d6448e",
       "hit_frame": 6
     },
     "effect": {
@@ -120,82 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/element_aoe_v1/source/lugh.png",
-    "method": "image_gen source > keyed matte > aligned native cells > shared palette > pinned boots",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/lugh.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        69,
         0,
+        311,
+        397
+      ],
+      [
+        443,
         0,
-        362,
-        385
+        681,
+        397
       ],
       [
-        362,
+        793,
         0,
-        724,
-        385
+        1033,
+        397
       ],
       [
-        724,
+        1141,
         0,
-        1086,
-        385
+        1381,
+        397
       ],
       [
-        1086,
-        0,
-        1448,
-        385
+        62,
+        397,
+        315,
+        763
       ],
       [
-        0,
-        385,
-        362,
-        769
+        425,
+        397,
+        691,
+        763
       ],
       [
-        362,
-        385,
-        724,
-        769
+        766,
+        397,
+        1169,
+        763
       ],
       [
-        724,
-        385,
-        1108,
-        769
+        1113,
+        397,
+        1396,
+        763
       ],
       [
-        1108,
-        385,
-        1448,
-        769
-      ],
-      [
-        0,
-        769,
-        362,
+        43,
+        763,
+        340,
         1086
       ],
       [
-        362,
-        769,
-        724,
+        388,
+        763,
+        723,
         1086
       ],
       [
-        724,
-        769,
-        1086,
+        749,
+        763,
+        1106,
         1086
       ],
       [
-        1086,
-        769,
-        1448,
+        1134,
+        763,
+        1405,
         1086
       ]
+    ],
+    "source_transforms": [
+      {
+        "factor": 0.5495750708215298,
+        "offset": [
+          49,
+          6
+        ]
+      },
+      {
+        "factor": 0.5495750708215298,
+        "offset": [
+          52,
+          6
+        ]
+      },
+      {
+        "factor": 0.5495750708215298,
+        "offset": [
+          51,
+          6
+        ]
+      },
+      {
+        "factor": 0.5495750708215298,
+        "offset": [
+          51,
+          6
+        ]
+      },
+      {
+        "factor": 0.5495750708215298,
+        "offset": [
+          47,
+          23
+        ]
+      },
+      {
+        "factor": 0.5495750708215298,
+        "offset": [
+          45,
+          23
+        ]
+      },
+      {
+        "factor": 0.5495750708215298,
+        "offset": [
+          44,
+          23
+        ]
+      },
+      {
+        "factor": 0.5495750708215298,
+        "offset": [
+          27,
+          23
+        ]
+      }
+    ],
+    "source_muzzle": [
+      1026,
+      591
     ]
   },
   "portrait_id": "lugh"

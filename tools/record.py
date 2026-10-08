@@ -41,7 +41,7 @@ def main() -> int:
     ap.add_argument("--res", default="1280x800")
     ap.add_argument("--frames", type=int, default=0, help="이 프레임 수만 찍고 끝낸다")
     ap.add_argument("--work", default=str(ROOT / "build/video"))
-    ap.add_argument("--out", default=str(ROOT / "build/all-in-defense-demo.mp4"))
+    ap.add_argument("--out", default=str(ROOT / "build/stellardefense-demo.mp4"))
     ap.add_argument("--keep", action="store_true", help="낱장 PNG 를 안 지운다")
     args = ap.parse_args()
 

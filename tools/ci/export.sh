@@ -20,15 +20,20 @@ if grep -Eq 'SCRIPT ERROR|Parse Error|Compile Error' build/ci/import-bootstrap.l
     exit 1
 fi
 checked_godot build/ci/import.log --import
-export POCKER_NO_SAVE=1
-for scene in flow_check rules_check progression_check wave_scaling_check course_check revive_flow_check localization_check ads_check; do
-    checked_godot "build/ci/$scene.log" "res://tests/$scene.tscn"
-    grep -q '판정: 정상' "build/ci/$scene.log"
+export STELLARDEFENSE_NO_SAVE=1
+for scene in stellar_identity_check stellar_gameplay_check 3d/stellar_render_check rite_check reroll_check flow_check rules_check progression_check wave_scaling_check course_check revive_flow_check localization_check ads_check; do
+    log="build/ci/${scene//\//-}.log"
+    checked_godot "$log" "res://tests/$scene.tscn"
+    grep -q '판정: 정상' "$log"
 done
 
-checked_godot build/ci/ios-export.log --export-release iOS "$PWD/build/ios/AllInDefense.ipa"
-test -s build/ios/AllInDefense.xcodeproj/project.pbxproj
-test -s build/ios/AllInDefense.pck
+checked_godot build/ci/ios-export.log --export-release iOS "$PWD/build/ios/StellarDefense.ipa"
+test -s build/ios/StellarDefense.xcodeproj/project.pbxproj
+test -s build/ios/StellarDefense.pck
+# The data DB (data/game.db) is authoring-only and must never ship.
+python3 tools/ci/check_no_db.py build/ios/StellarDefense.pck
+checked_godot build/ci/stellar-pack.log --main-pack "$PWD/build/ios/StellarDefense.pck" --script "$PWD/tools/ci/check_stellar_pack.gd"
+checked_godot build/ci/stellar-packed-boot.log --main-pack "$PWD/build/ios/StellarDefense.pck" --quit-after 90
 tar -czf build/ci/ios-project.tar.gz -C build ios
 
 checked_godot build/ci/android-export.log --export-debug "Android Test APK" "$PWD/build/apk/pokerdefense-test.apk"
@@ -40,3 +45,6 @@ grep -q 'org.godotengine.plugin.v2.PoingGodotAdMobRewardedAd' build/ci/manifest.
 grep -q 'org.godotengine.plugin.v2.PoingGodotAdMobRewardedInterstitialAd' build/ci/manifest.txt
 grep -q 'com.google.android.gms.ads.APPLICATION_ID' build/ci/manifest.txt
 python3 tools/audio/check_apk_audio.py "$apk"
+python3 tools/ci/check_no_db.py "$apk"
+
+python3 tools/ci/check_stellar_assets.py "$apk"

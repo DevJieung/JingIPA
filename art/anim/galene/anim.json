@@ -2,7 +2,7 @@
   "name": "galene_roster_v1",
   "ko": "갈레네",
   "elem": "water",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
     "w": 256,
     "h": 256
@@ -17,8 +17,8 @@
   },
   "scale": 0.6903553299492385,
   "muzzle_at": {
-    "x": 81,
-    "y": -144
+    "x": 82,
+    "y": -122
   },
   "hit_ms": 583.3333333333333,
   "face": 1,
@@ -43,7 +43,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "4b89cd2e48d204134bde2355d915bf1dbccf0d5c4257ba413b935762ea2915b4"
+      "sha256": "c145c3194c6620a906965e7c0eca89bd7f5cc843af1f37d46e7953754792ba09"
     },
     "attack": {
       "frames": 12,
@@ -67,7 +67,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "998612945db8d77f8f1b51764ca1fcdde744e8b53867f3ecaf26f45acd86f9be",
+      "sha256": "005ec4570b57f0577cad1deb234fbb88d788f118c720e488cccaec31f6194847",
       "hit_frame": 7
     },
     "effect": {
@@ -114,140 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/galene.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/galene.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        59,
         0,
-        0,
-        362,
-        365
+        283,
+        406
       ],
       [
-        362,
+        421,
         0,
-        724,
-        365
+        644,
+        406
       ],
       [
-        724,
+        783,
         0,
+        1007,
+        406
+      ],
+      [
+        1145,
+        0,
+        1369,
+        406
+      ],
+      [
+        30,
+        406,
+        312,
+        773
+      ],
+      [
+        391,
+        406,
+        662,
+        773
+      ],
+      [
+        761,
+        406,
+        1112,
+        773
+      ],
+      [
         1086,
-        365
+        406,
+        1432,
+        773
       ],
       [
-        1086,
-        0,
-        1448,
-        365
-      ],
-      [
-        0,
-        365,
-        362,
-        728
-      ],
-      [
-        362,
-        365,
-        724,
-        728
-      ],
-      [
-        724,
-        365,
-        1109,
-        728
-      ],
-      [
-        1109,
-        365,
-        1448,
-        728
-      ],
-      [
-        0,
-        728,
-        362,
+        31,
+        773,
+        343,
         1086
       ],
       [
-        362,
-        728,
-        724,
+        377,
+        773,
+        712,
         1086
       ],
       [
-        724,
-        728,
-        1086,
+        736,
+        773,
+        1077,
         1086
       ],
       [
-        1086,
-        728,
-        1448,
+        1123,
+        773,
+        1424,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.5845697329376854,
+        "factor": 0.5933734939759037,
         "offset": [
-          19,
-          11
+          44,
+          -17
         ]
       },
       {
-        "factor": 0.5845697329376854,
+        "factor": 0.5933734939759037,
         "offset": [
-          19,
-          11
+          45,
+          -17
         ]
       },
       {
-        "factor": 0.5845697329376854,
+        "factor": 0.5933734939759037,
         "offset": [
-          19,
-          11
+          44,
+          -17
         ]
       },
       {
-        "factor": 0.5845697329376854,
+        "factor": 0.5933734939759037,
         "offset": [
-          19,
-          11
+          44,
+          -17
         ]
       },
       {
-        "factor": 0.5845697329376854,
+        "factor": 0.5933734939759037,
         "offset": [
-          20,
-          12
+          26,
+          6
         ]
       },
       {
-        "factor": 0.5845697329376854,
+        "factor": 0.5933734939759037,
         "offset": [
-          20,
-          12
+          24,
+          6
         ]
       },
       {
-        "factor": 0.5845697329376854,
+        "factor": 0.5933734939759037,
         "offset": [
-          21,
-          12
+          40,
+          6
         ]
       },
       {
-        "factor": 0.5845697329376854,
+        "factor": 0.5933734939759037,
         "offset": [
-          33,
-          12
+          12,
+          6
         ]
       }
+    ],
+    "source_muzzle": [
+      1048,
+      567
     ]
   },
   "portrait_id": "galene"

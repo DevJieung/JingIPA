@@ -10,7 +10,7 @@
   },
   "scale": 0.3076923076923077,
   "movement": "flow",
-  "source": "Krea 2 Turbo + MiniMax H3",
+  "source": "imagegen_chibi_v1",
   "clips": {
     "move": {
       "frames": 19,
@@ -35,19 +35,97 @@
         83.33333333333333,
         83.33333333333333
       ],
-      "loop": true
+      "loop": true,
+      "cell": {
+        "w": 192,
+        "h": 192
+      },
+      "sha256": "c157bb1e5ceba129bbdb86b7c1c791df98560317262fb6e309b546b77952886d"
     }
   },
   "qc": {
     "canvas_clipping": false,
     "source_clipping": false,
-    "unique_poses": 19,
+    "unique_poses": 8,
     "forward_only": true,
     "fixed_scale": true,
-    "foot_patches": false,
-    "translation_range": [
+    "foot_patches": false
+  },
+  "palette_colors": 96,
+  "readability": {
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/drop_slime.png",
+    "source_cells": [
+      [
+        33,
+        0,
+        373,
+        512
+      ],
+      [
+        408,
+        0,
+        751,
+        512
+      ],
+      [
+        784,
+        0,
+        1137,
+        512
+      ],
+      [
+        1171,
+        0,
+        1504,
+        512
+      ],
+      [
+        28,
+        512,
+        378,
+        1024
+      ],
+      [
+        406,
+        512,
+        754,
+        1024
+      ],
+      [
+        782,
+        512,
+        1138,
+        1024
+      ],
+      [
+        1165,
+        512,
+        1511,
+        1024
+      ]
+    ],
+    "phase_map": [
+      0,
+      0,
+      0,
+      1,
+      1,
+      2,
+      2,
+      2,
+      3,
+      3,
+      4,
+      4,
+      5,
+      5,
+      5,
+      6,
+      6,
       7,
-      13
-    ]
+      7
+    ],
+    "method": "imagegen chibi movement repaint; alpha threshold, extraction, nearest sampling and shared palette only"
   }
 }

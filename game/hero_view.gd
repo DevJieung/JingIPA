@@ -463,8 +463,12 @@ static func innate_passive(u: Dictionary) -> String:
 	return "없음 · 기본 공격에 집중"
 
 
-static func attack_note(unit: Dictionary) -> String:
-	return "사거리 %d · 범위 안의 가까운 적 우선" % int(Balance.attack_range(unit))
+## ★ 사거리는 캐릭터가 아니라 **영웅 한 장의 등급**으로 정해진다(Balance.attack_range).
+##   영웅이 있는 자리에서는 그 영웅의 등급을 넘긴다 — 전투의 실제 사거리
+##   (Run.hero_stats(hero)["range"])와 같은 값이 된다. 캐릭터만 보여 주는 자리(도감)는
+##   생략하면 1성으로 계산한다.
+static func attack_note(unit: Dictionary, tier: int = -1) -> String:
+	return "사거리 %d · 범위 안의 가까운 적 우선" % int(Balance.attack_range(unit, tier))
 
 
 func draw_info(ci: CanvasItem, ui: Ui) -> void:
@@ -511,7 +515,7 @@ func _info_panel(ci: CanvasItem, ui: Ui, area: Rect2) -> void:
 	ui.zone(box, "hv:none")
 	var portrait := Rect2(201, 194, 320, 330)
 	SummonArt.seal(ci, portrait.get_center() + Vector2(0, 8), 132, _t * 0.2, tint, 0.23)
-	Art.draw_unit_fit(ci, unit, portrait)
+	Art.draw_unit_fit(ci, unit, portrait, Color.WHITE, tier)
 	Look.draw_rarity_fit(ci, Rect2(233, 535, 256, 28), tier, 10)
 	SummonArt.hero_info(ci, unit, tier, Rect2(555, 180, 514, 370), true, hero)
 	ui.button(ci, Rect2(556, 589, 243, 48), "이 영웅 이동", "hv:move", true, Look.GOLD, 22)

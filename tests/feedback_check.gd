@@ -6,6 +6,12 @@ func click_screen(id: String) -> bool:
 	await paint(main.screen)
 	return tap(main.screen, id)
 
+
+## 문 밖에 별 넷을 다시 세운다(횟수는 그대로). 다시 돌리다 우연히 다 들어 버리면 단추가 꺼져서
+## 「골드 때문에 꺼졌는가」를 잴 수 없게 된다.
+func scatter() -> void:
+	Run.orbit.assign(Fixture.orbit_for(1))
+
 func _ready() -> void:
 	if not require_no_save():
 		return
@@ -29,34 +35,65 @@ func _ready() -> void:
 			check(main.menu.ui.hit(Rect2(menu_zone["rect"]).get_center()) != "menu", "disabled menu has no active hit target")
 		check(await click_screen("fusion:close"), "fusion close reachable")
 		check(not main.screen.fusion.opened and main.screen.tab == tab, "closing fusion restores " + tab)
+	# --- 별맞춤 의식: 무료 → 유료 → 골드가 바닥난 뒤에도 소환과 별 끌어오기는 남는다 ---
+	# (단추 id 는 화면과의 약속이다: 소환 `go` · 다시 돌리기 `rite:respin` · 별 끌어오기 `rite:pull`)
 	Run.phase = Run.Phase.DRAW
-	Run.rerolled.assign([Run.free_rerolls(), 0, 0, 0, 0])
+	Fixture.stack(1)            # 문 밖에 별 넷 · 돌린 횟수 0
+	Run.gold = 0
 	main.show_draw()
-	Run.gold = Run.reroll_cost_of(0)
 	await paint(main.screen)
-	check(bool(zone_of(main.screen, "want:0").get("on", false)), "direct card choice available beside paid redraw")
-	var previous: int = Run.cards[0]
-	check(await click_screen("re0"), "paid replacement remains reachable")
-	check(Run.gold == 0 and Run.cards[0] != previous, "paid replacement spends the last gold and changes the card")
-	for slot in range(1, 5):
-		for attempt in range(Run.free_rerolls()):
-			check(await click_screen("re%d" % slot), "remaining free replacements work without gold")
+	check(main.screen.state == DrawScreen.PICK, "the rite opens on its pick state")
+	check(bool(zone_of(main.screen, "rite:pull").get("on", false)), "star pull available with no gold")
+	# 무료 횟수는 골드가 없어도 눌린다.
+	for attempt in range(Run.free_rerolls()):
+		scatter()
+		check(await click_screen("rite:respin"), "free re-spins work without gold")
+	check(Run.spins == Run.free_rerolls() and Run.paid_spins == 0 and Run.gold == 0 and Run.respins_left() == 0,
+			"free re-spins take no gold and use up the allowance")
+	# 무료를 다 쓰면 값이 붙는다 — 골드가 없으면 단추가 꺼지고, 마지막 골드까지는 쓸 수 있다.
+	scatter()
 	await paint(main.screen)
-	var before := Run.cards.duplicate()
-	for slot in range(5):
-		check(bool(zone_of(main.screen, "want:%d" % slot).get("on", false)), "direct card choice available with no gold")
-		check(not tap(main.screen, "re%d" % slot), "unaffordable replacement button stays disabled")
-	check(await click_screen("want:0"), "open direct card choice without gold")
-	check(main.screen.card_choice.opened and Run.cards == before and not Ads.busy, "opening choice does not request ad or change cards")
+	check(not tap(main.screen, "rite:respin") and Run.spins == Run.free_rerolls(), "paid re-spin button is disabled without gold")
+	Run.gold = Run.respin_cost()
+	check(Run.gold == Balance.reroll_cost(0) and Run.gold > 0, "the first paid re-spin has a price")
+	# 문 안에 별 둘(붙들린 0번과, 제 힘으로 든 1번)을 세워 두고 돌린다 — 둘 다 잠겨 있어야 한다.
+	Run.orbit.assign(Fixture.orbit_for(2))
+	await paint(main.screen)
+	check(bool(zone_of(main.screen, "rite:pull").get("on", false)), "star pull available beside the paid re-spin")
+	var locked: Array[int] = Run.orbit.duplicate()
+	check(await click_screen("rite:respin"), "paid re-spin remains reachable")
+	check(Run.gold == 0 and Run.paid_spins == 1 and Run.spins == Run.free_rerolls() + 1
+			and Run.orbit[0] == locked[0] and Run.orbit[1] == locked[1] and Run.rite_stars() >= 2,
+			"paid re-spin spends the last gold and leaves the stars inside the gate alone")
+	scatter()
+	await paint(main.screen)
+	check(bool(zone_of(main.screen, "rite:pull").get("on", false)), "star pull available with no gold and no re-spins left")
+	check(not tap(main.screen, "rite:respin"), "unaffordable re-spin button stays disabled")
+	# 별 끌어오기는 광고를 끝까지 봐야 준다 — 누르기만 해서는 별도 횟수도 그대로다.
+	var before: Dictionary = Run.snapshot()["rite"]
+	check(await click_screen("rite:pull"), "star pull can be tapped without gold")
+	check(Run.snapshot()["rite"] == before and Run.gold == 0 and not Ads.busy and main.screen.state == DrawScreen.PICK,
+			"tapping the star pull grants nothing until an ad is completed")
+	# 카드 선택 창이 없어졌다 — 별 끌어오기는 화면을 덮는 창을 띄우지 않고, 메뉴도 그대로 열린다.
+	check(not main.screen_modal_open(), "the star pull opens no modal over the rite")
 	main.menu.open()
-	check(not main.menu.opened, "card choice blocks menu opening")
-	main._notification(NOTIFICATION_WM_GO_BACK_REQUEST)
-	check(not main.menu.opened and not main.screen.card_choice.opened, "Android back closes only card choice")
-	main.menu.open()
-	check(main.menu.opened, "exhausted draw leaves menu available")
+	check(main.menu.opened, "exhausted rite leaves menu available")
 	main.menu.close()
-	check(await click_screen("go"), "hand confirmation remains reachable with no replacements left")
-	check(Run.phase == Run.Phase.SWAP, "exhausted draw still advances to formation")
+	main._notification(NOTIFICATION_WM_GO_BACK_REQUEST)
+	check(main.menu.opened, "Android back opens the menu on the rite")
+	main._notification(NOTIFICATION_WM_GO_BACK_REQUEST)
+	check(not main.menu.opened and main.screen.state == DrawScreen.PICK and Run.phase == Run.Phase.DRAW,
+			"Android back closes the menu and leaves the rite open")
+	# 다 든 5성에서는 돌릴 것도 끌어올 것도 없다 — 두 단추가 다 꺼지고 소환만 남는다.
+	Run.gold = 100000
+	Run.orbit.assign(Fixture.orbit_for(Rite.MAX_STARS))
+	await paint(main.screen)
+	check(not tap(main.screen, "rite:respin") and not tap(main.screen, "rite:pull") and Run.gold == 100000,
+			"with five stars in the gate neither re-spin nor pull can be tapped")
+	Run.gold = 0
+	scatter()
+	check(await click_screen("go"), "summon remains reachable with no re-spins left")
+	check(Run.phase == Run.Phase.SWAP and Run.hero_total() == 7, "exhausted rite still summons one hero and advances to formation")
 	main.show_draw()
 	main.screen.formation_tab = false
 	check(await click_screen("formation:fusion"), "draw hall fusion reachable")

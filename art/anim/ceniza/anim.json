@@ -2,7 +2,7 @@
   "name": "ceniza_roster_v1",
   "ko": "세니자",
   "elem": "fire",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
     "w": 256,
     "h": 256
@@ -17,8 +17,8 @@
   },
   "scale": 0.6127167630057804,
   "muzzle_at": {
-    "x": 22,
-    "y": -105
+    "x": 20,
+    "y": -84
   },
   "hit_ms": 666.6666666666666,
   "face": 1,
@@ -43,7 +43,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "b2e53a502495291e29a54a2fbe8f270bcd9db277d97b8680779c9fd96868f74a"
+      "sha256": "4ddbef0d1557bc2f90dfea08706f53899a03034831f34ce8a92b2e7257ebfe83"
     },
     "attack": {
       "frames": 12,
@@ -67,7 +67,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "cc62f374fcafb2d51b77e9852bd0b06a535dcfb939041a60a03817b764fcbf1d",
+      "sha256": "b56e79d92ebe818eea3f942f32636c0f377ad4053fb5f0032ee6f9eb8234f7f4",
       "hit_frame": 8
     },
     "effect": {
@@ -114,140 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/ceniza.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/ceniza.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        57,
         0,
+        297,
+        403
+      ],
+      [
+        410,
         0,
-        362,
-        362
+        654,
+        403
       ],
       [
-        362,
+        767,
         0,
-        724,
-        362
+        1009,
+        403
       ],
       [
-        724,
+        1124,
         0,
-        1086,
-        362
+        1366,
+        403
       ],
       [
-        1086,
-        0,
-        1448,
-        362
+        59,
+        403,
+        319,
+        774
       ],
       [
-        0,
-        362,
-        362,
-        724
+        432,
+        403,
+        698,
+        774
       ],
       [
-        362,
-        362,
-        724,
-        724
+        790,
+        403,
+        1110,
+        774
       ],
       [
-        724,
-        362,
-        1086,
-        724
+        1080,
+        403,
+        1369,
+        774
       ],
       [
-        1086,
-        362,
-        1448,
-        724
-      ],
-      [
-        0,
-        724,
-        362,
+        57,
+        774,
+        334,
         1086
       ],
       [
-        362,
-        724,
-        724,
+        392,
+        774,
+        693,
         1086
       ],
       [
-        724,
-        724,
-        1086,
+        753,
+        774,
+        1063,
         1086
       ],
       [
-        1086,
-        724,
-        1448,
+        1123,
+        774,
+        1403,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.5118343195266272,
+        "factor": 0.4942857142857143,
         "offset": [
-          33,
-          40
+          59,
+          25
         ]
       },
       {
-        "factor": 0.5118343195266272,
+        "factor": 0.4942857142857143,
         "offset": [
-          33,
-          40
+          58,
+          25
         ]
       },
       {
-        "factor": 0.5118343195266272,
+        "factor": 0.4942857142857143,
         "offset": [
-          33,
-          40
+          57,
+          25
         ]
       },
       {
-        "factor": 0.5118343195266272,
+        "factor": 0.4942857142857143,
         "offset": [
-          33,
-          40
+          57,
+          25
         ]
       },
       {
-        "factor": 0.5118343195266272,
+        "factor": 0.4942857142857143,
         "offset": [
-          34,
+          62,
           41
         ]
       },
       {
-        "factor": 0.5118343195266272,
+        "factor": 0.4942857142857143,
         "offset": [
-          34,
+          69,
           41
         ]
       },
       {
-        "factor": 0.5118343195266272,
+        "factor": 0.4942857142857143,
         "offset": [
-          34,
+          70,
           41
         ]
       },
       {
-        "factor": 0.5118343195266272,
+        "factor": 0.4942857142857143,
         "offset": [
-          33,
+          34,
           41
         ]
       }
+    ],
+    "source_muzzle": [
+      947,
+      604
     ]
   },
   "portrait_id": "ceniza"

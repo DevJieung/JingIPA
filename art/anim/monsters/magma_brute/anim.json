@@ -1,16 +1,16 @@
 {
   "name": "magma_brute",
   "cell": {
-    "w": 192,
-    "h": 192
+    "w": 256,
+    "h": 256
   },
   "anchor": {
-    "x": 96,
+    "x": 104,
     "y": 182
   },
   "scale": 0.3953488372093023,
   "movement": "walk",
-  "source": "Krea 2 Turbo + MiniMax H3",
+  "source": "imagegen_chibi_v1",
   "clips": {
     "move": {
       "frames": 21,
@@ -37,19 +37,99 @@
         83.33333333333333,
         83.33333333333333
       ],
-      "loop": true
+      "loop": true,
+      "cell": {
+        "w": 256,
+        "h": 256
+      },
+      "sha256": "8f189ae9b148d1fd62f15973b12e1b5b5e69d1772fd25e7cead4035ecb5816e8"
     }
   },
   "qc": {
     "canvas_clipping": false,
     "source_clipping": false,
-    "unique_poses": 21,
+    "unique_poses": 8,
     "forward_only": true,
     "fixed_scale": true,
-    "foot_patches": false,
-    "translation_range": [
+    "foot_patches": false
+  },
+  "palette_colors": 96,
+  "readability": {
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/magma_brute.png",
+    "source_cells": [
+      [
+        6,
+        0,
+        405,
+        512
+      ],
+      [
+        395,
+        0,
+        785,
+        512
+      ],
+      [
+        773,
+        0,
+        1168,
+        512
+      ],
+      [
+        1159,
+        0,
+        1536,
+        512
+      ],
+      [
+        7,
+        512,
+        404,
+        1024
+      ],
+      [
+        386,
+        512,
+        785,
+        1024
+      ],
+      [
+        776,
+        512,
+        1173,
+        1024
+      ],
+      [
+        1154,
+        512,
+        1536,
+        1024
+      ]
+    ],
+    "phase_map": [
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      2,
+      2,
+      3,
+      3,
+      3,
+      4,
+      4,
+      4,
+      5,
+      5,
+      6,
+      6,
+      6,
       7,
-      9
-    ]
+      7
+    ],
+    "method": "imagegen chibi movement repaint; alpha threshold, extraction, nearest sampling and shared palette only"
   }
 }

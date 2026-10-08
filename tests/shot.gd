@@ -5,13 +5,15 @@ extends Harness
 ## ★ 커맨드라인을 읽는 코드는 **여기에만** 둔다. 게임 쪽(core/ · game/)이 인자를 읽으면
 ##   검사기와 촬영이 서로의 인자를 삼키고 get_tree().quit() 이 촬영 도중 앱을 죽인다.
 ##
-##   godot --path . res://tests/shot.tscn -- --shots title,draw:5,reveal:9,battle:12,shop:8,over \
+##   godot --path . res://tests/shot.tscn -- --shots title,draw:5,reveal:5,battle:12,shop:8,over \
 ##         --out build/shots
 ##
 ## 찍을 수 있는 것:
 ##   title          타이틀
-##   draw:<탄>      카드 다섯 장 고르는 화면
-##   reveal:<족보>  족보 확정 연출 (0=하이카드 … 9=로열). 풀하우스 이상이 화려한 쪽이다.
+##   draw:<탄>      별맞춤 의식 — 별이 다 멈춘 뒤의 의식판
+##   spin:<탄>      별맞춤 의식 — 별이 도는 중(들어온 지 0.6초)
+##   reveal:<별>    확정 연출 (문 안의 별 1~5). 4성부터가 화려한 쪽이다.
+##   menu / rules / rite / elements        메뉴의 네 쪽(rite = 별맞춤 도움말)
 ##   battle:<탄>    전투 (몇 초 굴린 뒤)
 ##   layers         영웅 발밑에 광역 공격·희귀 착탄·전체 섬광을 겹친 가림 현상 재현
 ##   frost:<탄>     전투 + 서리 부적 — 얼음(둔화) 연출을 찍으려고 일부러 얼린다
@@ -110,7 +112,7 @@ func _one(spec: String) -> void:
 			for hu in Roster.UNITS:
 				Run.gain_hero(hu, int(hu["tier"]))
 			Run.begin_draw()
-			Run.confirm_hand()
+			Run.confirm_summon()
 			var details := DrawScreen.new()
 			details.formation_tab = false
 			main._swap(details)
@@ -128,10 +130,10 @@ func _one(spec: String) -> void:
 				details.queue_redraw()
 				await frames(3)
 				await _save("info_" + String(hu["id"]))
-		"menu", "rules", "hands", "elements":
+		"menu", "rules", "rite", "elements":
 			Fixture.prepare(12, SEED)
 			Run.begin_draw()
-			Run.confirm_hand()
+			Run.confirm_summon()
 			main.go_battle()
 			await frames(6)
 			main.menu.open()
@@ -151,24 +153,33 @@ func _one(spec: String) -> void:
 			main._swap(TitleScreen.new())
 			await frames(6)
 			await _save("title%s" % ("%d" % arg if arg > 0 else ""))
-		"draw":
+		"draw", "spin":
 			Fixture.prepare(maxi(1, arg), SEED)
 			Run.begin_draw()
-			main._swap(DrawScreen.new())
-			await frames(6)
-			await _save("draw%d" % arg)
+			var rite := DrawScreen.new()
+			main._swap(rite)
+			# 별이 돌다가 차례로 멈춘다. draw 는 다 멈추고 번쩍임이 가신 뒤를, spin 은 도는 중을 찍는다.
+			for i in range(400):
+				await get_tree().process_frame
+				if what == "spin" and rite.t > 0.6:
+					break
+				if what == "draw" and not rite._spinning() and rite.t > 2.4:
+					break
+			await _save("%s%d" % [what, arg])
 		"reveal":
 			Fixture.prepare(8, SEED)
 			Run.begin_draw()
-			Fixture.stack(arg)
+			# 문 안에 별이 arg 개 선 의식(1~5)을 확정한다. 0 이면 굴린 그대로다.
+			if arg > 0:
+				Fixture.stack(arg)
 			var d := DrawScreen.new()
 			main._swap(d)
 			await frames(2)
 			d._confirm()
-			# 이름이 뜨고 영웅이 나온 순간을 찍는다 (연출의 절정)
-			for i in range(240):
+			# 등급 별이 다 박히고 영웅이 나온 순간을 찍는다 (연출의 절정)
+			for i in range(400):
 				await get_tree().process_frame
-				if d.rt > 2.4:
+				if d.rt > d._burst_at() + 1.1:
 					break
 			await _save("reveal%d" % arg)
 		"biome":
@@ -252,7 +263,7 @@ func _one(spec: String) -> void:
 			#   (뽑기 → 확정 → 전투). _prepare 는 뽑기 화면 기준이라 한 명이 모자라고,
 			#   1탄이면 아예 0명이라 아무도 안 쏴서 사진이 통째로 거짓말이 된다.
 			Run.begin_draw()
-			Run.confirm_hand()
+			Run.confirm_summon()
 			PlayPolicy.arrange(Run)
 			Run.wave = bw
 			# 얼음은 맞는 족족 얼어붙어야 한 장에 담긴다. 서리 부적을 쥐여 준다.
@@ -374,7 +385,7 @@ func _one(spec: String) -> void:
 			var aw: int = maxi(1, arg)
 			Fixture.prepare(aw, SEED)
 			Run.begin_draw()
-			Run.confirm_hand()
+			Run.confirm_summon()
 			Run.wave = aw
 			Run.heroes.clear()
 			Run.bench.clear()
@@ -427,7 +438,7 @@ func _one(spec: String) -> void:
 			var rw: int = maxi(1, arg)
 			Fixture.prepare(rw, SEED)
 			Run.begin_draw()
-			Run.confirm_hand()
+			Run.confirm_summon()
 			PlayPolicy.arrange(Run)
 			Run.wave = rw
 			Run.phase = Run.Phase.BATTLE
@@ -485,8 +496,7 @@ func _one(spec: String) -> void:
 			for t2 in [3, 2, 1]:
 				Run.gain_hero(Roster.units_of_tier(t2)[0], t2)
 			Run.begin_draw()
-			# ★ 성역(7~9등급)에도 대기석(1~3등급)에도 없는 등급으로 뽑는다. 겹쳐 버리면
-			#   교체 창이 안 뜨고 엉뚱한 사진이 찍힌다.
+			# 문 안에 별 넷이 선 의식을 확정한다 — 자리가 없으니 새 영웅은 전당으로 간다.
 			Fixture.stack(4)
 			var d2 := DrawScreen.new()
 			main._swap(d2)

@@ -10,7 +10,7 @@
   },
   "scale": 0.3372093023255814,
   "movement": "walk",
-  "source": "Krea 2 Turbo + MiniMax H3",
+  "source": "imagegen_chibi_v1",
   "clips": {
     "move": {
       "frames": 15,
@@ -31,19 +31,93 @@
         83.33333333333333,
         83.33333333333333
       ],
-      "loop": true
+      "loop": true,
+      "cell": {
+        "w": 192,
+        "h": 192
+      },
+      "sha256": "c29c12cc6162378d880cbb8bb4a3b043620547a1855635d552aa647496e42474"
     }
   },
   "qc": {
     "canvas_clipping": false,
     "source_clipping": false,
-    "unique_poses": 15,
+    "unique_poses": 8,
     "forward_only": true,
     "fixed_scale": true,
-    "foot_patches": false,
-    "translation_range": [
+    "foot_patches": false
+  },
+  "palette_colors": 96,
+  "readability": {
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/spore_cap.png",
+    "source_cells": [
+      [
+        43,
+        0,
+        403,
+        512
+      ],
+      [
+        425,
+        0,
+        772,
+        512
+      ],
+      [
+        788,
+        0,
+        1143,
+        512
+      ],
+      [
+        1160,
+        0,
+        1506,
+        512
+      ],
+      [
+        35,
+        512,
+        396,
+        1024
+      ],
+      [
+        416,
+        512,
+        767,
+        1024
+      ],
+      [
+        787,
+        512,
+        1143,
+        1024
+      ],
+      [
+        1161,
+        512,
+        1510,
+        1024
+      ]
+    ],
+    "phase_map": [
+      0,
+      0,
+      1,
+      1,
+      2,
+      2,
       3,
-      5
-    ]
+      3,
+      4,
+      4,
+      5,
+      5,
+      6,
+      6,
+      7
+    ],
+    "method": "imagegen chibi movement repaint; alpha threshold, extraction, nearest sampling and shared palette only"
   }
 }

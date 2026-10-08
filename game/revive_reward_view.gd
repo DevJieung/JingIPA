@@ -33,7 +33,7 @@ func ready() -> bool:
 
 func draw(ci: CanvasItem, ui: Ui) -> void:
 	var unit: Dictionary = result.get("unit", {})
-	var tier := int(result.get("hand", Poker.Hand.ROYAL))
+	var tier := int(result.get("tier", Balance.TIER_MAX))
 	var element := String(unit.get("elem", "none"))
 	var gold_only := bool(result.get("gold_only", false))
 	var gold := int(result.get("gold", 0))
@@ -63,7 +63,7 @@ func draw(ci: CanvasItem, ui: Ui) -> void:
 	if gold_only:
 		_draw_gold(ci, at + Vector2(0, (1 - pop) * 40), pop)
 	else:
-		Art.draw_unit_fit(ci, unit, Rect2(212, 239 + (1 - pop) * 40, 332, 250), Color(1, 1, 1, pop))
+		Art.draw_unit_fit(ci, unit, Rect2(212, 239 + (1 - pop) * 40, 332, 250), Color(1, 1, 1, pop), tier)
 	if not gold_only:
 		Look.draw_rarity_fit(ci, Rect2(225, 501, 306, 32), tier, 14)
 	fx.draw(ci)
@@ -80,7 +80,7 @@ func draw(ci: CanvasItem, ui: Ui) -> void:
 		Look.text_box(ci, Rect2(182, 562, 392, 62), "골드가 즉시 지급되었습니다.", 22, Look.INK_DIM)
 	else:
 		Look.text_box(ci, Rect2(622, 240, 476, 65), Look.unit_name(unit), 43, Look.INK, HORIZONTAL_ALIGNMENT_LEFT)
-		Look.text_box(ci, Rect2(624, 311, 472, 37), "최고 등급 · 로열 플러시", 25, Look.GOLD, HORIZONTAL_ALIGNMENT_LEFT)
+		Look.text_box(ci, Rect2(624, 311, 472, 37), "최고 등급 · %s" % Look.star_label(tier), 25, Look.GOLD, HORIZONTAL_ALIGNMENT_LEFT)
 		Look.draw_elem(ci, Vector2(638, 379), 13, element)
 		Look.text_left(ci, Vector2(662, 379), Balance.elem_ko(element), 23, Balance.elem_color(element))
 		Look.fill_round(ci, Rect2(620, 416, 482, 100), 5, Look.BG_DEEP)

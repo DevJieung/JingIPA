@@ -2,7 +2,7 @@
   "name": "niamh_roster_v1",
   "ko": "니브",
   "elem": "elec",
-  "source": "imagegen_roster_v1",
+  "source": "imagegen_chibi_v1",
   "cell": {
     "w": 256,
     "h": 256
@@ -17,8 +17,8 @@
   },
   "scale": 0.9758064516129032,
   "muzzle_at": {
-    "x": 39,
-    "y": -92
+    "x": 48,
+    "y": -81
   },
   "hit_ms": 500.0,
   "face": 1,
@@ -43,7 +43,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "3eb89204a867fa6a1991f9f8a389a08169943b6d0def05631e4073ab1d414739"
+      "sha256": "0b993bb1acdd09cde6fdaad2bfbf15948ce9bde5896d1bad3e01a642579e31a1"
     },
     "attack": {
       "frames": 12,
@@ -67,7 +67,7 @@
         "w": 256,
         "h": 256
       },
-      "sha256": "afdc538a9fd55a7b8cc08f132cb1a79ac2627407c7cf500c4211ba5d171b59be",
+      "sha256": "811f46c7a00e386ef0efc13aa6287263ce6b066dd19f9509f56c2fdee5057cd6",
       "hit_frame": 6
     },
     "shot": {
@@ -114,140 +114,144 @@
     }
   },
   "readability": {
-    "version": 2,
-    "source": "art/animation/roster_v1/source/niamh.png",
-    "method": "image_gen source > keyed matte > foot-baseline and boot-center alignment > shared palette; generated anatomy preserved",
+    "version": 3,
+    "source": "art/animation/chibi_v1/source/niamh.png",
+    "method": "imagegen chibi repaint; alpha threshold, extraction, nearest sampling, shared palette and foot alignment only",
     "source_cells": [
       [
+        61,
         0,
-        0,
-        362,
-        393
+        349,
+        435
       ],
       [
-        362,
+        408,
         0,
-        724,
-        393
+        689,
+        435
       ],
       [
-        724,
+        771,
         0,
-        1086,
-        393
+        1053,
+        435
       ],
       [
-        1086,
+        1125,
         0,
-        1448,
-        393
+        1411,
+        435
       ],
       [
-        0,
+        48,
+        435,
+        369,
+        854
+      ],
+      [
         393,
-        362,
-        784
+        435,
+        755,
+        854
       ],
       [
-        362,
-        393,
-        724,
-        784
+        722,
+        435,
+        1124,
+        854
       ],
       [
-        724,
-        393,
-        1086,
-        784
+        1090,
+        435,
+        1427,
+        854
       ],
       [
-        1086,
-        393,
-        1448,
-        784
-      ],
-      [
-        0,
-        784,
-        362,
+        22,
+        854,
+        366,
         1086
       ],
       [
-        362,
-        784,
-        724,
+        377,
+        854,
+        717,
         1086
       ],
       [
-        724,
-        784,
-        1086,
+        733,
+        854,
+        1090,
         1086
       ],
       [
-        1086,
-        784,
-        1448,
+        1104,
+        854,
+        1437,
         1086
       ]
     ],
     "source_transforms": [
       {
-        "factor": 0.33787465940054495,
+        "factor": 0.3463687150837989,
         "offset": [
-          66,
-          91
+          80,
+          73
         ]
       },
       {
-        "factor": 0.33787465940054495,
+        "factor": 0.3463687150837989,
         "offset": [
-          75,
-          91
+          81,
+          73
         ]
       },
       {
-        "factor": 0.33787465940054495,
+        "factor": 0.3463687150837989,
         "offset": [
-          75,
-          91
+          82,
+          73
         ]
       },
       {
-        "factor": 0.33787465940054495,
+        "factor": 0.3463687150837989,
         "offset": [
-          75,
-          91
+          80,
+          73
         ]
       },
       {
-        "factor": 0.33787465940054495,
+        "factor": 0.3463687150837989,
         "offset": [
-          66,
-          92
+          79,
+          79
         ]
       },
       {
-        "factor": 0.33787465940054495,
+        "factor": 0.3463687150837989,
         "offset": [
-          75,
-          92
+          79,
+          79
         ]
       },
       {
-        "factor": 0.33787465940054495,
+        "factor": 0.3463687150837989,
         "offset": [
-          75,
-          92
+          68,
+          79
         ]
       },
       {
-        "factor": 0.33787465940054495,
+        "factor": 0.3463687150837989,
         "offset": [
-          75,
-          92
+          69,
+          79
         ]
       }
+    ],
+    "source_muzzle": [
+      1035,
+      621
     ]
   },
   "portrait_id": "niamh"

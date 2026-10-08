@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Actual Godot rendering of bilingual poker, rewards and camp hero details."""
+"""Actual Godot rendering of the bilingual star rite, rewards and camp hero details."""
 from pathlib import Path
 import subprocess
 from PIL import Image, ImageDraw
 from godot_env import ROOT, GODOT, xvfb
 out = ROOT / 'build/ui-polish'
-with xvfb(97, '1280x800') as env:
+with xvfb(137, '1280x800') as env:
     for resolution in ['1280x800', '1000x625']:
         folder = out / resolution
         folder.mkdir(parents=True, exist_ok=True)
@@ -16,7 +16,7 @@ with xvfb(97, '1280x800') as env:
         if result.returncode or 'SCRIPT ERROR:' in log or '판정: 실패' in log:
             raise SystemExit(result.returncode or 1)
         for locale in ['ko', 'en']:
-            files = [folder / f'{locale}_{stem}.png' for stem in ['title', 'poker', 'poker_no_gold', 'hero_pip', 'hero_thalassa', 'camp_deployment', 'camp_roster', 'camp_info', 'reward_notice', 'fusion_result', 'camp_u', 'camp_p', 'menu_menu', 'menu_rules', 'menu_hands', 'menu_elements', 'battle', 'battle_result', 'over']]
+            files = [folder / f'{locale}_{stem}.png' for stem in ['title', 'rite', 'rite_no_gold', 'hero_pip', 'hero_thalassa', 'camp_deployment', 'camp_roster', 'camp_info', 'reward_notice', 'fusion_result', 'camp_u', 'camp_p', 'menu_menu', 'menu_rules', 'menu_rite', 'menu_elements', 'battle', 'battle_result', 'over']]
             sheet = Image.new('RGB', (1500, 2380), '#101a22')
             ink = ImageDraw.Draw(sheet)
             for i, path in enumerate(files):
