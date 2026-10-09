@@ -200,15 +200,15 @@ func _rebuild_navigation() -> void:
 				break
 		_nav.set_point_solid(cell, solid)
 
-func _road_segment_clear(from: Vector2, to: Vector2) -> bool:
+func _road_segment_clear(from: Vector2, to: Vector2, margin: float = Balance.ARENA_MONSTER_RADIUS) -> bool:
 	var samples := maxi(1, ceili(from.distance_to(to) / 6.0))
 	for i in range(samples + 1):
-		if not ArenaGeometry.on_road(from.lerp(to, float(i) / samples), Balance.ARENA_MONSTER_RADIUS):
+		if not ArenaGeometry.on_road(from.lerp(to, float(i) / samples), margin):
 			return false
 	return true
 
-func _segment_clear(from: Vector2, to: Vector2) -> bool:
-	if not _road_segment_clear(from, to):
+func _segment_clear(from: Vector2, to: Vector2, road_margin: float = Balance.ARENA_MONSTER_RADIUS) -> bool:
+	if not _road_segment_clear(from, to, road_margin):
 		return false
 	var radius := Balance.ARENA_HERO_RADIUS + Balance.ARENA_MONSTER_RADIUS
 	for hero in heroes:
@@ -249,8 +249,11 @@ func _path_from(from: Vector2, target: Vector2) -> PackedVector2Array:
 func _join_path(from: Vector2, path: PackedVector2Array, avoid_heroes: bool = true) -> PackedVector2Array:
 	# Join ahead of the nearest grid centre when visible. Replanning must not
 	# pull a moving enemy back to a cell it has already passed.
+	# Half the road-sampling interval covers the gaps between samples. Without
+	# this clearance a shortcut can graze a bend and fail during actual movement.
+	var margin := Balance.ARENA_MONSTER_RADIUS + 3.0
 	while path.size() > 1:
-		if not (_segment_clear(from, path[1]) if avoid_heroes else _road_segment_clear(from, path[1])):
+		if not (_segment_clear(from, path[1], margin) if avoid_heroes else _road_segment_clear(from, path[1], margin)):
 			break
 		path.remove_at(0)
 	return path
@@ -340,8 +343,9 @@ func _move_monsters(dt: float) -> void:
 		while not path.is_empty() and current.distance_to(path[0]) <= 0.1:
 			path.remove_at(0)
 		var navigation_changed := int(mo["nav_v"]) != _nav_version
-		var obstructed := navigation_changed and not path.is_empty() and not _segment_clear(current, current.move_toward(path[0], speed * dt))
-		if (navigation_changed and (obstructed or path.is_empty())) or (path.is_empty() and had_path):
+		var obstructed := not path.is_empty() and not _segment_clear(current, current.move_toward(path[0], speed * dt))
+		var needs_path := obstructed or (path.is_empty() and (navigation_changed or had_path))
+		if needs_path:
 			path = _path_from(current, Balance.ARENA_CENTER)
 			while not path.is_empty() and current.distance_to(path[0]) <= 0.1:
 				path.remove_at(0)
@@ -354,7 +358,7 @@ func _move_monsters(dt: float) -> void:
 			continue
 		var target := path[0]
 		var next := current.move_toward(target, speed * dt)
-		if not _segment_clear(current, next):
+		if needs_path and not _segment_clear(current, next):
 			mo["blocked"] = true
 			mo["path"] = PackedVector2Array()
 			continue
@@ -470,6 +474,11 @@ func restore_arena(data: Dictionary, migrate_roads: bool = false) -> void:
 	gold = int(data["gold"])
 	_nav_version = int(data["nav_version"])
 	monsters.assign(data["monsters"].duplicate(true))
+	# Previous builds could save an empty path after grazing a road edge, with
+	# the current navigation version. Retry it once without waiting for a hero.
+	for mo in monsters:
+		if mo["path"].is_empty():
+			mo["nav_v"] = -1
 	if migrate_roads or int(data.get("road_revision", 1)) != ArenaGeometry.ROAD_REVISION:
 		for mo in monsters:
 			if not ArenaGeometry.on_road(mo["pos"], Balance.ARENA_MONSTER_RADIUS):

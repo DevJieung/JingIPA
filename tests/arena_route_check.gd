@@ -4,6 +4,7 @@ func _ready() -> void:
 	if not require_no_save(): return
 	Run.running = false
 	_check_routes()
+	_check_spawn_entries()
 	_check_moving_guardian()
 	_check_local_blockers()
 	_check_migration()
@@ -88,6 +89,63 @@ func _check_routes() -> void:
 	Arena.restore(saved)
 	for i in range(60): Arena.sim.step(1.0 / 60.0)
 	check(Arena.snapshot() == first, "도로 경로·이동 결정론적 이어하기")
+
+func _check_spawn_entries() -> void:
+	var sim := _battle()
+	var lanes := {}
+	var waiting := 0
+	var left_road := 0
+	var arrived := 0
+	# Keep the real random spawn positions: centre-only fixtures missed the
+	# shortcut that grazed the first bend for negative entrance offsets.
+	for sample in range(160):
+		sim.monsters.clear()
+		sim._spawn(Arena.spawns_for(1)[0])
+		var mo: Dictionary = sim.monsters[0]
+		lanes[mo["route"]] = true
+		mo["spd"] = 1.0
+		for frame in range(1500):
+			sim._move_monsters(1.0 / 60.0)
+			if mo["blocked"]:
+				waiting += 1
+				break
+			if not ArenaGeometry.on_road(mo["pos"], Balance.ARENA_MONSTER_RADIUS):
+				left_road += 1
+				break
+			if Vector2(mo["pos"]).distance_to(Balance.ARENA_CENTER) <= Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS:
+				arrived += 1
+				break
+	check(lanes.size() == ArenaGeometry.ROUTE_COUNT, "실제 무작위 출현으로 네 입구 모두 검사")
+	check(waiting == 0 and left_road == 0 and arrived == 160,
+		"출현 편차가 있는 160마리 모두 도로 안에서 정체 없이 수정 도착 (정체 %d·이탈 %d·도착 %d)" % [waiting, left_road, arrived])
+	# Saved by the previous build after the right entrance shortcut hit the
+	# road edge. Neither a hero move nor a road-layout migration should be needed.
+	sim = _battle()
+	sim._spawn(Arena.spawns_for(1)[0])
+	var mo: Dictionary = sim.monsters[0]
+	mo["pos"] = Balance.ARENA_CENTER + Vector2(442.1726, 34.446)
+	mo["blocked"] = true
+	mo["nav_v"] = sim._nav_version
+	mo["path"] = PackedVector2Array()
+	var saved := Arena.snapshot()
+	check(Arena.restore(saved), "입구에서 멈춘 이전 저장 불러오기")
+	sim = Arena.sim
+	var before: Vector2 = sim.monsters[0]["pos"]
+	var safe := true
+	for frame in range(120):
+		sim._move_monsters(1.0 / 60.0)
+		safe = safe and ArenaGeometry.on_road(sim.monsters[0]["pos"], Balance.ARENA_MONSTER_RADIUS)
+	check(safe and not sim.monsters[0]["blocked"] and before.distance_to(sim.monsters[0]["pos"]) > 60,
+		"영웅 이동 없이도 이어하기 직후 입구 정체 해소")
+	check(ArenaValidation.valid(Arena.snapshot()), "입구 정체 복구 뒤 저장 유효")
+	# Also recover a still-cached shortcut before it becomes an empty path.
+	saved["sim"]["monsters"][0]["path"] = PackedVector2Array([Balance.ARENA_CENTER + Vector2(350, 130)])
+	check(Arena.restore(saved), "이전 빌드의 가장자리를 스치는 경로 불러오기")
+	sim = Arena.sim
+	before = sim.monsters[0]["pos"]
+	for frame in range(120): sim._move_monsters(1.0 / 60.0)
+	check(not sim.monsters[0]["blocked"] and before.distance_to(sim.monsters[0]["pos"]) > 60,
+		"내비게이션 변경 없이도 막힌 기존 경로를 다시 탐색")
 
 func _check_moving_guardian() -> void:
 	var reference: Array[Vector2] = []
