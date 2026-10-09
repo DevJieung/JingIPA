@@ -3,6 +3,7 @@ render_mode diffuse_burley;
 uniform vec4 ground_color : source_color = vec4(0.05, 0.17, 0.25, 1.0);
 uniform vec4 edge_color : source_color = vec4(0.45, 0.62, 0.72, 1.0);
 uniform vec2 half_extent = vec2(11.04, 8.16);
+uniform float field_radius = 0.0;
 uniform float frozen = 1.0;
 uniform float motif_seed = 1.0;
 varying vec2 ground_uv;
@@ -29,7 +30,7 @@ void fragment() {
  float crack_mask=smoothstep(0.20,0.70,noise(p*0.31+vec2(17.0,7.0)));
  float fracture=(1.0-smoothstep(0.015,0.065,second-first))*crack_mask;
  float hairline=(1.0-smoothstep(0.009,0.026,second-first))*crack_mask;
- float distance_to_edge=min(half_extent.x-abs(p.x),half_extent.y-abs(p.y));
+ float distance_to_edge=field_radius>0.0 ? field_radius-length(p) : min(half_extent.x-abs(p.x),half_extent.y-abs(p.y));
  float snow=1.0-smoothstep(0.15,1.65,distance_to_edge+(cloud-0.5)*1.8);
  float frost=smoothstep(0.58,0.78,cloud)*0.23;
  vec3 deep=ground_color.rgb*(0.58+cloud*0.67);

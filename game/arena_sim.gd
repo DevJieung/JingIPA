@@ -12,6 +12,7 @@ var shield := 0.0
 var shield_t := 0.0
 var skill_cooldowns := {"blast": 0.0, "freeze": 0.0, "ward": 0.0}
 var _nav := AStarGrid2D.new()
+var _road_cells: Array[Vector2i] = []
 var _nav_key := ""
 var _nav_version := 0
 var _serial := 0
@@ -42,6 +43,15 @@ func setup(run_state, wave_no: int = 1, seed_value: int = 0) -> void:
 	_nav.offset = ArenaGeometry.MAP_RECT.position + _nav.cell_size * 0.5
 	_nav.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
 	_nav.update()
+	_road_cells.clear()
+	for y in range(_nav.region.size.y):
+		for x in range(_nav.region.size.x):
+			var cell := Vector2i(x, y)
+			# Reserve a little clearance so grid edges cannot cut across the inside
+			# of a curved road. The static mask is computed once, not every frame.
+			var road := ArenaGeometry.on_road(_nav.get_point_position(cell), Balance.ARENA_MONSTER_RADIUS + 3)
+			_nav.set_point_solid(cell, not road)
+			if road: _road_cells.append(cell)
 	_nav_key = ""
 	_rebuild_navigation()
 
@@ -96,16 +106,14 @@ func spawn_interval() -> float:
 func _spawn(monster: Dictionary) -> void:
 	super._spawn(monster)
 	var mo: Dictionary = monsters[-1]
-	var rect := ArenaGeometry.MAP_RECT.grow(-Balance.ARENA_MONSTER_RADIUS)
-	var point: Vector2
-	match _rng.randi_range(0, 3):
-		0: point = Vector2(rect.position.x, _rng.randf_range(rect.position.y, rect.end.y))
-		1: point = Vector2(rect.end.x, _rng.randf_range(rect.position.y, rect.end.y))
-		2: point = Vector2(_rng.randf_range(rect.position.x, rect.end.x), rect.position.y)
-		_: point = Vector2(_rng.randf_range(rect.position.x, rect.end.x), rect.end.y)
+	var lane := _rng.randi_range(0, ArenaGeometry.ROUTE_COUNT - 1)
+	var path := ArenaGeometry.route_points(lane)
+	var radial := (path[0] - Balance.ARENA_CENTER).normalized()
+	var point := ArenaGeometry.clamp_point(path[0] + Vector2(-radial.y, radial.x) * float(mo["off"]), Balance.ARENA_MONSTER_RADIUS)
 	_serial += 1
 	mo.merge({"pos": point, "vel": Vector2.ZERO, "blocked": false, "spawn_id": _serial,
 		"path": PackedVector2Array(), "nav_v": -1, "siege_t": 0.0})
+	mo["route"] = lane
 	mo["hp"] = float(mo["hp"]) * Balance.ARENA_HP_SCALE
 	mo["max"] = mo["hp"]
 	if String(mo["kind"]) == "boss":
@@ -174,20 +182,22 @@ func _rebuild_navigation() -> void:
 	_nav_key = key
 	_nav_version += 1
 	var radius := Balance.ARENA_HERO_RADIUS + Balance.ARENA_MONSTER_RADIUS + Balance.ARENA_NAV_CELL * 0.5
-	for y in range(_nav.region.size.y):
-		for x in range(_nav.region.size.x):
-			var cell := Vector2i(x, y)
-			var p := _nav.get_point_position(cell)
-			var solid := false
-			for hero in heroes:
-				var at: Vector2 = hero["pos"]
-				at = (at / 4.0).round() * 4.0
-				if p.distance_squared_to(at) < radius * radius:
-					solid = true
-					break
-			_nav.set_point_solid(cell, solid)
+	for cell in _road_cells:
+		var p := _nav.get_point_position(cell)
+		var solid := false
+		for hero in heroes:
+			var at: Vector2 = hero["pos"]
+			at = (at / 4.0).round() * 4.0
+			if p.distance_squared_to(at) < radius * radius:
+				solid = true
+				break
+		_nav.set_point_solid(cell, solid)
 
 func _segment_clear(from: Vector2, to: Vector2) -> bool:
+	var samples := maxi(1, ceili(from.distance_to(to) / 6.0))
+	for i in range(samples + 1):
+		if not ArenaGeometry.on_road(from.lerp(to, float(i) / samples), Balance.ARENA_MONSTER_RADIUS):
+			return false
 	var radius := Balance.ARENA_HERO_RADIUS + Balance.ARENA_MONSTER_RADIUS
 	for hero in heroes:
 		var p: Vector2 = hero["pos"]
@@ -229,10 +239,10 @@ func move_selected(direction: Vector2, dt: float) -> bool:
 	var hero: Dictionary = heroes[run.selected]
 	var current: Vector2 = hero["pos"]
 	var requested := current + direction.limit_length() * Balance.ARENA_HERO_SPEED * minf(maxf(dt, 0.0), 0.25)
-	var rect := ArenaGeometry.MAP_RECT.grow(-Balance.ARENA_HERO_RADIUS)
-	requested = requested.clamp(rect.position, rect.end)
+	requested = ArenaGeometry.clamp_point(requested, Balance.ARENA_HERO_RADIUS)
 	var accepted := current
 	for point in [requested, Vector2(requested.x, current.y), Vector2(current.x, requested.y)]:
+		if not ArenaGeometry.contains(point, Balance.ARENA_HERO_RADIUS): continue
 		if point.distance_to(Balance.ARENA_CENTER) < Balance.ALTAR_R + Balance.ARENA_HERO_RADIUS:
 			continue
 		var free := true
@@ -283,10 +293,11 @@ func _move_monsters(dt: float) -> void:
 				events.append({"t": "curse", "p": current})
 		var pushed := _advance_push(mo, dt)
 		if pushed > 0.0:
-			var push_to := current + (current - Balance.ARENA_CENTER).normalized() * pushed
-			if _segment_clear(current, push_to) and ArenaGeometry.MAP_RECT.has_point(push_to):
+			var push_to := current - ArenaGeometry.road_direction(current) * pushed
+			if _segment_clear(current, push_to):
 				current = push_to
 				mo["pos"] = current
+				mo["nav_v"] = -1
 		var stop := Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS
 		if current.distance_to(Balance.ARENA_CENTER) <= stop:
 			mo["siege_t"] = float(mo["siege_t"]) + dt
@@ -296,19 +307,17 @@ func _move_monsters(dt: float) -> void:
 			if not run.running:
 				return
 			continue
-		var target := Balance.ARENA_CENTER
-		if not _segment_clear(current, target):
-			if int(mo["nav_v"]) != _nav_version:
-				mo["path"] = _path_from(current, target)
-				mo["nav_v"] = _nav_version
-			var path: PackedVector2Array = mo["path"]
-			while path.size() > 1 and current.distance_to(path[0]) <= Balance.ARENA_NAV_CELL * 0.7:
-				path.remove_at(0)
-			mo["path"] = path
-			if path.is_empty():
-				mo["blocked"] = true
-				continue
-			target = path[0]
+		if int(mo["nav_v"]) != _nav_version:
+			mo["path"] = _path_from(current, Balance.ARENA_CENTER)
+			mo["nav_v"] = _nav_version
+		var path: PackedVector2Array = mo["path"]
+		while not path.is_empty() and current.distance_to(path[0]) <= 0.1:
+			path.remove_at(0)
+		mo["path"] = path
+		if path.is_empty():
+			mo["blocked"] = true
+			continue
+		var target := path[0]
 		var next := current.move_toward(target, speed * dt)
 		if not _segment_clear(current, next):
 			mo["blocked"] = true
@@ -405,7 +414,7 @@ func snapshot_arena() -> Dictionary:
 		"monsters": monsters.duplicate(true), "bullets": bullets.duplicate(true), "zones": zones.duplicate(true),
 		"pending": _pending.duplicate(true), "heroes": runtime}
 
-func restore_arena(data: Dictionary) -> void:
+func restore_arena(data: Dictionary, migrate_roads: bool = false) -> void:
 	elapsed = float(data["elapsed"])
 	boss_spawned = bool(data["boss_spawned"])
 	boss_alive = bool(data["boss_alive"])
@@ -424,6 +433,13 @@ func restore_arena(data: Dictionary) -> void:
 	gold = int(data["gold"])
 	_nav_version = int(data["nav_version"])
 	monsters.assign(data["monsters"].duplicate(true))
+	if migrate_roads:
+		for mo in monsters:
+			if not ArenaGeometry.on_road(mo["pos"], Balance.ARENA_MONSTER_RADIUS):
+				mo["pos"] = ArenaGeometry.nearest_road_point(mo["pos"])
+			mo["path"] = PackedVector2Array()
+			mo["nav_v"] = -1
+			mo["vel"] = Vector2.ZERO
 	bullets.assign(data["bullets"].duplicate(true))
 	zones.assign(data["zones"].duplicate(true))
 	_pending.assign(data["pending"].duplicate(true))

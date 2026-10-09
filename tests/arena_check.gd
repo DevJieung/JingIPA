@@ -28,7 +28,7 @@ func _advance(sim: ArenaSim, seconds: float) -> void:
 func _monster(sim: ArenaSim, at: Vector2) -> Dictionary:
 	sim._spawn(Arena.spawns_for(1)[0])
 	var mo: Dictionary = sim.monsters[-1]
-	mo["pos"] = at
+	mo["pos"] = at if ArenaGeometry.on_road(at, Balance.ARENA_MONSTER_RADIUS) else ArenaGeometry.nearest_road_point(at)
 	mo["hp"] = 100000.0
 	mo["max"] = mo["hp"]
 	sim._cache_positions()
@@ -107,62 +107,83 @@ func _check_movement() -> void:
 	for i in range(20): sim.move_selected(Vector2.DOWN, 0.1)
 	check(Vector2(sim.heroes[0]["pos"]).distance_to(Balance.ARENA_CENTER) >= Balance.ALTAR_R + Balance.ARENA_HERO_RADIUS, "크리스탈 관통 금지")
 	for i in range(100): sim.move_selected(Vector2.LEFT, 0.1)
-	check(ArenaGeometry.MAP_RECT.has_point(sim.heroes[0]["pos"]), "맵 경계 이탈 금지")
+	check(ArenaGeometry.contains(sim.heroes[0]["pos"], Balance.ARENA_HERO_RADIUS), "원형 경계 이탈 금지")
 	sim.monsters.clear()
 	var p: Vector2 = sim.heroes[0]["pos"]
-	_monster(sim, p + Vector2(40, 0))
-	_monster(sim, p + Vector2(120, 0))
+	_monster(sim, p + Vector2(40, 0))["pos"] = p + Vector2(40, 0)
+	_monster(sim, p + Vector2(120, 0))["pos"] = p + Vector2(120, 0)
 	sim._cache_positions()
 	check(sim._nearest_target(p, 200) == 0 and sim._nearest_target(p, 20) == -1, "각 영웅 위치 기준 최근접·사거리")
 
-func _check_navigation() -> void:
-	var sim := _battle(703)
-	Arena.heroes[0]["position"] = Balance.ARENA_CENTER + Vector2(-160, 0)
+func _park_heroes(sim: ArenaSim) -> void:
+	var occupied: Array[Vector2] = []
+	for hero in Arena.heroes:
+		var found := false
+		for y in range(-360, 361, 60):
+			for x in range(-360, 361, 60):
+				var p := Balance.ARENA_CENTER + Vector2(x, y)
+				if not ArenaGeometry.contains(p, Balance.ARENA_HERO_RADIUS) or ArenaGeometry.on_road(p, -60): continue
+				var clear := true
+				for other in occupied:
+					if p.distance_to(other) < Balance.ARENA_HERO_RADIUS * 2: clear = false
+				if clear:
+					hero["position"] = p
+					occupied.append(p)
+					found = true
+					break
+			if found: break
 	sim.refresh_heroes()
 	sim._rebuild_navigation()
-	var mo := _monster(sim, Balance.ARENA_CENTER + Vector2(-310, 0))
-	var detoured := false
+
+func _check_navigation() -> void:
+	var sim := _battle(703)
+	var road := ArenaGeometry.route_points(0)
+	var tangent := (road[19] - road[18]).normalized()
+	Arena.heroes[0]["position"] = road[18] + Vector2(-tangent.y, tangent.x) * 55
+	sim.refresh_heroes()
+	sim._rebuild_navigation()
+	var mo := _monster(sim, road[0])
+	mo["spd"] = 1.0
+	var passed_guardian := false
 	var safe := true
-	for i in range(900):
+	for i in range(1200):
 		sim._move_monsters(1.0 / 60.0)
-		detoured = detoured or absf(Vector2(mo["pos"]).y - Balance.ARENA_CENTER.y) > 15
-		safe = safe and Vector2(mo["pos"]).distance_to(sim.heroes[0]["pos"]) >= Balance.ARENA_HERO_RADIUS + Balance.ARENA_MONSTER_RADIUS - 0.01
-	check(detoured and safe, "영웅 길막 시 충돌 없이 우회")
-	check(Vector2(mo["pos"]).distance_to(Balance.ARENA_CENTER) <= Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS + 2, "우회 후 크리스탈 도착")
-	# Seal a spawned enemy against the edge with a legal 6-hero chain.
+		var distance: float = Vector2(mo["pos"]).distance_to(sim.heroes[0]["pos"])
+		passed_guardian = passed_guardian or distance < 90
+		safe = safe and distance >= Balance.ARENA_HERO_RADIUS + Balance.ARENA_MONSTER_RADIUS - 0.01
+	check(passed_guardian and safe, "길 가장자리 영웅을 충돌 없이 지나감")
+	check(Vector2(mo["pos"]).distance_to(Balance.ARENA_CENTER) <= Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS + 2, "도로 우회 후 크리스탈 도착")
 	sim = _battle(704)
 	for unit in Roster.UNITS:
 		if Arena.heroes.size() == 6: break
 		if not _contains_unit([Arena.heroes[0]["unit"]], String(unit["id"])): Arena.gain_hero(unit, 1)
-	for i in range(6):
-		Arena.heroes[i]["position"] = Vector2(ArenaGeometry.MAP_RECT.position.x + 80, ArenaGeometry.MAP_RECT.position.y + 27 + i * 52)
+	_park_heroes(sim)
+	var parked: Vector2 = Arena.heroes[0]["position"]
+	Arena.heroes[0]["position"] = road[6]
 	sim.refresh_heroes()
 	sim._rebuild_navigation()
-	# A trapped enemy's own start cell is closed when a hero approaches it.
-	mo = _monster(sim, sim.heroes[0]["pos"])
+	mo = _monster(sim, road[6])
 	var position: Vector2 = mo["pos"]
 	var hp: float = sim.crystal_hp
-	for i in range(600): sim._move_monsters(1.0 / 60.0)
-	check(mo["pos"] == position and mo["blocked"] and mo["motion_t"] == 0.0 and sim.crystal_hp == hp, "경로 없으면 무기한 대기·밀어내기 없음")
-	Arena.heroes[0]["position"] += Vector2(200, 0)
+	for i in range(120): sim._move_monsters(1.0 / 60.0)
+	check(mo["pos"] == position and mo["blocked"] and mo["motion_t"] == 0.0 and sim.crystal_hp == hp, "경로 없으면 대기·밀어내기 없음")
+	Arena.heroes[0]["position"] = parked
 	sim.refresh_heroes()
 	sim._rebuild_navigation()
 	for i in range(60): sim._move_monsters(1.0 / 60.0)
 	check(mo["pos"] != position, "길막 해제 후 이동 재개")
-	var trap := Balance.ARENA_CENTER + Vector2(-220, 0)
+	var trap := road[12]
 	for i in range(6):
 		Arena.heroes[i]["position"] = trap + Vector2.from_angle(i * TAU / 6.0) * 60.0
 	sim.refresh_heroes()
 	sim._rebuild_navigation()
 	sim.monsters.clear()
 	mo = _monster(sim, trap)
-	for i in range(600): sim._move_monsters(1.0 / 60.0)
-	check(mo["pos"] == trap and mo["blocked"] and mo["motion_t"] == 0.0, "겹침 없는 6인 완전 봉쇄에서도 무기한 대기")
-	Arena.heroes[0]["position"] += Vector2(0, -200)
-	sim.refresh_heroes()
-	sim._rebuild_navigation()
+	for i in range(120): sim._move_monsters(1.0 / 60.0)
+	check(mo["pos"] == trap and mo["blocked"] and mo["motion_t"] == 0.0, "겹침 없는 6인 완전 봉쇄에서도 대기")
+	_park_heroes(sim)
 	for i in range(60): sim._move_monsters(1.0 / 60.0)
-	check(mo["pos"] != trap, "봉쇄에 틈을 열면 이동 재개")
+	check(mo["pos"] != trap, "봉쇄를 풀면 도로 이동 재개")
 
 func _check_crystal_and_skills() -> void:
 	var sim := _battle(705)

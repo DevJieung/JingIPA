@@ -9,14 +9,14 @@ func _ready() -> void:
 	finish("확장 전장·추적 카메라·미니맵")
 
 func _check_expanded_battle() -> void:
-	check(ArenaGeometry.MAP_RECT.get_area() > Balance.MAP_RECT.get_area() * 1.8, "실제 이동 면적 확대")
+	check(PI * ArenaGeometry.RADIUS * ArenaGeometry.RADIUS > Balance.MAP_RECT.get_area() * 1.5, "실제 이동 면적 확대")
 	Arena.start_run(912)
 	Arena.choose_theme(0)
 	Arena.confirm_summon()
 	Arena.close_modal()
 	var sim: ArenaSim = Arena.sim
 	var limits := ArenaGeometry.MAP_RECT.grow(-Balance.ARENA_HERO_RADIUS)
-	for corner in ArenaGeometry.corners(limits):
+	for corner in ArenaGeometry.outline(8, Balance.ARENA_HERO_RADIUS):
 		Arena.heroes[0]["position"] = corner
 		sim.refresh_heroes()
 		sim.move_selected((corner - Balance.ARENA_CENTER).normalized(), 0.25)
@@ -25,24 +25,24 @@ func _check_expanded_battle() -> void:
 		check(Arena.restore(Arena.snapshot()) and Arena.heroes[0]["position"] == corner, "모서리 위치 이어하기 보존")
 		sim = Arena.sim
 	for i in range(80): sim._spawn(Arena.spawns_for(1)[0])
-	var spawn_rect := ArenaGeometry.MAP_RECT.grow(-Balance.ARENA_MONSTER_RADIUS)
+	var spawn_radius := ArenaGeometry.RADIUS - Balance.ARENA_MONSTER_RADIUS
 	for mo in sim.monsters:
 		var p: Vector2 = mo["pos"]
-		check(spawn_rect.grow(0.01).has_point(p), "새 경계 안 적 출현")
-		check(minf(minf(absf(p.x - spawn_rect.position.x), absf(p.x - spawn_rect.end.x)),
-			minf(absf(p.y - spawn_rect.position.y), absf(p.y - spawn_rect.end.y))) < 0.01, "네 외곽선에서 적 출현")
+		check(ArenaGeometry.contains(p, Balance.ARENA_MONSTER_RADIUS), "원형 경계 안 적 출현")
+		check(absf(p.distance_to(Balance.ARENA_CENTER) - spawn_radius) < 0.1 and ArenaGeometry.on_road(p, Balance.ARENA_MONSTER_RADIUS), "외곽 도로 입구에서 적 출현")
 	for y in range(sim._nav.region.size.y):
 		for x in range(sim._nav.region.size.x):
-			check(ArenaGeometry.MAP_RECT.has_point(sim._nav.get_point_position(Vector2i(x, y))), "길찾기 마지막 셀도 실제 맵 안")
-	# The expanded left edge lies outside the old projectile culling rectangle.
-	# Exercise real firing and damage there, not just the new bounds function.
+			var cell := Vector2i(x, y)
+			if not ArenaGeometry.on_road(sim._nav.get_point_position(cell), Balance.ARENA_MONSTER_RADIUS):
+				check(sim._nav.is_point_solid(cell), "원 밖과 길 밖 셀은 적 통행 금지")
+	# Exercise real firing and damage along the outer entrance.
 	sim.monsters.clear()
 	var left := Vector2(limits.position.x + 2, Balance.ARENA_CENTER.y)
 	Arena.heroes[0]["position"] = left
 	sim.refresh_heroes()
 	sim._spawn(Arena.spawns_for(1)[0])
 	var enemy: Dictionary = sim.monsters[0]
-	enemy["pos"] = left + Vector2(10, 75)
+	enemy["pos"] = left + Vector2(75, 0)
 	enemy["hp"] = 10000.0
 	enemy["max"] = 10000.0
 	sim._cache_positions()
@@ -68,11 +68,7 @@ func _check_camera() -> void:
 	check(view.project(Balance.ARENA_CENTER).distance_to(view.battle_box.get_center()) < 22,
 		"수정이 상하 HUD 사이 전장 중앙에 위치")
 	var rect := ArenaGeometry.MAP_RECT.grow(-Balance.ARENA_HERO_RADIUS)
-	var destinations := ArenaGeometry.corners(rect)
-	destinations.append(Vector2(rect.position.x, Balance.ARENA_CENTER.y))
-	destinations.append(Vector2(rect.end.x, Balance.ARENA_CENTER.y))
-	destinations.append(Vector2(Balance.ARENA_CENTER.x, rect.position.y))
-	destinations.append(Vector2(Balance.ARENA_CENTER.x, rect.end.y))
+	var destinations := ArenaGeometry.outline(8, Balance.ARENA_HERO_RADIUS)
 	for point in destinations:
 		for frame in range(150): view.follow_selected(point, 1.0 / 60.0)
 		check(not view.world.camera.transform.is_equal_approx(original), "가장자리 선택 영웅을 따라 카메라 이동")
@@ -91,9 +87,9 @@ func _check_camera() -> void:
 		for vertex in footprint:
 			check(Rect2(1086, 90, 160, 118).grow(0.1).has_point(vertex), "미니맵 시야를 맵 경계로 자름")
 	var paused := view.world.camera.transform
-	view.follow_selected(rect.position, 0.0)
+	view.follow_selected(destinations[0], 0.0)
 	check(view.world.camera.transform.is_equal_approx(paused), "모달·일시정지 중 추적도 정지")
-	view.follow_selected(rect.position, 1.0 / 60.0)
+	view.follow_selected(destinations[0], 1.0 / 60.0)
 	check(view.world.camera.position.distance_to(paused.origin) < 4.0, "다른 영웅 선택 시 한 프레임 순간이동 없음")
 	var mini := Rect2(20, 20, 180, 126)
 	check(view.minimap_point(Balance.ARENA_CENTER, mini).is_equal_approx(mini.get_center()), "미니맵 중앙 수정 위치")

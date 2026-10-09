@@ -21,8 +21,14 @@ func _ready() -> void:
 	check(Arena.heroes.size() == 1 and tap(screen, "close"), "첫 캐릭터 지급·전투 진입 버튼")
 	await paint(screen)
 	var hero_at: Vector2 = Arena.sim.heroes[Arena.selected]["pos"]
-	var joy_at := ArenaScreen.JOY_CENTER + Vector2.RIGHT * 50
-	screen._pointer(0, joy_at, true)
+	var joy_origin := Vector2(120, 675)
+	var joy_at := joy_origin + Vector2.RIGHT * 50
+	screen._pointer(0, joy_origin, true)
+	check(screen.joystick == Vector2.ZERO and screen.joy_origin == joy_origin, "터치 위치에서 정지 상태로 가변 스틱 생성")
+	var drag := InputEventScreenDrag.new()
+	drag.index = 0
+	drag.position = joy_at
+	screen._input(drag)
 	screen._process(0.1)
 	check(Vector2(Arena.sim.heroes[Arena.selected]["pos"]).distance_to(hero_at) > 1,
 			"실제 가상 조이스틱 입력으로 3D 영웅 이동")

@@ -96,7 +96,7 @@ func minimap_footprint(rect: Rect2) -> PackedVector2Array:
 	if world == null: return PackedVector2Array()
 	# Clip the actual oblique footprint before scaling, rather than clamping each
 	# corner (which would distort the view area when it straddles the map edge).
-	var clipped := Geometry2D.intersect_polygons(camera_ground_polygon(), ArenaGeometry.corners())
+	var clipped := Geometry2D.intersect_polygons(camera_ground_polygon(), ArenaGeometry.outline())
 	var polygon := PackedVector2Array()
 	if clipped.is_empty(): return polygon
 	for point in clipped[0]: polygon.append(minimap_point(point, rect))

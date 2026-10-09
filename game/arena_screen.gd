@@ -5,7 +5,6 @@ class_name ArenaScreen
 const FIELD := Rect2(0, 0, 1280, 800)
 const BATTLEFIELD := Rect2(0, 70, 1280, 490)
 const MINIMAP := Rect2(1088, 88, 174, 130)
-const JOY_CENTER := Vector2(123, 676)
 const JOY_RADIUS := 67.0
 const HERO_X := 255.0
 const HERO_Y := 631.0
@@ -18,6 +17,8 @@ var ui := Ui.new()
 var view_3d := ArenaView.new()
 var t := 0.0
 var joystick := Vector2.ZERO
+var joy_origin := Vector2.ZERO
+var _joy_selection := -1
 var _joy_pointer := -99
 var _draw_dt := 0.0
 var _modal_seen := ""
@@ -33,6 +34,7 @@ var _rite_age := 9.0
 var _spin_rings: Array = []
 var _card_crops: Dictionary = {}
 func _ready() -> void:
+	get_tree().process_frame.connect(_guard_joystick)
 	view_3d.battle_box = BATTLEFIELD
 	view_3d.minimap_box = MINIMAP
 	_theme_choice = clampi(Arena.theme_index, 0, maxi(0, Roster.THEMES.size() - 1))
@@ -65,8 +67,7 @@ func _track_modal() -> void:
 	var previous := _modal_seen
 	_modal_seen = Arena.modal
 	_phase_seen = Arena.phase
-	joystick = Vector2.ZERO
-	_joy_pointer = -99
+	cancel_joystick()
 	ui.pressed = ""
 	if Arena.modal == "rite" and previous != "rite":
 		_start_spin(range(Rite.RINGS))
@@ -84,10 +85,12 @@ func _start_spin(rings: Array) -> void:
 	_rite_age = 0.0
 
 func _input(e: InputEvent) -> void:
-	if _menu_open(): return
+	if _menu_open():
+		cancel_joystick()
+		return
 	if e is InputEventMouseButton and e.device < 0: return
 	if e is InputEventScreenTouch:
-		_pointer(e.index, e.position, e.pressed)
+		_pointer(e.index, e.position, e.pressed and not e.canceled)
 		return
 	if e is InputEventScreenDrag:
 		if e.index == _joy_pointer:
@@ -105,41 +108,67 @@ func _input(e: InputEvent) -> void:
 			Arena.close_modal()
 			get_viewport().set_input_as_handled()
 
+func cancel_joystick() -> void:
+	joystick = Vector2.ZERO
+	_joy_pointer = -99
+	_joy_selection = -1
+	queue_redraw()
+
+func _guard_joystick() -> void:
+	if _joy_pointer == -99: return
+	if not Arena.modal.is_empty() or _menu_open() or Arena.sim == null or Arena.sim.done or Arena.selected != _joy_selection or not is_visible_in_tree():
+		cancel_joystick()
+
+func _notification(what: int) -> void:
+	if what in [NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_WM_WINDOW_FOCUS_OUT]:
+		cancel_joystick()
+
 func _pointer(pointer: int, at: Vector2, pressed: bool) -> void:
 	if not pressed:
-		if pointer == _joy_pointer:
-			joystick = Vector2.ZERO
-			_joy_pointer = -99
+		if pointer == _joy_pointer: cancel_joystick()
 		ui.pressed = ""
 		return
-	if Arena.modal.is_empty() and Arena.sim != null and not Arena.sim.done and at.distance_to(JOY_CENTER) <= JOY_RADIUS + 20:
-		_joy_pointer = pointer
-		_set_joystick(at)
+	# Buttons retain multi-touch while an existing movement finger owns its origin.
+	for n in range(ui.zones.size() - 1, -1, -1):
+		var zone: Dictionary = ui.zones[n]
+		if not Rect2(zone["rect"]).has_point(at): continue
+		if bool(zone.get("on", false)):
+			ui.pressed = String(zone["id"])
+			_action(ui.pressed)
 		get_viewport().set_input_as_handled()
 		return
-	var id := ui.hit(at)
-	if not id.is_empty():
-		ui.pressed = id
-		_action(id)
+	if Rect2(0, 0, 1280, 70).has_point(at) or MINIMAP.has_point(at): return
+	if Arena.sim != null and Arena.sim.boss_spawned and Rect2(368, 83, 544, 39).has_point(at): return
+	if Arena.sim != null and Arena.sim.shield > 0 and Rect2(76, 80, 184, 30).has_point(at): return
+	if not FIELD.has_point(at) or not Arena.modal.is_empty() or Arena.sim == null or Arena.sim.done or _menu_open(): return
+	if _joy_pointer != -99:
 		get_viewport().set_input_as_handled()
 		return
-	if Arena.modal.is_empty() and BATTLEFIELD.has_point(at) and not MINIMAP.has_point(at):
+	if BATTLEFIELD.has_point(at):
 		var index := view_3d.hero_at(at)
 		if index >= 0:
 			Arena.selected = index
-			joystick = Vector2.ZERO
 			Sfx.play("button")
-		get_viewport().set_input_as_handled()
+	joy_origin = at
+	_joy_pointer = pointer
+	_joy_selection = Arena.selected
+	joystick = Vector2.ZERO
+	queue_redraw()
+	get_viewport().set_input_as_handled()
 
 func _set_joystick(at: Vector2) -> void:
-	joystick = ((at - JOY_CENTER) / JOY_RADIUS).limit_length(1.0)
+	if _joy_pointer == -99: return
+	_guard_joystick()
+	if _joy_pointer == -99: return
+	joystick = ((at - joy_origin) / JOY_RADIUS).limit_length(1.0)
 	if joystick.length() < 0.12: joystick = Vector2.ZERO
+	queue_redraw()
 
 func _action(id: String) -> void:
 	if id == "modal:block": return
 	if id.begins_with("hero:"):
 		Arena.selected = int(id.get_slice(":", 1))
-		joystick = Vector2.ZERO
+		cancel_joystick()
 	elif id == "summon": Arena.begin_summon()
 	elif id == "shop": Arena.open_modal("shop")
 	elif id == "bench": Arena.open_modal("bench")
@@ -199,6 +228,7 @@ func _draw() -> void:
 		_draw_topbar(theme)
 		_draw_controls()
 		_draw_minimap()
+		_draw_joystick()
 	match Arena.modal:
 		"theme": _draw_themes()
 		"rite": _draw_rite()
@@ -247,26 +277,6 @@ func _draw_controls() -> void:
 	draw_line(Vector2(0, 564), Vector2(1280, 564), Color("#97b7bd"), 1, true)
 	for x in [16, 1264]: _draw_diamond(Vector2(x, 564), 3, Look.GOLD)
 	var active := Arena.modal.is_empty() and Arena.sim != null and not Arena.sim.done
-	draw_circle(JOY_CENTER + Vector2(0, 3), JOY_RADIUS + 6, Color(0, 0, 0, 0.38))
-	draw_circle(JOY_CENTER, JOY_RADIUS + 4, Color(0.3, 0.54, 0.65, 0.45))
-	draw_circle(JOY_CENTER, JOY_RADIUS + 1, Color(0.02, 0.07, 0.11, 0.82))
-	draw_circle(JOY_CENTER, JOY_RADIUS - 3, Color(0.11, 0.24, 0.31, 0.75))
-	draw_circle(JOY_CENTER, JOY_RADIUS - 9, Color(0.025, 0.095, 0.15, 0.79))
-	draw_arc(JOY_CENTER, JOY_RADIUS + 2, PI * 1.05, TAU * 0.99, 48, Color("#91c7d9"), 1.4, true)
-	draw_arc(JOY_CENTER, JOY_RADIUS - 7, 0, TAU, 64, Color(0.41, 0.64, 0.73, 0.35), 1, true)
-	for d in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
-		var at: Vector2 = JOY_CENTER + d * 48
-		var normal := Vector2(-d.y, d.x)
-		draw_colored_polygon(PackedVector2Array([at + d * 6, at - d * 3 + normal * 4, at - d * 3 - normal * 4]), Color("#b8ddea") if active else Color("#47616b"))
-	var stick := JOY_CENTER + joystick * 36
-	draw_circle(stick + Vector2(0, 3), 28, Color(0, 0, 0, 0.30))
-	draw_circle(stick, 28, Look.GOLD if _joy_pointer != -99 else Color("#8db5c3"))
-	draw_circle(stick, 26, Color("#284d60") if active else Color("#263a43"))
-	draw_circle(stick + Vector2(-3, -4), 21, Color(0.25, 0.48, 0.58, 0.42))
-	draw_line(stick + Vector2(-15, -15), stick + Vector2(15, 15), Color(0.62, 0.85, 0.9, 0.13), 1, true)
-	draw_line(stick + Vector2(15, -15), stick + Vector2(-15, 15), Color(0.62, 0.85, 0.9, 0.13), 1, true)
-	Look.text_box(self, Rect2(40, 753, 166, 26), _tr("joystick"), 19, Look.INK)
-	Look.text_box(self, Rect2(27, 576, 193, 26), _tr("pause") if not active else _tr("select_hero"), 17, Look.GOLD if not active else Look.INK)
 	var summoning := active and Arena.gold >= Arena.summon_cost() and not Arena.eligible_units().is_empty()
 	ui.glass_button(self, Rect2(294, 574, 206, 39), _tr("summon") + "  %d G" % Arena.summon_cost(), "summon", summoning, Look.PANEL_EDGE, 20)
 	ui.glass_button(self, Rect2(510, 574, 206, 39), _tr("shop"), "shop", active, Look.PANEL_EDGE, 21)
@@ -277,6 +287,7 @@ func _draw_controls() -> void:
 			_draw_hero_card(rect, Arena.heroes[i], i == Arena.selected)
 			ui.zone(rect.grow(3), "hero:%d" % i, active)
 		else:
+			ui.zone(rect.grow(3), "hero:empty", false)
 			Look.glass_panel(self, rect, Color("#587787"), Color(0.06, 0.12, 0.16, 0.73))
 			_draw_skill_icon(Vector2(rect.get_center().x, rect.position.y + 31), "freeze", 13, Color(0.28, 0.46, 0.56, 0.25))
 			Look.text_box(self, Rect2(rect.position + Vector2(8, 59), Vector2(rect.size.x - 16, 43)), str(i + 1), 31, Color("#698390"))
@@ -295,6 +306,27 @@ func _draw_controls() -> void:
 		if remaining > 0 and Arena.sim != null:
 			var maximum := Arena.sim.skill_max_cooldown(id)
 			_bar(Rect2(rect.position.x + 8, rect.end.y - 6, rect.size.x - 16, 2), 1 - remaining / maxf(0.001, maximum), color)
+
+func _draw_joystick() -> void:
+	if _joy_pointer == -99 or not Arena.modal.is_empty() or _menu_open(): return
+	draw_circle(joy_origin + Vector2(0, 3), JOY_RADIUS + 6, Color(0, 0, 0, 0.38))
+	draw_circle(joy_origin, JOY_RADIUS + 4, Color(0.3, 0.54, 0.65, 0.45))
+	draw_circle(joy_origin, JOY_RADIUS + 1, Color(0.02, 0.07, 0.11, 0.24))
+	draw_circle(joy_origin, JOY_RADIUS - 3, Color(0.11, 0.24, 0.31, 0.18))
+	draw_circle(joy_origin, JOY_RADIUS - 9, Color(0.025, 0.095, 0.15, 0.12))
+	draw_arc(joy_origin, JOY_RADIUS + 2, PI * 1.05, TAU * 0.99, 48, Color("#91c7d9"), 1.4, true)
+	draw_arc(joy_origin, JOY_RADIUS - 7, 0, TAU, 64, Color(0.41, 0.64, 0.73, 0.35), 1, true)
+	for d in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
+		var at: Vector2 = joy_origin + d * 48
+		var normal := Vector2(-d.y, d.x)
+		draw_colored_polygon(PackedVector2Array([at + d * 6, at - d * 3 + normal * 4, at - d * 3 - normal * 4]), Color("#b8ddea"))
+	var stick := joy_origin + joystick * 36
+	draw_circle(stick + Vector2(0, 3), 28, Color(0, 0, 0, 0.30))
+	draw_circle(stick, 28, Look.GOLD if _joy_pointer != -99 else Color("#8db5c3"))
+	draw_circle(stick, 26, Color("#284d60"))
+	draw_circle(stick + Vector2(-3, -4), 21, Color(0.25, 0.48, 0.58, 0.42))
+	draw_line(stick + Vector2(-15, -15), stick + Vector2(15, 15), Color(0.62, 0.85, 0.9, 0.13), 1, true)
+	draw_line(stick + Vector2(15, -15), stick + Vector2(-15, 15), Color(0.62, 0.85, 0.9, 0.13), 1, true)
 
 func _draw_hero_card(rect: Rect2, hero: Dictionary, selected: bool) -> void:
 	var unit: Dictionary = hero["unit"]
@@ -333,10 +365,16 @@ func _draw_hero_card(rect: Rect2, hero: Dictionary, selected: bool) -> void:
 func _draw_minimap() -> void:
 	if Arena.sim == null: return
 	Look.glass_panel(self, MINIMAP, Color("#85adbc"), Color(0.015, 0.055, 0.085, 0.79))
-	var map := MINIMAP.grow(-11)
-	for n in range(1, 4):
-		draw_line(map.position + Vector2(map.size.x * n / 4, 0), map.position + Vector2(map.size.x * n / 4, map.size.y), Color(0.47, 0.68, 0.76, 0.09), 1)
-		draw_line(map.position + Vector2(0, map.size.y * n / 4), map.position + Vector2(map.size.x, map.size.y * n / 4), Color(0.47, 0.68, 0.76, 0.09), 1)
+	var map := Rect2(MINIMAP.get_center() - Vector2.ONE * 54, Vector2.ONE * 108)
+	var perimeter := PackedVector2Array()
+	for point in ArenaGeometry.outline(): perimeter.append(view_3d.minimap_point(point, map))
+	draw_colored_polygon(perimeter, Color(0.08, 0.20, 0.25, 0.30))
+	draw_polyline(perimeter + PackedVector2Array([perimeter[0]]), Color(0.55, 0.77, 0.84, 0.59), 1.1, true)
+	for lane in range(ArenaGeometry.ROUTE_COUNT):
+		var road := PackedVector2Array()
+		for point in ArenaGeometry.route_points(lane): road.append(view_3d.minimap_point(point, map))
+		draw_polyline(road, Color(0.56, 0.68, 0.68, 0.27), ArenaGeometry.ROAD_WIDTH / (ArenaGeometry.RADIUS * 2) * map.size.x, true)
+		draw_polyline(road, Color(0.78, 0.86, 0.82, 0.19), 1, true)
 	var footprint := view_3d.minimap_footprint(map)
 	if footprint.size() >= 3:
 		draw_colored_polygon(footprint, Color(0.27, 0.69, 0.82, 0.07))

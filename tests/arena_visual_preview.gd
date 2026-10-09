@@ -9,6 +9,9 @@ func _ready() -> void:
 	if not require_no_save(): return
 	out_dir = arg("--out", out_dir)
 	DirAccess.make_dir_recursive_absolute(out_dir)
+	if has_arg("--circle-only"):
+		await _circle_only()
+		return
 	if has_arg("--look-only"):
 		await _look_only()
 		return
@@ -63,9 +66,10 @@ func _ready() -> void:
 		var untouched: Vector2 = Arena.sim.heroes[0]["pos"]
 		var finger := InputEventScreenTouch.new()
 		finger.index = 0
-		finger.position = ArenaScreen.JOY_CENTER + Vector2(46, 0)
+		finger.position = Vector2(123, 676)
 		finger.pressed = true
 		screen._input(finger)
+		_drag(Vector2(169, 676), 0)
 		for n in range(12):
 			screen._process(1.0 / 30)
 			await _capture(locale + "_move_%02d" % n)
@@ -78,6 +82,7 @@ func _ready() -> void:
 		check(tap(screen, "hero:0"), "approved Limne remains selectable")
 		finger.pressed = true
 		screen._input(finger)
+		_drag(Vector2(169, 676), 0)
 		for n in range(6):
 			screen._process(1.0 / 30)
 			await _capture(locale + "_limne_move_%02d" % n)
@@ -177,6 +182,103 @@ func _ready() -> void:
 	print("Arena visual review: " + out_dir)
 	finish("Arena native 3D and mobile UI")
 
+func _circle_only() -> void:
+	for locale in ["ko", "en"]:
+		I18n.set_locale(locale)
+		Arena.start_run(20261009)
+		main = load("res://game/main.gd").new()
+		add_child(main)
+		await frames(3)
+		main.show_arena()
+		screen = main.screen
+		screen.set_process(false)
+		Arena.choose_theme(0)
+		Arena.confirm_summon()
+		Arena.close_modal()
+		Arena.heroes.clear()
+		Arena.gain_hero(Roster.unit_by_id("echo"), 3)
+		Arena.heroes[0]["position"] = Balance.ARENA_CENTER + Vector2(0, -175)
+		Arena.sim.refresh_heroes()
+		Arena.selected = 0
+		Arena.gold = 99999
+		Arena.sim.monsters.clear()
+		var pool := Roster.theme_pool(Arena.theme_for(1))
+		for lane in range(ArenaGeometry.ROUTE_COUNT):
+			for sample in [4, 14, 24]:
+				Arena.sim._spawn(pool[(lane + sample) % pool.size()])
+				var monster: Dictionary = Arena.sim.monsters[-1]
+				monster["pos"] = ArenaGeometry.route_points(lane)[sample]
+				monster["route"] = lane
+				monster["hp"] = float(monster["max"]) * 0.8
+		Arena.sim._rebuild_navigation()
+		screen.view_3d._follow_offset = Vector3.ZERO
+		screen.view_3d._camera_initialized = false
+		await _capture(locale + "_circle")
+		check(screen._joy_pointer == -99 and screen.joystick == Vector2.ZERO, "joystick hidden until a finger is down")
+		var traveled := 0.0
+		for n in range(16):
+			var before: Vector2 = Arena.sim.monsters[0]["pos"]
+			for tick in range(5):
+				Arena.sim._move_monsters(0.15)
+				Arena.sim.elapsed += 0.15
+			traveled += before.distance_to(Vector2(Arena.sim.monsters[0]["pos"]))
+			screen._draw_dt = 0.15
+			await _capture(locale + "_lane_%02d" % n)
+			for monster in Arena.sim.monsters:
+				check(ArenaGeometry.on_road(monster["pos"], Balance.ARENA_MONSTER_RADIUS), "moving enemy remains on the rendered curved road")
+		check(traveled > 20, "curved lane footage contains actual simulation movement")
+		var origins := [Vector2(105, 692), Vector2(352, 407), Vector2(38, 250), Vector2(1212, 440)]
+		for i in range(origins.size()):
+			var origin: Vector2 = origins[i]
+			screen._pointer(0, origin, true)
+			check(screen.joy_origin == origin and screen.joystick == Vector2.ZERO, "touch becomes the exact stationary origin")
+			await _capture(locale + "_joystick_start_%02d" % i)
+			_drag(origin + Vector2(47, -18))
+			check(screen.joystick.length() > 0, "drag activates floating joystick")
+			await _capture(locale + "_joystick_drag_%02d" % i)
+			screen._pointer(0, origin, false)
+			check(screen._joy_pointer == -99 and screen.joystick == Vector2.ZERO, "release hides the joystick")
+		await _capture(locale + "_joystick_released")
+		for n in range(8):
+			var at := Balance.ARENA_CENTER + Vector2.from_angle(n * TAU / 8) * (ArenaGeometry.RADIUS - Balance.ARENA_HERO_RADIUS)
+			Arena.sim.heroes[Arena.selected]["pos"] = at
+			for tick in range(30): screen.view_3d.follow_selected(at, 1.0 / 30)
+			await _capture(locale + "_circle_edge_%02d" % n)
+			check(ArenaGeometry.contains(at, Balance.ARENA_HERO_RADIUS - 0.01), "hero stands inside the circular rim")
+			check(ArenaScreen.BATTLEFIELD.has_point(screen.view_3d.project(at, 0.5)), "hero visible at the circular rim")
+			check(ArenaScreen.BATTLEFIELD.has_point(screen.view_3d.project(Balance.ARENA_CENTER, 1.95)), "crystal tip remains visible at circle edge")
+			check(ArenaScreen.BATTLEFIELD.has_point(screen.view_3d.project(Balance.ARENA_CENTER, 0.08)), "crystal base remains visible at circle edge")
+		_prepare_field()
+		screen.view_3d._follow_offset = Vector3.ZERO
+		screen.view_3d._camera_initialized = false
+		await _capture(locale + "_field_six")
+		screen._pointer(0, Vector2(105, 692), true)
+		_drag(Vector2(152, 680))
+		main.menu.open()
+		main.menu.page = "rules"
+		await _capture_canvas(main.menu, locale + "_help")
+		check(screen._joy_pointer == -99, "menu opening cancels movement while screen processing is disabled")
+		main.menu.close()
+		Arena.open_modal("shop")
+		await _capture(locale + "_upgrades")
+		Arena.close_modal()
+		for id in ["saeta", "glaukos", "jokull"]: Arena.gain_hero(Roster.unit_by_id(id), 9)
+		Arena.open_modal("bench")
+		await _capture(locale + "_reserves_selected")
+		Arena.close_modal()
+		screen._pointer(0, Vector2(100, 690), true)
+		_drag(Vector2(150, 690))
+		screen._notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
+		check(screen._joy_pointer == -99 and screen.joystick == Vector2.ZERO, "focus loss cancels floating control")
+		main.queue_free()
+		main = null
+		screen = null
+		await frames(4)
+	var file := FileAccess.open(out_dir + "/circle-report.json", FileAccess.WRITE)
+	file.store_string(JSON.stringify({"checks": checks, "failures": failures, "text_boxes": _audit_count}, "  ") + "\n")
+	file = null
+	finish("Circular arena, curved lanes and floating joystick")
+
 func _look_only() -> void:
 	for locale in ["ko", "en"]:
 		I18n.set_locale(locale)
@@ -204,7 +306,7 @@ func _look_only() -> void:
 		Arena.sim.monsters.clear()
 		var pool := Roster.theme_pool(Arena.theme_for(1))
 		Arena.sim._spawn(pool[0])
-		Arena.sim.monsters[0]["pos"] = Balance.ARENA_CENTER + Vector2(180, 110)
+		Arena.sim.monsters[0]["pos"] = ArenaGeometry.nearest_road_point(Balance.ARENA_CENTER + Vector2(180, 110))
 		Arena.sim.monsters[0]["hp"] *= 0.45
 		await _capture(locale + "_reference")
 		if has_arg("--reference-only"):
@@ -218,7 +320,7 @@ func _look_only() -> void:
 		var size_before: float = screen.view_3d.world.camera.size
 		for direction in [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN, Vector2(-1,-1), Vector2(1,-1), Vector2(-1,1), Vector2(1,1)]:
 			var at: Vector2 = Balance.ARENA_CENTER + direction * ArenaGeometry.MAP_RECT.size * 0.5
-			at = at.clamp(ArenaGeometry.MAP_RECT.position + Vector2.ONE * 24, ArenaGeometry.MAP_RECT.end - Vector2.ONE * 24)
+			at = ArenaGeometry.clamp_point(at, 24)
 			Arena.sim.heroes[0]["pos"] = at
 			for n in range(30): screen.view_3d.follow_selected(at, 1.0 / 30)
 			var name := "edge_%s_%s" % [int(direction.x), int(direction.y)]
@@ -232,7 +334,7 @@ func _look_only() -> void:
 		for n in range(30): screen.view_3d.follow_selected(Balance.ARENA_CENTER, 1.0 / 30)
 		Arena.sim.monsters.clear()
 		for n in range(12):
-			Arena.sim.heroes[0]["pos"] = Balance.ARENA_CENTER + Vector2(220 + n * 22, 85)
+			Arena.sim.heroes[0]["pos"] = ArenaGeometry.clamp_point(Balance.ARENA_CENTER + Vector2(220 + n * 22, 85), 24)
 			screen._draw_dt = 1.0 / 15
 			Arena.sim.elapsed += 1.0 / 15
 			await _capture(locale + "_follow_%02d" % n)
@@ -407,9 +509,10 @@ func _polish_only() -> void:
 			var old_positions := _positions()
 			var finger := InputEventScreenTouch.new()
 			finger.index = 0
-			finger.position = ArenaScreen.JOY_CENTER + Vector2(46, 0)
+			finger.position = Vector2(123, 676)
 			finger.pressed = true
 			screen._input(finger)
+			_drag(Vector2(169, 676), 0)
 			screen._process(1.0 / 30)
 			check(Vector2(Arena.sim.heroes[i]["pos"]).distance_to(old_positions[i]) > 0.1, "each selected hero actually moves")
 			for j in range(Balance.ARENA_HERO_LIMIT):
@@ -473,9 +576,13 @@ func _rite_only() -> void:
 		_window_touch(card.get_center(), false)
 		check(Arena.selected == 5, "window pixel touch selects the sixth hero after stretch")
 		var old_position: Vector2 = Arena.sim.heroes[5]["pos"]
-		_window_touch(ArenaScreen.JOY_CENTER + Vector2(46, 0), true)
+		_window_touch(Vector2(123, 676), true)
+		var drag := InputEventScreenDrag.new()
+		drag.index = 7
+		drag.position = get_viewport().get_final_transform() * Vector2(169, 676)
+		get_viewport().push_input(drag, false)
 		screen._process(1.0 / 30)
-		_window_touch(ArenaScreen.JOY_CENTER + Vector2(46, 0), false)
+		_window_touch(Vector2(123, 676), false)
 		check(Vector2(Arena.sim.heroes[5]["pos"]).distance_to(old_position) > 0.1, "window pixel joystick touch moves the selected hero")
 		check(screen.joystick == Vector2.ZERO, "window pixel release stops the joystick")
 		main.queue_free()
@@ -486,6 +593,12 @@ func _rite_only() -> void:
 	file.store_string(JSON.stringify({"checks": checks, "failures": failures}, "  ") + "\n")
 	file = null
 	finish("Arena ritual presentation")
+
+func _drag(logical: Vector2, pointer: int = 0) -> void:
+	var drag := InputEventScreenDrag.new()
+	drag.index = pointer
+	drag.position = logical
+	screen._input(drag)
 
 func _window_touch(logical: Vector2, pressed: bool) -> void:
 	var event := InputEventScreenTouch.new()
@@ -508,9 +621,9 @@ func _prepare_field() -> void:
 	for n in range(22):
 		Arena.sim._spawn(pool[n % pool.size()])
 		var mo: Dictionary = Arena.sim.monsters[-1]
-		mo["pos"] = Balance.ARENA_CENTER + Vector2.from_angle(n * TAU / 22) * (210 + (n % 3) * 32)
+		mo["pos"] = ArenaGeometry.route_points(n % ArenaGeometry.ROUTE_COUNT)[6 + (n / ArenaGeometry.ROUTE_COUNT) * 5]
 		mo["hp"] *= 0.7
-		mo["vel"] = (Balance.ARENA_CENTER - Vector2(mo["pos"])).normalized()
+		mo["vel"] = ArenaGeometry.road_direction(mo["pos"])
 	Arena.sim.monsters[0]["blocked"] = true
 	Arena.sim.monsters[0]["vel"] = Vector2.ZERO
 	Arena.sim.crystal_hp = Arena.sim.crystal_max * 0.65

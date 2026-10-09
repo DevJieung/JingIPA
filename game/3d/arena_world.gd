@@ -40,7 +40,7 @@ func build_map(theme: Dictionary) -> void:
 	var body := String(theme.get("main_body", "wood"))
 	_weather_body = body
 	var snowy := body in ["aqua", "frost"]
-	var half := ArenaGeometry.MAP_RECT.size / (UNIT * 2.0)
+	var radius := ArenaGeometry.RADIUS / UNIT
 	var palette := {"aqua":"#16445a", "flame":"#342d38", "wood":"#223e40", "rock":"#384653", "frost":"#24506a"}
 	var ground := Color(String(palette.get(body, "#223e40")))
 	var moss := Color("#597779")
@@ -57,57 +57,79 @@ func build_map(theme: Dictionary) -> void:
 	woodland_material.set_shader_parameter("frozen", 0.0)
 	woodland_material.set_shader_parameter("motif_seed", 27.0)
 	woodland.material_override = woodland_material
-	var soil := StellarModels.part(terrain, "box", Vector3(0, -0.06, 0), Vector3(half.x * 2, 0.15, half.y * 2), ground)
+	var soil := MeshInstance3D.new()
+	var disc := CylinderMesh.new()
+	disc.top_radius = radius
+	disc.bottom_radius = radius
+	disc.height = 0.15
+	disc.radial_segments = 128
+	soil.mesh = disc
+	soil.position.y = -0.06
+	terrain.add_child(soil)
 	var soil_material := ShaderMaterial.new()
 	soil_material.shader = preload("res://art/models/arena_ground.gdshader")
 	soil_material.set_shader_parameter("ground_color", ground)
 	soil_material.set_shader_parameter("edge_color", moss)
-	soil_material.set_shader_parameter("half_extent", half)
+	soil_material.set_shader_parameter("field_radius", radius)
 	soil_material.set_shader_parameter("frozen", 1.0 if snowy else 0.08)
 	soil_material.set_shader_parameter("motif_seed", float(absi(id.hash()) % 1000))
 	soil.material_override = soil_material
 	var rng := RandomNumberGenerator.new()
 	rng.seed = absi(id.hash())
-	# Individual beveled masonry and uneven snow caps catch moonlight at the rim.
-	for side in [-1, 1]:
-		for n in range(24):
-			var x := lerpf(-half.x, half.x, (n + 0.5) / 24.0)
-			var at := Vector3(x, -0.14, side * (half.y + 0.20))
-			StellarModels.part(terrain, "stone", at, Vector3(half.x / 12.0 - 0.025, 0.48, 0.44), Color("#425b71").lightened((n % 3) * 0.035))
-			if snowy: StellarModels.part(terrain, "stone", at + Vector3(0, 0.25, 0), Vector3(half.x / 12.0 - 0.01, 0.07, 0.48), moss)
-		for n in range(18):
-			var z := lerpf(-half.y, half.y, (n + 0.5) / 18.0)
-			var at := Vector3(side * (half.x + 0.20), -0.14, z)
-			StellarModels.part(terrain, "stone", at, Vector3(0.44, 0.48, half.y / 9.0 - 0.025), Color("#425b71").lightened((n % 3) * 0.035))
-			if snowy: StellarModels.part(terrain, "stone", at + Vector3(0, 0.25, 0), Vector3(0.48, 0.07, half.y / 9.0 - 0.01), moss)
-	# Several depths of asymmetrical firs, boulders and snow banks extend past camera travel.
-	for n in range(160):
-		var at := Vector3(rng.randf_range(-half.x - 15, half.x + 15), -0.32, rng.randf_range(-half.y - 13, half.y + 13))
-		if absf(at.x) < half.x + 1.20 and absf(at.z) < half.y + 1.20: continue
-		var distance := maxf(absf(at.x) - half.x, absf(at.z) - half.y)
-		var value := rng.randf_range(0.95, 1.85) if distance > 3 else rng.randf_range(0.65, 1.1)
+	# The 128-sided disc and stone arc use the same radius as movement and lanes.
+	for n in range(96):
+		var angle := TAU * (n + 0.5) / 96.0
+		if _gate_near(angle, 0.12): continue
+		var at := Vector3(cos(angle) * (radius + 0.16), -0.14, sin(angle) * (radius + 0.16))
+		var turn := Vector3(0, -angle - PI / 2, 0)
+		var width := TAU * radius / 96.0 - 0.015
+		StellarModels.part(terrain, "stone", at, Vector3(width, 0.48, 0.40), Color("#425b71").lightened((n % 3) * 0.035), 0, 0, turn)
+		if snowy: StellarModels.part(terrain, "stone", at + Vector3(0, 0.25, 0), Vector3(width + 0.01, 0.07, 0.44), moss, 0, 0, turn)
+	for lane in range(ArenaGeometry.ROUTE_COUNT): _arena_road(ArenaGeometry.route_points(lane), snowy)
+	var plaza := MeshInstance3D.new()
+	var plaza_disc := CylinderMesh.new()
+	plaza_disc.top_radius = ArenaGeometry.PLAZA_RADIUS / UNIT
+	plaza_disc.bottom_radius = plaza_disc.top_radius
+	plaza_disc.height = 0.018
+	plaza_disc.radial_segments = 96
+	plaza.mesh = plaza_disc
+	plaza.position.y = 0.037
+	var plaza_material := ShaderMaterial.new()
+	plaza_material.shader = preload("res://art/models/arena_road.gdshader")
+	plaza_material.set_shader_parameter("road_color", Color("#536f7b") if snowy else Color("#6b7774"))
+	plaza_material.set_shader_parameter("field_radius", radius)
+	plaza_material.set_shader_parameter("plaza", true)
+	plaza.material_override = plaza_material
+	plaza.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	terrain.add_child(plaza)
+	# Woodland follows concentric irregular arcs; foreground trees stay off the rim.
+	for n in range(150):
+		var at := Vector3(rng.randf_range(-radius - 15, radius + 15), -0.32, rng.randf_range(-radius - 13, radius + 13))
+		var distance := Vector2(at.x, at.z).length() - radius
+		if distance < 2.3: continue
+		var value := rng.randf_range(0.95, 1.85) if distance > 4 else rng.randf_range(0.65, 1.0)
 		_fir(terrain, at, value, snowy, n % 3)
 		if n % 3 == 0:
 			StellarModels.part(terrain, "stone", at + Vector3(0.7, 0.18, 0.3), Vector3(1.35, 0.85, 1.15) * value, Color("#344c62"), 0, 0, Vector3(0.1, n, 0.15))
 			if snowy: StellarModels.part(terrain, "sphere", at + Vector3(0.7, 0.59, 0.3), Vector3(1.25, 0.16, 1.05) * value, moss)
-	for side in [-1, 1]:
-		for n in range(15):
-			var at := Vector3(side * (half.x + 0.95 + (n % 2) * 0.35), -0.2, (n - 7) * half.y / 7.0)
-			_fir(terrain, at, 0.72 + (n % 3) * 0.13, snowy, n % 3)
-		for n in range(19):
-			var at := Vector3((n - 9) * half.x / 9.0, -0.2, side * (half.y + 2.0 + (n % 2) * 0.25))
-			_fir(terrain, at, 0.68 + (n % 4) * 0.12, snowy, n % 3)
-	for side in [-1, 1]:
-		for n in range(12):
-			var at := Vector3(side * (half.x + 2.2 + (n % 3) * 0.35), -0.39, (n - 5.5) * 1.8)
-			var stone := Vector3(1.4 + (n % 3) * 0.36, 0.65 + (n % 4) * 0.20, 1.6)
-			StellarModels.part(terrain, "stone", at, stone, Color("#2c435b"), 0, 0, Vector3(0.07, n * 0.7, 0.1))
-			if snowy: StellarModels.part(terrain, "sphere", at + Vector3(0, stone.y * 0.5, 0), Vector3(stone.x * 0.82, 0.10, stone.z * 0.88), Color("#68869c"))
-	# Sparse edge chips keep the central fighting space clear and readable.
+	for n in range(68):
+		var angle := n * TAU / 68.0
+		if _gate_near(angle, 0.16): continue
+		var distance := radius + 1.8 + (n % 3) * 0.28
+		var at := Vector3(cos(angle) * distance, -0.20, sin(angle) * distance)
+		_fir(terrain, at, 0.62 + (n % 3) * 0.12, snowy, n % 3)
+	for n in range(30):
+		var angle := n * TAU / 30.0
+		if _gate_near(angle, 0.18): continue
+		var at := Vector3(cos(angle) * (radius + 3.4), -0.39, sin(angle) * (radius + 3.4))
+		var stone := Vector3(1.4 + (n % 3) * 0.36, 0.65 + (n % 4) * 0.20, 1.6)
+		StellarModels.part(terrain, "stone", at, stone, Color("#2c435b"), 0, 0, Vector3(0.07, n * 0.7, 0.1))
+		if snowy: StellarModels.part(terrain, "sphere", at + Vector3(0, stone.y * 0.5, 0), Vector3(stone.x * 0.82, 0.10, stone.z * 0.88), Color("#68869c"))
 	for n in range(43):
-		var side := -1.0 if n % 2 else 1.0
-		var at := Vector3(rng.randf_range(-half.x + 0.4, half.x - 0.4), 0.06, side * (half.y - rng.randf_range(0.25, 1.0)))
-		if n % 3 == 0: at = Vector3(side * (half.x - rng.randf_range(0.25, 1.0)), 0.06, rng.randf_range(-half.y, half.y))
+		var angle := rng.randf() * TAU
+		if _gate_near(angle, 0.14): continue
+		var distance := radius - rng.randf_range(0.2, 0.7)
+		var at := Vector3(cos(angle) * distance, 0.06, sin(angle) * distance)
 		StellarModels.part(terrain, "stone", at, Vector3(0.14 + (n % 3) * 0.06, 0.10, 0.12 + (n % 4) * 0.04), moss, 0.05)
 	# Preserve each theme's authored landmark, relocated outside the larger arena.
 	var landmark := Node3D.new()
@@ -115,7 +137,7 @@ func build_map(theme: Dictionary) -> void:
 	_landmark(landmark, String(Scenery.MAP_MOTIFS.get(id, "gravel")), body, moss, rng)
 	for part in landmark.get_children():
 		if part is Node3D:
-			part.position.x += (-half.x - 1.8 + 8.6) * (-1 if part.position.x > 0 else 1)
+			part.position.x += (-radius - 2.8 + 8.6) * (-1 if part.position.x > 0 else 1)
 	for ring in range(3):
 		StellarModels.part(terrain, "cylinder", Vector3(0, 0.07 + ring * 0.075, 0), Vector3(2.30 - ring * 0.24, 0.14, 2.30 - ring * 0.24), Color("#405a72").lightened(ring * 0.07), 0.1)
 	for n in range(12):
@@ -125,11 +147,13 @@ func build_map(theme: Dictionary) -> void:
 		StellarModels.part(terrain, "box", rune, Vector3(0.055, 0.013, 0.12), Color("#a2ecff"), 0.2, 0.7, Vector3(0, -angle, 0))
 	StellarModels.part(terrain, "ring", Vector3(0, 0.27, 0), Vector3(1.8, 0.035, 1.8), Color("#94e8fa"), 0.3, 0.55)
 	var lamp_positions: Array[Vector3] = []
-	for side in [-1, 1]:
-		for zside in [-1, 1]:
-			var at := Vector3(side * (half.x + 0.85), 0, zside * half.y * 0.68)
-			_sanctuary_lantern(terrain, at, snowy)
-			lamp_positions.append(at)
+	for lane in range(ArenaGeometry.ROUTE_COUNT):
+		var entry := world(ArenaGeometry.route_points(lane)[0])
+		var radial := Vector3(entry.x, 0, entry.z).normalized()
+		var tangent := Vector3(-radial.z, 0, radial.x)
+		var at := radial * (radius + 0.85) + tangent * 1.35
+		_sanctuary_lantern(terrain, at, snowy)
+		lamp_positions.append(at)
 	StellarModels.compact(terrain)
 	var crystal := Node3D.new()
 	crystal.position = Vector3(0, 0.30, 0)
@@ -181,6 +205,46 @@ func build_map(theme: Dictionary) -> void:
 	weather.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(weather)
 	weather_update(0)
+
+func _gate_near(angle: float, half_angle: float) -> bool:
+	for lane in range(ArenaGeometry.ROUTE_COUNT):
+		var at := ArenaGeometry.route_points(lane)[0] - Balance.ARENA_CENTER
+		if absf(wrapf(angle - at.angle(), -PI, PI)) < half_angle: return true
+	return false
+
+func _arena_road(route: PackedVector2Array, snowy: bool) -> void:
+	if route.size() < 2: return
+	var points := route.duplicate()
+	# The visual entrance fills the route's round end cap up to the circular rim.
+	points.insert(0, Balance.ARENA_CENTER + (points[0] - Balance.ARENA_CENTER).normalized() * ArenaGeometry.RADIUS)
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var along := 0.0
+	var half_width := ArenaGeometry.ROAD_WIDTH / (UNIT * 2)
+	for i in range(points.size() - 1):
+		var a := world(points[i], 0.029)
+		var b := world(points[i + 1], 0.029)
+		var tangent_a := (world(points[mini(i + 1, points.size() - 1)]) - world(points[maxi(0, i - 1)])).normalized()
+		var tangent_b := (world(points[mini(i + 2, points.size() - 1)]) - world(points[i])).normalized()
+		var normal_a := Vector3(-tangent_a.z, 0, tangent_a.x) * half_width
+		var normal_b := Vector3(-tangent_b.z, 0, tangent_b.x) * half_width
+		var length := a.distance_to(b)
+		var vertices: Array[Vector3] = [a - normal_a, a + normal_a, b + normal_b, b - normal_b]
+		var coords: Array[Vector2] = [Vector2(along, 0), Vector2(along, 1), Vector2(along + length, 1), Vector2(along + length, 0)]
+		for index in [0, 2, 1, 0, 3, 2]:
+			surface.set_normal(Vector3.UP)
+			surface.set_uv(coords[index])
+			surface.add_vertex(vertices[index])
+		along += length
+	var road := MeshInstance3D.new()
+	road.mesh = surface.commit()
+	var material := ShaderMaterial.new()
+	material.shader = preload("res://art/models/arena_road.gdshader")
+	material.set_shader_parameter("road_color", Color("#536f7b") if snowy else Color("#6b7774"))
+	material.set_shader_parameter("field_radius", ArenaGeometry.RADIUS / UNIT)
+	road.material_override = material
+	road.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	terrain.add_child(road)
 
 func _fir(root: Node3D, at: Vector3, value: float, snow: bool, tone: int) -> void:
 	var needles: Color = [Color("#193a4e"), Color("#21465b"), Color("#2a5062")][tone]

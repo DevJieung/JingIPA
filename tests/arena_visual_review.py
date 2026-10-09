@@ -14,7 +14,7 @@ from godot_env import ROOT, GODOT, xvfb
 parser = argparse.ArgumentParser()
 parser.add_argument("--res", action="append")
 parser.add_argument("--out-root", type=Path, default=ROOT / "build/arena-visual")
-parser.add_argument("--only", choices=["polish", "help", "rite", "style", "look"])
+parser.add_argument("--only", choices=["polish", "help", "rite", "style", "look", "circle"])
 args = parser.parse_args()
 report = {"renderer": "gl_compatibility", "device_fps_measured": False, "resolutions": {}}
 for index, resolution in enumerate(args.res or ["1280x800", "1000x625"]):
@@ -34,7 +34,7 @@ for index, resolution in enumerate(args.res or ["1280x800", "1000x625"]):
         print("\n".join(log.splitlines()[-100:]))
         sys.exit(1)
     for locale in ["ko", "en"]:
-        names = ["reference", "edge_-1_0", "edge_1_0", "edge_0_-1", "edge_0_1", "edge_1_1", "biome_00", "biome_20", "biome_30", "biome_40", "themes", "rite_free", "summon_new", "field_six", "help", "growth_result",
+        names = ["circle", "circle_edge_00", "circle_edge_02", "circle_edge_04", "circle_edge_06", "joystick_start_00", "joystick_drag_00", "joystick_drag_01", "joystick_drag_02", "joystick_drag_03", "joystick_released", "reference", "edge_-1_0", "edge_1_0", "edge_0_-1", "edge_0_1", "edge_1_1", "biome_00", "biome_20", "biome_30", "biome_40", "themes", "rite_free", "summon_new", "field_six", "help", "growth_result",
                  "growth_maxed", "upgrades", "passives", "reserves_selected", "boss", "victory",
                  "defeat", "title", "title_resume", "collection_water", "collection_fire", "collection_elec", "menu_menu", "menu_rite", "menu_elements"]
         names = [name for name in names if (out / f"{locale}_{name}.png").exists()]
@@ -46,16 +46,20 @@ for index, resolution in enumerate(args.res or ["1280x800", "1000x625"]):
             shot.thumbnail((426, 267))
             contact.paste(shot, (n % 3 * 426, n // 3 * 267))
         contact.save(out / f"{locale}_contact.jpg", quality=94)
-        for motion in ["move", "limne_move", "skill_blast", "skill_freeze", "skill_ward", "rite_spin", "follow", "echo_attack"]:
+        for motion in ["move", "limne_move", "skill_blast", "skill_freeze", "skill_ward", "rite_spin", "follow", "echo_attack", "lane"]:
             files = sorted(out.glob(f"{locale}_{motion}_[0-9][0-9].png"))
-            frames = [Image.open(path).convert("RGB") for path in files]
+            frames = []
+            for path in files:
+                preview = Image.open(path).convert("RGB")
+                preview.thumbnail((640, 400))
+                frames.append(preview.quantize(colors=128, method=Image.Quantize.FASTOCTREE))
             if frames:
                 frames[0].save(out / f"{locale}_{motion}.gif", save_all=True,
-                               append_images=frames[1:], duration=100, loop=0)
+                               append_images=frames[1:], duration=100, loop=0, optimize=False)
     checks = json.loads((out / (f"{args.only}-report.json" if args.only else "report.json")).read_text())
     if "resolution" in checks:
         checks["layout_resolution"] = checks.pop("resolution")
-    checks["window_resolution"] = list(Image.open(out / "ko_rite_free.png").size)
+    checks["window_resolution"] = list(Image.open(out / ("ko_circle.png" if args.only == "circle" else "ko_rite_free.png")).size)
     checks["screenshots"] = {"polish": 32, "help": 2, "rite": 12, "style": 38}.get(args.only, len(list(out.glob("*.png"))))
     checks["render_errors"] = 0
     report["resolutions"][resolution] = checks

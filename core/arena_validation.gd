@@ -5,8 +5,8 @@ class_name ArenaValidation
 static func number(value: Variant, low: float = 0.0, high: float = INF) -> bool:
 	return (value is int or value is float) and is_finite(float(value)) and float(value) >= low and float(value) <= high
 
-static func point(value: Variant) -> bool:
-	return vector(value) and ArenaGeometry.MAP_RECT.grow(2).has_point(value)
+static func point(value: Variant, legacy: bool = false) -> bool:
+	return vector(value) and (ArenaGeometry.LEGACY_RECT.grow(2).has_point(value) if legacy else ArenaGeometry.contains(value, -2))
 
 static func vector(value: Variant) -> bool:
 	return value is Vector2 and is_finite(value.x) and is_finite(value.y)
@@ -21,8 +21,9 @@ static func source(value: Variant, count: int) -> bool:
 	return value is int and value >= -1 and value < count
 
 static func valid(data: Dictionary) -> bool:
-	if data.get("mode") != "arena" or data.get("v") != 1 or data.get("wave") != 1:
+	if data.get("mode") != "arena" or data.get("v") not in [1, 2] or data.get("wave") != 1:
 		return false
+	var legacy: bool = data["v"] == 1
 	for key in ["seed", "rng", "phase", "theme_index", "selected", "gold", "lives", "kills", "best_tier", "summon_count"]:
 		if not data.get(key) is int:
 			return false
@@ -46,7 +47,7 @@ static func valid(data: Dictionary) -> bool:
 			if not hero is Dictionary or not hero.get("u") is String or Roster.unit_by_id(hero["u"]).is_empty() or ids.has(hero["u"]):
 				return false
 			ids[hero["u"]] = true
-			if not hero.get("t") is int or not hero.get("points") is int or not point(hero.get("p")):
+			if not hero.get("t") is int or not hero.get("points") is int or not point(hero.get("p"), legacy):
 				return false
 			var tier := int(hero["t"])
 			if tier < 0 or tier > Balance.TIER_MAX or hero["points"] < 0:
@@ -140,8 +141,9 @@ static func valid(data: Dictionary) -> bool:
 		if hero.has("fx_d") and not vector(hero["fx_d"]):
 			return false
 	for mo in sim["monsters"]:
-		if not point(mo.get("pos")) or not mo.get("m") is Dictionary or not mo.get("path") is PackedVector2Array:
+		if not point(mo.get("pos"), legacy) or not mo.get("m") is Dictionary or not mo.get("path") is PackedVector2Array:
 			return false
+		if not legacy and not ArenaGeometry.on_road(mo["pos"]): return false
 		for key in ["hp", "max", "spd", "motion_t", "slow", "slow_t", "stun_t", "stun_cd", "push", "push_left", "push_t", "flash", "burn", "burn_t", "burn_em", "siege_t", "s", "off", "h"]:
 			if not number(mo.get(key), -1000000.0):
 				return false
@@ -154,7 +156,7 @@ static func valid(data: Dictionary) -> bool:
 		if not mo.get("spawn_id") is int or not mo.get("nav_v") is int or not mo.get("blocked") is bool:
 			return false
 		for at in mo["path"]:
-			if not point(at):
+			if not point(at, legacy) or (not legacy and not ArenaGeometry.on_road(at)):
 				return false
 	for bullet in sim["bullets"]:
 		if not vector(bullet.get("p")) or not vector(bullet.get("v")) or not bullet.get("c") is Color or not bullet.get("crit") is bool:

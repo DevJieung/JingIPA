@@ -31,6 +31,7 @@ def main():
             source = f"assets/{module}.gd"
             assert source in names or source + ".remap" in names, f"Missing continuous battle module: {module}"
         check_imported_resource(archive, names, "assets/art/models/arena_ground.gdshader")
+        check_imported_resource(archive, names, "assets/art/models/arena_road.gdshader")
         assert not any(name in names for name in ("assets/asis.jpg", "assets/asis.jpg.import",
                        "assets/tobe.png", "assets/tobe.png.import")), "Design references must not ship"
         catalog = json.loads(archive.read("assets/core/locales/ui.json"))

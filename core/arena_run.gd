@@ -60,6 +60,7 @@ func _spawn_position(index: int) -> Vector2:
 	return preferred
 
 func _position_free(point: Vector2) -> bool:
+	if not ArenaGeometry.contains(point, Balance.ARENA_HERO_RADIUS): return false
 	if point.distance_to(Balance.ARENA_CENTER) < Balance.ALTAR_R + Balance.ARENA_HERO_RADIUS:
 		return false
 	for hero in heroes:
@@ -270,7 +271,7 @@ func _arena_heroes_out(list: Array) -> Array:
 	return out
 
 func snapshot(_include_checkpoint: bool = true) -> Dictionary:
-	return {"mode": "arena", "v": 1, "wave": 1, "seed": run_seed, "rng": rng.state,
+	return {"mode": "arena", "v": 2, "wave": 1, "seed": run_seed, "rng": rng.state,
 		"phase": phase, "modal": modal, "theme_index": theme_index, "selected": selected,
 		"gold": gold, "lives": lives, "kills": kills, "best_tier": best_tier,
 		"heroes": _arena_heroes_out(heroes), "bench": _arena_heroes_out(bench),
@@ -302,6 +303,8 @@ func restore(data: Dictionary) -> bool:
 		var list: Array = heroes if group == "heroes" else bench
 		for saved in data[group]:
 			list.append({"unit": Roster.unit_by_id(String(saved["u"])), "tier": int(saved["t"]), "position": Vector2(saved["p"]), "growth_points": int(saved["points"]), "n": 1, "wave": 1})
+	if int(data["v"]) == 1:
+		_migrate_circle_positions()
 	levels = data["levels"].duplicate()
 	passives.assign(data["passives"])
 	owned_passives.assign(data["owned_passives"])
@@ -319,8 +322,32 @@ func restore(data: Dictionary) -> bool:
 	if theme_index >= 0:
 		sim = ArenaSim.new()
 		sim.setup(self, 1, run_seed)
-		sim.restore_arena(data["sim"])
+		sim.restore_arena(data["sim"], int(data["v"]) == 1)
 	return true
+
+func _migrate_circle_positions() -> void:
+	# Existing rectangular saves retain their progress. Only positions that no
+	# longer fit are relocated, and neighbouring heroes must not collapse together.
+	var occupied: Array[Vector2] = []
+	for hero in heroes:
+		var preferred := ArenaGeometry.clamp_point(hero["position"], Balance.ARENA_HERO_RADIUS)
+		var candidate := preferred
+		for ring in range(20):
+			var found := false
+			for step_index in range(1 if ring == 0 else 24):
+				candidate = ArenaGeometry.clamp_point(preferred + Vector2.from_angle(TAU * step_index / 24.0) * ring * Balance.ARENA_HERO_RADIUS * 2.0, Balance.ARENA_HERO_RADIUS)
+				if candidate.distance_to(Balance.ARENA_CENTER) < Balance.ALTAR_R + Balance.ARENA_HERO_RADIUS: continue
+				var clear := true
+				for other in occupied:
+					if other.distance_to(candidate) < Balance.ARENA_HERO_RADIUS * 2.0: clear = false
+				if clear:
+					found = true
+					break
+			if found: break
+		hero["position"] = candidate
+		occupied.append(candidate)
+	for hero in bench:
+		hero["position"] = ArenaGeometry.clamp_point(hero["position"], Balance.ARENA_HERO_RADIUS)
 
 func autosave() -> void:
 	if running:
