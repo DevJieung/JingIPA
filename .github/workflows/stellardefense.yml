@@ -83,7 +83,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: stellardefense-gradle-${{ runner.os }}-${{ env.GODOT_VERSION }}-${{ hashFiles('addons/admob/android/bin/**', 'tools/ci/prepare.py') }}
+          key: stellardefense-gradle-${{ runner.os }}-${{ env.GODOT_VERSION }}-${{ hashFiles('tools/ci/prepare.py', 'export_presets.cfg') }}
           restore-keys: stellardefense-gradle-${{ runner.os }}-${{ env.GODOT_VERSION }}-
       - name: 테스트 APK 서명 키 유지
         uses: actions/cache@v4
@@ -93,7 +93,6 @@ jobs:
       - name: 모바일 빌드 설정
         env:
           IOS_TEAM_ID: ${{ secrets.STELLARDEFENSE_IOS_TEAM_ID || secrets.POKERDEFENSE_IOS_TEAM_ID || secrets.IOS_TEAM_ID }}
-          STELLARDEFENSE_ADMOB_ENV: ${{ secrets.STELLARDEFENSE_ADMOB_ENV || secrets.POKERDEFENSE_ADMOB_ENV }}
         run: python3 tools/ci/prepare.py
       - name: 게임 검사 및 APK / Xcode 프로젝트 빌드
         run: bash tools/ci/export.sh
