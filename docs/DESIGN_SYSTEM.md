@@ -5,6 +5,26 @@
 역할 정의: [graphic_design_manager](../.codex/agents/graphic_design_manager.toml).
 분담 규칙: [AGENTS.md](../AGENTS.md).
 
+## 2026-10-10 도로 확대·중앙 영웅 우회
+
+- 사용자 요청에 따라 `ArenaGeometry.ROAD_WIDTH`를90→116logical로 넓혔다.
+  3D 돌 포장과 미니맵은 같은 폭을 읽으며 기존 S굽이·중앙 광장·밤숲 재질을 유지한다.
+  길 개정은3이다. 아래10월9일 기록의90logical은 이전 값이다.
+- 정적 시각 검수는 실제 GL1280×800/1000×625 각각79검사·실패0·렌더 오류0이다.
+  두 화면의 도로/미니맵,굽이 사이 땅,광장 연결,진입구 돌 테두리·등불을 직접 확인했다.
+  자료: `build/arena-road-width/<해상도>/ko_reference.png`와`render.log`.
+- 영웅 반경26→18·몬스터 반경16→10·길찾기 격자20→10은 사용자 승인 후
+  `data/game.db`에서 적용했다. 모델 크기와 장비·애니메이션 원본은 유지한다.
+  4방향 길 중앙에 영웅을 세워도 몬스터가 충돌 원을 침범하거나 멈추지 않고 옆으로
+  지나가는 실제9.6초 연속 프레임을 두 화면 크기에서 직접 확인했다.
+- 재현: `python3 tests/arena_visual_review.py --only road --out-root build/arena-road-bypass`.
+  실제 GL1280×800/1000×625 각각 한영76PNG·5,376검사·실패0·렌더 오류0이며,
+  PNG 픽셀 크기도 각 창과 일치한다. 중앙 영웅 우회·6인 전장·4진입구·미니맵·작은 영문
+  화면을 확인했다. 자료는 `build/arena-road-bypass/<해상도>/*_road_pass_00..31.png`,
+  `*_road_pass.gif`, `*_contact.jpg`와 [검수 보고서](../build/arena-road-bypass/road-report.json)다.
+  검수 구현은`tests/arena_visual_preview.gd`와`tests/arena_visual_review.py`다.
+  통합 검증·모바일 빌드는 부모 담당이며 Android/iOS 실기기·FPS 검수는 수행하지 않았다.
+
 ## 2026-10-09 후속 — 우측 전투 HUD·보행 변형 복구·긴 진입로
 
 - 최신 사용자 요청에 따라 하단 HUD를 우측288px 명령 패널로 옮겼다.

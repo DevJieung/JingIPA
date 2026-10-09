@@ -116,7 +116,8 @@ func _spawn(monster: Dictionary) -> void:
 	var lane := _rng.randi_range(0, ArenaGeometry.ROUTE_COUNT - 1)
 	var path := ArenaGeometry.route_points(lane)
 	var radial := (path[0] - Balance.ARENA_CENTER).normalized()
-	var point := ArenaGeometry.clamp_point(path[0] + Vector2(-radial.y, radial.x) * float(mo["off"]), Balance.ARENA_MONSTER_RADIUS)
+	var entrance := Balance.ARENA_CENTER + radial * (ArenaGeometry.RADIUS - Balance.ARENA_MONSTER_RADIUS)
+	var point := ArenaGeometry.clamp_point(entrance + Vector2(-radial.y, radial.x) * float(mo["off"]), Balance.ARENA_MONSTER_RADIUS)
 	_serial += 1
 	mo.merge({"pos": point, "vel": Vector2.ZERO, "blocked": false, "spawn_id": _serial,
 		"path": PackedVector2Array(), "nav_v": -1, "siege_t": 0.0})

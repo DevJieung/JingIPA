@@ -3,9 +3,9 @@ class_name ArenaGeometry
 
 ## Shared geometry for rendering, navigation, free hero movement and the minimap.
 const RADIUS := 500.0
-const ROAD_WIDTH := 90.0
+const ROAD_WIDTH := 116.0
 const ROUTE_COUNT := 4
-const ROAD_REVISION := 2
+const ROAD_REVISION := 3
 const PLAZA_RADIUS := 103.0
 const MAP_RECT := Rect2(Balance.ARENA_CENTER - Vector2.ONE * RADIUS, Vector2.ONE * RADIUS * 2)
 const LEGACY_RECT := Rect2(Balance.ARENA_CENTER - Vector2(552, 408), Vector2(1104, 816))

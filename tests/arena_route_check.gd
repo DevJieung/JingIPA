@@ -6,7 +6,7 @@ func _ready() -> void:
 	_check_routes()
 	_check_spawn_entries()
 	_check_moving_guardian()
-	_check_local_blockers()
+	_check_center_guardians()
 	_check_migration()
 	await _check_floating_input()
 	Arena.running = false
@@ -52,10 +52,11 @@ func _check_routes() -> void:
 			radial_line = radial_line and p.distance_to(closest) < 30
 			if p.distance_to(Balance.ARENA_CENTER) <= Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS: break
 		check(road_only, "모든 프레임에서 길 안에 머무름 %d" % lane)
-		check(not radial_line and travelled > 900, "직선 지름길 없이 긴 굽은 도로 이동 %d (거리 %.1f)" % [lane, travelled])
+		var direct_distance := route[0].distance_to(Balance.ARENA_CENTER) - Balance.ALTAR_R - Balance.ARENA_MONSTER_RADIUS
+		check(not radial_line and travelled > direct_distance * 2.0, "직선의 두 배 이상 긴 굽은 도로 이동 %d (거리 %.1f)" % [lane, travelled])
 		print("입구 %d 실제 이동 거리 %.1f / 도로 중심선 %.1f" % [lane, travelled, road_length])
 		check(Vector2(mo["pos"]).distance_to(Balance.ARENA_CENTER) <= Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS + 1, "네 입구 모두 수정 도착 %d" % lane)
-	# A guardian only stops enemies at contact, never at the distant entrance.
+	# A single central guardian leaves room to pass throughout the road.
 	sim.monsters.clear()
 	var block_point := ArenaGeometry.route_points(0)[12]
 	Arena.heroes[0]["position"] = block_point
@@ -64,17 +65,18 @@ func _check_routes() -> void:
 	sim._spawn(Arena.spawns_for(1)[0])
 	var blocked: Dictionary = sim.monsters[0]
 	blocked["pos"] = ArenaGeometry.route_points(0)[0]
+	blocked["spd"] = 1.0
 	var start: Vector2 = blocked["pos"]
 	for i in range(90): sim._move_monsters(1.0 / 60.0)
-	check(not blocked["blocked"] and Vector2(blocked["pos"]).distance_to(start) > 50, "멀리 있는 영웅이 길을 막아도 입구에서 계속 접근")
-	for i in range(600): sim._move_monsters(1.0 / 60.0)
-	check(blocked["blocked"] and Vector2(blocked["pos"]).distance_to(block_point) < 46, "실제 영웅 접촉 직전에서만 대기")
+	check(not blocked["blocked"] and Vector2(blocked["pos"]).distance_to(start) > 50, "중앙 영웅이 있어도 입구에서 계속 접근")
+	for i in range(360): sim._move_monsters(1.0 / 60.0)
+	check(not blocked["blocked"] and Vector2(blocked["pos"]).distance_to(block_point) > 80, "중앙 영웅을 지나 계속 전진")
 	var waiting: Vector2 = blocked["pos"]
 	Arena.heroes[0]["position"] = Balance.ARENA_CENTER + Vector2(230, -10)
 	sim.refresh_heroes()
 	sim._rebuild_navigation()
 	for i in range(90): sim._move_monsters(1.0 / 60.0)
-	check(Vector2(blocked["pos"]).distance_to(waiting) > 30 and ArenaGeometry.on_road(blocked["pos"], Balance.ARENA_MONSTER_RADIUS), "봉쇄 해제 뒤 같은 도로 이동 재개")
+	check(Vector2(blocked["pos"]).distance_to(waiting) > 30 and ArenaGeometry.on_road(blocked["pos"], Balance.ARENA_MONSTER_RADIUS), "영웅 위치 변경 뒤에도 같은 도로 이동 유지")
 	blocked["pos"] = ArenaGeometry.route_points(0)[20]
 	blocked["nav_v"] = -1
 	sim._push(0)
@@ -170,25 +172,37 @@ func _check_moving_guardian() -> void:
 		if moving:
 			check(same_progress and keeps_moving, "영웅을 10초 연속 이동해도 적은 정지·뒷걸음 없이 같은 속도로 전진")
 
-func _check_local_blockers() -> void:
+func _check_center_guardians() -> void:
 	var sim := _battle()
-	var route := ArenaGeometry.route_points(0)
-	for sample in [12, 18, 24, 30, 36, 42, 48, 54]:
-		Arena.heroes[0]["position"] = route[sample]
-		sim.refresh_heroes()
-		sim._rebuild_navigation()
-		sim.monsters.clear()
-		sim._spawn(Arena.spawns_for(1)[0])
-		var mo: Dictionary = sim.monsters[0]
-		mo["pos"] = route[0]
-		mo["spd"] = 1.0
-		var safe := true
-		for frame in range(1200):
-			sim._move_monsters(1.0 / 60.0)
-			safe = safe and Vector2(mo["pos"]).distance_to(route[sample]) >= Balance.ARENA_HERO_RADIUS + Balance.ARENA_MONSTER_RADIUS - 0.01
-		var at: Vector2 = mo["pos"]
-		for frame in range(60): sim._move_monsters(1.0 / 60.0)
-		check(safe and bool(mo["blocked"]) and at == mo["pos"] and at.distance_to(route[sample]) < 46, "S자 바깥 굽이도 실제 접촉까지 접근·대기 중 왕복 없음 %d" % sample)
+	# All four rotations, straight sections, inner/outer bends, and positions
+	# between grid centres must leave a usable passage beside a single hero.
+	for lane in range(ArenaGeometry.ROUTE_COUNT):
+		var route := ArenaGeometry.route_points(lane)
+		for sample in [6, 12, 18, 24, 30, 36, 42, 48, 54]:
+			for offset in [Vector2.ZERO, Vector2(3, 3)]:
+				var guardian: Vector2 = route[sample] + offset
+				Arena.heroes[0]["position"] = guardian
+				sim.refresh_heroes()
+				sim._rebuild_navigation()
+				sim.monsters.clear()
+				sim._spawn(Arena.spawns_for(1)[0])
+				var mo: Dictionary = sim.monsters[0]
+				mo["pos"] = route[0]
+				mo["spd"] = 1.0
+				var safe := true
+				var road_only := true
+				var keeps_moving := true
+				for frame in range(1500):
+					sim._move_monsters(1.0 / 60.0)
+					var at: Vector2 = mo["pos"]
+					safe = safe and at.distance_to(guardian) >= Balance.ARENA_HERO_RADIUS + Balance.ARENA_MONSTER_RADIUS - 0.01
+					road_only = road_only and ArenaGeometry.on_road(at, Balance.ARENA_MONSTER_RADIUS)
+					keeps_moving = keeps_moving and not bool(mo["blocked"])
+					if at.distance_to(Balance.ARENA_CENTER) <= Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS: break
+				var label := "입구%d·굽이%d·편차%s" % [lane, sample, offset]
+				check(safe and road_only, "중앙 영웅 우회 중 관통·길 이탈 없음 " + label)
+				check(keeps_moving and Vector2(mo["pos"]).distance_to(Balance.ARENA_CENTER) <= Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS,
+					"중앙 영웅 한 명으로 길이 막히지 않고 수정 도착 " + label)
 
 func _check_migration() -> void:
 	var sim := _battle()
@@ -207,8 +221,25 @@ func _check_migration() -> void:
 	var broken := Arena.snapshot()
 	broken["heroes"][0]["p"] = ArenaGeometry.MAP_RECT.position
 	check(not Arena.restore(broken), "새 형식의 원 밖 좌표는 거부")
+	# A previously blocked enemy must replan immediately after the wider-road
+	# update even when the guardian never moves and the old path was nonempty.
+	var narrow_road := Arena.snapshot()
+	var route := ArenaGeometry.route_points(0)
+	narrow_road["heroes"][0]["p"] = route[18]
+	narrow_road["sim"]["road_revision"] = 2
+	narrow_road["sim"]["monsters"][0]["pos"] = route[12]
+	narrow_road["sim"]["monsters"][0]["path"] = PackedVector2Array([route[18]])
+	narrow_road["sim"]["monsters"][0]["blocked"] = true
+	narrow_road["sim"]["monsters"][0]["spd"] = 1.0
+	check(Arena.restore(narrow_road), "좁은 도로에서 영웅에게 막힌 기존 저장 불러오기")
+	check(Arena.sim.monsters[0]["path"].is_empty() and Arena.sim.monsters[0]["nav_v"] == -1, "이전 충돌 반경·격자 경로를 폐기하고 재탐색")
+	for frame in range(1500):
+		Arena.sim._move_monsters(1.0 / 60.0)
+		if Vector2(Arena.sim.monsters[0]["pos"]).distance_to(Balance.ARENA_CENTER) <= Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS: break
+	check(not Arena.sim.monsters[0]["blocked"] and Vector2(Arena.sim.monsters[0]["pos"]).distance_to(Balance.ARENA_CENTER) <= Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS,
+		"이전 저장도 영웅을 움직이지 않고 우회하여 수정 도착")
 	var old_road := Arena.snapshot()
-	old_road["sim"]["monsters"][0]["pos"] = Balance.ARENA_CENTER + Vector2(330, 70)
+	old_road["sim"]["monsters"][0]["pos"] = Balance.ARENA_CENTER + Vector2(230, -10)
 	old_road["sim"]["monsters"][0]["path"] = PackedVector2Array([Balance.ARENA_CENTER + Vector2(330, 170), Balance.ARENA_CENTER])
 	check(not Arena.restore(old_road), "현재 도로 저장의 길 밖 좌표는 거부")
 	old_road["sim"].erase("road_revision")

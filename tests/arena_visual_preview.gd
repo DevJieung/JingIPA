@@ -9,6 +9,9 @@ func _ready() -> void:
 	if not require_no_save(): return
 	out_dir = arg("--out", out_dir)
 	DirAccess.make_dir_recursive_absolute(out_dir)
+	if has_arg("--road-only"):
+		await _road_only()
+		return
 	if has_arg("--hud-only"):
 		await _hud_only()
 		return
@@ -184,6 +187,99 @@ func _ready() -> void:
 	file = null
 	print("Arena visual review: " + out_dir)
 	finish("Arena native 3D and mobile UI")
+
+func _road_only() -> void:
+	var trajectories: Array = []
+	for locale in ["ko", "en"]:
+		I18n.set_locale(locale)
+		Arena.start_run(20261010)
+		main = load("res://game/main.gd").new()
+		add_child(main)
+		await frames(3)
+		main.show_arena()
+		screen = main.screen
+		screen.set_process(false)
+		Arena.choose_theme(0)
+		Arena.confirm_summon()
+		Arena.close_modal()
+		_prepare_field()
+		await _capture(locale + "_road_field_six")
+		Arena.heroes.clear()
+		Arena.bench.clear()
+		var ids := ["echo", "brasa", "limne", "dummy"]
+		for lane in range(ArenaGeometry.ROUTE_COUNT):
+			Arena.gain_hero(Roster.unit_by_id(ids[lane]), 3)
+			Arena.heroes[lane]["position"] = ArenaGeometry.route_points(lane)[18]
+		Arena.sim.refresh_heroes()
+		Arena.sim.monsters.clear()
+		Arena.selected = -1
+		var pool := Roster.theme_pool(Arena.theme_for(1))
+		for lane in range(ArenaGeometry.ROUTE_COUNT):
+			Arena.sim._spawn(pool[0])
+			var monster: Dictionary = Arena.sim.monsters[-1]
+			monster["pos"] = ArenaGeometry.route_points(lane)[14]
+			monster["route"] = lane
+			monster["hp"] = 1000000.0
+			monster["max"] = 1000000.0
+		Arena.sim._rebuild_navigation()
+		screen.view_3d._follow_offset = Vector3.ZERO
+		screen.view_3d._camera_initialized = true
+		screen.view_3d._apply_camera(Vector3.ZERO)
+		await _capture(locale + "_road_center_guardians")
+		var closest := [INF, INF, INF, INF]
+		var blocked := [0, 0, 0, 0]
+		for n in range(32):
+			for tick in range(18):
+				Arena.sim._move_monsters(1.0 / 60)
+				Arena.sim.elapsed += 1.0 / 60
+				for lane in range(ArenaGeometry.ROUTE_COUNT):
+					var monster: Dictionary = Arena.sim.monsters[lane]
+					closest[lane] = minf(closest[lane], Vector2(monster["pos"]).distance_to(Arena.sim.heroes[lane]["pos"]))
+					if monster["blocked"]: blocked[lane] += 1
+			await _capture(locale + "_road_pass_%02d" % n)
+			var frame := {"locale": locale, "frame": n, "monsters": []}
+			for lane in range(ArenaGeometry.ROUTE_COUNT):
+				var at: Vector2 = Arena.sim.monsters[lane]["pos"]
+				check(ArenaGeometry.on_road(at, Balance.ARENA_MONSTER_RADIUS), "bypassing monster stays on visible road lane " + str(lane))
+				frame["monsters"].append({"lane": lane, "x": at.x, "y": at.y})
+			trajectories.append(frame)
+		for lane in range(ArenaGeometry.ROUTE_COUNT):
+			var path := ArenaGeometry.route_points(lane)
+			var progress := _road_progress(Arena.sim.monsters[lane]["pos"], path)
+			var hero_progress := _road_progress(Arena.sim.heroes[lane]["pos"], path)
+			check(progress > hero_progress + 45.0, "monster visibly passes central guardian lane " + str(lane))
+			check(closest[lane] >= Balance.ARENA_HERO_RADIUS + Balance.ARENA_MONSTER_RADIUS - 0.01, "bypass respects the active collision circles lane " + str(lane))
+			check(blocked[lane] == 0, "central guardian never stops the monster lane " + str(lane))
+		# Real hero-follow views include the road entrances, boundary stones and lamps.
+		Arena.selected = 0
+		for lane in range(ArenaGeometry.ROUTE_COUNT):
+			Arena.sim.heroes[0]["pos"] = ArenaGeometry.route_points(lane)[1]
+			screen.view_3d._camera_initialized = false
+			await _capture(locale + "_road_entry_%02d" % lane)
+		main.queue_free()
+		main = null
+		screen = null
+		await frames(4)
+	I18n.set_locale("ko")
+	var file := FileAccess.open(out_dir + "/road-report.json", FileAccess.WRITE)
+	file.store_string(JSON.stringify({"checks": checks, "failures": failures, "text_boxes": _audit_count,
+		"road_width": ArenaGeometry.ROAD_WIDTH, "simulation_seconds": 9.6,
+		"trajectories": trajectories, "device_fps_measured": false}, "  ") + "\n")
+	file = null
+	finish("Wider roads and central guardian bypass")
+
+func _road_progress(at: Vector2, path: PackedVector2Array) -> float:
+	var nearest := INF
+	var progress := 0.0
+	var along := 0.0
+	for i in range(path.size() - 1):
+		var point := Geometry2D.get_closest_point_to_segment(at, path[i], path[i + 1])
+		var distance := point.distance_squared_to(at)
+		if distance < nearest:
+			nearest = distance
+			progress = along + point.distance_to(path[i])
+		along += path[i].distance_to(path[i + 1])
+	return progress
 
 func _hud_only() -> void:
 	for locale in ["ko", "en"]:

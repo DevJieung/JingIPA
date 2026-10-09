@@ -174,7 +174,7 @@ func _check_navigation() -> void:
 	check(mo["pos"] != position, "길막 해제 후 이동 재개")
 	var trap := road[12]
 	for i in range(6):
-		Arena.heroes[i]["position"] = trap + Vector2.from_angle(i * TAU / 6.0) * 60.0
+		Arena.heroes[i]["position"] = trap + Vector2.from_angle(i * TAU / 6.0) * (Balance.ARENA_HERO_RADIUS + Balance.ARENA_MONSTER_RADIUS) * 1.5
 	sim.refresh_heroes()
 	sim._rebuild_navigation()
 	sim.monsters.clear()
