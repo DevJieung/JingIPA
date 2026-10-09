@@ -9,6 +9,9 @@ func _ready() -> void:
 	if not require_no_save(): return
 	out_dir = arg("--out", out_dir)
 	DirAccess.make_dir_recursive_absolute(out_dir)
+	if has_arg("--look-only"):
+		await _look_only()
+		return
 	if has_arg("--style-only"):
 		await _style_only()
 		return
@@ -41,13 +44,12 @@ func _ready() -> void:
 		await _capture(locale + "_summon_new")
 		check(tap(screen, "close"), "new hero result resumes battle")
 		_prepare_field()
+		screen.view_3d._follow_offset = Vector3.ZERO
+		screen.view_3d._camera_initialized = false
 		await _capture(locale + "_field_six")
 		check(screen.view_3d.world is ArenaWorld, "arena uses its own native 3D world adapter")
 		check(screen.view_3d.world.hero_nodes.size() == Balance.ARENA_HERO_LIMIT, "all six real hero models are present")
-		for corner in [Balance.MAP_RECT.position, Balance.MAP_RECT.end,
-			Vector2(Balance.MAP_RECT.end.x, Balance.MAP_RECT.position.y), Vector2(Balance.MAP_RECT.position.x, Balance.MAP_RECT.end.y)]:
-			check(ArenaScreen.FIELD.has_point(screen.view_3d.project(corner, 0.15)), "whole spawn edge stays in fixed overview")
-			check(ArenaScreen.FIELD.has_point(screen.view_3d.project(corner, 1.75)), "tall model at spawn edge stays in fixed overview")
+		check(screen.view_3d.minimap_footprint(ArenaScreen.MINIMAP.grow(-11)).size() >= 3, "minimap exposes the camera area")
 		var camera_before := screen.view_3d.world.camera.transform
 		main.menu.open()
 		main.menu.page = "rules"
@@ -69,7 +71,7 @@ func _ready() -> void:
 			await _capture(locale + "_move_%02d" % n)
 		check(Vector2(Arena.sim.heroes[1]["pos"]).distance_to(before) > 1, "joystick actually moves selected native hero")
 		check(Vector2(Arena.sim.heroes[0]["pos"]).is_equal_approx(untouched), "other heroes hold their assigned positions")
-		check(screen.view_3d.world.camera.transform.is_equal_approx(camera_before), "moving heroes never moves the fixed camera")
+		check(is_equal_approx(screen.view_3d.world.camera.size, 26.0), "following preserves object scale")
 		finger.pressed = false
 		screen._input(finger)
 		check(screen.joystick == Vector2.ZERO, "touch release stops joystick")
@@ -175,6 +177,106 @@ func _ready() -> void:
 	print("Arena visual review: " + out_dir)
 	finish("Arena native 3D and mobile UI")
 
+func _look_only() -> void:
+	for locale in ["ko", "en"]:
+		I18n.set_locale(locale)
+		Arena.start_run(20261009)
+		main = load("res://game/main.gd").new()
+		add_child(main)
+		await frames(3)
+		main.show_arena()
+		screen = main.screen
+		screen.set_process(false)
+		var lake := 0
+		for i in range(Roster.THEMES.size()):
+			if Roster.THEMES[i]["id"] == "calm_lake": lake = i
+		Arena.choose_theme(lake)
+		Arena.confirm_summon()
+		Arena.close_modal()
+		Arena.heroes.clear()
+		Arena.gain_hero(Roster.unit_by_id("echo"), 3)
+		Arena.heroes[0]["position"] = Balance.ARENA_CENTER + Vector2(100, 100)
+		Arena.sim.refresh_heroes()
+		Arena.selected = 0
+		Arena.gold = 69
+		Arena.sim.elapsed = 143
+		Arena.sim.crystal_hp = 1160
+		Arena.sim.monsters.clear()
+		var pool := Roster.theme_pool(Arena.theme_for(1))
+		Arena.sim._spawn(pool[0])
+		Arena.sim.monsters[0]["pos"] = Balance.ARENA_CENTER + Vector2(180, 110)
+		Arena.sim.monsters[0]["hp"] *= 0.45
+		await _capture(locale + "_reference")
+		if has_arg("--reference-only"):
+			main.queue_free()
+			await frames(4)
+			finish("Arena reference quick review")
+			return
+		for n in range(8):
+			screen._process(1.0 / 15)
+			await _capture(locale + "_echo_attack_%02d" % n)
+		var size_before: float = screen.view_3d.world.camera.size
+		for direction in [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN, Vector2(-1,-1), Vector2(1,-1), Vector2(-1,1), Vector2(1,1)]:
+			var at: Vector2 = Balance.ARENA_CENTER + direction * ArenaGeometry.MAP_RECT.size * 0.5
+			at = at.clamp(ArenaGeometry.MAP_RECT.position + Vector2.ONE * 24, ArenaGeometry.MAP_RECT.end - Vector2.ONE * 24)
+			Arena.sim.heroes[0]["pos"] = at
+			for n in range(30): screen.view_3d.follow_selected(at, 1.0 / 30)
+			var name := "edge_%s_%s" % [int(direction.x), int(direction.y)]
+			await _capture(locale + "_" + name)
+			check(ArenaScreen.BATTLEFIELD.has_point(screen.view_3d.project(Balance.ARENA_CENTER, 0.1)), "crystal base visible at " + name)
+			check(ArenaScreen.BATTLEFIELD.has_point(screen.view_3d.project(Balance.ARENA_CENTER, 1.95)), "crystal tip visible at " + name)
+			check(ArenaScreen.BATTLEFIELD.has_point(screen.view_3d.project(at, 0.5)), "selected hero visible at " + name)
+			check(is_equal_approx(size_before, screen.view_3d.world.camera.size), "follow preserves object scale")
+			check(screen.view_3d.minimap_footprint(ArenaScreen.MINIMAP.grow(-11)).size() >= 3, "minimap view footprint exists")
+		Arena.sim.heroes[0]["pos"] = Balance.ARENA_CENTER
+		for n in range(30): screen.view_3d.follow_selected(Balance.ARENA_CENTER, 1.0 / 30)
+		Arena.sim.monsters.clear()
+		for n in range(12):
+			Arena.sim.heroes[0]["pos"] = Balance.ARENA_CENTER + Vector2(220 + n * 22, 85)
+			screen._draw_dt = 1.0 / 15
+			Arena.sim.elapsed += 1.0 / 15
+			await _capture(locale + "_follow_%02d" % n)
+		_prepare_field()
+		screen.view_3d._follow_offset = Vector3.ZERO
+		screen.view_3d._camera_initialized = false
+		await _capture(locale + "_field_six")
+		Arena.open_modal("shop")
+		await _capture(locale + "_upgrades")
+		screen._shop_tab = "passives"
+		await _capture(locale + "_passives")
+		Arena.close_modal()
+		for id in ["saeta", "glaukos", "jokull"]: Arena.gain_hero(Roster.unit_by_id(id), 9)
+		Arena.open_modal("bench")
+		await _capture(locale + "_reserves_selected")
+		Arena.close_modal()
+		for skill in ["blast", "freeze", "ward"]:
+			Arena.sim.skill_cooldowns[skill] = 0.0
+			await paint(screen)
+			check(tap(screen, "skill:" + skill), "restyled skill button remains active")
+			await _capture(locale + "_skill_" + skill)
+		main.menu.open()
+		main.menu.page = "rules"
+		await _capture_canvas(main.menu, locale + "_help")
+		main.menu.close()
+		Arena.gold = 99999
+		Arena.begin_summon()
+		screen._rite_age = 9
+		await _capture(locale + "_rite_free")
+		Arena.close_modal()
+		Arena.modal = ""
+		Arena.phase = Arena.Phase.BATTLE
+		for theme in [0, 20, 30, 40]:
+			Arena.theme_index = theme
+			await _capture(locale + "_biome_%02d" % theme)
+		main.queue_free()
+		main = null
+		screen = null
+		await frames(4)
+	var file := FileAccess.open(out_dir + "/look-report.json", FileAccess.WRITE)
+	file.store_string(JSON.stringify({"checks": checks, "failures": failures, "text_boxes": _audit_count}, "  ") + "\n")
+	file = null
+	finish("Arena reference look and following camera")
+
 func _style_only() -> void:
 	for locale in ["ko", "en"]:
 		I18n.set_locale(locale)
@@ -212,6 +314,8 @@ func _style_only() -> void:
 		await _capture(locale + "_summon_new")
 		Arena.close_modal()
 		_prepare_field()
+		screen.view_3d._follow_offset = Vector3.ZERO
+		screen.view_3d._camera_initialized = false
 		await _capture(locale + "_field_six")
 		Arena.gold = 99999
 		Arena.open_modal("shop")

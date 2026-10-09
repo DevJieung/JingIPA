@@ -107,7 +107,7 @@ func _check_movement() -> void:
 	for i in range(20): sim.move_selected(Vector2.DOWN, 0.1)
 	check(Vector2(sim.heroes[0]["pos"]).distance_to(Balance.ARENA_CENTER) >= Balance.ALTAR_R + Balance.ARENA_HERO_RADIUS, "크리스탈 관통 금지")
 	for i in range(100): sim.move_selected(Vector2.LEFT, 0.1)
-	check(Balance.MAP_RECT.has_point(sim.heroes[0]["pos"]), "맵 경계 이탈 금지")
+	check(ArenaGeometry.MAP_RECT.has_point(sim.heroes[0]["pos"]), "맵 경계 이탈 금지")
 	sim.monsters.clear()
 	var p: Vector2 = sim.heroes[0]["pos"]
 	_monster(sim, p + Vector2(40, 0))
@@ -135,7 +135,7 @@ func _check_navigation() -> void:
 		if Arena.heroes.size() == 6: break
 		if not _contains_unit([Arena.heroes[0]["unit"]], String(unit["id"])): Arena.gain_hero(unit, 1)
 	for i in range(6):
-		Arena.heroes[i]["position"] = Vector2(Balance.MAP_RECT.position.x + 80, Balance.MAP_RECT.position.y + 27 + i * 52)
+		Arena.heroes[i]["position"] = Vector2(ArenaGeometry.MAP_RECT.position.x + 80, ArenaGeometry.MAP_RECT.position.y + 27 + i * 52)
 	sim.refresh_heroes()
 	sim._rebuild_navigation()
 	# A trapped enemy's own start cell is closed when a hero approaches it.
@@ -265,7 +265,7 @@ func _check_boss() -> void:
 	var sim := _battle(707)
 	var initial_limit := sim.population_limit()
 	var initial_gap := sim.spawn_interval()
-	_monster(sim, Balance.MAP_RECT.position + Vector2(30, 30))
+	_monster(sim, ArenaGeometry.MAP_RECT.position + Vector2(30, 30))
 	sim.elapsed = Balance.ARENA_BOSS_AT - 0.02
 	check(sim.population_limit() > initial_limit and sim.spawn_interval() < initial_gap, "시간에 따라 개체 수·스폰 빈도 증가")
 	_advance(sim, 0.1)
@@ -303,7 +303,7 @@ func _check_duration() -> void:
 		for mo in sim.monsters:
 			if float(mo["spd"]) > 0.0:
 				var at: Vector2 = mo["pos"]
-				var rect := Balance.MAP_RECT.grow(-Balance.ARENA_MONSTER_RADIUS)
+				var rect := ArenaGeometry.MAP_RECT.grow(-Balance.ARENA_MONSTER_RADIUS)
 				var distances := [absf(at.x - rect.position.x), absf(at.x - rect.end.x), absf(at.y - rect.position.y), absf(at.y - rect.end.y)]
 				sides[distances.find(distances.min())] = true
 			mo["spd"] = 0.0

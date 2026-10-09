@@ -14,7 +14,7 @@ from godot_env import ROOT, GODOT, xvfb
 parser = argparse.ArgumentParser()
 parser.add_argument("--res", action="append")
 parser.add_argument("--out-root", type=Path, default=ROOT / "build/arena-visual")
-parser.add_argument("--only", choices=["polish", "help", "rite", "style"])
+parser.add_argument("--only", choices=["polish", "help", "rite", "style", "look"])
 args = parser.parse_args()
 report = {"renderer": "gl_compatibility", "device_fps_measured": False, "resolutions": {}}
 for index, resolution in enumerate(args.res or ["1280x800", "1000x625"]):
@@ -22,21 +22,23 @@ for index, resolution in enumerate(args.res or ["1280x800", "1000x625"]):
     out.mkdir(parents=True, exist_ok=True)
     with xvfb(113 + index, resolution) as env:
         extra = [f"--{args.only}-only"] if args.only else []
-        result = subprocess.run(
-            [str(GODOT), "--path", str(ROOT), "--resolution", resolution,
-             "res://tests/arena_visual_preview.tscn", "--", "--out", str(out), *extra],
-            env=env, capture_output=True, text=True, timeout=600,
-        )
-    log = result.stdout + "\n" + result.stderr
-    (out / (f"{args.only}-render.log" if args.only else "render.log")).write_text(log)
+        live_log = out / (f"{args.only}-render.log" if args.only else "render.log")
+        with live_log.open("w") as stream:
+            result = subprocess.run(
+                [str(GODOT), "--path", str(ROOT), "--resolution", resolution,
+                 "res://tests/arena_visual_preview.tscn", "--", "--out", str(out), *extra],
+                env=env, stdout=stream, stderr=subprocess.STDOUT, text=True, timeout=600,
+            )
+    log = live_log.read_text()
     if result.returncode or "ERROR:" in log or "!! " in log:
         print("\n".join(log.splitlines()[-100:]))
         sys.exit(1)
     for locale in ["ko", "en"]:
-        names = ["themes", "rite_free", "summon_new", "field_six", "help", "growth_result",
+        names = ["reference", "edge_-1_0", "edge_1_0", "edge_0_-1", "edge_0_1", "edge_1_1", "biome_00", "biome_20", "biome_30", "biome_40", "themes", "rite_free", "summon_new", "field_six", "help", "growth_result",
                  "growth_maxed", "upgrades", "passives", "reserves_selected", "boss", "victory",
                  "defeat", "title", "title_resume", "collection_water", "collection_fire", "collection_elec", "menu_menu", "menu_rite", "menu_elements"]
-        contact = Image.new("RGB", (1280, 267 * 7), (10, 20, 29))
+        names = [name for name in names if (out / f"{locale}_{name}.png").exists()]
+        contact = Image.new("RGB", (1280, 267 * max(1, (len(names) + 2) // 3)), (10, 20, 29))
         for n, name in enumerate(names):
             if not (out / f"{locale}_{name}.png").exists():
                 continue
@@ -44,7 +46,7 @@ for index, resolution in enumerate(args.res or ["1280x800", "1000x625"]):
             shot.thumbnail((426, 267))
             contact.paste(shot, (n % 3 * 426, n // 3 * 267))
         contact.save(out / f"{locale}_contact.jpg", quality=94)
-        for motion in ["move", "limne_move", "skill_blast", "skill_freeze", "skill_ward", "rite_spin"]:
+        for motion in ["move", "limne_move", "skill_blast", "skill_freeze", "skill_ward", "rite_spin", "follow", "echo_attack"]:
             files = sorted(out.glob(f"{locale}_{motion}_[0-9][0-9].png"))
             frames = [Image.open(path).convert("RGB") for path in files]
             if frames:

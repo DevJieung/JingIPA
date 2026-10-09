@@ -165,6 +165,8 @@ fi
 step "4-2. 저장 · 보상 · 메뉴 · 거래 회귀 검사"
 godot_run 120 "$TMP/arena.log" res://tests/arena_check.tscn
 expect "연속 수호전 규칙·저장" "판정: 정상" "$TMP/arena.log"
+godot_run 120 "$TMP/arena-camera.log" res://tests/arena_camera_check.tscn
+expect "확장 전장·추적 카메라·미니맵" "판정: 정상" "$TMP/arena-camera.log"
 godot_run 180 "$TMP/arena-play.log" res://tests/arena_play_check.tscn
 expect "연속 수호전 실제 UI 흐름" "판정: 정상" "$TMP/arena-play.log"
 godot_run 90 "$TMP/stellar-identity.log" res://tests/stellar_identity_check.tscn

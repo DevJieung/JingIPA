@@ -796,3 +796,24 @@ static func wrap_text(ci: CanvasItem, s: String, box: Rect2, size: int, col: Col
 			text_left(ci, Vector2(box.position.x, y), line, size, col)
 		else:
 			text_center(ci, Vector2(box.get_center().x, y), line, size, col)
+
+## Frosted blue glass for the continuous arena HUD. Text stays native and crisp.
+static func glass_panel(ci: CanvasItem, rect: Rect2, edge: Color = PANEL_EDGE,
+		face: Color = Color(0.035, 0.09, 0.13, 0.82), selected: bool = false) -> void:
+	var p := rect.position
+	var e := rect.end
+	var cut := 5.0
+	var shape := PackedVector2Array([p + Vector2(cut, 0), Vector2(e.x - cut, p.y),
+		Vector2(e.x - cut, p.y + 3), Vector2(e.x, p.y + cut), Vector2(e.x, e.y - cut),
+		Vector2(e.x - cut, e.y - 3), e - Vector2(cut, 0), Vector2(p.x + cut, e.y),
+		Vector2(p.x + cut, e.y - 3), Vector2(p.x, e.y - cut), p + Vector2(0, cut), p + Vector2(cut, 3)])
+	ci.draw_colored_polygon(shape, face)
+	ci.draw_polyline(shape + PackedVector2Array([shape[0]]), Color(edge, 0.95 if selected else 0.70), 1.6 if selected else 1.0, true)
+	ci.draw_line(p + Vector2(9, 2), Vector2(e.x - 9, p.y + 2), Color(edge.lightened(0.35), 0.62), 1, true)
+	ci.draw_line(Vector2(p.x + 9, e.y - 2), e - Vector2(9, 2), Color(edge, 0.26), 1, true)
+	for n in range(9):
+		ci.draw_line(p + Vector2(7, 4 + n), Vector2(e.x - 7, p.y + 4 + n), Color(edge, (0.045 if selected else 0.020) * (1 - n / 9.0)), 1)
+	if selected:
+		for side in [-1, 1]:
+			var x: float = rect.get_center().x + side * (rect.size.x * 0.5 - 3)
+			ci.draw_circle(Vector2(x, p.y + 7), 1.8, edge.lightened(0.35))

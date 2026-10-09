@@ -6,7 +6,7 @@ static func number(value: Variant, low: float = 0.0, high: float = INF) -> bool:
 	return (value is int or value is float) and is_finite(float(value)) and float(value) >= low and float(value) <= high
 
 static func point(value: Variant) -> bool:
-	return vector(value) and Balance.MAP_RECT.grow(2).has_point(value)
+	return vector(value) and ArenaGeometry.MAP_RECT.grow(2).has_point(value)
 
 static func vector(value: Variant) -> bool:
 	return value is Vector2 and is_finite(value.x) and is_finite(value.y)

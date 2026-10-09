@@ -37,13 +37,16 @@ func setup(run_state, wave_no: int = 1, seed_value: int = 0) -> void:
 	_spawn_t = Balance.ARENA_SPAWN_INITIAL
 	for id in skill_cooldowns:
 		skill_cooldowns[id] = 0.0
-	_nav.region = Rect2i(Vector2i.ZERO, Vector2i(ceili(Balance.MAP_RECT.size.x / Balance.ARENA_NAV_CELL), ceili(Balance.MAP_RECT.size.y / Balance.ARENA_NAV_CELL)))
-	_nav.cell_size = Vector2.ONE * Balance.ARENA_NAV_CELL
-	_nav.offset = Balance.MAP_RECT.position + _nav.cell_size * 0.5
+	_nav.region = Rect2i(Vector2i.ZERO, Vector2i(ceili(ArenaGeometry.MAP_RECT.size.x / Balance.ARENA_NAV_CELL), ceili(ArenaGeometry.MAP_RECT.size.y / Balance.ARENA_NAV_CELL)))
+	_nav.cell_size = ArenaGeometry.MAP_RECT.size / Vector2(_nav.region.size)
+	_nav.offset = ArenaGeometry.MAP_RECT.position + _nav.cell_size * 0.5
 	_nav.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
 	_nav.update()
 	_nav_key = ""
 	_rebuild_navigation()
+
+func projectile_bounds() -> Rect2:
+	return ArenaGeometry.MAP_RECT.grow(80)
 
 func _build_queue() -> void:
 	_queue.clear()
@@ -93,7 +96,7 @@ func spawn_interval() -> float:
 func _spawn(monster: Dictionary) -> void:
 	super._spawn(monster)
 	var mo: Dictionary = monsters[-1]
-	var rect := Balance.MAP_RECT.grow(-Balance.ARENA_MONSTER_RADIUS)
+	var rect := ArenaGeometry.MAP_RECT.grow(-Balance.ARENA_MONSTER_RADIUS)
 	var point: Vector2
 	match _rng.randi_range(0, 3):
 		0: point = Vector2(rect.position.x, _rng.randf_range(rect.position.y, rect.end.y))
@@ -158,7 +161,7 @@ func _tick(dt: float) -> void:
 	_save_t += dt
 
 func _cell(point: Vector2) -> Vector2i:
-	var local := (point - Balance.MAP_RECT.position) / Balance.ARENA_NAV_CELL
+	var local := (point - ArenaGeometry.MAP_RECT.position) / _nav.cell_size
 	return Vector2i(clampi(floori(local.x), 0, _nav.region.size.x - 1), clampi(floori(local.y), 0, _nav.region.size.y - 1))
 
 func _rebuild_navigation() -> void:
@@ -226,7 +229,7 @@ func move_selected(direction: Vector2, dt: float) -> bool:
 	var hero: Dictionary = heroes[run.selected]
 	var current: Vector2 = hero["pos"]
 	var requested := current + direction.limit_length() * Balance.ARENA_HERO_SPEED * minf(maxf(dt, 0.0), 0.25)
-	var rect := Balance.MAP_RECT.grow(-Balance.ARENA_HERO_RADIUS)
+	var rect := ArenaGeometry.MAP_RECT.grow(-Balance.ARENA_HERO_RADIUS)
 	requested = requested.clamp(rect.position, rect.end)
 	var accepted := current
 	for point in [requested, Vector2(requested.x, current.y), Vector2(current.x, requested.y)]:
@@ -281,7 +284,7 @@ func _move_monsters(dt: float) -> void:
 		var pushed := _advance_push(mo, dt)
 		if pushed > 0.0:
 			var push_to := current + (current - Balance.ARENA_CENTER).normalized() * pushed
-			if _segment_clear(current, push_to) and Balance.MAP_RECT.has_point(push_to):
+			if _segment_clear(current, push_to) and ArenaGeometry.MAP_RECT.has_point(push_to):
 				current = push_to
 				mo["pos"] = current
 		var stop := Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS
@@ -377,7 +380,7 @@ func cast_skill(id: String) -> bool:
 	elif id == "freeze":
 		for i in range(monsters.size()):
 			_slow(i, Balance.ARENA_FREEZE_SLOW, Balance.ARENA_FREEZE_DURATION)
-		events.append({"t": "arena_freeze", "p": at, "r": Balance.MAP_RECT.size.length()})
+		events.append({"t": "arena_freeze", "p": at, "r": ArenaGeometry.MAP_RECT.size.length()})
 	else:
 		shield = Balance.ARENA_WARD_SHIELD
 		shield_t = Balance.ARENA_WARD_DURATION

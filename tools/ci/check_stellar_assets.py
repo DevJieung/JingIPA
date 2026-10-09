@@ -26,10 +26,13 @@ def main():
         for module in ["stellar_models", "stellar_world", "stellar_view", "stellar_portraits", "stellar_backdrop"]:
             source = f"assets/game/3d/{module}.gd"
             assert source in names or source + ".remap" in names, f"Missing 3D renderer: {module}"
-        for module in ["core/arena_run", "core/arena_validation", "game/arena_sim", "game/arena_screen",
+        for module in ["core/arena_run", "core/arena_validation", "core/arena_geometry", "game/arena_sim", "game/arena_screen",
                        "game/3d/arena_view", "game/3d/arena_world"]:
             source = f"assets/{module}.gd"
             assert source in names or source + ".remap" in names, f"Missing continuous battle module: {module}"
+        check_imported_resource(archive, names, "assets/art/models/arena_ground.gdshader")
+        assert not any(name in names for name in ("assets/asis.jpg", "assets/asis.jpg.import",
+                       "assets/tobe.png", "assets/tobe.png.import")), "Design references must not ship"
         catalog = json.loads(archive.read("assets/core/locales/ui.json"))
         for locale in ("ko", "en"):
             for key in ("arena.title", "arena.rules.control", "arena.rules.growth", "arena.rules.boss"):

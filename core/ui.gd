@@ -61,3 +61,14 @@ func tab(ci: CanvasItem, rect: Rect2, label: String, id: String, selected: bool,
 	if selected:
 		ci.draw_rect(Rect2(rect.position.x + 5, rect.end.y - 4, rect.size.x - 10, 3), Look.GOLD)
 	Look.text_box(ci, Rect2(rect.position + Vector2(10, 3), rect.size - Vector2(20, 8)), label, size, Look.GOLD if selected else Look.INK_DIM)
+
+func glass_button(ci: CanvasItem, rect: Rect2, label: String, id: String,
+		on: bool = true, accent: Color = Look.PANEL_EDGE, size: int = 23) -> void:
+	zone(rect, id, on)
+	var down := on and pressed == id
+	var tint := accent if on else Color("#405461")
+	var face := Color("#142e3f").lerp(accent, 0.12) if on else Color("#0d1f2b")
+	face.a = 0.82 if down else 0.72
+	if down: face = face.lightened(0.12)
+	Look.glass_panel(ci, rect, tint, face, on and accent != Look.PANEL_EDGE)
+	Look.text_box(ci, Rect2(rect.position + Vector2(10, 3), rect.size - Vector2(20, 6)), label, size, Look.INK if on else Color("#8499a5"))

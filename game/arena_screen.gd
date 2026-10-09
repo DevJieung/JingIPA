@@ -2,13 +2,15 @@ extends Node2D
 class_name ArenaScreen
 
 ## One battlefield, with the ritual, growth and reserves over its paused world.
-const FIELD := Rect2(16, 82, 1248, 480)
-const JOY_CENTER := Vector2(132, 683)
-const JOY_RADIUS := 65.0
+const FIELD := Rect2(0, 0, 1280, 800)
+const BATTLEFIELD := Rect2(0, 70, 1280, 490)
+const MINIMAP := Rect2(1088, 88, 174, 130)
+const JOY_CENTER := Vector2(123, 676)
+const JOY_RADIUS := 67.0
 const HERO_X := 255.0
-const HERO_Y := 640.0
+const HERO_Y := 631.0
 const HERO_W := 115.0
-const HERO_GAP := 14.0
+const HERO_GAP := 10.0
 const MODAL := Rect2(72, 86, 1136, 676)
 
 var main = null
@@ -29,7 +31,10 @@ var _bench_choice := -1
 var _field_choice := -1
 var _rite_age := 9.0
 var _spin_rings: Array = []
+var _card_crops: Dictionary = {}
 func _ready() -> void:
+	view_3d.battle_box = BATTLEFIELD
+	view_3d.minimap_box = MINIMAP
 	_theme_choice = clampi(Arena.theme_index, 0, maxi(0, Roster.THEMES.size() - 1))
 	_theme_page = _theme_choice / 12
 	_track_modal()
@@ -50,7 +55,7 @@ func _menu_open() -> bool:
 
 func _ground_direction(direction: Vector2) -> Vector2:
 	if direction.length_squared() < 0.001 or view_3d.world == null: return Vector2.ZERO
-	var center := FIELD.get_center()
+	var center := BATTLEFIELD.get_center()
 	var a := view_3d.ground_at(center)
 	var b := view_3d.ground_at(center + direction.normalized() * 40)
 	return (b - a).normalized() * minf(1.0, direction.length()) if a.is_finite() and b.is_finite() else Vector2.ZERO
@@ -118,7 +123,7 @@ func _pointer(pointer: int, at: Vector2, pressed: bool) -> void:
 		_action(id)
 		get_viewport().set_input_as_handled()
 		return
-	if Arena.modal.is_empty() and FIELD.has_point(at):
+	if Arena.modal.is_empty() and BATTLEFIELD.has_point(at) and not MINIMAP.has_point(at):
 		var index := view_3d.hero_at(at)
 		if index >= 0:
 			Arena.selected = index
@@ -193,6 +198,7 @@ func _draw() -> void:
 		_draw_monster_bars()
 		_draw_topbar(theme)
 		_draw_controls()
+		_draw_minimap()
 	match Arena.modal:
 		"theme": _draw_themes()
 		"rite": _draw_rite()
@@ -201,76 +207,187 @@ func _draw() -> void:
 		"result": _draw_result()
 
 func _draw_topbar(theme: Dictionary) -> void:
-	Look.material_panel(self, Rect2(8, 3, 1264, 72), Look.PANEL, Look.PANEL_EDGE)
-	draw_line(Vector2(24, 75), Vector2(1256, 75), Color(Look.CRYSTAL, 0.18), 1, true)
-	Look.text_box(self, Rect2(24, 10, 250, 30), _tr("title"), 25, Look.GOLD, HORIZONTAL_ALIGNMENT_LEFT)
-	Look.text_box(self, Rect2(350, 12, 210, 32), String(theme.get("ko", "")), 23, Look.INK_DIM)
+	draw_rect(Rect2(0, 0, 1280, 69), Color(0.025, 0.065, 0.095, 0.88))
+	draw_line(Vector2(0, 69), Vector2(1280, 69), Color("#84b5c5"), 1, true)
+	draw_line(Vector2(0, 71), Vector2(1280, 71), Color(0.02, 0.04, 0.07, 0.55), 2)
+	_draw_hud_crystal(Vector2(43, 34))
+	Look.text_box(self, Rect2(76, 8, 315, 30), _tr("title"), 25, Look.GOLD, HORIZONTAL_ALIGNMENT_LEFT)
+	for x in [442, 648, 800]:
+		draw_line(Vector2(x, 16), Vector2(x, 54), Color("#406072"), 1, true)
+		_draw_diamond(Vector2(x, 35), 3.5, Color("#688e9f"))
+	Look.text_box(self, Rect2(458, 17, 176, 32), String(theme.get("ko", "")), 23, Look.INK)
 	if Arena.sim == null: return
 	var sim = Arena.sim
-	Look.draw_crystal(self, Vector2(36, 55), 9, sim.crystal_hp > 0)
 	var fraction := clampf(sim.crystal_hp / maxf(1.0, sim.crystal_max), 0, 1)
-	_bar(Rect2(58, 48, 218, 12), fraction, Look.hp_color(fraction))
-	Look.text_box(self, Rect2(282, 40, 145, 24), "%d / %d" % [ceili(sim.crystal_hp), int(sim.crystal_max)], 17, Look.INK)
+	_bar(Rect2(79, 49, 207, 9), fraction, Color("#6af4ef"))
+	Look.text_box(self, Rect2(300, 40, 131, 23), "%d / %d" % [ceili(sim.crystal_hp), int(sim.crystal_max)], 17, Look.INK)
 	if sim.shield > 0:
-		Look.text_box(self, Rect2(430, 43, 125, 21), _tr("shield") + " " + str(ceili(sim.shield)), 16, Look.CRYSTAL)
-	Look.text_box(self, Rect2(586, 8, 206, 22), _tr("boss_final") if sim.boss_spawned else _tr("boss_in"), 17, Look.INK_DIM)
+		Look.glass_panel(self, Rect2(76, 80, 184, 30), Look.CRYSTAL, Color(0.015, 0.08, 0.14, 0.78))
+		_draw_skill_icon(Vector2(92, 95), "ward", 8, Look.CRYSTAL)
+		Look.text_box(self, Rect2(106, 82, 146, 26), _tr("shield") + " " + str(ceili(sim.shield)), 16, Look.CRYSTAL)
+	Look.text_box(self, Rect2(662, 7, 125, 22), _tr("boss_final") if sim.boss_spawned else _tr("boss_in"), 16, Look.INK_DIM)
 	var clock := maxf(0, Balance.ARENA_BOSS_AT - sim.elapsed)
-	Look.text_box(self, Rect2(586, 30, 206, 32), _clock(sim.elapsed) if sim.boss_spawned else _clock(clock), 29, Look.GOLD if sim.boss_spawned else Look.INK)
-	Look.text_box(self, Rect2(808, 18, 136, 36), "%d G" % Arena.gold, 25, Look.GOLD)
+	Look.text_box(self, Rect2(662, 27, 125, 34), _clock(sim.elapsed) if sim.boss_spawned else _clock(clock), 28, Look.GOLD if sim.boss_spawned else Look.INK)
+	_draw_coin(Vector2(832, 35), 12)
+	Look.text_box(self, Rect2(851, 16, 100, 37), "%d G" % Arena.gold, 25, Look.GOLD)
 	if sim.boss_spawned:
 		for mo in sim.monsters:
 			if String(mo.get("kind", "")) != "boss": continue
-			var box := Rect2(368, 91, 544, 34)
-			Look.fill_round(self, box, 5, Color("#15242a"))
-			_bar(Rect2(380, 114, 520, 5), float(mo["hp"]) / maxf(1, float(mo["max"])), Look.RED)
-			Look.text_box(self, Rect2(385, 91, 510, 23), I18n.t(String(mo["m"].get("ko", _tr("boss_final")))), 19, Look.INK)
+			var box := Rect2(368, 83, 544, 39)
+			Look.glass_panel(self, box, Color("#be797e"), Color(0.09, 0.02, 0.06, 0.85))
+			_bar(Rect2(380, 112, 520, 4), float(mo["hp"]) / maxf(1, float(mo["max"])), Look.RED)
+			Look.text_box(self, Rect2(385, 86, 510, 23), I18n.t(String(mo["m"].get("ko", _tr("boss_final")))), 19, Look.INK)
 			break
 
 func _draw_controls() -> void:
-	Look.material_panel(self, Rect2(8, 572, 1264, 224), Look.PANEL.darkened(0.34), Look.PANEL_EDGE)
-	draw_line(Vector2(24, 572), Vector2(1256, 572), Look.PANEL_EDGE, 1)
+	# The forest remains visible under the touch deck, making the world continuous.
+	draw_rect(Rect2(0, 564, 1280, 236), Color(0.012, 0.037, 0.06, 0.81))
+	for n in range(13):
+		draw_rect(Rect2(0, 564 + n * 3, 1280, 3), Color(0.014, 0.052, 0.075, 0.10 * (1 - n / 13.0)))
+	draw_line(Vector2(0, 564), Vector2(1280, 564), Color("#97b7bd"), 1, true)
+	for x in [16, 1264]: _draw_diamond(Vector2(x, 564), 3, Look.GOLD)
 	var active := Arena.modal.is_empty() and Arena.sim != null and not Arena.sim.done
-	draw_circle(JOY_CENTER + Vector2(0, 3), JOY_RADIUS + 7, Color(0, 0, 0, 0.45))
-	draw_circle(JOY_CENTER, JOY_RADIUS + 3, Color("#758c91"))
-	draw_circle(JOY_CENTER, JOY_RADIUS, Color("#162a32"))
-	draw_arc(JOY_CENTER, JOY_RADIUS - 12, 0, TAU, 48, Color("#35515d"), 2, true)
+	draw_circle(JOY_CENTER + Vector2(0, 3), JOY_RADIUS + 6, Color(0, 0, 0, 0.38))
+	draw_circle(JOY_CENTER, JOY_RADIUS + 4, Color(0.3, 0.54, 0.65, 0.45))
+	draw_circle(JOY_CENTER, JOY_RADIUS + 1, Color(0.02, 0.07, 0.11, 0.82))
+	draw_circle(JOY_CENTER, JOY_RADIUS - 3, Color(0.11, 0.24, 0.31, 0.75))
+	draw_circle(JOY_CENTER, JOY_RADIUS - 9, Color(0.025, 0.095, 0.15, 0.79))
+	draw_arc(JOY_CENTER, JOY_RADIUS + 2, PI * 1.05, TAU * 0.99, 48, Color("#91c7d9"), 1.4, true)
+	draw_arc(JOY_CENTER, JOY_RADIUS - 7, 0, TAU, 64, Color(0.41, 0.64, 0.73, 0.35), 1, true)
 	for d in [Vector2.UP, Vector2.DOWN, Vector2.LEFT, Vector2.RIGHT]:
-		var at: Vector2 = JOY_CENTER + d * 44
+		var at: Vector2 = JOY_CENTER + d * 48
 		var normal := Vector2(-d.y, d.x)
-		draw_colored_polygon(PackedVector2Array([at + d * 7, at - d * 2 + normal * 4, at - d * 2 - normal * 4]), Color("#9eb4ba") if active else Color("#47616b"))
-	var stick := JOY_CENTER + joystick * 37
-	draw_circle(stick + Vector2(0, 3), 26, Color(0, 0, 0, 0.45))
-	draw_circle(stick, 26, Look.GOLD if _joy_pointer != -99 else Color("#8ba3a8"))
-	draw_circle(stick, 23, Color("#344e58") if active else Color("#263a43"))
-	Look.text_box(self, Rect2(50, 766, 164, 22), _tr("joystick"), 18, Look.INK_DIM)
-	Look.text_box(self, Rect2(50, 592, 164, 25), _tr("pause") if not active else _tr("select_hero"), 17, Look.GOLD if not active else Look.INK_DIM)
+		draw_colored_polygon(PackedVector2Array([at + d * 6, at - d * 3 + normal * 4, at - d * 3 - normal * 4]), Color("#b8ddea") if active else Color("#47616b"))
+	var stick := JOY_CENTER + joystick * 36
+	draw_circle(stick + Vector2(0, 3), 28, Color(0, 0, 0, 0.30))
+	draw_circle(stick, 28, Look.GOLD if _joy_pointer != -99 else Color("#8db5c3"))
+	draw_circle(stick, 26, Color("#284d60") if active else Color("#263a43"))
+	draw_circle(stick + Vector2(-3, -4), 21, Color(0.25, 0.48, 0.58, 0.42))
+	draw_line(stick + Vector2(-15, -15), stick + Vector2(15, 15), Color(0.62, 0.85, 0.9, 0.13), 1, true)
+	draw_line(stick + Vector2(15, -15), stick + Vector2(-15, 15), Color(0.62, 0.85, 0.9, 0.13), 1, true)
+	Look.text_box(self, Rect2(40, 753, 166, 26), _tr("joystick"), 19, Look.INK)
+	Look.text_box(self, Rect2(27, 576, 193, 26), _tr("pause") if not active else _tr("select_hero"), 17, Look.GOLD if not active else Look.INK)
 	var summoning := active and Arena.gold >= Arena.summon_cost() and not Arena.eligible_units().is_empty()
-	ui.button(self, Rect2(255, 584, 225, 44), _tr("summon") + "  %d G" % Arena.summon_cost(), "summon", summoning, Look.GOLD, 20)
-	ui.button(self, Rect2(491, 584, 225, 44), _tr("shop"), "shop", active, Look.PANEL_EDGE, 21)
-	ui.button(self, Rect2(727, 584, 225, 44), _tr("bench") + "  %d" % Arena.bench.size(), "bench", active, Look.PANEL_EDGE, 21)
+	ui.glass_button(self, Rect2(294, 574, 206, 39), _tr("summon") + "  %d G" % Arena.summon_cost(), "summon", summoning, Look.PANEL_EDGE, 20)
+	ui.glass_button(self, Rect2(510, 574, 206, 39), _tr("shop"), "shop", active, Look.PANEL_EDGE, 21)
+	ui.glass_button(self, Rect2(726, 574, 242, 39), _tr("bench") + "  %d" % Arena.bench.size(), "bench", active, Look.PANEL_EDGE, 21)
 	for i in range(Balance.ARENA_HERO_LIMIT):
-		var rect := Rect2(HERO_X + i * (HERO_W + HERO_GAP), HERO_Y, HERO_W, 143)
+		var rect := Rect2(HERO_X + i * (HERO_W + HERO_GAP), HERO_Y, HERO_W, 153)
 		if i < Arena.heroes.size():
-			HeroCard.draw(self, rect, Arena.heroes[i], i == Arena.selected)
-			ui.zone(rect.grow(4), "hero:%d" % i, active)
+			_draw_hero_card(rect, Arena.heroes[i], i == Arena.selected)
+			ui.zone(rect.grow(3), "hero:%d" % i, active)
 		else:
-			Look.outline_round(self, rect, 4, Color("#3d5156"), 1)
-			Look.fill_round(self, rect, 4, Color("#17282e"))
-			Look.text_box(self, Rect2(rect.position + Vector2(8, 43), Vector2(rect.size.x - 16, 40)), str(i + 1), 27, Color("#617a80"))
-			Look.text_box(self, Rect2(rect.position.x + 8, rect.end.y - 37, rect.size.x - 16, 24), "빈 자리", 16, Look.INK_DIM)
+			Look.glass_panel(self, rect, Color("#587787"), Color(0.06, 0.12, 0.16, 0.73))
+			_draw_skill_icon(Vector2(rect.get_center().x, rect.position.y + 31), "freeze", 13, Color(0.28, 0.46, 0.56, 0.25))
+			Look.text_box(self, Rect2(rect.position + Vector2(8, 59), Vector2(rect.size.x - 16, 43)), str(i + 1), 31, Color("#698390"))
+			Look.text_box(self, Rect2(rect.position.x + 8, rect.end.y - 33, rect.size.x - 16, 24), "빈 자리", 17, Color("#829ba7"))
 	for i in range(3):
 		var id: String = ["blast", "freeze", "ward"][i]
-		var rect := Rect2(1058, 584 + i * 68, 196, 61)
+		var rect := Rect2(1056, 574 + i * 70, 206, 61)
 		var remaining := float(Arena.sim.skill_cooldowns.get(id, 0.0)) if Arena.sim != null else 0.0
 		var enabled := active and remaining <= 0
-		var color: Color = [Look.GOLD, Look.ICE, Look.CRYSTAL][i]
-		ui.button(self, rect, "", "skill:" + id, enabled, color if enabled else Look.PANEL_EDGE, 18)
-		_draw_skill_icon(Vector2(rect.position.x + 27, rect.get_center().y - 4), id, 13, Look.BG_DEEP if enabled and id == "blast" else color if enabled else Look.INK_DIM)
-		Look.text_box(self, Rect2(rect.position + Vector2(52, 6), Vector2(134, 26)), _tr("skill." + id), 20, Look.BG_DEEP if enabled and id == "blast" else Look.INK)
-		Look.text_box(self, Rect2(rect.position + Vector2(52, 31), Vector2(134, 20)), _tr("ready") if remaining <= 0 else "%.1f" % remaining, 15, Look.BG_DEEP if enabled and id == "blast" else Look.INK_DIM)
+		var color: Color = [Look.GOLD, Color("#aeeaff"), Color("#6ce8fa")][i]
+		ui.glass_button(self, rect, "", "skill:" + id, enabled, color, 18)
+		for layer in range(3): draw_circle(Vector2(rect.position.x + 30, rect.get_center().y), 21 - layer * 4, Color(color, 0.035 if enabled else 0.009))
+		_draw_skill_icon(Vector2(rect.position.x + 30, rect.get_center().y), id, 17, color if enabled else Look.INK_DIM)
+		Look.text_box(self, Rect2(rect.position + Vector2(59, 6), Vector2(138, 26)), _tr("skill." + id), 20, color if enabled else Look.INK_DIM)
+		Look.text_box(self, Rect2(rect.position + Vector2(59, 31), Vector2(138, 20)), _tr("ready") if remaining <= 0 else "%.1f" % remaining, 15, color if enabled else Look.INK_DIM)
 		if remaining > 0 and Arena.sim != null:
 			var maximum := Arena.sim.skill_max_cooldown(id)
-			_bar(Rect2(rect.position.x + 8, rect.end.y - 7, rect.size.x - 16, 3), 1 - remaining / maxf(0.001, maximum), color)
+			_bar(Rect2(rect.position.x + 8, rect.end.y - 6, rect.size.x - 16, 2), 1 - remaining / maxf(0.001, maximum), color)
+
+func _draw_hero_card(rect: Rect2, hero: Dictionary, selected: bool) -> void:
+	var unit: Dictionary = hero["unit"]
+	var tier := int(hero["tier"])
+	var element := String(unit.get("elem", "none"))
+	var edge := Look.GOLD if selected else Balance.elem_color(element).lerp(Color("#7394a6"), 0.60)
+	Look.glass_panel(self, rect, edge, Color(0.018, 0.04, 0.065, 0.93), selected)
+	var preview := Art.unit_preview(unit, tier)
+	if not preview.is_empty():
+		var key := String(unit["id"]) + ":" + str(tier)
+		if not _card_crops.has(key):
+			var texture: Texture2D = preview["tex"]
+			var picture: Image = texture.diffuse_texture.get_image() if texture is CanvasTexture else texture.get_image()
+			if picture.is_compressed(): picture.decompress()
+			var visible := Rect2(picture.get_used_rect())
+			var crop_height := visible.size.y * 0.53
+			var crop_width := minf(visible.size.x, crop_height * 0.86)
+			_card_crops[key] = Rect2(visible.get_center().x - crop_width * 0.5, visible.position.y - 3, crop_width, crop_height)
+		# Alpha bounds remove empty studio margins before a native upper-body crop.
+		var crop: Rect2 = _card_crops[key]
+		var target := Rect2(rect.position + Vector2(5, 20), Vector2(rect.size.x - 10, rect.size.y - 29))
+		draw_texture_rect_region(preview["tex"], Art.fit_rect(crop.size, target), crop)
+	for n in range(9):
+		draw_rect(Rect2(rect.position.x + 4, rect.end.y - 38 + n * 4, rect.size.x - 8, 4), Color(0.018, 0.035, 0.055, 0.18 + n * 0.088))
+	Look.text_box(self, Rect2(rect.position.x + 5, rect.end.y - 30, rect.size.x - 10, 27), Look.unit_name(unit), 20, Look.INK)
+	Look.fill_round(self, Rect2(rect.position + Vector2(4, 4), Vector2(rect.size.x - 8, 20)), 2, Color(0.008, 0.017, 0.03, 0.90))
+	Look.draw_elem(self, rect.position + Vector2(14, 14), 8, element)
+	Look.draw_rarity_fit(self, Rect2(rect.position + Vector2(27, 4), Vector2(rect.size.x - 34, 20)), tier, 5.2)
+	if selected:
+		Look.draw_brackets(self, rect.grow(2), 13, Look.GOLD.lightened(0.25), 2)
+		var badge := rect.position + Vector2(rect.size.x - 24, 29)
+		Look.fill_round(self, Rect2(badge, Vector2(18, 18)), 2, Look.GOLD)
+		draw_line(badge + Vector2(4, 9), badge + Vector2(8, 13), Look.BG_DEEP, 2)
+		draw_line(badge + Vector2(8, 13), badge + Vector2(15, 5), Look.BG_DEEP, 2)
+
+func _draw_minimap() -> void:
+	if Arena.sim == null: return
+	Look.glass_panel(self, MINIMAP, Color("#85adbc"), Color(0.015, 0.055, 0.085, 0.79))
+	var map := MINIMAP.grow(-11)
+	for n in range(1, 4):
+		draw_line(map.position + Vector2(map.size.x * n / 4, 0), map.position + Vector2(map.size.x * n / 4, map.size.y), Color(0.47, 0.68, 0.76, 0.09), 1)
+		draw_line(map.position + Vector2(0, map.size.y * n / 4), map.position + Vector2(map.size.x, map.size.y * n / 4), Color(0.47, 0.68, 0.76, 0.09), 1)
+	var footprint := view_3d.minimap_footprint(map)
+	if footprint.size() >= 3:
+		draw_colored_polygon(footprint, Color(0.27, 0.69, 0.82, 0.07))
+		draw_polyline(footprint + PackedVector2Array([footprint[0]]), Color(0.60, 0.84, 0.90, 0.57), 1, true)
+	for mo in Arena.sim.monsters:
+		if float(mo.get("hp", 0)) <= 0: continue
+		var at := view_3d.minimap_point(mo["pos"], map)
+		var boss := String(mo.get("kind", "")) == "boss"
+		if boss:
+			draw_circle(at, 5.5, Color(0.98, 0.3, 0.24, 0.15))
+			_draw_diamond(at, 4, Color("#ffad68"))
+		else: draw_circle(at, 2.0, Color("#f58c83"))
+	for i in range(Arena.sim.heroes.size()):
+		var at := view_3d.minimap_point(Arena.sim.heroes[i]["pos"], map)
+		if i == Arena.selected:
+			draw_arc(at, 4.2, 0, TAU, 18, Color("#ffe3a0"), 1, true)
+			draw_circle(at, 2.4, Look.GOLD)
+		else: draw_circle(at, 2, Color("#91cfda"))
+	var crystal := view_3d.minimap_point(Balance.ARENA_CENTER, map)
+	_draw_diamond(crystal, 4, Color("#77edff"))
+	draw_circle(crystal, 1, Color.WHITE)
+	# Compass tick uses a shape, avoiding another language-dependent HUD label.
+	draw_colored_polygon(PackedVector2Array([Vector2(MINIMAP.get_center().x, MINIMAP.position.y + 2), Vector2(MINIMAP.get_center().x - 3, MINIMAP.position.y + 7), Vector2(MINIMAP.get_center().x + 3, MINIMAP.position.y + 7)]), Color("#9dbdcc"))
+
+func _draw_diamond(at: Vector2, radius: float, color: Color) -> void:
+	draw_colored_polygon(PackedVector2Array([at + Vector2(0, -radius), at + Vector2(radius * 0.67, 0), at + Vector2(0, radius), at + Vector2(-radius * 0.67, 0)]), color)
+
+func _draw_hud_crystal(at: Vector2) -> void:
+	var top := at + Vector2(0, -24)
+	var left := at + Vector2(-13, -3)
+	var right := at + Vector2(13, -3)
+	var bottom := at + Vector2(0, 24)
+	var core := at + Vector2(-1, 3)
+	var high := at + Vector2(3, -8)
+	for n in range(3): draw_circle(at, 20 - n * 3, Color(0.19, 0.74, 0.93, 0.032))
+	draw_colored_polygon(PackedVector2Array([top, left, high]), Color("#c8faff"))
+	draw_colored_polygon(PackedVector2Array([top, high, right]), Color("#31b9e1"))
+	draw_colored_polygon(PackedVector2Array([left, core, high]), Color("#278ab8"))
+	draw_colored_polygon(PackedVector2Array([right, high, core]), Color("#83f0ff"))
+	draw_colored_polygon(PackedVector2Array([left, bottom, core]), Color("#1769a7"))
+	draw_colored_polygon(PackedVector2Array([right, core, bottom]), Color("#51cdec"))
+	draw_polyline(PackedVector2Array([top, left, bottom, right, top]), Color("#9aeeff"), 1, true)
+	draw_line(top, core, Color("#b9f5ff"), 1, true)
+	draw_line(core, bottom, Color("#a6f1ff"), 1, true)
+
+func _draw_coin(at: Vector2, radius: float) -> void:
+	draw_circle(at, radius + 1, Color("#7e653b"))
+	draw_circle(at, radius, Color("#dcad51"))
+	draw_arc(at, radius - 3, 0, TAU, 28, Color("#fff0b8"), 1.2, true)
+	draw_line(at + Vector2(-2, -7), at + Vector2(-5, 6), Color("#ffedb0"), 2, true)
+	draw_line(at + Vector2(3, -7), at + Vector2(0, 6), Color("#805d2d"), 2, true)
 
 func _draw_skill_icon(center: Vector2, id: String, radius: float, color: Color) -> void:
 	if id == "blast":
@@ -298,7 +415,7 @@ func _draw_monster_bars() -> void:
 		if mo["hp"] >= mo["max"] and not bool(mo.get("blocked", false)): continue
 		var boss := String(mo.get("kind", "")) == "boss"
 		var at := view_3d.project(mo["pos"], 1.75 if boss else 1.2 if String(mo.get("kind", "")) == "tank" else 0.84)
-		if not FIELD.grow(-14).has_point(at): continue
+		if not BATTLEFIELD.grow(-14).has_point(at) or MINIMAP.has_point(at): continue
 		var cell := Vector2i(int(at.x / 34), int(at.y / 13))
 		if occupied.has(cell) and not boss: continue
 		occupied[cell] = true
@@ -311,7 +428,7 @@ func _draw_monster_bars() -> void:
 func _shade() -> void:
 	draw_rect(Look.SCREEN, Color(0.025, 0.05, 0.075, 0.80))
 	ui.zone(Look.SCREEN, "modal:block")
-	Look.material_panel(self, MODAL, Look.PANEL, Look.PANEL_EDGE)
+	Look.glass_panel(self, MODAL, Color("#81a5b6"), Color(0.035, 0.085, 0.13, 0.96))
 	Look.fill_round(self, Rect2(1002, 100, 174, 31), 4, Color("#2d4246"))
 	Look.text_box(self, Rect2(1008, 102, 162, 25), _tr("pause"), 17, Look.GOLD)
 

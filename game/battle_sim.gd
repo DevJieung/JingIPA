@@ -645,6 +645,9 @@ const RETARGET_CONE := 0.94
 const RETARGET_R := 200.0
 
 
+func projectile_bounds() -> Rect2:
+	return Rect2(-80, -80, 1440, 960)
+
 func _move_bullets(dt: float) -> void:
 	var keep: Array = []
 	for b in bullets:
@@ -672,7 +675,7 @@ func _move_bullets(dt: float) -> void:
 		p += v * dt
 		b["p"] = p
 		b["v"] = v
-		if not Rect2(-80, -80, 1440, 960).has_point(p):
+		if not projectile_bounds().has_point(p):
 			continue
 
 		# ★ Array(b["hit"]) 로 감싸 쓰지 마라 — 변환본에 append 하면 원본이 안 바뀌어

@@ -101,7 +101,10 @@ func _draw() -> void:
 		var rect := Hud.MENU_RECT
 		if main.screen is TitleScreen or main.screen is OverScreen:
 			rect.position.y = 24
-		ui.button(self, rect, "메뉴 / 도움말", "menu", not main.screen_modal_open(), Look.PANEL_EDGE, 20)
+		if main.screen is ArenaScreen:
+			ui.glass_button(self, rect, "메뉴 / 도움말", "menu", not main.screen_modal_open(), Color("#7598aa"), 20)
+		else:
+			ui.button(self, rect, "메뉴 / 도움말", "menu", not main.screen_modal_open(), Look.PANEL_EDGE, 20)
 		return
 	draw_rect(Look.SCREEN, Color(0.01, 0.02, 0.04, 0.85))
 	Look.material_panel(self, Rect2(220, 86, 840, 638), Look.PANEL, Look.CRYSTAL)
@@ -245,7 +248,15 @@ func _draw_languages(rect: Rect2) -> void:
 		var code := "ko" if index == 0 else "en"
 		var button_rect := Rect2(rect.position + Vector2(index * 76, 0), Vector2(68, rect.size.y))
 		var selected := I18n.locale == code
-		ui.button(self, button_rect, "KOR" if code == "ko" else "ENG", "language:" + code,
-				true, Look.GOLD if selected else Look.PANEL_EDGE, 20)
+		if main.screen is ArenaScreen:
+			if selected:
+				ui.zone(button_rect, "language:" + code)
+				Look.glass_panel(self, button_rect, Look.GOLD.lightened(0.25), Color("#e6bd58"), true)
+				Look.text_box(self, button_rect.grow(-5), "KOR" if code == "ko" else "ENG", 20, Look.BG_DEEP)
+			else:
+				ui.glass_button(self, button_rect, "KOR" if code == "ko" else "ENG", "language:" + code, true, Color("#7598aa"), 20)
+		else:
+			ui.button(self, button_rect, "KOR" if code == "ko" else "ENG", "language:" + code,
+					true, Look.GOLD if selected else Look.PANEL_EDGE, 20)
 		if selected:
 			draw_rect(Rect2(button_rect.position + Vector2(19, button_rect.size.y - 9), Vector2(30, 3)), Look.BG_DEEP)

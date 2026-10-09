@@ -50,7 +50,7 @@ func _spawn_position(index: int) -> Vector2:
 	var preferred := Balance.ARENA_CENTER + Vector2.from_angle(-PI * 0.5 + float(index) * TAU / float(maxi(1, Balance.ARENA_HERO_LIMIT))) * (Balance.ALTAR_R + Balance.ARENA_HERO_RADIUS * 3.0)
 	if _position_free(preferred):
 		return preferred
-	var rect := Balance.MAP_RECT.grow(-Balance.ARENA_HERO_RADIUS)
+	var rect := ArenaGeometry.MAP_RECT.grow(-Balance.ARENA_HERO_RADIUS)
 	var step_size := maxi(1, ceili(Balance.ARENA_HERO_RADIUS * 2.0))
 	for y in range(ceili(rect.position.y), floori(rect.end.y), step_size):
 		for x in range(ceili(rect.position.x), floori(rect.end.x), step_size):
