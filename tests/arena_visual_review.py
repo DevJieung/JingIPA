@@ -14,7 +14,7 @@ from godot_env import ROOT, GODOT, xvfb
 parser = argparse.ArgumentParser()
 parser.add_argument("--res", action="append")
 parser.add_argument("--out-root", type=Path, default=ROOT / "build/arena-visual")
-parser.add_argument("--only", choices=["polish", "help", "rite", "style", "look", "circle"])
+parser.add_argument("--only", choices=["polish", "help", "rite", "style", "look", "circle", "hud"])
 args = parser.parse_args()
 report = {"renderer": "gl_compatibility", "device_fps_measured": False, "resolutions": {}}
 for index, resolution in enumerate(args.res or ["1280x800", "1000x625"]):
@@ -46,7 +46,7 @@ for index, resolution in enumerate(args.res or ["1280x800", "1000x625"]):
             shot.thumbnail((426, 267))
             contact.paste(shot, (n % 3 * 426, n // 3 * 267))
         contact.save(out / f"{locale}_contact.jpg", quality=94)
-        for motion in ["move", "limne_move", "skill_blast", "skill_freeze", "skill_ward", "rite_spin", "follow", "echo_attack", "lane"]:
+        for motion in ["move", "limne_move", "skill_blast", "skill_freeze", "skill_ward", "rite_spin", "follow", "echo_attack", "lane", "long_walk"]:
             files = sorted(out.glob(f"{locale}_{motion}_[0-9][0-9].png"))
             frames = []
             for path in files:

@@ -3,13 +3,15 @@ class_name ArenaScreen
 
 ## One battlefield, with the ritual, growth and reserves over its paused world.
 const FIELD := Rect2(0, 0, 1280, 800)
-const BATTLEFIELD := Rect2(0, 70, 1280, 490)
-const MINIMAP := Rect2(1088, 88, 174, 130)
+const BATTLEFIELD := Rect2(0, 70, 992, 730)
+const SIDEBAR := Rect2(992, 70, 288, 730)
+const MINIMAP := Rect2(1006, 84, 130, 132)
 const JOY_RADIUS := 67.0
-const HERO_X := 255.0
-const HERO_Y := 631.0
-const HERO_W := 115.0
-const HERO_GAP := 10.0
+const HERO_X := 1006.0
+const HERO_Y := 228.0
+const HERO_W := 124.0
+const HERO_H := 119.0
+const HERO_GAP := 12.0
 const MODAL := Rect2(72, 86, 1136, 676)
 
 var main = null
@@ -137,7 +139,7 @@ func _pointer(pointer: int, at: Vector2, pressed: bool) -> void:
 			_action(ui.pressed)
 		get_viewport().set_input_as_handled()
 		return
-	if Rect2(0, 0, 1280, 70).has_point(at) or MINIMAP.has_point(at): return
+	if Rect2(0, 0, 1280, 70).has_point(at) or SIDEBAR.has_point(at): return
 	if Arena.sim != null and Arena.sim.boss_spawned and Rect2(368, 83, 544, 39).has_point(at): return
 	if Arena.sim != null and Arena.sim.shield > 0 and Rect2(76, 80, 184, 30).has_point(at): return
 	if not FIELD.has_point(at) or not Arena.modal.is_empty() or Arena.sim == null or Arena.sim.done or _menu_open(): return
@@ -270,19 +272,18 @@ func _draw_topbar(theme: Dictionary) -> void:
 			break
 
 func _draw_controls() -> void:
-	# The forest remains visible under the touch deck, making the world continuous.
-	draw_rect(Rect2(0, 564, 1280, 236), Color(0.012, 0.037, 0.06, 0.81))
-	for n in range(13):
-		draw_rect(Rect2(0, 564 + n * 3, 1280, 3), Color(0.014, 0.052, 0.075, 0.10 * (1 - n / 13.0)))
-	draw_line(Vector2(0, 564), Vector2(1280, 564), Color("#97b7bd"), 1, true)
-	for x in [16, 1264]: _draw_diamond(Vector2(x, 564), 3, Look.GOLD)
+	# All commands live in one right rail; the lower field stays open for movement.
+	draw_rect(SIDEBAR, Color(0.012, 0.037, 0.06, 0.88))
+	draw_line(SIDEBAR.position, Vector2(SIDEBAR.position.x, SIDEBAR.end.y), Color("#84a8b5"), 1, true)
+	for n in range(7):
+		draw_rect(Rect2(SIDEBAR.position.x - 14 + n * 2, 70, 2, 730), Color(0.01, 0.03, 0.05, n * 0.025))
 	var active := Arena.modal.is_empty() and Arena.sim != null and not Arena.sim.done
 	var summoning := active and Arena.gold >= Arena.summon_cost() and not Arena.eligible_units().is_empty()
-	ui.glass_button(self, Rect2(294, 574, 206, 39), _tr("summon") + "  %d G" % Arena.summon_cost(), "summon", summoning, Look.PANEL_EDGE, 20)
-	ui.glass_button(self, Rect2(510, 574, 206, 39), _tr("shop"), "shop", active, Look.PANEL_EDGE, 21)
-	ui.glass_button(self, Rect2(726, 574, 242, 39), _tr("bench") + "  %d" % Arena.bench.size(), "bench", active, Look.PANEL_EDGE, 21)
+	_draw_command_button(Rect2(1148, 84, 118, 40), _tr("summon"), "%d G" % Arena.summon_cost(), "summon", summoning)
+	ui.glass_button(self, Rect2(1148, 130, 118, 40), _tr("shop"), "shop", active, Look.PANEL_EDGE, 19)
+	_draw_command_button(Rect2(1148, 176, 118, 40), _tr("bench"), str(Arena.bench.size()), "bench", active)
 	for i in range(Balance.ARENA_HERO_LIMIT):
-		var rect := Rect2(HERO_X + i * (HERO_W + HERO_GAP), HERO_Y, HERO_W, 153)
+		var rect := Rect2(HERO_X + (i % 2) * (HERO_W + HERO_GAP), HERO_Y + (i / 2) * (HERO_H + 9), HERO_W, HERO_H)
 		if i < Arena.heroes.size():
 			_draw_hero_card(rect, Arena.heroes[i], i == Arena.selected)
 			ui.zone(rect.grow(3), "hero:%d" % i, active)
@@ -290,22 +291,28 @@ func _draw_controls() -> void:
 			ui.zone(rect.grow(3), "hero:empty", false)
 			Look.glass_panel(self, rect, Color("#587787"), Color(0.06, 0.12, 0.16, 0.73))
 			_draw_skill_icon(Vector2(rect.get_center().x, rect.position.y + 31), "freeze", 13, Color(0.28, 0.46, 0.56, 0.25))
-			Look.text_box(self, Rect2(rect.position + Vector2(8, 59), Vector2(rect.size.x - 16, 43)), str(i + 1), 31, Color("#698390"))
+			Look.text_box(self, Rect2(rect.position + Vector2(8, 44), Vector2(rect.size.x - 16, 36)), str(i + 1), 27, Color("#698390"))
 			Look.text_box(self, Rect2(rect.position.x + 8, rect.end.y - 33, rect.size.x - 16, 24), "빈 자리", 17, Color("#829ba7"))
 	for i in range(3):
 		var id: String = ["blast", "freeze", "ward"][i]
-		var rect := Rect2(1056, 574 + i * 70, 206, 61)
+		var rect := Rect2(1006, 615 + i * 61, 260, 54)
 		var remaining := float(Arena.sim.skill_cooldowns.get(id, 0.0)) if Arena.sim != null else 0.0
 		var enabled := active and remaining <= 0
 		var color: Color = [Look.GOLD, Color("#aeeaff"), Color("#6ce8fa")][i]
 		ui.glass_button(self, rect, "", "skill:" + id, enabled, color, 18)
 		for layer in range(3): draw_circle(Vector2(rect.position.x + 30, rect.get_center().y), 21 - layer * 4, Color(color, 0.035 if enabled else 0.009))
 		_draw_skill_icon(Vector2(rect.position.x + 30, rect.get_center().y), id, 17, color if enabled else Look.INK_DIM)
-		Look.text_box(self, Rect2(rect.position + Vector2(59, 6), Vector2(138, 26)), _tr("skill." + id), 20, color if enabled else Look.INK_DIM)
-		Look.text_box(self, Rect2(rect.position + Vector2(59, 31), Vector2(138, 20)), _tr("ready") if remaining <= 0 else "%.1f" % remaining, 15, color if enabled else Look.INK_DIM)
+		Look.text_box(self, Rect2(rect.position + Vector2(59, 3), Vector2(190, 26)), _tr("skill." + id), 20, color if enabled else Look.INK_DIM)
+		Look.text_box(self, Rect2(rect.position + Vector2(59, 28), Vector2(190, 20)), _tr("ready") if remaining <= 0 else "%.1f" % remaining, 15, color if enabled else Look.INK_DIM)
 		if remaining > 0 and Arena.sim != null:
 			var maximum := Arena.sim.skill_max_cooldown(id)
 			_bar(Rect2(rect.position.x + 8, rect.end.y - 6, rect.size.x - 16, 2), 1 - remaining / maxf(0.001, maximum), color)
+
+func _draw_command_button(rect: Rect2, title: String, value: String, id: String, active: bool) -> void:
+	ui.glass_button(self, rect, "", id, active)
+	var color := Look.INK if active else Color("#8499a5")
+	Look.text_box(self, Rect2(rect.position + Vector2(4, 1), Vector2(rect.size.x - 8, 21)), title, 17, color)
+	Look.text_box(self, Rect2(rect.position + Vector2(4, 20), Vector2(rect.size.x - 8, 20)), value, 13, Look.GOLD if active else color)
 
 func _draw_joystick() -> void:
 	if _joy_pointer == -99 or not Arena.modal.is_empty() or _menu_open(): return

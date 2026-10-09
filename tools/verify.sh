@@ -169,6 +169,8 @@ godot_run 120 "$TMP/arena-camera.log" res://tests/arena_camera_check.tscn
 expect "확장 전장·추적 카메라·미니맵" "판정: 정상" "$TMP/arena-camera.log"
 godot_run 120 "$TMP/arena-route.log" res://tests/arena_route_check.tscn
 expect "원형 전장·도로 이동·가변 조이스틱" "판정: 정상" "$TMP/arena-route.log"
+godot_run 180 "$TMP/arena-pose.log" res://tests/arena_pose_check.tscn
+expect "50명 연속 보행·정지 자세 누적 방지" "판정: 정상" "$TMP/arena-pose.log"
 godot_run 180 "$TMP/arena-play.log" res://tests/arena_play_check.tscn
 expect "연속 수호전 실제 UI 흐름" "판정: 정상" "$TMP/arena-play.log"
 godot_run 90 "$TMP/stellar-identity.log" res://tests/stellar_identity_check.tscn

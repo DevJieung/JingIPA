@@ -111,6 +111,9 @@ static func valid(data: Dictionary) -> bool:
 	if data["modal"] == "theme":
 		return data["heroes"].is_empty() and data["bench"].is_empty() and data["sim"].is_empty()
 	var sim: Dictionary = data["sim"]
+	if sim.has("road_revision") and (not sim["road_revision"] is int or sim["road_revision"] < 1):
+		return false
+	var current_roads := not legacy and int(sim.get("road_revision", 1)) == ArenaGeometry.ROAD_REVISION
 	for key in ["elapsed", "crystal_hp", "shield", "shield_t", "spawn_t", "curse_t", "surge", "surge_t"]:
 		if not number(sim.get(key)):
 			return false
@@ -143,7 +146,7 @@ static func valid(data: Dictionary) -> bool:
 	for mo in sim["monsters"]:
 		if not point(mo.get("pos"), legacy) or not mo.get("m") is Dictionary or not mo.get("path") is PackedVector2Array:
 			return false
-		if not legacy and not ArenaGeometry.on_road(mo["pos"]): return false
+		if current_roads and not ArenaGeometry.on_road(mo["pos"]): return false
 		for key in ["hp", "max", "spd", "motion_t", "slow", "slow_t", "stun_t", "stun_cd", "push", "push_left", "push_t", "flash", "burn", "burn_t", "burn_em", "siege_t", "s", "off", "h"]:
 			if not number(mo.get(key), -1000000.0):
 				return false
@@ -156,7 +159,7 @@ static func valid(data: Dictionary) -> bool:
 		if not mo.get("spawn_id") is int or not mo.get("nav_v") is int or not mo.get("blocked") is bool:
 			return false
 		for at in mo["path"]:
-			if not point(at, legacy) or (not legacy and not ArenaGeometry.on_road(at)):
+			if not point(at, legacy) or (current_roads and not ArenaGeometry.on_road(at)):
 				return false
 	for bullet in sim["bullets"]:
 		if not vector(bullet.get("p")) or not vector(bullet.get("v")) or not bullet.get("c") is Color or not bullet.get("crit") is bool:

@@ -5,6 +5,7 @@ class_name ArenaGeometry
 const RADIUS := 500.0
 const ROAD_WIDTH := 90.0
 const ROUTE_COUNT := 4
+const ROAD_REVISION := 2
 const PLAZA_RADIUS := 103.0
 const MAP_RECT := Rect2(Balance.ARENA_CENTER - Vector2.ONE * RADIUS, Vector2.ONE * RADIUS * 2)
 const LEGACY_RECT := Rect2(Balance.ARENA_CENTER - Vector2(552, 408), Vector2(1104, 816))
@@ -24,11 +25,12 @@ static func outline(segments: int = 96, margin: float = 0.0) -> PackedVector2Arr
 
 static func route_points(lane: int) -> PackedVector2Array:
 	if _routes.is_empty():
-		# A curved dogleg, rotated into four independent entrances. These exact
+		# A winding double bend, rotated into four independent entrances. These exact
 		# samples also draw the road; there is no separate visual-only route.
-		var anchors := PackedVector2Array([Vector2(484, 0), Vector2(395, 0),
-			Vector2(330, 70), Vector2(330, 170), Vector2(245, 215),
-			Vector2(150, 180), Vector2(95, 90), Vector2.ZERO])
+		var anchors := PackedVector2Array([Vector2(484, 0), Vector2(420, 15),
+			Vector2(370, 125), Vector2(310, 270), Vector2(190, 330),
+			Vector2(90, 300), Vector2(85, 225), Vector2(180, 210),
+			Vector2(235, 130), Vector2(180, 75), Vector2(90, 70), Vector2.ZERO])
 		for route in range(ROUTE_COUNT):
 			var path := PackedVector2Array()
 			for i in range(anchors.size() - 1):

@@ -25,7 +25,7 @@ python3 tools/gamedb.py check
 python3 tools/gen_roster.py --check
 python3 tools/check_localization.py
 python3 -m unittest discover -s tests -p test_check_no_ads.py
-for scene in arena_check arena_camera_check arena_route_check arena_play_check stellar_identity_check stellar_gameplay_check 3d/stellar_render_check limne_model_check native_hero_check native_monster_check formation_check free_placement_check rite_check reroll_check flow_check rules_check progression_check wave_scaling_check course_check localization_check no_ads_check; do
+for scene in arena_check arena_camera_check arena_route_check arena_pose_check arena_play_check stellar_identity_check stellar_gameplay_check 3d/stellar_render_check limne_model_check native_hero_check native_monster_check formation_check free_placement_check rite_check reroll_check flow_check rules_check progression_check wave_scaling_check course_check localization_check no_ads_check; do
     log="build/ci/${scene//\//-}.log"
     checked_godot "$log" "res://tests/$scene.tscn"
     grep -q '판정: 정상' "$log"

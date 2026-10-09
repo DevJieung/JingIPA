@@ -4,6 +4,8 @@ func _ready() -> void:
 	if not require_no_save(): return
 	Run.running = false
 	_check_routes()
+	_check_moving_guardian()
+	_check_local_blockers()
 	_check_migration()
 	await _check_floating_input()
 	Arena.running = false
@@ -30,6 +32,9 @@ func _check_routes() -> void:
 		sim._spawn(Arena.spawns_for(1)[0])
 		var mo: Dictionary = sim.monsters[0]
 		var route := ArenaGeometry.route_points(lane)
+		var road_length := 0.0
+		for i in range(1, route.size()): road_length += route[i - 1].distance_to(route[i])
+		check(road_length > 1100, "진입로 중심선 길이 1100 이상 %d" % lane)
 		mo["pos"] = route[0]
 		mo["nav_v"] = -1
 		mo["spd"] = 1.0
@@ -46,9 +51,10 @@ func _check_routes() -> void:
 			radial_line = radial_line and p.distance_to(closest) < 30
 			if p.distance_to(Balance.ARENA_CENTER) <= Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS: break
 		check(road_only, "모든 프레임에서 길 안에 머무름 %d" % lane)
-		check(not radial_line and travelled > 520, "직선 지름길 없이 굽은 도로 이동 %d (거리 %.1f)" % [lane, travelled])
+		check(not radial_line and travelled > 900, "직선 지름길 없이 긴 굽은 도로 이동 %d (거리 %.1f)" % [lane, travelled])
+		print("입구 %d 실제 이동 거리 %.1f / 도로 중심선 %.1f" % [lane, travelled, road_length])
 		check(Vector2(mo["pos"]).distance_to(Balance.ARENA_CENTER) <= Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS + 1, "네 입구 모두 수정 도착 %d" % lane)
-	# A guardian sealing the road must cause waiting, never a shortcut over snow.
+	# A guardian only stops enemies at contact, never at the distant entrance.
 	sim.monsters.clear()
 	var block_point := ArenaGeometry.route_points(0)[12]
 	Arena.heroes[0]["position"] = block_point
@@ -59,12 +65,15 @@ func _check_routes() -> void:
 	blocked["pos"] = ArenaGeometry.route_points(0)[0]
 	var start: Vector2 = blocked["pos"]
 	for i in range(90): sim._move_monsters(1.0 / 60.0)
-	check(blocked["blocked"] and blocked["pos"] == start, "길 봉쇄 시 길 밖으로 새지 않고 대기")
+	check(not blocked["blocked"] and Vector2(blocked["pos"]).distance_to(start) > 50, "멀리 있는 영웅이 길을 막아도 입구에서 계속 접근")
+	for i in range(600): sim._move_monsters(1.0 / 60.0)
+	check(blocked["blocked"] and Vector2(blocked["pos"]).distance_to(block_point) < 46, "실제 영웅 접촉 직전에서만 대기")
+	var waiting: Vector2 = blocked["pos"]
 	Arena.heroes[0]["position"] = Balance.ARENA_CENTER + Vector2(230, -10)
 	sim.refresh_heroes()
 	sim._rebuild_navigation()
 	for i in range(90): sim._move_monsters(1.0 / 60.0)
-	check(blocked["pos"] != start and ArenaGeometry.on_road(blocked["pos"], Balance.ARENA_MONSTER_RADIUS), "봉쇄 해제 뒤 같은 도로 이동 재개")
+	check(Vector2(blocked["pos"]).distance_to(waiting) > 30 and ArenaGeometry.on_road(blocked["pos"], Balance.ARENA_MONSTER_RADIUS), "봉쇄 해제 뒤 같은 도로 이동 재개")
 	blocked["pos"] = ArenaGeometry.route_points(0)[20]
 	blocked["nav_v"] = -1
 	sim._push(0)
@@ -79,6 +88,49 @@ func _check_routes() -> void:
 	Arena.restore(saved)
 	for i in range(60): Arena.sim.step(1.0 / 60.0)
 	check(Arena.snapshot() == first, "도로 경로·이동 결정론적 이어하기")
+
+func _check_moving_guardian() -> void:
+	var reference: Array[Vector2] = []
+	for moving in [false, true]:
+		var sim := _battle()
+		sim._spawn(Arena.spawns_for(1)[0])
+		var mo: Dictionary = sim.monsters[0]
+		mo["pos"] = ArenaGeometry.route_points(0)[0]
+		mo["spd"] = 1.0
+		var same_progress := true
+		var keeps_moving := true
+		for frame in range(600):
+			if moving:
+				sim.move_selected(Vector2.RIGHT if (frame / 8) % 2 == 0 else Vector2.LEFT, 1.0 / 60.0)
+				sim._rebuild_navigation()
+			sim._move_monsters(1.0 / 60.0)
+			if moving:
+				same_progress = same_progress and Vector2(mo["pos"]).distance_to(reference[frame]) < 0.01
+				keeps_moving = keeps_moving and not bool(mo["blocked"])
+			else:
+				reference.append(mo["pos"])
+		if moving:
+			check(same_progress and keeps_moving, "영웅을 10초 연속 이동해도 적은 정지·뒷걸음 없이 같은 속도로 전진")
+
+func _check_local_blockers() -> void:
+	var sim := _battle()
+	var route := ArenaGeometry.route_points(0)
+	for sample in [12, 18, 24, 30, 36, 42, 48, 54]:
+		Arena.heroes[0]["position"] = route[sample]
+		sim.refresh_heroes()
+		sim._rebuild_navigation()
+		sim.monsters.clear()
+		sim._spawn(Arena.spawns_for(1)[0])
+		var mo: Dictionary = sim.monsters[0]
+		mo["pos"] = route[0]
+		mo["spd"] = 1.0
+		var safe := true
+		for frame in range(1200):
+			sim._move_monsters(1.0 / 60.0)
+			safe = safe and Vector2(mo["pos"]).distance_to(route[sample]) >= Balance.ARENA_HERO_RADIUS + Balance.ARENA_MONSTER_RADIUS - 0.01
+		var at: Vector2 = mo["pos"]
+		for frame in range(60): sim._move_monsters(1.0 / 60.0)
+		check(safe and bool(mo["blocked"]) and at == mo["pos"] and at.distance_to(route[sample]) < 46, "S자 바깥 굽이도 실제 접촉까지 접근·대기 중 왕복 없음 %d" % sample)
 
 func _check_migration() -> void:
 	var sim := _battle()
@@ -97,6 +149,15 @@ func _check_migration() -> void:
 	var broken := Arena.snapshot()
 	broken["heroes"][0]["p"] = ArenaGeometry.MAP_RECT.position
 	check(not Arena.restore(broken), "새 형식의 원 밖 좌표는 거부")
+	var old_road := Arena.snapshot()
+	old_road["sim"]["monsters"][0]["pos"] = Balance.ARENA_CENTER + Vector2(330, 70)
+	old_road["sim"]["monsters"][0]["path"] = PackedVector2Array([Balance.ARENA_CENTER + Vector2(330, 170), Balance.ARENA_CENTER])
+	check(not Arena.restore(old_road), "현재 도로 저장의 길 밖 좌표는 거부")
+	old_road["sim"].erase("road_revision")
+	check(Arena.restore(old_road), "이전 짧은 도로 저장 이어하기 허용")
+	check(ArenaGeometry.on_road(Arena.sim.monsters[0]["pos"], Balance.ARENA_MONSTER_RADIUS) and Arena.sim.monsters[0]["path"].is_empty(), "이전 도로 적 위치·캐시 경로를 새 길로 이전")
+	for frame in range(60): Arena.sim._move_monsters(1.0 / 60.0)
+	check(Arena.gold == old_road["gold"] and Arena.sim.elapsed == old_road["sim"]["elapsed"] and ArenaValidation.valid(Arena.snapshot()), "도로 이전 뒤 이동·골드·시간·저장 보존")
 
 func _drag(screen: ArenaScreen, pointer: int, at: Vector2) -> void:
 	var event := InputEventScreenDrag.new()
@@ -147,7 +208,7 @@ func _check_floating_input() -> void:
 	canceled.index = 4
 	screen._input(canceled)
 	check(screen._joy_pointer == -99 and screen.joystick == Vector2.ZERO, "이동 손가락의 터치 취소는 즉시 정지")
-	for point in [Vector2(1190, 25), ArenaScreen.MINIMAP.get_center(), Rect2(skill["rect"]).get_center()]:
+	for point in [Vector2(1190, 25), ArenaScreen.MINIMAP.get_center(), Rect2(skill["rect"]).get_center(), Vector2(997, 430), Vector2(1136, 224)]:
 		screen._pointer(5, point, true)
 		check(screen._joy_pointer == -99, "HUD·미니맵·쿨다운 버튼은 스틱 시작 제외")
 	screen._pointer(4, Vector2(200, 350), true)

@@ -12,6 +12,7 @@ var shield := 0.0
 var shield_t := 0.0
 var skill_cooldowns := {"blast": 0.0, "freeze": 0.0, "ward": 0.0}
 var _nav := AStarGrid2D.new()
+var _road_nav := AStarGrid2D.new()
 var _road_cells: Array[Vector2i] = []
 var _nav_key := ""
 var _nav_version := 0
@@ -43,6 +44,11 @@ func setup(run_state, wave_no: int = 1, seed_value: int = 0) -> void:
 	_nav.offset = ArenaGeometry.MAP_RECT.position + _nav.cell_size * 0.5
 	_nav.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_ONLY_IF_NO_OBSTACLES
 	_nav.update()
+	_road_nav.region = _nav.region
+	_road_nav.cell_size = _nav.cell_size
+	_road_nav.offset = _nav.offset
+	_road_nav.diagonal_mode = _nav.diagonal_mode
+	_road_nav.update()
 	_road_cells.clear()
 	for y in range(_nav.region.size.y):
 		for x in range(_nav.region.size.x):
@@ -51,6 +57,7 @@ func setup(run_state, wave_no: int = 1, seed_value: int = 0) -> void:
 			# of a curved road. The static mask is computed once, not every frame.
 			var road := ArenaGeometry.on_road(_nav.get_point_position(cell), Balance.ARENA_MONSTER_RADIUS + 3)
 			_nav.set_point_solid(cell, not road)
+			_road_nav.set_point_solid(cell, not road)
 			if road: _road_cells.append(cell)
 	_nav_key = ""
 	_rebuild_navigation()
@@ -193,11 +200,16 @@ func _rebuild_navigation() -> void:
 				break
 		_nav.set_point_solid(cell, solid)
 
-func _segment_clear(from: Vector2, to: Vector2) -> bool:
+func _road_segment_clear(from: Vector2, to: Vector2) -> bool:
 	var samples := maxi(1, ceili(from.distance_to(to) / 6.0))
 	for i in range(samples + 1):
 		if not ArenaGeometry.on_road(from.lerp(to, float(i) / samples), Balance.ARENA_MONSTER_RADIUS):
 			return false
+	return true
+
+func _segment_clear(from: Vector2, to: Vector2) -> bool:
+	if not _road_segment_clear(from, to):
+		return false
 	var radius := Balance.ARENA_HERO_RADIUS + Balance.ARENA_MONSTER_RADIUS
 	for hero in heroes:
 		var p: Vector2 = hero["pos"]
@@ -221,11 +233,27 @@ func _path_from(from: Vector2, target: Vector2) -> PackedVector2Array:
 				candidates.append(cell)
 	candidates.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
 		return from.distance_squared_to(_nav.get_point_position(a)) < from.distance_squared_to(_nav.get_point_position(b)))
+	var fallback := PackedVector2Array()
 	for cell in candidates:
 		var path := _nav.get_point_path(cell, end)
 		if not path.is_empty():
-			return path
-	return PackedVector2Array()
+			return _join_path(from, path)
+		if fallback.is_empty():
+			fallback = _road_nav.get_point_path(cell, end)
+	# A distant guardian can seal a lane. Follow the road up to that guardian;
+	# every movement segment still checks the real collision radius. A partial
+	# AStar path instead stops at the point closest to the crystal, which can be
+	# hundreds of units before an obstruction on the far side of an S bend.
+	return _join_path(from, fallback, false)
+
+func _join_path(from: Vector2, path: PackedVector2Array, avoid_heroes: bool = true) -> PackedVector2Array:
+	# Join ahead of the nearest grid centre when visible. Replanning must not
+	# pull a moving enemy back to a cell it has already passed.
+	while path.size() > 1:
+		if not (_segment_clear(from, path[1]) if avoid_heroes else _road_segment_clear(from, path[1])):
+			break
+		path.remove_at(0)
+	return path
 
 func move_selected(direction: Vector2, dt: float) -> bool:
 	for actor in heroes:
@@ -307,12 +335,19 @@ func _move_monsters(dt: float) -> void:
 			if not run.running:
 				return
 			continue
-		if int(mo["nav_v"]) != _nav_version:
-			mo["path"] = _path_from(current, Balance.ARENA_CENTER)
-			mo["nav_v"] = _nav_version
 		var path: PackedVector2Array = mo["path"]
+		var had_path := not path.is_empty()
 		while not path.is_empty() and current.distance_to(path[0]) <= 0.1:
 			path.remove_at(0)
+		var navigation_changed := int(mo["nav_v"]) != _nav_version
+		var obstructed := navigation_changed and not path.is_empty() and not _segment_clear(current, current.move_toward(path[0], speed * dt))
+		if (navigation_changed and (obstructed or path.is_empty())) or (path.is_empty() and had_path):
+			path = _path_from(current, Balance.ARENA_CENTER)
+			while not path.is_empty() and current.distance_to(path[0]) <= 0.1:
+				path.remove_at(0)
+		# Keep the next valid waypoint through unrelated hero movement. Resetting
+		# every path on every navigation revision causes visible stalls/backsteps.
+		mo["nav_v"] = _nav_version
 		mo["path"] = path
 		if path.is_empty():
 			mo["blocked"] = true
@@ -321,6 +356,7 @@ func _move_monsters(dt: float) -> void:
 		var next := current.move_toward(target, speed * dt)
 		if not _segment_clear(current, next):
 			mo["blocked"] = true
+			mo["path"] = PackedVector2Array()
 			continue
 		mo["pos"] = next
 		mo["vel"] = (next - current) / dt
@@ -406,7 +442,8 @@ func snapshot_arena() -> Dictionary:
 		state.erase("h")
 		state.erase("st")
 		runtime.append(state)
-	return {"elapsed": elapsed, "boss_spawned": boss_spawned, "boss_alive": boss_alive, "crystal_hp": crystal_hp,
+	return {"road_revision": ArenaGeometry.ROAD_REVISION,
+		"elapsed": elapsed, "boss_spawned": boss_spawned, "boss_alive": boss_alive, "crystal_hp": crystal_hp,
 		"shield": shield, "shield_t": shield_t, "cooldowns": skill_cooldowns.duplicate(), "spawn_t": _spawn_t,
 		"serial": _serial, "rng": _rng.state, "curse_t": curse_t, "surge": surge, "surge_t": surge_t,
 		"accumulator": _accumulator, "kills": kills, "gold": gold,
@@ -433,7 +470,7 @@ func restore_arena(data: Dictionary, migrate_roads: bool = false) -> void:
 	gold = int(data["gold"])
 	_nav_version = int(data["nav_version"])
 	monsters.assign(data["monsters"].duplicate(true))
-	if migrate_roads:
+	if migrate_roads or int(data.get("road_revision", 1)) != ArenaGeometry.ROAD_REVISION:
 		for mo in monsters:
 			if not ArenaGeometry.on_road(mo["pos"], Balance.ARENA_MONSTER_RADIUS):
 				mo["pos"] = ArenaGeometry.nearest_road_point(mo["pos"])

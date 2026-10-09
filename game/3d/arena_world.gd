@@ -301,13 +301,20 @@ func weather_update(time: float) -> void:
 		weather.multimesh.set_instance_transform(n, Transform3D(Basis.from_scale(size), Vector3(x + sin(time * 0.4 + n) * 0.35, y, z)))
 
 func sync_heroes(heroes: Array, time: float, battle: bool = false) -> void:
-	# Limne's adapter drives its skin from controls, unlike sampled native clips.
-	# Restore the authored leg controls before adding this frame's locomotion.
+	# Remove our previous additive gait before sampling clips. AnimationPlayer
+	# can skip constant translation tracks on seek, so adding to their last pose
+	# each frame makes legs stretch upward indefinitely (also on paused redraws).
 	for key in _walk:
-		if not hero_nodes.has(key) or not hero_nodes[key] is LimneModel: continue
+		if not hero_nodes.has(key): continue
 		var node: Node3D = hero_nodes[key]
-		var rests: Dictionary = _walk[key].get("leg_rests", {})
-		for side in rests: node.get_node("Leg" + side).transform = rests[side]
+		var track: Dictionary = _walk[key]
+		var skeleton: Skeleton3D = track.get("skeleton")
+		if is_instance_valid(skeleton):
+			var poses: Dictionary = track.get("base_poses", {})
+			for bone in poses: skeleton.set_bone_pose(int(bone), poses[bone])
+		if node is LimneModel:
+			var rests: Dictionary = track.get("leg_rests", {})
+			for side in rests: node.get_node("Leg" + side).transform = rests[side]
 	super.sync_heroes(heroes, time, battle)
 	var keep: Dictionary = {}
 	for i in range(heroes.size()):
@@ -325,17 +332,19 @@ func sync_heroes(heroes: Array, time: float, battle: bool = false) -> void:
 		var elapsed := maxf(0.0, time - float(track["time"]))
 		var moved := delta.length() > 0.025 and delta.length() < 70
 		var walking: bool = battle and (moved if elapsed > 0.00001 else bool(track.get("walking", false)))
+		track["base_poses"] = {}
 		if walking:
 			if elapsed > 0.00001:
 				track["phase"] = float(track["phase"]) + delta.length() * 0.11
 				track["direction"] = delta
 			var phase := float(track["phase"])
 			var skeleton: Skeleton3D = track["skeleton"]
-			if skeleton != null:
+			if skeleton != null and not node is LimneModel:
 				for side in ["L", "R"]:
 					var bone := skeleton.find_bone("SkinLeg" + side)
 					if bone < 0: bone = skeleton.find_bone("Leg" + side)
 					if bone < 0: continue
+					track["base_poses"][bone] = skeleton.get_bone_pose(bone)
 					var wave := sin(phase + (0.0 if side == "L" else PI))
 					skeleton.set_bone_pose_rotation(bone, skeleton.get_bone_pose_rotation(bone) * Quaternion(Vector3.RIGHT, wave * 0.29))
 					var shift := skeleton.get_bone_pose_position(bone)

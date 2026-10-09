@@ -9,6 +9,9 @@ func _ready() -> void:
 	if not require_no_save(): return
 	out_dir = arg("--out", out_dir)
 	DirAccess.make_dir_recursive_absolute(out_dir)
+	if has_arg("--hud-only"):
+		await _hud_only()
+		return
 	if has_arg("--circle-only"):
 		await _circle_only()
 		return
@@ -182,6 +185,97 @@ func _ready() -> void:
 	print("Arena visual review: " + out_dir)
 	finish("Arena native 3D and mobile UI")
 
+func _hud_only() -> void:
+	for locale in ["ko", "en"]:
+		I18n.set_locale(locale)
+		Arena.start_run(20261009)
+		main = load("res://game/main.gd").new()
+		add_child(main)
+		await frames(3)
+		main.show_arena()
+		screen = main.screen
+		screen.set_process(false)
+		Arena.choose_theme(0)
+		Arena.confirm_summon()
+		Arena.close_modal()
+		Arena.heroes.clear()
+		Arena.gain_hero(Roster.unit_by_id("echo"), 3)
+		Arena.heroes[0]["position"] = Balance.ARENA_CENTER + Vector2(80, 110)
+		Arena.sim.refresh_heroes()
+		Arena.sim.monsters.clear()
+		Arena.gold = 69
+		Arena.selected = 0
+		await _capture(locale + "_reference")
+		# Thirty seconds of continuous real native gait, not twelve isolated poses.
+		for n in range(12):
+			for tick in range(150):
+				var phase := (n * 150 + tick) * 0.01
+				Arena.sim.heroes[0]["pos"] = Balance.ARENA_CENTER + Vector2(100, 100) + Vector2.from_angle(phase) * 70
+				Arena.sim.elapsed += 1.0 / 60
+				screen.view_3d.world.sync_heroes(Arena.sim.heroes, Arena.sim.elapsed, true)
+			await _capture(locale + "_long_walk_%02d" % n)
+		Arena.sim.elapsed += 0.1
+		await _capture(locale + "_walk_stopped")
+		var pool := Roster.theme_pool(Arena.theme_for(1))
+		Arena.sim._spawn(pool[0])
+		Arena.sim.monsters[0]["pos"] = ArenaGeometry.nearest_road_point(Arena.sim.heroes[0]["pos"] + Vector2(40, 0))
+		Arena.sim.monsters[0]["hp"] = 1000000.0
+		Arena.sim.monsters[0]["max"] = 1000000.0
+		Arena.sim._cache_positions()
+		for n in range(6):
+			screen._process(1.0 / 15)
+			await _capture(locale + "_echo_attack_%02d" % n)
+		_prepare_field()
+		Arena.gold = 99999
+		await _capture(locale + "_field_six")
+		for zone in screen.ui.zones:
+			check(ArenaScreen.SIDEBAR.encloses(Rect2(zone["rect"])), "all battle commands remain in the right HUD")
+		var last := zone_of(screen, "hero:5")
+		_window_touch(Rect2(last["rect"]).get_center(), true)
+		_window_touch(Rect2(last["rect"]).get_center(), false)
+		check(Arena.selected == 5, "window pixel touch selects sixth right-side card")
+		await _capture(locale + "_selected_last")
+		for point in [Vector2(105, 692), Vector2(935, 442)]:
+			screen._pointer(0, point, true)
+			_drag(point + Vector2(40, -15))
+			check(screen._joy_pointer == 0 and screen.joystick.length() > 0, "open lower field starts movement")
+			await _capture(locale + "_joystick_" + str(int(point.x)))
+			screen._pointer(0, point, false)
+		for point in [Vector2(997, 430), Vector2(1136, 224), ArenaScreen.MINIMAP.get_center()]:
+			screen._pointer(1, point, true)
+			check(screen._joy_pointer == -99, "right HUD gaps do not start movement")
+		for direction in [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]:
+			var at: Vector2 = Balance.ARENA_CENTER + direction * (ArenaGeometry.RADIUS - Balance.ARENA_HERO_RADIUS)
+			Arena.sim.heroes[Arena.selected]["pos"] = at
+			for frame in range(60): screen.view_3d.follow_selected(at, 1.0 / 30)
+			await _capture(locale + "_edge_%d_%d" % [int(direction.x), int(direction.y)])
+			for height in [0.08, 1.95]:
+				check(ArenaScreen.BATTLEFIELD.has_point(screen.view_3d.project(Balance.ARENA_CENTER, height)), "crystal remains clear of right HUD")
+			check(ArenaScreen.BATTLEFIELD.has_point(screen.view_3d.project(at, 0.5)), "selected native hero remains clear of right HUD")
+		for skill in ["blast", "freeze", "ward"]:
+			Arena.sim.skill_cooldowns[skill] = 0.0
+			await paint(screen)
+			check(tap(screen, "skill:" + skill), "right skill action remains active")
+			await _capture(locale + "_skill_" + skill)
+		Arena.open_modal("shop")
+		await _capture(locale + "_upgrades")
+		Arena.close_modal()
+		Arena.gain_hero(Roster.unit_by_id("saeta"), 9)
+		Arena.open_modal("bench")
+		await _capture(locale + "_reserves_selected")
+		Arena.close_modal()
+		Arena.begin_summon()
+		screen._rite_age = 9
+		await _capture(locale + "_rite_free")
+		main.queue_free()
+		main = null
+		screen = null
+		await frames(4)
+	var file := FileAccess.open(out_dir + "/hud-report.json", FileAccess.WRITE)
+	file.store_string(JSON.stringify({"checks": checks, "failures": failures, "text_boxes": _audit_count}, "  ") + "\n")
+	file = null
+	finish("Right command HUD and prolonged native locomotion")
+
 func _circle_only() -> void:
 	for locale in ["ko", "en"]:
 		I18n.set_locale(locale)
@@ -227,7 +321,7 @@ func _circle_only() -> void:
 			for monster in Arena.sim.monsters:
 				check(ArenaGeometry.on_road(monster["pos"], Balance.ARENA_MONSTER_RADIUS), "moving enemy remains on the rendered curved road")
 		check(traveled > 20, "curved lane footage contains actual simulation movement")
-		var origins := [Vector2(105, 692), Vector2(352, 407), Vector2(38, 250), Vector2(1212, 440)]
+		var origins := [Vector2(105, 692), Vector2(352, 407), Vector2(38, 250), Vector2(942, 440)]
 		for i in range(origins.size()):
 			var origin: Vector2 = origins[i]
 			screen._pointer(0, origin, true)

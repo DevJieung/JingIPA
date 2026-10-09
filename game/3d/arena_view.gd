@@ -2,8 +2,8 @@ extends StellarView
 class_name ArenaView
 
 ## HUD overlays the full world texture; follow and picking use the open field.
-var battle_box := Rect2(0, 70, 1280, 490)
-var minimap_box := Rect2(1088, 88, 174, 130)
+var battle_box := Rect2(0, 70, 992, 730)
+var minimap_box := Rect2(1006, 84, 130, 132)
 var _follow_offset := Vector3.ZERO
 var _camera_initialized := false
 var _camera_sim = null
@@ -31,7 +31,7 @@ func _active_box() -> Rect2:
 func _apply_camera(offset: Vector3) -> void:
 	world.camera_target = offset
 	world.camera_update()
-	# Reframe the fixed orthographic view into the space between the HUD strips.
+	# Center the fixed orthographic view in the open area left of the command rail.
 	var center := box.get_center()
 	var focus := _active_box().get_center()
 	var a := world.ground_at(center - box.position)

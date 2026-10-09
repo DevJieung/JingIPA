@@ -179,8 +179,14 @@ func _check_navigation() -> void:
 	sim._rebuild_navigation()
 	sim.monsters.clear()
 	mo = _monster(sim, trap)
-	for i in range(120): sim._move_monsters(1.0 / 60.0)
-	check(mo["pos"] == trap and mo["blocked"] and mo["motion_t"] == 0.0, "겹침 없는 6인 완전 봉쇄에서도 대기")
+	safe = true
+	for i in range(120):
+		sim._move_monsters(1.0 / 60.0)
+		for hero in sim.heroes:
+			safe = safe and Vector2(mo["pos"]).distance_to(hero["pos"]) >= Balance.ARENA_HERO_RADIUS + Balance.ARENA_MONSTER_RADIUS - 0.01
+	var waiting: Vector2 = mo["pos"]
+	for i in range(60): sim._move_monsters(1.0 / 60.0)
+	check(safe and Vector2(mo["pos"]).distance_to(trap) < 24 and mo["pos"] == waiting and mo["blocked"], "6인 완전 봉쇄는 실제 접촉 지점까지 접근한 뒤 관통·밀어내기 없이 대기")
 	_park_heroes(sim)
 	for i in range(60): sim._move_monsters(1.0 / 60.0)
 	check(mo["pos"] != trap, "봉쇄를 풀면 도로 이동 재개")
