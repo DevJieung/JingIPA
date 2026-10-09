@@ -1,0 +1,68 @@
+{
+  "id": "glacier_dragon",
+  "creator": "Actual TRELLIS creature surface retained; Blender UV-preserving LOD, body-specific skin and authored IdleLoop/MoveLoop",
+  "input": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-raw/glacier_dragon/model.glb",
+  "source_sha256": "07b9f1258e718b57f6c181a8540a315cbad1dfee0c4bcbd239000b9801532a96",
+  "raw_triangles": 178845,
+  "game_triangles": 64999,
+  "game_texture_max": 1024,
+  "height": 1.55,
+  "shape": "dragon",
+  "rig": [
+    "Body",
+    "Head",
+    "WingL",
+    "WingR",
+    "Tail",
+    "ArmL",
+    "ArmR",
+    "LegL",
+    "LegR"
+  ],
+  "clips": [
+    "IdleLoop",
+    "MoveLoop"
+  ],
+  "mesh_count": 1,
+  "material_count": 1,
+  "embedded_images": 1,
+  "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/glacier_dragon/high.blend",
+  "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/glacier_dragon/game.blend",
+  "glb_sha256": "10c549a8768556ae1c1574662f10b513e63c637d45b4df8b08929288a41b812c",
+  "glb_bytes": 4858944,
+  "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
+  "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
+  "visual_review": {
+    "resolutions": {
+      "1280x800": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 66603,
+          "vertices": 57380
+        }
+      },
+      "1000x625": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 66603,
+          "vertices": 57380
+        }
+      }
+    },
+    "glb_sha256": "10c549a8768556ae1c1574662f10b513e63c637d45b4df8b08929288a41b812c",
+    "report": "build/character-3d/monster-review/report.json",
+    "artist_note": "Direct actual GL Compatibility two-resolution 78PNG four views, Idle/Move continuous frames, Burn/Frost/Stun and twelve heroes battle inspected. Original long ice horns, grey-blue wings, pale segmented belly, two clawed arms/two feet and spined tail retained; nine-bone wings and tail move without disconnected surfaces or texture collapse."
+  }
+}

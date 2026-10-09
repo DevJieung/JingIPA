@@ -1,0 +1,72 @@
+{
+  "id": "igni",
+  "creator": "actual TRELLIS native surface retained; Blender UV-preserving LOD, game materials, continuous skin and authored clips",
+  "input": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/raw-v3/igni/model.glb",
+  "source_sha256": "21e5003d4dc07d316e097a73c8ec16aa2d6ed03f4ac0132256a0f052ad354b92",
+  "raw_triangles": 176608,
+  "game_triangles": 54978,
+  "game_texture_max": 1024,
+  "mesh_count": 1,
+  "material_count": 1,
+  "embedded_images": 1,
+  "rig": [
+    "Body",
+    "ArmL",
+    "ArmR",
+    "LegL",
+    "LegR",
+    "ForearmL",
+    "ForearmR",
+    "HandL",
+    "HandR",
+    "WeaponR"
+  ],
+  "clips": [
+    "Attack",
+    "IdleLoop"
+  ],
+  "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/igni/high.blend",
+  "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/igni/game.blend",
+  "height": 1.65,
+  "glb_bytes": 4862600,
+  "glb_sha256": "7005f28adca8c618d46c536062e26d96ccf8b25c6390d08dd2c912e2f8c6e84f",
+  "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
+  "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
+  "visual_review": {
+    "resolutions": {
+      "1280x800": {
+        "screenshots": 85,
+        "render_errors": 0,
+        "battle_captured": true,
+        "model_geometry": {
+          "materials": 2,
+          "meshes": 2,
+          "triangles": 55058,
+          "vertices": 56401
+        }
+      },
+      "1000x625": {
+        "screenshots": 85,
+        "render_errors": 0,
+        "battle_captured": true,
+        "model_geometry": {
+          "materials": 2,
+          "meshes": 2,
+          "triangles": 55058,
+          "vertices": 56401
+        }
+      }
+    },
+    "glb_sha256": "7005f28adca8c618d46c536062e26d96ccf8b25c6390d08dd2c912e2f8c6e84f",
+    "report": "build/character-3d/review/report.json",
+    "directly_inspected": [
+      "original",
+      "native studio",
+      "turnaround",
+      "idle/attack contact",
+      "grades/awakening",
+      "two-resolution mixed battle"
+    ],
+    "artist_note": "Directly inspected both-resolution turnarounds, 0/4/9/awakened gallery, continuous idle/attack contacts and actual selected mixed battle. Ceniza pressure pack stays on torso while right gun aims; Kari left twin-barrel stays rigid with distinct mouths; Vidarr cyan gauntlet hoses remain connected; Igni blade silhouette and Volcan heavy equipment preserve active-sprite identity. No visible limb tearing, floating pieces or foot displacement in reviewed sequences."
+  }
+}

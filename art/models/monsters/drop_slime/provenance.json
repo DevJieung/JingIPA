@@ -1,0 +1,62 @@
+{
+  "id": "drop_slime",
+  "creator": "Actual TRELLIS creature surface retained; Blender UV-preserving LOD, body-specific skin and authored IdleLoop/MoveLoop",
+  "input": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-raw/drop_slime/model.glb",
+  "source_sha256": "ddd81f4fccd0a67f9a5ea2003e04677a2aa5cf4634278c6fa4adcdb470c88898",
+  "raw_triangles": 179888,
+  "game_triangles": 10000,
+  "game_texture_max": 512,
+  "height": 0.64,
+  "shape": "blob",
+  "rig": [
+    "Body",
+    "Base",
+    "Crown"
+  ],
+  "clips": [
+    "IdleLoop",
+    "MoveLoop"
+  ],
+  "mesh_count": 1,
+  "material_count": 1,
+  "embedded_images": 1,
+  "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/drop_slime/high.blend",
+  "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/drop_slime/game.blend",
+  "glb_sha256": "e8a74c2e910b766f17b18538f7dade9cb318d629c6cdc16cef820ab1aeab9497",
+  "glb_bytes": 892816,
+  "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
+  "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
+  "visual_review": {
+    "resolutions": {
+      "1280x800": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 11604,
+          "vertices": 11014
+        }
+      },
+      "1000x625": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 11604,
+          "vertices": 11014
+        }
+      }
+    },
+    "glb_sha256": "e8a74c2e910b766f17b18538f7dade9cb318d629c6cdc16cef820ab1aeab9497",
+    "report": "build/character-3d/monster-review/report.json",
+    "artist_note": "Actual active sprite and native3D front/side/back/3quarter inspected. Navy-teal teardrop blob, two hollow black eyes and pooled lobed ground base preserved; 24idle/32squash-glide frames have a clean seam/anchored base. Both-resolution factory/world battle and Burn/Frost/Stun readability checked. No humanoid legs or face accessories introduced. Device FPS unmeasured."
+  }
+}

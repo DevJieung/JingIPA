@@ -1,0 +1,74 @@
+{
+  "id": "titan_bloom",
+  "creator": "Actual TRELLIS closed-v2 volume repaired in Blender with 6.2mm voxel continuous-surface retopology, gentle surface polish, nearest-source triangle UV transfer and original six-bone skin/IdleLoop/MoveLoop transfer. No primitive replacement or further inference.",
+  "input": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-raw-titan-closed-v2/titan_bloom/model.glb",
+  "source_sha256": "d1eb35eac1c68b6b8f902a28163982a57cb302a16816f69e8d4be44642018bd8",
+  "raw_triangles": 178520,
+  "game_triangles": 139999,
+  "game_texture_max": 1024,
+  "height": 1.55,
+  "shape": "plant",
+  "rig": [
+    "Body",
+    "Maw",
+    "VineL",
+    "VineR",
+    "RootL",
+    "RootR"
+  ],
+  "clips": [
+    "IdleLoop",
+    "MoveLoop"
+  ],
+  "mesh_count": 1,
+  "material_count": 1,
+  "embedded_images": 1,
+  "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/titan_bloom/high.blend",
+  "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/titan_bloom/game.blend",
+  "glb_sha256": "ceef7b53ef047ba03a1679de9aa62d8392d584f88adf34c879f400eef6d14fb3",
+  "glb_bytes": 12819484,
+  "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
+  "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
+  "raw_gltf_triangles": 178603,
+  "repaired_high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/titan_bloom/repaired-high.blend",
+  "topology_repair": {
+    "voxel_size_m": 0.0062,
+    "source_uv_transfer": "one source triangle per new polygon, barycentric clipped projection; original embedded atlas retained",
+    "skin_transfer": "nearest-four native source weights plus two adjacency blend passes",
+    "max_surface_projection_distance_m": 0.011354752816259861,
+    "rejected_polish_archive": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-review/titan_bloom/rejected-polish"
+  },
+  "visual_review": {
+    "resolutions": {
+      "1280x800": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 141603,
+          "vertices": 179352
+        }
+      },
+      "1000x625": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 141603,
+          "vertices": 179352
+        }
+      }
+    },
+    "glb_sha256": "ceef7b53ef047ba03a1679de9aa62d8392d584f88adf34c879f400eef6d14fb3",
+    "report": "build/character-3d/monster-review/report.json",
+    "artist_note": "Directly inspected repaired native flower maw/fangs, three red buds, curved vines/root feet in studio four views and bothactual Godot sizes. Closed surface removed broken fragments; 24idle/32move, status and12hero battle/orbit preserve identity. Retained source paint remainsrough; no raster parity or deviceFPS claim."
+  }
+}

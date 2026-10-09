@@ -1,0 +1,65 @@
+{
+  "id": "wave_giant",
+  "creator": "Actual TRELLIS creature surface retained; Blender UV-preserving LOD, body-specific skin and authored IdleLoop/MoveLoop",
+  "input": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-raw/wave_giant/model.glb",
+  "source_sha256": "9659495d63bfdb021959ae061b7a750183a8182cf2f864bbab6b513406bd3c88",
+  "raw_triangles": 179990,
+  "game_triangles": 45000,
+  "game_texture_max": 1024,
+  "height": 1.18,
+  "shape": "biped",
+  "rig": [
+    "Body",
+    "Head",
+    "LegL",
+    "LegR",
+    "ArmL",
+    "ArmR"
+  ],
+  "clips": [
+    "IdleLoop",
+    "MoveLoop"
+  ],
+  "mesh_count": 1,
+  "material_count": 1,
+  "embedded_images": 1,
+  "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/wave_giant/high.blend",
+  "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/wave_giant/game.blend",
+  "glb_sha256": "cebb995bdcda7d3517b8db4a7b1dd8346a8240c0dd439e07af8a466000a66107",
+  "glb_bytes": 4088300,
+  "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
+  "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
+  "visual_review": {
+    "resolutions": {
+      "1280x800": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 46604,
+          "vertices": 46318
+        }
+      },
+      "1000x625": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 46604,
+          "vertices": 46318
+        }
+      }
+    },
+    "glb_sha256": "cebb995bdcda7d3517b8db4a7b1dd8346a8240c0dd439e07af8a466000a66107",
+    "report": "build/character-3d/monster-review/report.json",
+    "artist_note": "Direct original and actual studio/runtime front, side, back, three-quarter, both resolutions and continuous IdleLoop/MoveLoop viewed. Ray paired fins/one tail and cyan face, jelly cap/tentacle beard/dark orb and wave giant foam silhouette preserved. No pose cracks or loop jumps; independently phased movement and status/mixed battle remain readable at small size. Device FPS unmeasured."
+  }
+}

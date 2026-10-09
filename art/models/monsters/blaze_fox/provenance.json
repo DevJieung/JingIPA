@@ -1,0 +1,66 @@
+{
+  "id": "blaze_fox",
+  "creator": "Actual TRELLIS creature surface retained; Blender UV-preserving LOD, body-specific skin and authored IdleLoop/MoveLoop",
+  "input": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-raw/blaze_fox/model.glb",
+  "source_sha256": "72936fbc9677a8ed80d9ab35e554e02efd1a208201adc12ddfa64e3611dd4873",
+  "raw_triangles": 177840,
+  "game_triangles": 54979,
+  "game_texture_max": 512,
+  "height": 0.88,
+  "shape": "quadruped",
+  "rig": [
+    "Body",
+    "Head",
+    "Tail",
+    "FrontL",
+    "FrontR",
+    "RearL",
+    "RearR"
+  ],
+  "clips": [
+    "IdleLoop",
+    "MoveLoop"
+  ],
+  "mesh_count": 1,
+  "material_count": 1,
+  "embedded_images": 1,
+  "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/blaze_fox/high.blend",
+  "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/blaze_fox/game.blend",
+  "glb_sha256": "310e6ac6fb20f662dbc6ce114ef5b00778d0f6b3a7e39542dee9d58c37b6fbf8",
+  "glb_bytes": 3673048,
+  "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
+  "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
+  "visual_review": {
+    "resolutions": {
+      "1280x800": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 56583,
+          "vertices": 55693
+        }
+      },
+      "1000x625": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 56583,
+          "vertices": 55693
+        }
+      }
+    },
+    "glb_sha256": "310e6ac6fb20f662dbc6ce114ef5b00778d0f6b3a7e39542dee9d58c37b6fbf8",
+    "report": "build/character-3d/monster-review/report.json",
+    "artist_note": "Directly inspected actual GL Compatibility at1280x800 and1000x625: orange four-legged fox with cream ruff/dark paws/flame tail and red winged dragon with ivory belly/horns/tail remain coherent from front,side,back; independent diagonal stride,tail and wing motion in continuous MoveLoop frames; Burn/Frost/Stun and mixed12hero battle remain readable. Rejected destructive14k/28k LODs preserved; accepted UV-retaining54,979/64,871 triangle runtime variants. No device FPS claim."
+  }
+}

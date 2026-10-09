@@ -1,0 +1,357 @@
+{
+  "version": 1,
+  "monsters": {
+    "drop_slime": {
+      "path": "res://art/models/monsters/drop_slime/drop_slime.glb",
+      "rig": 3,
+      "height": 0.64,
+      "shape": "blob",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "e8a74c2e910b766f17b18538f7dade9cb318d629c6cdc16cef820ab1aeab9497",
+      "ready": true
+    },
+    "blaze_fox": {
+      "path": "res://art/models/monsters/blaze_fox/blaze_fox.glb",
+      "rig": 7,
+      "height": 0.88,
+      "shape": "quadruped",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "310e6ac6fb20f662dbc6ce114ef5b00778d0f6b3a7e39542dee9d58c37b6fbf8",
+      "ready": true
+    },
+    "flame_dragon": {
+      "path": "res://art/models/monsters/flame_dragon/flame_dragon.glb",
+      "rig": 9,
+      "height": 1.62,
+      "shape": "dragon",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "b64da6437241afa4fb3230a79cbdf06cb6458aa9f4c3f3026c4c15e98bb96d01",
+      "ready": true
+    },
+    "rapid_ray": {
+      "path": "res://art/models/monsters/rapid_ray/rapid_ray.glb",
+      "rig": 5,
+      "height": 0.82,
+      "shape": "ray",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "b6f228e758b044fa3c70bfcfdf78e588e2b4334e98bd1594e370c9e0a1320c46",
+      "ready": true
+    },
+    "jelly_seer": {
+      "path": "res://art/models/monsters/jelly_seer/jelly_seer.glb",
+      "rig": 4,
+      "height": 1.0,
+      "shape": "jelly",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "e4aa9762fcc6ed376aa0d8db70c8947094d324a39ebdc32c8ac9d35b804e3be5",
+      "ready": true
+    },
+    "wave_giant": {
+      "path": "res://art/models/monsters/wave_giant/wave_giant.glb",
+      "rig": 6,
+      "height": 1.18,
+      "shape": "biped",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "cebb995bdcda7d3517b8db4a7b1dd8346a8240c0dd439e07af8a466000a66107",
+      "ready": true
+    },
+    "ember_imp": {
+      "path": "res://art/models/monsters/ember_imp/ember_imp.glb",
+      "rig": 6,
+      "height": 0.72,
+      "shape": "biped",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "4063d4d40bdcce1b31058c8cafb5859da18c930e29e5e6f6ffa14118f3fa4c5e",
+      "ready": true
+    },
+    "magma_brute": {
+      "path": "res://art/models/monsters/magma_brute/magma_brute.glb",
+      "rig": 7,
+      "height": 1.18,
+      "shape": "quadruped",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "357fb3b2b7a192ca83c21846a21d7c1621993d01e3ac2d41df7ecadc48ef4393",
+      "ready": true
+    },
+    "pyre_priest": {
+      "path": "res://art/models/monsters/pyre_priest/pyre_priest.glb",
+      "rig": 7,
+      "height": 1.0,
+      "shape": "biped",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "e691c0c3dfc67a6f194626c14a121196f8db5a0564741234cf7ae8ba5135dec7",
+      "ready": true
+    },
+    "bramble_imp": {
+      "path": "res://art/models/monsters/bramble_imp/bramble_imp.glb",
+      "rig": 6,
+      "height": 0.72,
+      "shape": "biped",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "68539c9b9bf8360ffe3a718ba88a0080f0d73554b5340e66ca34f982700092c5",
+      "ready": true
+    },
+    "vine_lynx": {
+      "path": "res://art/models/monsters/vine_lynx/vine_lynx.glb",
+      "rig": 7,
+      "height": 0.82,
+      "shape": "quadruped",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "c8f7fd79f617e044231b38a0d79fd256db28a1644891ce19d56adfce1869ed58",
+      "ready": true
+    },
+    "elder_treant": {
+      "path": "res://art/models/monsters/elder_treant/elder_treant.glb",
+      "rig": 6,
+      "height": 1.18,
+      "shape": "tree",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "7d4a9fb1067e0a86f3523f4811e2ca5eec8d90f69124e3309c68d8401c49bd45",
+      "ready": true
+    },
+    "spore_cap": {
+      "path": "res://art/models/monsters/spore_cap/spore_cap.glb",
+      "rig": 6,
+      "height": 1.0,
+      "shape": "mushroom",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "5908d32db9549a434090b7b1d7336d43c28bd2b8978e308ffb402528041c65bc",
+      "ready": true
+    },
+    "stone_golem": {
+      "path": "res://art/models/monsters/stone_golem/stone_golem.glb",
+      "rig": 6,
+      "height": 1.18,
+      "shape": "biped",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "eb788f2a660dd85f805fb81325ef8ccdf1f34c75a7e9f5936d3ec705d954bedb",
+      "ready": true
+    },
+    "runestone_idol": {
+      "path": "res://art/models/monsters/runestone_idol/runestone_idol.glb",
+      "rig": 2,
+      "height": 1.0,
+      "shape": "idol",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "bc1ef9ac17bca20b8349763399e662c9b9dc2d93080b5161ebcfce127592a73f",
+      "ready": true
+    },
+    "pebble_imp": {
+      "path": "res://art/models/monsters/pebble_imp/pebble_imp.glb",
+      "rig": 6,
+      "height": 0.72,
+      "shape": "biped",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "94f476e5d3c58894db229e483070020f6e915b23a509f1cdbedd28d53dac0a31",
+      "ready": true
+    },
+    "frost_imp": {
+      "path": "res://art/models/monsters/frost_imp/frost_imp.glb",
+      "rig": 6,
+      "height": 0.72,
+      "shape": "biped",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "92ce965169196151a4b68198fc5219bed87d309b3dab1ce57991b8bf757341c7",
+      "ready": true
+    },
+    "blizzard_wolf": {
+      "path": "res://art/models/monsters/blizzard_wolf/blizzard_wolf.glb",
+      "rig": 7,
+      "height": 0.82,
+      "shape": "quadruped",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "5a40821ced0857ca9f3551e858272c8e5330859afc95e571dc572012bcab406b",
+      "ready": true
+    },
+    "crystal_skink": {
+      "path": "res://art/models/monsters/crystal_skink/crystal_skink.glb",
+      "rig": 7,
+      "height": 0.82,
+      "shape": "quadruped",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "9a7550383752d5bdd95918d667611bcb7d212de667785fd249020c03fd4a616d",
+      "ready": true
+    },
+    "glacier_titan": {
+      "path": "res://art/models/monsters/glacier_titan/glacier_titan.glb",
+      "rig": 6,
+      "height": 1.18,
+      "shape": "biped",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "24bcbbefee0826471e64369d162b83898e8240ef233c3748120933234c4f8686",
+      "ready": true
+    },
+    "rime_witch": {
+      "path": "res://art/models/monsters/rime_witch/rime_witch.glb",
+      "rig": 7,
+      "height": 1.0,
+      "shape": "biped",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "0437c78decd4d17e60a35a707dd3af8affbfa6978e8654c648471a2026c21134",
+      "ready": true
+    },
+    "abyss_leviathan": {
+      "path": "res://art/models/monsters/abyss_leviathan/abyss_leviathan.glb",
+      "rig": 6,
+      "height": 1.55,
+      "shape": "serpent",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "2ac241d78ad154b615fc9085a64c36d0ea53c56d917565e8437205cdbcfa78ac",
+      "ready": true
+    },
+    "titan_bloom": {
+      "path": "res://art/models/monsters/titan_bloom/titan_bloom.glb",
+      "rig": 6,
+      "height": 1.55,
+      "shape": "plant",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "ceef7b53ef047ba03a1679de9aa62d8392d584f88adf34c879f400eef6d14fb3",
+      "ready": true
+    },
+    "crystal_golem_king": {
+      "path": "res://art/models/monsters/crystal_golem_king/crystal_golem_king.glb",
+      "rig": 6,
+      "height": 1.55,
+      "shape": "biped",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "17a6fb3ddc409abbeb636320bdb482869df7e04b121ece88c59cffa21da5c96d",
+      "ready": true
+    },
+    "glacier_dragon": {
+      "path": "res://art/models/monsters/glacier_dragon/glacier_dragon.glb",
+      "rig": 9,
+      "height": 1.55,
+      "shape": "dragon",
+      "metallic": 0.0,
+      "clips": [
+        "IdleLoop",
+        "MoveLoop"
+      ],
+      "glb_sha256": "10c549a8768556ae1c1574662f10b513e63c637d45b4df8b08929288a41b812c",
+      "ready": true
+    }
+  },
+  "ready_ids": [
+    "drop_slime",
+    "blaze_fox",
+    "flame_dragon",
+    "rapid_ray",
+    "jelly_seer",
+    "wave_giant",
+    "ember_imp",
+    "magma_brute",
+    "bramble_imp",
+    "vine_lynx",
+    "spore_cap",
+    "stone_golem",
+    "runestone_idol",
+    "pyre_priest",
+    "elder_treant",
+    "pebble_imp",
+    "blizzard_wolf",
+    "crystal_skink",
+    "frost_imp",
+    "glacier_titan",
+    "rime_witch",
+    "abyss_leviathan",
+    "crystal_golem_king",
+    "glacier_dragon",
+    "titan_bloom"
+  ]
+}

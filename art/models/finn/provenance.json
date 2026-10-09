@@ -1,0 +1,72 @@
+{
+  "id": "finn",
+  "creator": "actual TRELLIS native surface retained; Blender UV-preserving LOD, game materials, continuous skin and authored clips",
+  "input": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/raw-finn-separated-v4/finn/model.glb",
+  "source_sha256": "9aa687c89b13b033984659464eff65fe0d65df68ee7734eed8ad06cedfb374df",
+  "raw_triangles": 178760,
+  "game_triangles": 54995,
+  "game_texture_max": 1024,
+  "mesh_count": 1,
+  "material_count": 1,
+  "embedded_images": 1,
+  "rig": [
+    "Body",
+    "ArmL",
+    "ArmR",
+    "LegL",
+    "LegR",
+    "ForearmL",
+    "ForearmR",
+    "HandL",
+    "HandR",
+    "WeaponL"
+  ],
+  "clips": [
+    "Attack",
+    "IdleLoop"
+  ],
+  "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/finn/high.blend",
+  "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/finn/game.blend",
+  "height": 1.65,
+  "glb_bytes": 4887448,
+  "glb_sha256": "222a05c0ba3303f1af81502c20ae40d6db75919b047c4cf3a2f23bf7c710c1b2",
+  "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
+  "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
+  "visual_review": {
+    "resolutions": {
+      "1280x800": {
+        "screenshots": 85,
+        "render_errors": 0,
+        "battle_captured": true,
+        "model_geometry": {
+          "materials": 2,
+          "meshes": 2,
+          "triangles": 55075,
+          "vertices": 56587
+        }
+      },
+      "1000x625": {
+        "screenshots": 85,
+        "render_errors": 0,
+        "battle_captured": true,
+        "model_geometry": {
+          "materials": 2,
+          "meshes": 2,
+          "triangles": 55075,
+          "vertices": 56587
+        }
+      }
+    },
+    "glb_sha256": "222a05c0ba3303f1af81502c20ae40d6db75919b047c4cf3a2f23bf7c710c1b2",
+    "report": "build/character-3d/review/report.json",
+    "directly_inspected": [
+      "original",
+      "native studio",
+      "turnaround",
+      "idle/attack contact",
+      "grades/awakening",
+      "two-resolution mixed battle"
+    ],
+    "artist_note": "Direct studio, 4 runtime views, both 1280x800/1000x625 galleries and continuous attack contacts reviewed. Finn separated cuff no longer drags a hip flap; all distinct palettes/back equipment retained. One-nozzle Marea, long rifle Grey, dual pistols Carmen/Conor, large cannon Brian stay coherent through release/recovery, feet fixed. Same frozen model grades/awakening and selected mixed battle inspected; moderate matte style retained. Device FPS unmeasured."
+  }
+}

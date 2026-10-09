@@ -190,7 +190,44 @@ static func hero(unit: Dictionary, grade: int) -> Node3D:
 		_rigs.erase(key)
 		_rigs[key] = cached
 		return cached.instantiate()
+	if id == "limne":
+		var custom := LimneModel.create()
+		custom.name = "StellarHero_limne"
+		custom.set_meta("identity",id)
+		custom.set_meta("grade",grade)
+		var equipment := Node3D.new()
+		equipment.name = "RankEquipment"
+		custom.get_node("Body").add_child(equipment)
+		_rank_details(equipment,Color("#148b96"),Color("#caa263") if grade < 6 else Color("#f2d297"),grade,0,bool(unit.get("fusion_only",false)))
+		compact(equipment)
+		_ownership(custom,custom)
+		var scene := PackedScene.new()
+		scene.pack(custom)
+		_rigs[key] = scene
+		while _rigs.size() > 96: _rigs.erase(_rigs.keys()[0])
+		custom.free()
+		return scene.instantiate()
 	var profile: Dictionary = profiles().get(id, profiles().get("limne", {}))
+	if NativeCharacterModel.has_model(id):
+		var custom := NativeCharacterModel.create(id)
+		if custom != null:
+			custom.name = "StellarHero_" + id
+			custom.set_meta("identity", id)
+			custom.set_meta("grade", grade)
+			var equipment := Node3D.new()
+			equipment.name = "RankEquipment"
+			custom.get_node("Body").add_child(equipment)
+			_rank_details(equipment, Color(String(profile.get("coat", unit.get("color", "#5ce8ff")))),
+				Color("#caa263") if grade < 6 else Color("#f2d297"), grade,
+				int(profile.get("index", 0)), bool(unit.get("fusion_only", false)))
+			compact(equipment)
+			_ownership(custom, custom)
+			var scene := PackedScene.new()
+			scene.pack(custom)
+			_rigs[key] = scene
+			while _rigs.size() > 96: _rigs.erase(_rigs.keys()[0])
+			custom.free()
+			return scene.instantiate()
 	var root := Node3D.new()
 	root.name = "StellarHero_" + id
 	root.set_meta("identity", id)
@@ -428,6 +465,12 @@ static func _rank_details(body: Node3D, base: Color, gold: Color, grade: int, in
 		for side in [-1,1]: part(body,"cone",Vector3(side*0.57,1.3,0.3),Vector3(0.22,0.72,0.14),base,0.5,0.4,Vector3(0,0,-side*0.5))
 
 static func monster(data: Dictionary) -> Node3D:
+	var id := String(data.get("id", "monster"))
+	if NativeMonsterModel.has_model(id):
+		var native := NativeMonsterModel.create(id)
+		native.name = "StellarMonster_" + id
+		native.set_meta("identity", id)
+		return native
 	var root := Node3D.new()
 	root.name = "StellarMonster_" + String(data.get("id", "monster"))
 	var kind := String(data.get("kind", "swarm"))

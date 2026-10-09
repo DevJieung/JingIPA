@@ -1,0 +1,68 @@
+{
+  "id": "flame_dragon",
+  "creator": "Actual TRELLIS creature surface retained; Blender UV-preserving LOD, body-specific skin and authored IdleLoop/MoveLoop",
+  "input": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-raw/flame_dragon/model.glb",
+  "source_sha256": "a9400ac73afdac0f144a3b92c13dedd9afd8b67ce8fd8e504152c737e27f74c5",
+  "raw_triangles": 164820,
+  "game_triangles": 64871,
+  "game_texture_max": 1024,
+  "height": 1.62,
+  "shape": "dragon",
+  "rig": [
+    "Body",
+    "Head",
+    "WingL",
+    "WingR",
+    "Tail",
+    "ArmL",
+    "ArmR",
+    "LegL",
+    "LegR"
+  ],
+  "clips": [
+    "IdleLoop",
+    "MoveLoop"
+  ],
+  "mesh_count": 1,
+  "material_count": 1,
+  "embedded_images": 1,
+  "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/flame_dragon/high.blend",
+  "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/flame_dragon/game.blend",
+  "glb_sha256": "b64da6437241afa4fb3230a79cbdf06cb6458aa9f4c3f3026c4c15e98bb96d01",
+  "glb_bytes": 5336140,
+  "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
+  "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
+  "visual_review": {
+    "resolutions": {
+      "1280x800": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 66475,
+          "vertices": 64578
+        }
+      },
+      "1000x625": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 66475,
+          "vertices": 64578
+        }
+      }
+    },
+    "glb_sha256": "b64da6437241afa4fb3230a79cbdf06cb6458aa9f4c3f3026c4c15e98bb96d01",
+    "report": "build/character-3d/monster-review/report.json",
+    "artist_note": "Directly inspected actual GL Compatibility at1280x800 and1000x625: orange four-legged fox with cream ruff/dark paws/flame tail and red winged dragon with ivory belly/horns/tail remain coherent from front,side,back; independent diagonal stride,tail and wing motion in continuous MoveLoop frames; Burn/Frost/Stun and mixed12hero battle remain readable. Rejected destructive14k/28k LODs preserved; accepted UV-retaining54,979/64,871 triangle runtime variants. No device FPS claim."
+  }
+}

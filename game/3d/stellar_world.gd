@@ -15,6 +15,8 @@ var texts: Array[Dictionary] = []
 var _text_gap := 0.0
 var crystals: Array[Node3D] = []
 var hero_nodes: Dictionary = {}
+var _native_pending: Dictionary = {}
+var _native_direction: Dictionary = {}
 var monster_nodes: Dictionary = {}
 var bullet_nodes: Array[Node3D] = []
 var effects: Array[Dictionary] = []
@@ -343,6 +345,9 @@ func _landmark(root: Node3D, motif: String, body: String, moss: Color, rng: Rand
 
 func sync_heroes(heroes: Array, time: float, battle: bool = false) -> void:
 	var keep: Dictionary = {}
+	if not battle:
+		_native_pending.clear()
+		_native_direction.clear()
 	for i in range(heroes.size()):
 		var data: Dictionary = heroes[i]
 		var hero: Dictionary = data["h"] if battle else data
@@ -360,13 +365,31 @@ func sync_heroes(heroes: Array, time: float, battle: bool = false) -> void:
 		var node: Node3D = hero_nodes[key]
 		var p: Vector2 = data["pos"] if battle else Run.hero_position(hero)
 		node.position = world(p,0.07)
+		var ft := float(data.get("fx_t",9))
+		var raw_wind := float(data.get("fx_w",0.35))
+		if node is NativeCharacterModel:
+			# Simulation may emit several events between rendered frames. Set the
+			# current clock before replay so fast and newly spawned cards retain
+			# their actual release, including zero-wind aim/fire pairs.
+			if _native_pending.has(i):
+				node.animate_visual(time+float(i)*0.31,ft,raw_wind,battle)
+				for pending in _native_pending[i]: node.visual_event(pending)
+				_native_pending.erase(i)
+			var direction: Vector2 = _native_direction.get(i,data.get("fx_d",Vector2(0,1))) if battle else Vector2(0,1)
+			if direction.length_squared()>0.001: node.rotation.y = atan2(-direction.x,-direction.y)
+			node.animate_visual(time+float(i)*0.31,ft,raw_wind,battle)
+			continue
+		_native_pending.erase(i)
+		_native_direction.erase(i)
 		var direction: Vector2 = data.get("fx_d",Vector2(0,1)) if battle else Vector2(0,1)
 		if direction.length_squared()>0.001: node.rotation.y = atan2(-direction.x,-direction.y)
-		var ft := float(data.get("fx_t",9))
-		var wind := maxf(0.04,float(data.get("fx_w",0.35)))
+		var wind := maxf(0.04,raw_wind)
 		var attack := 0.0
 		if battle and ft<wind+0.22:
 			attack = ft/wind if ft<=wind else maxf(0,1-(ft-wind)/0.22)
+		if node is LimneModel:
+			node.animate_visual(time+float(i)*0.31,ft,wind,battle)
+			continue
 		var body: Node3D = node.get_node("Body")
 		body.rotation.x = -attack*0.11
 		body.position.y = sin(time*2.7+i)*0.012
@@ -378,6 +401,26 @@ func sync_heroes(heroes: Array, time: float, battle: bool = false) -> void:
 		if not keep.has(key):
 			hero_nodes[key].free()
 			hero_nodes.erase(key)
+	for source in _native_pending.keys():
+		if int(source)>=heroes.size(): _native_pending.erase(source)
+	for source in _native_direction.keys():
+		if int(source)>=heroes.size(): _native_direction.erase(source)
+
+func _native_event(e: Dictionary) -> void:
+	var type := String(e.get("t",""))
+	if type not in ["aim","fire","cancel","retarget"]: return
+	var source := int(e.get("src",-1))
+	if source<0 or source>=Balance.HERO_SLOTS: return
+	if type in ["aim","fire","retarget"] and e.get("d") is Vector2:
+		_native_direction[source] = e["d"]
+	elif type=="cancel":
+		_native_direction.erase(source)
+	# Aim replaces an older unfinished attack. The bounded queue preserves an
+	# immediate zero-wind aim/fire pair without growing while actors are absent.
+	if type=="aim" or not _native_pending.has(source): _native_pending[source] = []
+	var pending: Array = _native_pending[source]
+	pending.append(e.duplicate())
+	while pending.size()>8: pending.pop_front()
 
 func sync_battle(sim, time: float, lives: int, dt: float = 0.016) -> void:
 	sync_heroes(sim.heroes,time,true)
@@ -396,15 +439,23 @@ func sync_battle(sim, time: float, lives: int, dt: float = 0.016) -> void:
 		var p := BattleSim.mpos(mo)
 		var ahead := Balance.path_at(float(mo["s"])+4,float(mo["off"]),int(mo.get("route",0)))
 		var d := ahead-p
-		node.position = world(p,0.14+sin(time*10+key)*0.035)
+		var native_monster := bool(node.get_meta("_stellar_native_monster", false))
+		if native_monster:
+			# The simulator's forward-only clock already includes pause, slow,
+			# stun and battle speed. Authored locomotion owns the body movement.
+			node.position = world(p,0.14)
+			node.rotation.z = 0.0
+			node.call("animate_visual", float(mo.get("motion_t",0.0))+float(mo.get("motion_phase",0.0)))
+		else:
+			node.position = world(p,0.14+sin(time*10+key)*0.035)
+			node.rotation.z = sin(time*10+key)*0.035
 		if d.length_squared()>0.001: node.rotation.y = atan2(-d.x,-d.y)
-		node.rotation.z = sin(time*10+key)*0.035
 		node.get_node("StellarBurn").visible=float(mo.get("burn_t",0))>0
 		node.get_node("StellarFrost").visible=float(mo.get("slow_t",0))>0
 		node.get_node("StellarStun").visible=float(mo.get("stun_t",0))>0
 		node.get_node("StellarBurn").scale=Vector3.ONE*(0.9+sin(time*18+key)*0.13)
 		node.get_node("StellarStun").rotation.y=time*5
-		if float(mo.get("stun_t",0))>0: node.rotation.z = sin(time*35+key)*0.025
+		if not native_monster and float(mo.get("stun_t",0))>0: node.rotation.z = sin(time*35+key)*0.025
 	for key in monster_nodes.keys():
 		if not keep.has(key):
 			monster_nodes[key].free()
@@ -494,6 +545,7 @@ func set_placement_preview(at: Vector2, valid: bool) -> void:
 
 func event(e: Dictionary) -> void:
 	var type := String(e.get("t",""))
+	_native_event(e)
 	if type in ["hit","zone_tick"] and e.has("n") and _text_gap<=0 and texts.size()<24:
 		texts.append({"p":Vector2(e.get("mp",e.get("p",Vector2.ZERO))),"n":float(e["n"]),"color":Color("#ffd390") if bool(e.get("big",false)) else Color("#e5f4f6"),"age":0.0,"big":bool(e.get("big",false))})
 		_text_gap=0.07

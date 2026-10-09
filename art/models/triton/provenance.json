@@ -1,0 +1,71 @@
+{
+  "id": "triton",
+  "creator": "actual TRELLIS native surface retained; Blender UV-preserving LOD, game materials, continuous skin and authored clips",
+  "input": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/raw-v3/triton/model.glb",
+  "source_sha256": "3b626b3ceaeb37414def1ac8b16fd31705202d85765d648bfb279171f0de64cb",
+  "raw_triangles": 179349,
+  "game_triangles": 54993,
+  "game_texture_max": 1024,
+  "mesh_count": 1,
+  "material_count": 1,
+  "embedded_images": 1,
+  "rig": [
+    "Body",
+    "ArmL",
+    "ArmR",
+    "LegL",
+    "LegR",
+    "ForearmL",
+    "ForearmR",
+    "HandL",
+    "HandR"
+  ],
+  "clips": [
+    "Attack",
+    "IdleLoop"
+  ],
+  "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/triton/high.blend",
+  "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/triton/game.blend",
+  "height": 1.7,
+  "glb_bytes": 5121512,
+  "glb_sha256": "e6169d9a4c327220baf54b0671d8fe85d845b31ae91c199f39382a06208fae17",
+  "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
+  "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
+  "visual_review": {
+    "resolutions": {
+      "1280x800": {
+        "screenshots": 85,
+        "render_errors": 0,
+        "battle_captured": true,
+        "model_geometry": {
+          "materials": 2,
+          "meshes": 2,
+          "triangles": 55073,
+          "vertices": 58605
+        }
+      },
+      "1000x625": {
+        "screenshots": 85,
+        "render_errors": 0,
+        "battle_captured": true,
+        "model_geometry": {
+          "materials": 2,
+          "meshes": 2,
+          "triangles": 55073,
+          "vertices": 58605
+        }
+      }
+    },
+    "glb_sha256": "e6169d9a4c327220baf54b0671d8fe85d845b31ae91c199f39382a06208fae17",
+    "report": "build/character-3d/review/report.json",
+    "directly_inspected": [
+      "original",
+      "native studio",
+      "turnaround",
+      "idle/attack contact",
+      "grades/awakening",
+      "two-resolution mixed battle"
+    ],
+    "artist_note": "Direct actual 1280/1000 multiview, grades, awakening, 24 idle and 40 aim/release/recovery frames plus mixed 12-hero battle reviewed. Preserve Triton/Frosti original vertical back cannon rather than invent handheld weapons; fixed equipment shares Body motion and short pale pressure pulses occur only at actual physical top port after fire. Donn continuous glove/forearm guards and fixed three back cartridges retained; no stretched fingers or gear seams in motion. Foot contact and matte original navy/iceblue/lime-purple identity remain legible in small battlefield."
+  }
+}

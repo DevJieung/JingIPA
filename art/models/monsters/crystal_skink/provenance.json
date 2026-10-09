@@ -1,0 +1,66 @@
+{
+  "id": "crystal_skink",
+  "creator": "Actual TRELLIS creature surface retained; Blender UV-preserving LOD, body-specific skin and authored IdleLoop/MoveLoop",
+  "input": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-raw/crystal_skink/model.glb",
+  "source_sha256": "7de0571bf25049dba345b21380a83aa55c7c027b5c34387fb7c5f7ac74de0a40",
+  "raw_triangles": 179281,
+  "game_triangles": 54996,
+  "game_texture_max": 512,
+  "height": 0.82,
+  "shape": "quadruped",
+  "rig": [
+    "Body",
+    "Head",
+    "Tail",
+    "FrontL",
+    "FrontR",
+    "RearL",
+    "RearR"
+  ],
+  "clips": [
+    "IdleLoop",
+    "MoveLoop"
+  ],
+  "mesh_count": 1,
+  "material_count": 1,
+  "embedded_images": 1,
+  "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/crystal_skink/high.blend",
+  "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/crystal_skink/game.blend",
+  "glb_sha256": "9a7550383752d5bdd95918d667611bcb7d212de667785fd249020c03fd4a616d",
+  "glb_bytes": 3942384,
+  "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
+  "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
+  "visual_review": {
+    "resolutions": {
+      "1280x800": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 56600,
+          "vertices": 59517
+        }
+      },
+      "1000x625": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 56600,
+          "vertices": 59517
+        }
+      }
+    },
+    "glb_sha256": "9a7550383752d5bdd95918d667611bcb7d212de667785fd249020c03fd4a616d",
+    "report": "build/character-3d/monster-review/report.json",
+    "artist_note": "Direct actual two resolutions78PNG/errors0, original/native four views, continuous Idle/Move, all status effects and mixed12hero battle reviewed. Pyre whole measured Staff/holding hand remains coherent; closed-trunk Elder native mask/body/canopy recover identity without open voids. Pebble/Blizzard retained native UV surfaces resolve rejected collapse shards, with larger runtime geometry honestly recorded rather than claimed optimized FPS. Amber skink quadruped and cream-blue frost imp retain anatomy/colors and stable loop silhouette. Current source/editable/proof SHA frozen; mobile FPS not measured."
+  }
+}

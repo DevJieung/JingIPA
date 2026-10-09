@@ -1,0 +1,66 @@
+{
+  "id": "rime_witch",
+  "creator": "Actual TRELLIS creature surface retained; Blender UV-preserving LOD, body-specific skin and authored IdleLoop/MoveLoop",
+  "input": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-raw/rime_witch/model.glb",
+  "source_sha256": "b8e26958e2f5a0d2bb8ad2fb26d4f1816b933982895814206c122d4f492e6be4",
+  "raw_triangles": 175975,
+  "game_triangles": 175972,
+  "game_texture_max": 1024,
+  "height": 1.0,
+  "shape": "biped",
+  "rig": [
+    "Body",
+    "Head",
+    "LegL",
+    "LegR",
+    "ArmL",
+    "ArmR",
+    "Staff"
+  ],
+  "clips": [
+    "IdleLoop",
+    "MoveLoop"
+  ],
+  "mesh_count": 1,
+  "material_count": 1,
+  "embedded_images": 1,
+  "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/rime_witch/high.blend",
+  "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/rime_witch/game.blend",
+  "glb_sha256": "0437c78decd4d17e60a35a707dd3af8affbfa6978e8654c648471a2026c21134",
+  "glb_bytes": 11426340,
+  "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
+  "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
+  "visual_review": {
+    "resolutions": {
+      "1280x800": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 177576,
+          "vertices": 150473
+        }
+      },
+      "1000x625": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 177576,
+          "vertices": 150473
+        }
+      }
+    },
+    "glb_sha256": "0437c78decd4d17e60a35a707dd3af8affbfa6978e8654c648471a2026c21134",
+    "report": "build/character-3d/monster-review/report.json",
+    "artist_note": "Actual GL Compatibility four views, 24 idle/32 move continuous frames, three status effects and 12 heroes mixed battle directly inspected at 1280x800 and 1000x625. Glacier continuous ice plates/fists/feet retain original body; Rime seven-bone full staff remains rigid with hand throughout motion; Leviathan retains coiled serpent belly and fins without humanoid legs. Full-native surface preservation on Glacier/Rime is a quality fallback, not mobile FPS validation."
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "id": "pip",
+  "creator": "actual TRELLIS native surface retained; Blender UV-preserving LOD, game materials, continuous skin and authored clips",
+  "input": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/raw-v3/pip/model.glb",
+  "source_sha256": "d82aff4efc72a4f59115a62ef71467af13d78ceab01ba107d37321bb0b253e29",
+  "raw_triangles": 179012,
+  "game_triangles": 54995,
+  "game_texture_max": 1024,
+  "mesh_count": 1,
+  "material_count": 1,
+  "embedded_images": 1,
+  "rig": [
+    "Body",
+    "ArmL",
+    "ArmR",
+    "LegL",
+    "LegR",
+    "ForearmL",
+    "ForearmR",
+    "HandL",
+    "HandR",
+    "WeaponL",
+    "WeaponR"
+  ],
+  "clips": [
+    "Attack",
+    "IdleLoop"
+  ],
+  "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/pip/high.blend",
+  "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/pip/game.blend",
+  "height": 1.56,
+  "glb_bytes": 4977892,
+  "glb_sha256": "05bb4dbf5a3297538a423259b68123e7afe7128fc2055f4edc24b94c285d3998",
+  "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
+  "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
+  "visual_review": {
+    "report": "build/character-3d/review/report.json",
+    "reviewed_glb_sha256": "05bb4dbf5a3297538a423259b68123e7afe7128fc2055f4edc24b94c285d3998",
+    "deformation": "build/character-3d/review/pip/deformation-rig3.json",
+    "resolutions": {
+      "1280x800": {
+        "screenshots": 85,
+        "render_errors": 0,
+        "battle_captured": true,
+        "model_geometry": {
+          "materials": 2,
+          "meshes": 2,
+          "triangles": 55075,
+          "vertices": 59446
+        }
+      },
+      "1000x625": {
+        "screenshots": 85,
+        "render_errors": 0,
+        "battle_captured": true,
+        "model_geometry": {
+          "materials": 2,
+          "meshes": 2,
+          "triangles": 55075,
+          "vertices": 59446
+        }
+      }
+    },
+    "directly_inspected": [
+      "turnaround",
+      "attack_contact",
+      "studio_attack",
+      "grades",
+      "battle_selected"
+    ]
+  }
+}

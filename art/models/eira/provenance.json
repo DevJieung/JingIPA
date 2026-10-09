@@ -1,0 +1,72 @@
+{
+  "id": "eira",
+  "creator": "actual TRELLIS native surface retained; Blender UV-preserving LOD, game materials, continuous skin and authored clips",
+  "input": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/raw-v3/eira/model.glb",
+  "source_sha256": "00b0d5e8bf72482ec562382ad27f6da1c941ab94d27bf16f69bd66d06d1e757e",
+  "raw_triangles": 179196,
+  "game_triangles": 54997,
+  "game_texture_max": 1024,
+  "mesh_count": 1,
+  "material_count": 1,
+  "embedded_images": 1,
+  "rig": [
+    "Body",
+    "ArmL",
+    "ArmR",
+    "LegL",
+    "LegR",
+    "ForearmL",
+    "ForearmR",
+    "HandL",
+    "HandR",
+    "WeaponL"
+  ],
+  "clips": [
+    "Attack",
+    "IdleLoop"
+  ],
+  "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/eira/high.blend",
+  "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/eira/game.blend",
+  "height": 1.65,
+  "glb_bytes": 5025536,
+  "glb_sha256": "092e7e4c1b23c3e30c2940a59ab3f10c2ea160e13443589e8e762eb60ec975bd",
+  "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
+  "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
+  "visual_review": {
+    "resolutions": {
+      "1280x800": {
+        "screenshots": 85,
+        "render_errors": 0,
+        "battle_captured": true,
+        "model_geometry": {
+          "materials": 2,
+          "meshes": 2,
+          "triangles": 55077,
+          "vertices": 55145
+        }
+      },
+      "1000x625": {
+        "screenshots": 85,
+        "render_errors": 0,
+        "battle_captured": true,
+        "model_geometry": {
+          "materials": 2,
+          "meshes": 2,
+          "triangles": 55077,
+          "vertices": 55145
+        }
+      }
+    },
+    "glb_sha256": "092e7e4c1b23c3e30c2940a59ab3f10c2ea160e13443589e8e762eb60ec975bd",
+    "report": "build/character-3d/review/report.json",
+    "directly_inspected": [
+      "original",
+      "native studio",
+      "turnaround",
+      "idle/attack contact",
+      "grades/awakening",
+      "two-resolution mixed battle"
+    ],
+    "artist_note": "Actual native rest and attack multiview plus both two-resolution galleries/40frame attack contacts/grades0,4,9,awakening and selected 12unique hero battle directly inspected. Whole bows/string and hands move together, boots remain fixed, back quivers/cloaks retain their original silhouettes. Eira measured lower gray bow frame is bound to weapon, separate from boot/Body; no trailing black stretched connection. Matte game palette/face readable, no device FPS assertion."
+  }
+}

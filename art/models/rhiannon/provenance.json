@@ -1,0 +1,71 @@
+{
+  "id": "rhiannon",
+  "creator": "actual TRELLIS native surface retained; Blender UV-preserving LOD, game materials, continuous skin and authored clips",
+  "input": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/raw-v3/rhiannon/model.glb",
+  "source_sha256": "dbb7753efc20fb999c08221c29ef1aa498f66dedbab1f4842f3ae1efae658a65",
+  "raw_triangles": 178758,
+  "game_triangles": 54995,
+  "game_texture_max": 1024,
+  "mesh_count": 1,
+  "material_count": 1,
+  "embedded_images": 1,
+  "rig": [
+    "Body",
+    "ArmL",
+    "ArmR",
+    "LegL",
+    "LegR",
+    "ForearmL",
+    "ForearmR",
+    "HandL",
+    "HandR"
+  ],
+  "clips": [
+    "Attack",
+    "IdleLoop"
+  ],
+  "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/rhiannon/high.blend",
+  "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/rhiannon/game.blend",
+  "height": 1.65,
+  "glb_bytes": 4917792,
+  "glb_sha256": "d5cdf3b50071779a37f254f56353d29a51197030bdebe757c6ed0390ce34dcd2",
+  "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
+  "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
+  "visual_review": {
+    "resolutions": {
+      "1280x800": {
+        "screenshots": 85,
+        "render_errors": 0,
+        "battle_captured": true,
+        "model_geometry": {
+          "materials": 2,
+          "meshes": 2,
+          "triangles": 55075,
+          "vertices": 54711
+        }
+      },
+      "1000x625": {
+        "screenshots": 85,
+        "render_errors": 0,
+        "battle_captured": true,
+        "model_geometry": {
+          "materials": 2,
+          "meshes": 2,
+          "triangles": 55075,
+          "vertices": 54711
+        }
+      }
+    },
+    "glb_sha256": "d5cdf3b50071779a37f254f56353d29a51197030bdebe757c6ed0390ce34dcd2",
+    "report": "build/character-3d/review/report.json",
+    "directly_inspected": [
+      "original",
+      "native studio",
+      "turnaround",
+      "idle/attack contact",
+      "grades/awakening",
+      "two-resolution mixed battle"
+    ],
+    "artist_note": "Artist directly inspected original identity and actual studio multi-view, both-size Godot gallery/idle/attack contacts/grades/awakening/mixed battle. Complete bow/ice blade and relaxed arm/gauntlet shapes remain coherent; Phorkys cylinder equipment and rifle aim use measured native landmarks, <0.1mm sole displacement; no visible gear tears or detached garment. Mobile FPS not measured."
+  }
+}

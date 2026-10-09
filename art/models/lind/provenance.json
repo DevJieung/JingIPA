@@ -1,0 +1,72 @@
+{
+  "id": "lind",
+  "creator": "actual TRELLIS native surface retained; Blender UV-preserving LOD, game materials, continuous skin and authored clips",
+  "input": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/raw-v3/lind/model.glb",
+  "source_sha256": "fdc458f0d439b5f91a9697a1f4251297b8f78923afffbee1ac6dbe7f9806a028",
+  "raw_triangles": 175374,
+  "game_triangles": 54996,
+  "game_texture_max": 1024,
+  "mesh_count": 1,
+  "material_count": 1,
+  "embedded_images": 1,
+  "rig": [
+    "Body",
+    "ArmL",
+    "ArmR",
+    "LegL",
+    "LegR",
+    "ForearmL",
+    "ForearmR",
+    "HandL",
+    "HandR",
+    "WeaponR"
+  ],
+  "clips": [
+    "Attack",
+    "IdleLoop"
+  ],
+  "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/lind/high.blend",
+  "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/lind/game.blend",
+  "height": 1.65,
+  "glb_bytes": 4868208,
+  "glb_sha256": "48147149db522b9b540c3a078f95964cbbcd77669f71d4408a5590bb5cb7adc6",
+  "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
+  "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
+  "visual_review": {
+    "resolutions": {
+      "1280x800": {
+        "screenshots": 85,
+        "render_errors": 0,
+        "battle_captured": true,
+        "model_geometry": {
+          "materials": 2,
+          "meshes": 2,
+          "triangles": 55076,
+          "vertices": 55448
+        }
+      },
+      "1000x625": {
+        "screenshots": 85,
+        "render_errors": 0,
+        "battle_captured": true,
+        "model_geometry": {
+          "materials": 2,
+          "meshes": 2,
+          "triangles": 55076,
+          "vertices": 55448
+        }
+      }
+    },
+    "glb_sha256": "48147149db522b9b540c3a078f95964cbbcd77669f71d4408a5590bb5cb7adc6",
+    "report": "build/character-3d/review/report.json",
+    "directly_inspected": [
+      "original",
+      "native studio",
+      "turnaround",
+      "idle/attack contact",
+      "grades/awakening",
+      "two-resolution mixed battle"
+    ],
+    "artist_note": "Original identity/color/held gear preserved. Direct native multiple-view, clean sole and continuous prepare/release/recovery inspected. Chispa levels gray weapon forward; Lind cyan chain/cells remain coherent; Brigid complete bow/string and quiver do not tear. Both real game resolutions preserve silhouette and grade/awakening detail."
+  }
+}

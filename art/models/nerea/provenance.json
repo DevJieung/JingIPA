@@ -1,0 +1,72 @@
+{
+  "id": "nerea",
+  "creator": "actual TRELLIS native surface retained; Blender UV-preserving LOD, game materials, continuous skin and authored clips",
+  "input": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/raw-v3/nerea/model.glb",
+  "source_sha256": "95e4849c2f6373e8c92d516d9c20b56d37d4870488e637e6655c61b9519b2c33",
+  "raw_triangles": 178393,
+  "game_triangles": 54997,
+  "game_texture_max": 1024,
+  "mesh_count": 1,
+  "material_count": 1,
+  "embedded_images": 1,
+  "rig": [
+    "Body",
+    "ArmL",
+    "ArmR",
+    "LegL",
+    "LegR",
+    "ForearmL",
+    "ForearmR",
+    "HandL",
+    "HandR",
+    "WeaponR"
+  ],
+  "clips": [
+    "Attack",
+    "IdleLoop"
+  ],
+  "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/nerea/high.blend",
+  "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/nerea/game.blend",
+  "height": 1.7,
+  "glb_bytes": 4883524,
+  "glb_sha256": "ce8b7a457a9285cac748e7556515fd23e80598db1eeb4785f8ef1e8a4fc8a890",
+  "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
+  "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
+  "visual_review": {
+    "resolutions": {
+      "1280x800": {
+        "screenshots": 85,
+        "render_errors": 0,
+        "battle_captured": true,
+        "model_geometry": {
+          "materials": 2,
+          "meshes": 2,
+          "triangles": 55077,
+          "vertices": 55365
+        }
+      },
+      "1000x625": {
+        "screenshots": 85,
+        "render_errors": 0,
+        "battle_captured": true,
+        "model_geometry": {
+          "materials": 2,
+          "meshes": 2,
+          "triangles": 55077,
+          "vertices": 55365
+        }
+      }
+    },
+    "glb_sha256": "ce8b7a457a9285cac748e7556515fd23e80598db1eeb4785f8ef1e8a4fc8a890",
+    "report": "build/character-3d/review/report.json",
+    "directly_inspected": [
+      "original",
+      "native studio",
+      "turnaround",
+      "idle/attack contact",
+      "grades/awakening",
+      "two-resolution mixed battle"
+    ],
+    "artist_note": "Direct actual Godot two-resolution galleries, continuous idle/attack contact frames,0/4/9 and actual awakened model,12unique hero mixedbattle inspected. Preserve Lugh green canister/beard purpleworkwear, Galene navy coat/brown cylinders, Zero ivory automaton/chain, Phantom white ponytail/swordL, Caden purplehair/lime armor/swordR, Estoque brown hair/glasses/gold-redworkwear/swordR, Nerea white hair/navyarmor/bigbackslab/cyanbladeR and Glaukos greenhair/cyanworkgear/largecleaverL. Feet fixed, cuffs/waist continuous, coherent retained UV matte surfaces and weapon shape throughout strike/recovery. No deviceFPS claim."
+  }
+}

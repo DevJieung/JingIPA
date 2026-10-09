@@ -1,0 +1,65 @@
+{
+  "id": "abyss_leviathan",
+  "creator": "Actual TRELLIS creature surface retained; Blender UV-preserving LOD, body-specific skin and authored IdleLoop/MoveLoop",
+  "input": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-raw/abyss_leviathan/model.glb",
+  "source_sha256": "a70d2c37b573d18f232ebbf887d65ac72d841b607e7062dc6e09c6a158b1f733",
+  "raw_triangles": 173828,
+  "game_triangles": 64915,
+  "game_texture_max": 1024,
+  "height": 1.55,
+  "shape": "serpent",
+  "rig": [
+    "Body",
+    "Neck",
+    "Head",
+    "Tail",
+    "FinL",
+    "FinR"
+  ],
+  "clips": [
+    "IdleLoop",
+    "MoveLoop"
+  ],
+  "mesh_count": 1,
+  "material_count": 1,
+  "embedded_images": 1,
+  "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/abyss_leviathan/high.blend",
+  "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/abyss_leviathan/game.blend",
+  "glb_sha256": "2ac241d78ad154b615fc9085a64c36d0ea53c56d917565e8437205cdbcfa78ac",
+  "glb_bytes": 5435492,
+  "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
+  "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
+  "visual_review": {
+    "resolutions": {
+      "1280x800": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 66519,
+          "vertices": 66256
+        }
+      },
+      "1000x625": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 66519,
+          "vertices": 66256
+        }
+      }
+    },
+    "glb_sha256": "2ac241d78ad154b615fc9085a64c36d0ea53c56d917565e8437205cdbcfa78ac",
+    "report": "build/character-3d/monster-review/report.json",
+    "artist_note": "Actual GL Compatibility four views, 24 idle/32 move continuous frames, three status effects and 12 heroes mixed battle directly inspected at 1280x800 and 1000x625. Glacier continuous ice plates/fists/feet retain original body; Rime seven-bone full staff remains rigid with hand throughout motion; Leviathan retains coiled serpent belly and fins without humanoid legs. Full-native surface preservation on Glacier/Rime is a quality fallback, not mobile FPS validation."
+  }
+}

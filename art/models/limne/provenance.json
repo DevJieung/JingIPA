@@ -1,0 +1,39 @@
+{
+  "creator": "Hybrid TRELLIS.2 hair/clothing/body + Blender authored continuous face/neck/hands, curved eyes and machinery",
+  "input": "build/limne-pro/runtime/outputs/limne_remesh_pbr_00001.glb",
+  "quality_reference": "build/limne-pro/concept/limne_target.png",
+  "concept_type": "built-in image_gen raster; separate from real GLB",
+  "glb": "art/models/limne/limne.glb",
+  "blender": "4.0.2",
+  "high_source": "build/limne-pro/source/limne_high.blend",
+  "game_source": "build/limne-game-motion/limne_game.blend",
+  "raw_source_triangles": 178385,
+  "cleaned_retained_surface_before_local_polish_triangles": 127093,
+  "game_triangles_before_gltf": 173032,
+  "surface_strategy": "preserved original 2048 base-color/ORM UV maps; no reduction or atlas rebake",
+  "runtime_normal_map": false,
+  "source_sha256": "740bb0a0b9d182230363946e665407103a26e337cbe5594d53fa1c8a1f25e8a6",
+  "glb_sha256": "b0d3f0231076fecf1c7a7c8750a9e579365da6b03cea1ac42562fa83c1b29d92",
+  "height": 1.63,
+  "source_front": "-y",
+  "rig": "nine continuous skin bones; original five controls plus elbow/palm articulation",
+  "runtime_color_correction": "LimneModel enables radial iris COLOR_0 omitted by Godot material import; skin COLOR_0 already active",
+  "quality_status": "Accepted shape; user-requested game style and motion revision",
+  "glb_bytes": 17091528,
+  "glb_meshes": 63,
+  "glb_materials": 22,
+  "embedded_images": 2,
+  "style": "Accepted Limne shape; moderate stylized game materials and articulated aiming",
+  "accepted_source": "build/limne-game-motion/before/limne_game.blend",
+  "accepted_glb_sha256": "37a0ca04bf96048f4d72fb44d68b1c6bebccd69a4faebf05316cffd6449b41b8",
+  "motion_bones": [
+    "SkinForearmL",
+    "SkinForearmR",
+    "SkinHandL",
+    "SkinHandR"
+  ],
+  "animation_clips": [
+    "IdleLoop",
+    "WaterSprayAttack"
+  ]
+}

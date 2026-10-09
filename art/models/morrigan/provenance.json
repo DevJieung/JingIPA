@@ -1,0 +1,72 @@
+{
+  "id": "morrigan",
+  "creator": "actual TRELLIS native surface retained; Blender UV-preserving LOD, game materials, continuous skin and authored clips",
+  "input": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/raw-v3/morrigan/model.glb",
+  "source_sha256": "f589df9ec109a1f31e65e0d5fdaebac2916a508a1a9fc216b2e1aa011381a64b",
+  "raw_triangles": 178377,
+  "game_triangles": 54991,
+  "game_texture_max": 1024,
+  "mesh_count": 1,
+  "material_count": 1,
+  "embedded_images": 1,
+  "rig": [
+    "Body",
+    "ArmL",
+    "ArmR",
+    "LegL",
+    "LegR",
+    "ForearmL",
+    "ForearmR",
+    "HandL",
+    "HandR",
+    "WeaponR"
+  ],
+  "clips": [
+    "Attack",
+    "IdleLoop"
+  ],
+  "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/morrigan/high.blend",
+  "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/morrigan/game.blend",
+  "height": 1.65,
+  "glb_bytes": 5217852,
+  "glb_sha256": "1f47f86f6838f210d64018a019e6c92ff78b9c4445026d003396f4658e3c9df4",
+  "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
+  "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
+  "visual_review": {
+    "resolutions": {
+      "1280x800": {
+        "screenshots": 85,
+        "render_errors": 0,
+        "battle_captured": true,
+        "model_geometry": {
+          "materials": 2,
+          "meshes": 2,
+          "triangles": 55071,
+          "vertices": 60339
+        }
+      },
+      "1000x625": {
+        "screenshots": 85,
+        "render_errors": 0,
+        "battle_captured": true,
+        "model_geometry": {
+          "materials": 2,
+          "meshes": 2,
+          "triangles": 55071,
+          "vertices": 60339
+        }
+      }
+    },
+    "glb_sha256": "1f47f86f6838f210d64018a019e6c92ff78b9c4445026d003396f4658e3c9df4",
+    "report": "build/character-3d/review/report.json",
+    "directly_inspected": [
+      "original",
+      "native studio",
+      "turnaround",
+      "idle/attack contact",
+      "grades/awakening",
+      "two-resolution mixed battle"
+    ],
+    "artist_note": "Direct source-to-native identity, full rest and attack turnarounds, continuous runtime idle/attack phases, rank0/4/9 and awakening, and both-resolution selected mixed-battle views inspected. Shift segmented rear hoop, Thalassa teal coat/pressure valves, Snorri winch/anchor, Morrigan leaf armor/chain, Blank human ivory suit, Candela hood/chain, Sigrid triple rear fans and Helga right-hand blue blade retain individual source silhouettes. No visible palm/body strips, equipment tearing or foot jumps in reviewed sequences."
+  }
+}

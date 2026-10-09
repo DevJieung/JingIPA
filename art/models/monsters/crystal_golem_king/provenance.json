@@ -1,0 +1,65 @@
+{
+  "id": "crystal_golem_king",
+  "creator": "Actual TRELLIS creature surface retained; Blender UV-preserving LOD, body-specific skin and authored IdleLoop/MoveLoop",
+  "input": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-raw/crystal_golem_king/model.glb",
+  "source_sha256": "e18d6e7e6df372e5eca9e71bc4c4ec0a776056607c600ff3002568dfc62aee05",
+  "raw_triangles": 176485,
+  "game_triangles": 64989,
+  "game_texture_max": 1024,
+  "height": 1.55,
+  "shape": "biped",
+  "rig": [
+    "Body",
+    "Head",
+    "LegL",
+    "LegR",
+    "ArmL",
+    "ArmR"
+  ],
+  "clips": [
+    "IdleLoop",
+    "MoveLoop"
+  ],
+  "mesh_count": 1,
+  "material_count": 1,
+  "embedded_images": 1,
+  "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/crystal_golem_king/high.blend",
+  "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/crystal_golem_king/game.blend",
+  "glb_sha256": "17a6fb3ddc409abbeb636320bdb482869df7e04b121ece88c59cffa21da5c96d",
+  "glb_bytes": 6091072,
+  "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
+  "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
+  "visual_review": {
+    "resolutions": {
+      "1280x800": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 66593,
+          "vertices": 70136
+        }
+      },
+      "1000x625": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 66593,
+          "vertices": 70136
+        }
+      }
+    },
+    "glb_sha256": "17a6fb3ddc409abbeb636320bdb482869df7e04b121ece88c59cffa21da5c96d",
+    "report": "build/character-3d/monster-review/report.json",
+    "artist_note": "Direct actual two-resolution 78PNG native QA: four views, full idle/move sequence, Burn/Frost/Stun and twelve hero battle with orbit/selection. Original crownlike stone head, three large purple crystals, chest core and blocky fists/feet retain coherent surfaces throughout authored six-bone motion."
+  }
+}

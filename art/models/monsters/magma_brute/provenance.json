@@ -1,0 +1,66 @@
+{
+  "id": "magma_brute",
+  "creator": "Actual TRELLIS creature surface retained; Blender UV-preserving LOD, body-specific skin and authored IdleLoop/MoveLoop",
+  "input": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-raw/magma_brute/model.glb",
+  "source_sha256": "a0e47d8b8749252da38edd2321a754c86bab0cd1c2dc96f0b1f0eb2f936501e0",
+  "raw_triangles": 178937,
+  "game_triangles": 54998,
+  "game_texture_max": 1024,
+  "height": 1.18,
+  "shape": "quadruped",
+  "rig": [
+    "Body",
+    "Head",
+    "Tail",
+    "FrontL",
+    "FrontR",
+    "RearL",
+    "RearR"
+  ],
+  "clips": [
+    "IdleLoop",
+    "MoveLoop"
+  ],
+  "mesh_count": 1,
+  "material_count": 1,
+  "embedded_images": 1,
+  "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/magma_brute/high.blend",
+  "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/magma_brute/game.blend",
+  "glb_sha256": "357fb3b2b7a192ca83c21846a21d7c1621993d01e3ac2d41df7ecadc48ef4393",
+  "glb_bytes": 5424668,
+  "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
+  "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
+  "visual_review": {
+    "resolutions": {
+      "1280x800": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 56602,
+          "vertices": 65032
+        }
+      },
+      "1000x625": {
+        "screenshots": 78,
+        "render_errors": 0,
+        "battle_captured": true,
+        "density_count": 12,
+        "heroes": 12,
+        "model_geometry": {
+          "materials": 4,
+          "meshes": 14,
+          "triangles": 56602,
+          "vertices": 65032
+        }
+      }
+    },
+    "glb_sha256": "357fb3b2b7a192ca83c21846a21d7c1621993d01e3ac2d41df7ecadc48ef4393",
+    "report": "build/character-3d/monster-review/report.json",
+    "artist_note": "Direct actual two-resolution 78 PNG each, original identity/native multiview, continuous Idle/Move, status states and 12-hero mixed battlefield reviewed. Separate quadruped rock armor/tail, root humanoid mask/branches, cat vine body, mushroom cap/stalk, biped stone fists and legless idol/crown anatomy retained with matching authored clips; coherent UV/matte surfaces and readable small faces, no collapsed shards or fake humanoid limbs. Device FPS remains unmeasured."
+  }
+}
