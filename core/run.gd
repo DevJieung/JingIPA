@@ -54,18 +54,14 @@ var repairs: int = 0
 ## 이번 탄의 별맞춤 의식 — 다섯 궤도의 별이 멈춘 자리(Rite 의 칸 번호). 안쪽 궤도부터다.
 ## **문 안에 든 별의 수가 곧 뽑힐 영웅의 등급이다**(Rite.stars).
 var orbit: Array[int] = []
-## 이번 탄에 다시 돌린 횟수(무료 + 유료). 광고로 끌어온 것은 안 센다.
+## 이번 탄에 다시 돌린 횟수(무료 + 유료).
 var spins: int = 0
 ## 그중 골드를 낸 횟수. 값을 매기는 데 쓴다(Balance.reroll_cost).
 var paid_spins: int = 0
-## 광고로 별을 끌어온 횟수. 다시 돌린 횟수와 합쳐 「의식의 판 번호」가 된다(rite_revision) —
-## 오래된 광고 콜백이 이미 바뀐 별을 또 끌어오지 못하게 한다.
-var pulls: int = 0
 
 const FUSION_BENCH := 100000
 var fusion_pending: Dictionary = {}
 var fusion_serial: int = 0
-var continue_used: bool = false # 부활 이력/저장 호환용. 부활 횟수를 제한하지 않는다.
 var retry_wave: bool = false # 부활 대기실에서는 다음 탄 대신 현재 탄을 다시 시작한다.
 var battle_checkpoint: Dictionary = {}
 var support_wave: int = -1
@@ -139,7 +135,6 @@ func start_run(seed_value: int = 0) -> void:
 	shop_offer.clear()
 	fusion_pending = {}
 	fusion_serial = 0
-	continue_used = false
 	retry_wave = false
 	battle_checkpoint = {}
 	support_wave = -1
@@ -148,7 +143,6 @@ func start_run(seed_value: int = 0) -> void:
 	orbit.clear()
 	spins = 0
 	paid_spins = 0
-	pulls = 0
 	last_result = {}
 	last_tier = -1
 	last_bumped = false
@@ -357,22 +351,7 @@ func lv(id: String) -> int:
 ## ★ 상점이 공식을 다시 적으면 안 된다(CLAUDE.md 18). 「+15%」라고 적어 두고 실제로는
 ##   1.09배가 걸리는 어긋남은 아무도 못 잡는다 — 전투가 부르는 바로 그 함수를 부른다.
 func up_at(id: String, l: int) -> float:
-	match id:
-		"atk":
-			return Balance.atk_mult(l)
-		"rate":
-			return Balance.rate_mult(l)
-		"crit":
-			return Balance.crit_chance(l)
-		"critx":
-			return Balance.crit_mult(l)
-		"gold":
-			return Balance.gold_mult(l)
-		"mire":
-			return Balance.mire_mult(l)
-		"reroll":
-			return float(Balance.FREE_REROLL + l)
-	return 1.0
+	return CombatStats.upgrade(id, l)
 
 
 ## **지금 전투가 실제로 쓰는 값** — 능력치 단계에 패시브까지 얹은 것.
@@ -436,7 +415,6 @@ func begin_draw() -> void:
 		Rite.ensure_stars(orbit, Balance.RITE_FIRST_STARS, rng)
 	spins = 0
 	paid_spins = 0
-	pulls = 0
 
 
 func _shuffle(a: Array) -> void:
@@ -510,25 +488,6 @@ func respin() -> Array[int]:
 	#   켜는 것만으로 공짜 횟수와 쓴 골드가 되살아난다.
 	autosave()
 	return moved
-
-
-## 보상형 광고로 끌어올 별 — 문 밖의 가장 바깥 별. 끌어올 것이 없으면 -1.
-func pull_target() -> int:
-	if not running or phase != Phase.DRAW or not Rite.valid(orbit):
-		return -1
-	return Rite.pull_target(orbit)
-
-
-## 그 궤도의 별을 광고 보상으로 끌어올 수 있는가. 무료 횟수·골드와 무관하다.
-func can_pull(ring: int) -> bool:
-	return running and phase == Phase.DRAW and Rite.valid(orbit) \
-			and ring >= 0 and ring < Rite.RINGS and not Rite.in_gate(ring, orbit[ring])
-
-
-## 의식의 판 번호. 별이 한 번이라도 바뀌면 오른다 — 광고를 보는 사이에 다시 돌렸다면
-## 그 광고의 보상은 옛 상태를 겨눈 것이라 거절한다.
-func rite_revision() -> int:
-	return spins + pulls
 
 
 # --------------------------------------------------------------------------- #
@@ -640,7 +599,7 @@ func latest_draw_location() -> Array:
 ##
 ## 같은 캐릭터는 중첩하지 않고 전당의 별도 카드로 보관한다.
 ## 출전 가능한 새 캐릭터는 빈 발판에 세우고, 전장이 가득 찼으면 전당에 보관한다.
-## 광고 부활처럼 사용자가 직접 배치할 보상은 auto_deploy=false로 지급한다.
+## 사용자가 직접 배치할 보상은 auto_deploy=false로 지급한다.
 ##
 ## 돌려주는 것: {"stacked": 겹쳤는가, "where": "field"|"bench", "slot": 자리, "n": 겹친 수}
 func gain_hero(unit: Dictionary, tier: int, allow_echo: bool = true, auto_deploy: bool = true, metadata: Dictionary = {}) -> Dictionary:
@@ -890,26 +849,17 @@ func hero_total() -> int:
 ## ★ 전투(BattleSim)와 상점 표시가 반드시 이 함수를 함께 써야 "상점에는 +20% 라고
 ##   적혀 있는데 실제로는 안 오르는" 종류의 어긋남이 안 생긴다.
 func pas_mult(key: String) -> float:
-	var m := 1.0
-	for id in passives:
-		m *= float(Balance.passive_by_id(String(id)).get(key, 1.0))
-	return m
+	return CombatStats.passive_mult(passives, key)
 
 
 ## 덧셈 효과(치명타 확률·치명타 배율처럼 더하는 것).
 func pas_add(key: String) -> float:
-	var t := 0.0
-	for id in passives:
-		t += float(Balance.passive_by_id(String(id)).get(key, 0.0))
-	return t
+	return CombatStats.passive_add(passives, key)
 
 
 ## 그 효과를 가진 패시브 중 가장 센 값. 둔화처럼 **겹치지 않고 센 쪽만** 쓰는 것에.
 func pas_best(key: String) -> float:
-	var best := 0.0
-	for id in passives:
-		best = max(best, float(Balance.passive_by_id(String(id)).get(key, 0.0)))
-	return best
+	return CombatStats.passive_best(passives, key)
 
 
 func passive_full() -> bool:
@@ -996,15 +946,7 @@ func offer_passives(n: int = 3) -> Array:
 ##   전투와 **같은 값**을 본다. 전투에서만 곱하면 화면에는 안 오른 것처럼 보이는데
 ##   실제로는 오르는, 아무도 못 잡는 어긋남이 생긴다(상성 배수와 반대되는 경우다).
 func resonance_mult(elem: String) -> float:
-	if not has("resonance") or elem == "":
-		return 1.0
-	var n := 0
-	for h in heroes:
-		if String(h["unit"].get("elem", "none")) == elem:
-			n += 1
-			if n >= 2:
-				return Balance.PASSIVE_RESONANCE
-	return 1.0
+	return CombatStats.resonance(heroes, passives, elem)
 
 
 # --------------------------------------------------------------------------- #
@@ -1032,58 +974,7 @@ func buy_repair() -> bool:
 # 영웅의 실제 능력치 — 전투와 검사기가 **이 함수 하나만** 쓴다
 # --------------------------------------------------------------------------- #
 func hero_stats(h: Dictionary) -> Dictionary:
-	var u: Dictionary = h["unit"]
-	var t: int = int(h["tier"])
-	var prof: Dictionary = Balance.PROFILE[String(u.get("profile", "balance"))]
-	var bul: Dictionary = Balance.BULLET.get(String(u.get("bullet", "shot")), Balance.BULLET["shot"])
-	# ★ 같은 캐릭터가 겹친 만큼 **공격력만** 배가 된다(공격속도는 그대로).
-	#   같은 영웅 n명을 나란히 세웠던 예전과 단일 대상 피해가 정확히 같아지는 값이다.
-	# ★ 속성마다의 **기본 화력**(Balance.elem_dmg)을 여기서 곱한다. 1.0 이 아닌 것이 둘이다 —
-	#   물은 상태이상이 없어서(1.12), 전기는 **면역이 둘**이라 상성 폭이 좁아서(1.32)
-	#   그 몫을 순수 피해로 돌려받는다.
-	# ★ 왜 전투(BattleSim._hurt)가 아니라 여기인가: 여기에 두면 상점의 「초당 피해」와
-	#   자동 플레이 정책이 **같은 값**을 본다. 전투에서만 곱하면 화면에는 안 오른 것처럼
-	#   보이는데 실제로는 오르는, 아무도 못 잡는 어긋남이 생긴다.
-	#   (상성 배수는 반대다 — 어느 몬스터를 때릴지 모르므로 전투에서만 곱한다)
-	var el := String(u.get("elem", "none"))
-	# ★ **역할**(일격·도탄·특효·광역). 방식과 다른 축이다 — 같은 `shot` 이라도 일격은
-	#   한 대가 무겁고(x1.26) 특효는 가벼운 대신(x0.74) 상태이상이 두 배다.
-	#   표에 없는 값이 오면 「일격」으로 받는다(화면이 안 죽게 하려는 것이고, 실제로
-	#   어긋나면 ns_check 가 잡는다).
-	var role := String(u.get("role", "single"))
-	var rol: Dictionary = Balance.ROLE.get(role, Balance.ROLE["single"])
-	var n: int = int(h.get("n", 1))
-	# ★ **겹치면 탄이 그 수만큼 나간다**(Balance.stack_shots). 여기 atk 는 **한 발**의
-	#   세기이고, 발 수를 곱해야 n배가 된다 — 그래서 total_dps 는 shots 를 같이 곱한다.
-	var atk: float = Balance.TIER_ATK[t] * float(prof["atk"]) * float(bul["dmg"]) \
-			* float(rol["atk"]) \
-			* Balance.elem_dmg(el) * resonance_mult(el) \
-			* Balance.atk_mult(lv("atk")) * pas_mult("atk")
-	# 각성 위력 — 합성으로 얻은 수호자와, 5성에서 더 승급한 영웅만 1.0 을 넘는다.
-	atk *= float(h.get("awakening_mult", 1.0))
-	var rate: float = Balance.TIER_RATE[t] * float(prof["rate"]) \
-			* Balance.rate_mult(lv("rate")) * pas_mult("rate")
-	# 사거리는 배치 미리보기와 실제 겨냥이 같은 값을 사용한다.
-	# ★ **무상성 특효는 치명타에 특화된다.** 무상성에는 상태이상이 없어서(CLAUDE.md 5-2)
-	#   「특효」가 걸 것이 없기 때문이다. 몬스터에게 아무것도 안 붙이므로 5-2 는 그대로다 —
-	#   이것은 쏘는 쪽의 능력치다. 여기(hero_stats)에서 얹는 까닭은 상점의 「치명타」 줄과
-	#   자동 플레이 정책이 **같은 값**을 봐야 하기 때문이다.
-	var crit: float = Balance.crit_chance(lv("crit")) + pas_add("crit")
-	if role == "rider" and el == "none":
-		crit += Balance.RIDER_CRIT
-	return {
-		"atk": atk, "rate": rate,
-		"range": Balance.attack_range(u, t),
-		"shots": 1,
-		"bullet": String(u.get("bullet", "shot")),
-		# 역할. 전투가 상태이상 세기(특효)와 밀어내기를 여기서 읽는다.
-		"role": role,
-		# 공격 속성. 상성 배수는 전투(BattleSim._hurt)에서만 곱한다 —
-		# 여기서 미리 곱해 두면 "어느 몬스터를 때리느냐"를 모르는 채로 곱하는 셈이 된다.
-		"elem": el,
-		"crit": min(0.85, crit),
-		"critx": Balance.crit_mult(lv("critx")) + pas_add("critx"),
-	}
+	return CombatStats.hero(h, levels, passives, heroes)
 
 
 ## 영웅 한 명의 **단일 대상** 초당 데미지(치명타 기대값 포함). 상점의 「초당 피해」,
@@ -1092,8 +983,7 @@ func hero_stats(h: Dictionary) -> Dictionary:
 ## ★ 겹친 만큼 **발이 여러 개** 나간다(shots). 안 곱하면 x5 영웅이 1겹으로 세어져서
 ##   상점의 「초당 피해」와 자동 플레이 정책이 전장을 통째로 잘못 짠다.
 static func stats_dps(st: Dictionary) -> float:
-	var mult: float = 1.0 + float(st["crit"]) * (float(st["critx"]) - 1.0)
-	return float(st["atk"]) * float(st["rate"]) * mult * float(st.get("shots", 1))
+	return CombatStats.dps(st)
 
 
 func hero_dps(h: Dictionary) -> float:
@@ -1235,10 +1125,9 @@ func snapshot(include_checkpoint: bool = true) -> Dictionary:
 		"levels": levels.duplicate(), "passives": Array(passives).duplicate(),
 		"owned_passives": _owned_passives_out(), "hero_damage": hero_damage.duplicate(true),
 		"offer": Array(shop_offer).duplicate(), "repairs": repairs,
-		"rite": {"orbit": Array(orbit).duplicate(), "spins": spins, "paid": paid_spins, "pulls": pulls},
+		"rite": {"orbit": Array(orbit).duplicate(), "spins": spins, "paid": paid_spins},
 		"last": _last_out(), "rng": rng.state,
 		"fusion": _fusion_out(), "fusion_serial": fusion_serial,
-		"continue_used": continue_used,
 		"retry_wave": retry_wave,
 		"support_wave": support_wave,
 		"checkpoint": battle_checkpoint.duplicate(true) if include_checkpoint else {},
@@ -1369,7 +1258,6 @@ func restore(d: Dictionary) -> bool:
 	orbit.assign(_ints(rite.get("orbit", []) as Array))
 	spins = maxi(0, int(rite.get("spins", 0)))
 	paid_spins = clampi(int(rite.get("paid", 0)), 0, spins)
-	pulls = maxi(0, int(rite.get("pulls", 0)))
 	last_result = _last_in(d.get("last", {}) as Dictionary)
 	if not last_result.is_empty():
 		# 이전 12인 편성을 옮긴 뒤에도 획득 팝업이 현재 대기 위치를 가리키게 한다.
@@ -1391,8 +1279,13 @@ func restore(d: Dictionary) -> bool:
 		phase = Phase.BATTLE
 	fusion_pending = d.get("fusion", {}).duplicate(true)
 	fusion_serial = int(d.get("fusion_serial", 0))
-	continue_used = bool(d.get("continue_used", false))
 	retry_wave = bool(d.get("retry_wave", false))
+	if bool(last_result.get("revived", false)):
+		last_result = {}
+		if phase == Phase.SWAP:
+			phase = Phase.SHOP
+			if shop_offer.is_empty():
+				roll_shop()
 	support_wave = int(d.get("support_wave", -1))
 	support_available = false
 	battle_checkpoint = d.get("checkpoint", {}).duplicate(true)
@@ -1410,7 +1303,7 @@ func autosave() -> void:
 		Save.clear_run()
 
 
-# Five-card fusion keeps an undo snapshot until its result is accepted.
+# Keep the fusion result until its presentation is acknowledged.
 
 func _fusion_out() -> Dictionary:
 	return fusion_pending.duplicate(true)
@@ -1526,7 +1419,7 @@ func claim_midpoint_support(choice: String, field_index: int = 0) -> Dictionary:
 		return {}
 	var result: Dictionary = {}
 	if choice == "summon":
-		# 지원 소환은 **한 번 돌린 그대로** 받는다 — 다시 돌리기도 조커도 광고도 없다.
+		# 지원 소환은 **한 번 돌린 그대로** 받는다 — 다시 돌리기와 조커는 적용하지 않는다.
 		var support_orbit := Rite.roll(rng)
 		var count := Rite.stars(support_orbit)
 		var tier := Rite.tier_of(count)
@@ -1565,21 +1458,6 @@ func claim_midpoint_support(choice: String, field_index: int = 0) -> Dictionary:
 	return result
 
 
-func undo_fusion() -> bool:
-	if not reward_allowed("fusion_undo", {"fusion_id": fusion_pending.get("id", -1)}):
-		return false
-	heroes.clear()
-	bench.clear()
-	for h in fusion_pending["before_h"]:
-		heroes.append(_hero_in(h))
-	for h in fusion_pending["before_b"]:
-		bench.append(_hero_in(h))
-	fusion_pending = {}
-	ensure_posts()
-	autosave()
-	return true
-
-
 func prepare_battle() -> void:
 	fusion_pending = {}
 	retry_wave = false
@@ -1589,80 +1467,5 @@ func prepare_battle() -> void:
 	autosave()
 
 
-func reward_allowed(kind: String, data: Dictionary = {}) -> bool:
-	if data.has("seed") and (int(data["seed"]) != run_seed or int(data.get("wave", -1)) != wave):
-		return false
-	match kind:
-		# 「card」 는 광고 단위 이름이다(AdMob 의 card_change). 보상은 별 하나를 문 안으로 끌어온다.
-		"card":
-			if not can_pull(int(data.get("slot", -1))):
-				return false
-			return not data.has("revision") or int(data["revision"]) == rite_revision()
-		"fusion_undo":
-			return running and phase in [Phase.SWAP, Phase.SHOP] \
-					and not fusion_pending.is_empty() \
-					and int(data.get("fusion_id", -1)) == int(fusion_pending.get("id", -2))
-		"crystal":
-			return running and phase == Phase.SHOP and lives < max_lives()
-		"continue":
-			return phase == Phase.OVER and not battle_checkpoint.is_empty()
-	return false
-
-
-func apply_ad_reward(kind: String, data: Dictionary) -> bool:
-	if not reward_allowed(kind, data):
-		return false
-	match kind:
-		"card":
-			Rite.pull(orbit, int(data["slot"]), rng)
-			pulls += 1
-		"fusion_undo":
-			return undo_fusion()
-		"crystal":
-			add_lives(max_lives())
-		"continue":
-			return revive_wave()
-	autosave()
-	return true
-
-
 func next_battle_wave() -> int:
 	return wave if retry_wave else mini(wave + 1, Balance.LAST_WAVE)
-
-
-func revive_wave() -> bool:
-	if not reward_allowed("continue"):
-		return false
-	var checkpoint := battle_checkpoint.duplicate(true)
-	if not restore(checkpoint):
-		return false
-	continue_used = true
-	lives = max_lives()
-	add_gold(Balance.REVIVE_GOLD)
-	last_result = {"tier": Balance.TIER_MAX, "stars": Rite.MAX_STARS, "orbit": [],
-			"unit": {}, "bumped": false, "joker": -1, "showy": true,
-			"stacked": false, "where": "", "slot": -1,
-			"n": 1, "revived": true, "reward_pending": true,
-			"gold": Balance.REVIVE_GOLD, "gold_only": true, "duplicate": false}
-	battle_checkpoint = {}
-	retry_wave = true
-	phase = Phase.SWAP
-	running = true
-	lives_changed.emit(lives)
-	autosave()
-	return true
-
-
-## 획득 연출 확인만 저장한다. 재접속/중복 터치로 영웅을 다시 지급하지 않는다.
-func acknowledge_revive_reward() -> bool:
-	if not running or phase != Phase.SWAP or not continue_used \
-			or not bool(last_result.get("revived", false)) \
-			or not bool(last_result.get("reward_pending", false)):
-		return false
-	last_result["reward_pending"] = false
-	phase = Phase.SHOP
-	retry_wave = true
-	if shop_offer.is_empty():
-		roll_shop()
-	autosave()
-	return true

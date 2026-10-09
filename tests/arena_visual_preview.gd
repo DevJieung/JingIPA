@@ -9,6 +9,9 @@ func _ready() -> void:
 	if not require_no_save(): return
 	out_dir = arg("--out", out_dir)
 	DirAccess.make_dir_recursive_absolute(out_dir)
+	if has_arg("--style-only"):
+		await _style_only()
+		return
 	if has_arg("--help-only"):
 		await _help_only()
 		return
@@ -144,6 +147,19 @@ func _ready() -> void:
 		await paint(main.screen)
 		check(zone_of(main.screen, "resume").size() > 0, "title has arena continue button")
 		await snap(out_dir + "/" + locale + "_title_resume.png")
+		for unit in Roster.UNITS:
+			Save.seen_units[String(unit["id"])] = true
+		main.screen.collection.opened = true
+		for element in ["water", "fire", "ice", "elec", "none"]:
+			main.screen.collection.element = element
+			await _capture_canvas(main.screen, locale + "_collection_" + element)
+		main.screen.collection.close()
+		await paint(main.screen)
+		main.menu.open()
+		for menu_page in ["menu", "rite", "elements"]:
+			main.menu.page = menu_page
+			await _capture_canvas(main.menu, locale + "_menu_" + menu_page)
+		main.menu.close()
 		Save.cur_run = {}
 		main.queue_free()
 		main = null
@@ -158,6 +174,72 @@ func _ready() -> void:
 	file = null
 	print("Arena visual review: " + out_dir)
 	finish("Arena native 3D and mobile UI")
+
+func _style_only() -> void:
+	for locale in ["ko", "en"]:
+		I18n.set_locale(locale)
+		Arena.start_run(20261009)
+		main = load("res://game/main.gd").new()
+		add_child(main)
+		await frames(3)
+		Save.cur_run = {}
+		await _capture_canvas(main.screen, locale + "_title")
+		Save.cur_run = {"mode": "arena", "wave": 1, "sim": {"elapsed": 187.0}}
+		await _capture_canvas(main.screen, locale + "_title_resume")
+		for unit in Roster.UNITS:
+			Save.seen_units[String(unit["id"])] = true
+		main.screen.collection.opened = true
+		for element in ["water", "fire", "ice", "elec", "none"]:
+			main.screen.collection.element = element
+			await _capture_canvas(main.screen, locale + "_collection_" + element)
+		main.screen.collection.close()
+		await paint(main.screen)
+		main.menu.open()
+		for menu_page in ["menu", "rite", "elements"]:
+			main.menu.page = menu_page
+			await _capture_canvas(main.menu, locale + "_menu_" + menu_page)
+		main.menu.close()
+		main.show_arena()
+		screen = main.screen
+		screen.set_process(false)
+		await _capture(locale + "_themes")
+		Arena.choose_theme(0)
+		screen._track_modal()
+		screen._rite_age = 9
+		await _capture(locale + "_rite_free")
+		check(zone_of(screen, "rite:pull").is_empty(), "no advertising action on the ritual")
+		Arena.confirm_summon()
+		await _capture(locale + "_summon_new")
+		Arena.close_modal()
+		_prepare_field()
+		await _capture(locale + "_field_six")
+		Arena.gold = 99999
+		Arena.open_modal("shop")
+		await _capture(locale + "_upgrades")
+		screen._shop_tab = "passives"
+		await _capture(locale + "_passives")
+		Arena.close_modal()
+		for id in ["saeta", "glaukos", "jokull"]:
+			Arena.gain_hero(Roster.unit_by_id(id), 9)
+		Arena.open_modal("bench")
+		screen._track_modal()
+		screen._bench_choice = 0
+		await _capture(locale + "_reserves_selected")
+		Arena.close_modal()
+		Arena.sim.done = true
+		Arena.sim.won = true
+		Arena.end_run(true)
+		await _capture(locale + "_victory")
+		Arena.sim.won = false
+		await _capture(locale + "_defeat")
+		main.queue_free()
+		main = null
+		screen = null
+		await frames(4)
+	var file := FileAccess.open(out_dir + "/style-report.json", FileAccess.WRITE)
+	file.store_string(JSON.stringify({"checks": checks, "failures": failures, "text_boxes": _audit_count}, "  ") + "\n")
+	file = null
+	finish("Native 3D design consistency")
 
 func _help_only() -> void:
 	for locale in ["ko", "en"]:
@@ -262,28 +344,21 @@ func _rite_only() -> void:
 		screen._track_modal()
 		screen._rite_age = 9
 		await _capture(locale + "_rite_free")
-		var ring := Arena.pull_target()
 		var spins_before := Arena.spins
 		var respin_box: Rect2 = zone_of(screen, "rite:respin")["rect"]
 		_window_touch(respin_box.get_center(), true)
 		_window_touch(respin_box.get_center(), false)
 		check(Arena.spins > spins_before, "window pixel touch reaches the stretched ritual button")
 		screen._rite_age = 9
-		ring = Arena.pull_target()
-		check(ring >= 0 and bool(zone_of(screen, "rite:pull").get("on", false)), "rewarded pull is available for a missed star")
-		screen._pull_ring = ring
-		screen._pull_from = Rite.angle(ring, int(Arena.orbit[ring]))
-		check(Arena.apply_ad_reward("card", {"slot": ring}), "actual arena reward moves the requested star")
-		Ads.completed.emit("card", true)
-		check(screen._pull_draw_ring == ring, "reward callback connects the existing star movement")
+		check(zone_of(screen, "rite:pull").is_empty(), "ritual exposes no rewarded pull action")
 		var clock: float = Arena.sim.elapsed
 		for n in range(4):
 			screen._process(0.15)
-			await _capture(locale + "_rite_pull_%02d" % n)
-		check(is_equal_approx(clock, Arena.sim.elapsed), "reward and ritual animation preserve paused battle time")
+			await _capture(locale + "_rite_spin_%02d" % n)
+		check(is_equal_approx(clock, Arena.sim.elapsed), "ritual animation preserves paused battle time")
 		Arena.orbit = RiteBoard.sample_orbit(Rite.MAX_STARS)
 		await _capture(locale + "_rite_full")
-		check(not bool(zone_of(screen, "rite:pull").get("on", true)), "pull button disables when all stars are in the gate")
+		check(not bool(zone_of(screen, "rite:respin").get("on", true)), "respin disables when all stars are in the gate")
 		Arena.confirm_summon()
 		Arena.close_modal()
 		_prepare_field()
@@ -306,7 +381,7 @@ func _rite_only() -> void:
 	var file := FileAccess.open(out_dir + "/rite-report.json", FileAccess.WRITE)
 	file.store_string(JSON.stringify({"checks": checks, "failures": failures}, "  ") + "\n")
 	file = null
-	finish("Arena rewarded ritual presentation")
+	finish("Arena ritual presentation")
 
 func _window_touch(logical: Vector2, pressed: bool) -> void:
 	var event := InputEventScreenTouch.new()
@@ -344,14 +419,27 @@ func _positions() -> Array:
 
 func _capture(name: String) -> void:
 	screen._track_modal()
+	await _capture_canvas(screen, name)
+
+func _capture_canvas(canvas: CanvasItem, name: String) -> void:
 	Look.text_audit_enabled = true
 	Look.text_audit.clear()
 	Look.raw_text_audit.clear()
-	await paint(screen)
+	await paint(canvas)
 	for item in Look.text_audit:
 		_audit_count += 1
 		var box: Rect2 = item["box"]
 		check(box.size.x > 0 and box.size.y > 0, "visible text box " + name)
 		check(int(item["size"]) >= 12, "readable text size " + name + ": " + String(item["text"]))
+	if canvas is ArenaScreen:
+		var shown: Array[String] = []
+		for item in Look.text_audit:
+			shown.append(String(item["text"]))
+		if Arena.modal == "theme":
+			for index in range(canvas._theme_page * 12, mini(Roster.THEMES.size(), canvas._theme_page * 12 + 12)):
+				check(I18n.t(String(Roster.THEMES[index]["ko"])) in shown, "localized theme name is actually rendered: " + String(Roster.THEMES[index]["id"]))
+		else:
+			var theme: Dictionary = Roster.THEMES[clampi(Arena.theme_index, 0, Roster.THEMES.size() - 1)]
+			check(I18n.t(String(theme["ko"])) in shown, "current battlefield name is rendered in the HUD")
 	Look.text_audit_enabled = false
 	await snap(out_dir + "/" + name + ".png")

@@ -280,7 +280,7 @@ func _check_first_rite() -> void:
 		Run.begin_draw()
 		check(Run.wave == 1 and Run.rite_stars() >= Balance.RITE_FIRST_STARS and Rite.valid(Run.orbit),
 				"판의 첫 의식은 %d성 이상으로 열린다" % Balance.RITE_FIRST_STARS)
-		check(Run.spins == 0 and Run.paid_spins == 0 and Run.pulls == 0 and Run.respins_left() == Run.free_rerolls(),
+		check(Run.spins == 0 and Run.paid_spins == 0 and Run.respins_left() == Run.free_rerolls(),
 				"첫 의식의 보정은 다시 돌리기 횟수를 쓰지 않는다")
 		Run.confirm_summon()
 		Run.begin_draw()

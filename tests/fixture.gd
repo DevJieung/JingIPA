@@ -74,4 +74,3 @@ static func stack(star_count: int) -> void:
 	Run.orbit.assign(orbit_for(star_count))
 	Run.spins = 0
 	Run.paid_spins = 0
-	Run.pulls = 0

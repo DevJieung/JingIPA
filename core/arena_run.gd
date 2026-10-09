@@ -98,21 +98,12 @@ func begin_draw() -> void:
 		Rite.ensure_stars(orbit, Balance.RITE_FIRST_STARS, rng)
 	spins = 0
 	paid_spins = 0
-	pulls = 0
 	autosave()
 
 func growth_needed(hero: Dictionary) -> int:
 	if int(hero["tier"]) >= Balance.TIER_MAX:
 		return 0
 	return Balance.ARENA_GROWTH_BASE + int(hero["tier"]) * Balance.ARENA_GROWTH_STEP
-
-func reward_allowed(kind: String, data: Dictionary = {}) -> bool:
-	if kind != "card" or not running or modal != "rite":
-		return false
-	# Unlike waves, repeat summons all share wave 1 and reset their rite revision.
-	if data.has("summon_count") and int(data["summon_count"]) != summon_count:
-		return false
-	return super.reward_allowed(kind, data)
 
 func gain_hero(unit: Dictionary, tier: int, _allow_echo: bool = true, auto_deploy: bool = true, _metadata: Dictionary = {}) -> Dictionary:
 	var found := find_hero(String(unit["id"]))
@@ -286,7 +277,7 @@ func snapshot(_include_checkpoint: bool = true) -> Dictionary:
 		"levels": levels.duplicate(), "passives": Array(passives), "owned_passives": Array(owned_passives),
 		"hero_damage": hero_damage.duplicate(true),
 		"offer": Array(shop_offer), "summon_count": summon_count,
-		"rite": {"orbit": Array(orbit), "spins": spins, "paid": paid_spins, "pulls": pulls},
+		"rite": {"orbit": Array(orbit), "spins": spins, "paid": paid_spins},
 		"summon_result": summon_result.duplicate(true), "sim": sim.snapshot_arena() if sim != null else {}}
 
 func restore(data: Dictionary) -> bool:
@@ -320,7 +311,6 @@ func restore(data: Dictionary) -> bool:
 	orbit.assign(_ints(data["rite"]["orbit"]))
 	spins = int(data["rite"]["spins"])
 	paid_spins = int(data["rite"]["paid"])
-	pulls = int(data["rite"]["pulls"])
 	summon_result = data["summon_result"].duplicate(true)
 	last_result = summon_result
 	last_unit = summon_result.get("unit", {})

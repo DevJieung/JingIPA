@@ -35,8 +35,8 @@ const NIGHT := Color("#0a141d")
 const LANE_A := Color("#0f1d29")
 const LANE_B := Color("#0b1722")
 const ORBIT := Color("#527383")
-const BRASS := Color("#8f6f2c")
-const BRASS_DARK := Color("#33250f")
+const BRASS := Look.GOLD_DEEP
+const BRASS_DARK := Color("#222b32")
 ## 문의 테와 별빛 — 흰 금빛. 등급 5성의 색(Look.TIER_COLOR 의 끝)과 같은 결이다.
 const LIGHT := Color("#fff0b8")
 ## 문 안을 채우는 빛 — 수정에서 나오는 찬 흰빛. 금빛으로 채우면 밤빛 판 위에서 탁한 올리브색이
@@ -119,6 +119,8 @@ static func draw_base(ci: CanvasItem, c: Vector2, sc: float = 1.0, time: float =
 	_disc(ci, c, rim + RIM_W * sc, BRASS_DARK, dome)
 	_disc(ci, c, rim + (RIM_W - 2.0) * sc, BRASS, dome)
 	_disc(ci, c, rim + 2.0 * sc, BRASS_DARK, dome)
+	ci.draw_arc(c, rim + (RIM_W - 1.0) * sc, PI * 1.08, PI * 1.92, 80,
+			Color(Look.GOLD.lightened(0.22), 0.78), maxf(1.0, 1.7 * sc), true)
 	for ring in range(Rite.RINGS - 1, -1, -1):
 		_disc(ci, c, lane_outer(ring, sc), LANE_A if ring % 2 == 0 else LANE_B, dome)
 	_disc(ci, c, lane_inner(0, sc), NIGHT, dome)

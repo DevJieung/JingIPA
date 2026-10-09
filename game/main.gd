@@ -83,7 +83,8 @@ func go(f: Callable) -> void:
 
 
 func _swap(s: Node2D) -> void:
-	if screen != null and is_instance_valid(screen):
+	if is_instance_valid(screen):
+		remove_child(screen)
 		screen.queue_free()
 	screen = s
 	s.set("main", self)
@@ -95,7 +96,9 @@ func _swap(s: Node2D) -> void:
 		s.name = sc.get_global_name()
 	add_child(s)
 	move_child(s, 0)
-	if s is BattleScreen:
+	if s is ArenaScreen:
+		Sfx.play_music("camp" if Arena.theme_index < 0 else "ritual" if Arena.modal == "rite" else "theme_" + String(Arena.theme_for(1)["id"]))
+	elif s is BattleScreen:
 		Sfx.play_music(Sfx.battle_music_id(Run.wave))
 	elif s is ThemeScreen:
 		Sfx.play_music(Sfx.battle_music_id(Run.wave + 1))
@@ -113,7 +116,7 @@ func screen_modal_open() -> bool:
 	if screen is TitleScreen:
 		return screen.collection.opened
 	if screen is DrawScreen:
-		return screen.state == DrawScreen.REVIVE_REWARD or screen.fusion.active() or screen.hv.info >= 0
+		return screen.fusion.active() or screen.hv.info >= 0
 	if screen is ShopScreen:
 		return screen.fusion.active() or screen.hv.info >= 0
 	if screen is BattleScreen:
@@ -146,12 +149,12 @@ func show_title() -> void:
 
 func start_run(seed_value: int = 0) -> void:
 	Run.running = false
+	Arena.running = false
 	Arena.start_run(seed_value)
 	go(show_arena)
 
 func show_arena() -> void:
 	_swap(ArenaScreen.new())
-	Sfx.play_music("camp" if Arena.theme_index < 0 else "ritual" if Arena.modal == "rite" else "theme_" + String(Arena.theme_for(1)["id"]))
 
 func active_run() -> Node:
 	return Arena if screen is ArenaScreen else Run

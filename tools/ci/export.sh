@@ -21,7 +21,11 @@ if grep -Eq 'SCRIPT ERROR|Parse Error|Compile Error' build/ci/import-bootstrap.l
 fi
 checked_godot build/ci/import.log --import
 export STELLARDEFENSE_NO_SAVE=1
-for scene in arena_check arena_play_check stellar_identity_check stellar_gameplay_check 3d/stellar_render_check limne_model_check native_hero_check native_monster_check formation_check free_placement_check rite_check reroll_check flow_check rules_check progression_check wave_scaling_check course_check revive_flow_check localization_check ads_check; do
+python3 tools/gamedb.py check
+python3 tools/gen_roster.py --check
+python3 tools/check_localization.py
+python3 -m unittest discover -s tests -p test_check_no_ads.py
+for scene in arena_check arena_play_check stellar_identity_check stellar_gameplay_check 3d/stellar_render_check limne_model_check native_hero_check native_monster_check formation_check free_placement_check rite_check reroll_check flow_check rules_check progression_check wave_scaling_check course_check localization_check no_ads_check; do
     log="build/ci/${scene//\//-}.log"
     checked_godot "$log" "res://tests/$scene.tscn"
     grep -q '판정: 정상' "$log"
@@ -41,9 +45,7 @@ apk="$PWD/build/apk/sd-tst.apk"
 test -s "$apk"
 "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify "$apk"
 "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump xmltree --file AndroidManifest.xml "$apk" > build/ci/manifest.txt
-grep -q 'org.godotengine.plugin.v2.PoingGodotAdMobRewardedAd' build/ci/manifest.txt
-grep -q 'org.godotengine.plugin.v2.PoingGodotAdMobRewardedInterstitialAd' build/ci/manifest.txt
-grep -q 'com.google.android.gms.ads.APPLICATION_ID' build/ci/manifest.txt
+python3 tools/ci/check_no_ads.py "$apk" --manifest build/ci/manifest.txt
 python3 tools/audio/check_apk_audio.py "$apk"
 python3 tools/ci/check_no_db.py "$apk"
 

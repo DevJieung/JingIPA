@@ -136,9 +136,9 @@ func check_fusion_growth() -> void:
 				"the fused hero card carries the announced tier and power")
 		check(not fused.has("value") and not result.has("value") and not result.has("variant"), "fusion inherits no poker value")
 		check(Save.best_of(String(result["unit"])) >= int(result["tier"]), "the codex remembers the fused guardian's tier")
-		check(Run.restore(Run.snapshot()), "exclusive hero and undo window survive restart")
-		check(Run.undo_fusion() and Run.snapshot()["heroes"] == before["heroes"] and Run.snapshot()["bench"] == before["bench"],
-			"undo restores exact materials and protected deployed heroes")
+		check(Run.restore(Run.snapshot()), "exclusive hero and pending result survive restart")
+		Run.accept_fusion()
+		check(Run.hero_total() == before["heroes"].size() + before["bench"].size() - 4, "accepted fusion consumes exactly five materials for one guardian")
 	# 의식(과 지원 소환)이 뽑는 쪽에는 합성 전용 수호자가 절대 안 섞인다.
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 100
@@ -169,10 +169,9 @@ func check_repeated_awakening() -> void:
 	var restored := Run.restore(decoded.get_value("cur", "state")) if parsed else false
 	var after := Run.snapshot()
 	check(parsed and restored and after == snapshot, "repeated awakening survives disk serialization exactly")
-	check(Run.undo_fusion(), "awakened materials can still be restored before acceptance")
-	check(Run.bench.size() == 5 and is_equal_approx(float(Run.bench[0]["awakening_mult"]), held)
-			and bool(Run.bench[0]["awakened"]) and int(Run.bench[0]["tier"]) == Balance.TIER_MAX,
-			"undo preserves the materials' previous awakened power and tier")
+
+	Run.accept_fusion()
+	check(Run.fusion_pending.is_empty() and Run.hero_total() == 2, "awakened result remains after accepting fusion")
 
 
 ## 전투 한가운데의 지원 — 승급(반 별) 또는 소환(의식 한 번). 어느 쪽이든 한 탄에 한 번이다.

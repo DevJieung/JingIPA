@@ -44,12 +44,6 @@ func _ready() -> void:
 	check(Sfx._players.all(func(v): return not v.playing), "effects off stops outstanding effects")
 	Save.set_music(true)
 	check(not p.stream_paused, "music independent from effects setting")
-	Ads.busy = true
-	Sfx._process(0.1)
-	check(p.stream_paused, "ad playback pauses background music")
-	Ads.busy = false
-	Sfx._process(0.1)
-	check(not p.stream_paused, "background music resumes after ad")
 	var main := load("res://game/main.gd").new() as Node2D
 	add_child(main)
 	Fixture.fresh(71)

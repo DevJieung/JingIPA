@@ -5,8 +5,7 @@ func _ready() -> void:
 	if not require_no_save():
 		return
 	_test_preview()
-	await _test_notice()
-	finish("테마 출현 정보·보상 알림 검사")
+	finish("테마 출현 정보 검사")
 
 
 func _test_preview() -> void:
@@ -55,45 +54,3 @@ func _test_preview() -> void:
 		check(Run.snapshot() == saved, "preview leaves the rite, rewards, RNG and save state untouched")
 		check(Run.theme_preview(10)["end_wave"] == 10, "partial block does not spill into the next theme")
 		check(Run.theme_preview(100)["end_wave"] == 100, "last-wave preview stays within the run")
-
-
-func _test_notice() -> void:
-	var main := load("res://game/main.gd").new() as Node2D
-	add_child(main)
-	Fixture.fresh(15092026)
-	main.show_draw()
-	await paint(main.screen)
-	Ads.set_process(false)
-	var before := Run.snapshot().duplicate(true)
-	Ads._finish(true, "광고 보상을 받았습니다.")
-	Ads._process(3.1)
-	check(Ads._message_left == 0.0, "reward notice expires automatically")
-	check(Run.snapshot() == before, "notice expiry does not award another reward")
-	Ads._finish(true, "광고 보상을 받았습니다.")
-	var click := InputEventMouseButton.new()
-	click.button_index = MOUSE_BUTTON_LEFT
-	click.pressed = true
-	click.position = Vector2(752, 34)
-	get_viewport().push_input(click)
-	check(Ads._message_left == 0.0 and not Ads._reward_notice, "mouse press dismisses reward notice")
-	check(not main.menu.opened, "dismiss press does not activate the menu underneath")
-	check(Run.snapshot() == before, "dismiss press leaves gameplay unchanged")
-	await frames(2)
-	Ads._finish(true, "광고 보상을 받았습니다.")
-	var touch := InputEventScreenTouch.new()
-	touch.pressed = true
-	touch.position = Vector2(752, 34)
-	get_viewport().push_input(touch)
-	check(Ads._message_left == 0.0, "native screen touch dismisses reward notice")
-	get_viewport().push_input(click)
-	check(not main.menu.opened, "emulated mouse event from the same touch is consumed")
-	await frames(2)
-	Ads._finish(true, "광고 보상을 받았습니다.")
-	Ads.busy = true
-	get_viewport().push_input(touch)
-	check(Ads._message_left > 0.0, "notice dismissal does not cancel a busy advertisement")
-	Ads.busy = false
-	Ads._message_left = 0.0
-	Ads.set_process(true)
-	main.queue_free()
-	await frames(2)

@@ -26,11 +26,11 @@ Actions 실행의 `stellardefense-apk-ipa` Artifact에 아래 파일이 함께 �
 
 Godot 4.7.1, JDK 17, Android SDK 36을 사용한다. Android 템플릿은 매 빌드에서
 공식 Godot 배포본으로 복원한다. 로컬 ARM 전용 Gradle/aapt2 경로는 커밋하지 않는다.
-AdMob 5.0.0의 Android ads 플러그인 파일은 저장소에 포함한다.
+앱은 광고 SDK와 네트워크 권한 없이 오프라인으로 실행한다.
 
-Linux에서 에셋을 임포트하고 게임 흐름·번역·광고 회귀 검사를 실행한 다음 APK와
+Linux에서 에셋을 임포트하고 게임 흐름·번역·저장 호환 검사를 실행한 다음 APK와
 Xcode 프로젝트를 내보낸다. macOS에서 그 Xcode 프로젝트를 빌드해 IPA로 묶는다.
-IPA에는 같은 커밋의 게임 데이터가 들어간다. Android 서명·광고 플러그인·리소스,
+IPA에는 같은 커밋의 게임 데이터가 들어간다. Android 서명·광고 SDK 부재·리소스,
 IPA의 실행 파일·번들 ID·게임 데이터도 검사한다.
 
 로컬 APK는 계속 `bash tools/build_apk.sh`로 생성하며, 검증에 성공한 파일만
@@ -61,13 +61,11 @@ Apple ID로 서명하여 설치한다. 이 파일은 App Store/TestFlight 업로
 프로파일과 `release-testing`/`app-store-connect` 등을 함께 설정해야 한다.
 기기 설치 가능 여부는 프로파일의 배포 방식과 등록 기기에 따른다.
 
-## 광고와 비공개 설정
+## 비공개 설정과 배포 검사
 
-기본 CI APK는 체크인된 Google 테스트 광고 ID를 사용한다. 실제 Android 광고 ID를
-적용하려면 `STELLARDEFENSE_ADMOB_ENV` Secret에 `tools/admob_config.py`가 읽는
-`ADMOB_APP_ID`, `ADMOB_REWARD_CARD_CHANGE_ID`, `ADMOB_REWARD_MERGE_RESTORE_ID`,
-`ADMOB_REWARD_REVIVE_ID` 설정만 넣는다. 로컬 `.env` 자체는 업로드하지 않는다.
-현재 프로젝트의 iOS AdMob 비활성화 설정은 그대로 유지된다.
+광고 ID와 광고용 Secret은 사용하지 않는다. `tools/ci/check_no_ads.py`가 APK의
+광고 리소스·DEX 클래스·네트워크/광고 권한을 거부한다. `.env`는 생성 도구 전용이며
+APK 빌드는 읽거나 프로젝트 설정에 주입하지 않는다.
 
 생성 도구의 대용량 원본(`art/animation`, `art/concepts`, `art/audio_sources`,
 `art/portraits/sources`), 빌드 캐시, SDK, 인증서는 Git에서 제외한다.

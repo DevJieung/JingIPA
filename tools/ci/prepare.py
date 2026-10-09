@@ -5,12 +5,9 @@ import os
 from pathlib import Path
 import re
 import subprocess
-import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "tools"))
-from admob_config import inject_project, read_settings
 
 
 def main():
@@ -39,22 +36,6 @@ def main():
     settings.write_text('[gd_resource type="EditorSettings" format=3]\n\n[resource]\n' +
                         'export/android/java_sdk_path = ' + json.dumps(os.environ["JAVA_HOME"]) + '\n' +
                         'export/android/android_sdk_path = ' + json.dumps(os.environ["ANDROID_HOME"]) + '\n')
-
-    # Inject Android ads only in this disposable checkout.
-    project = ROOT / "project.godot"
-    content = project.read_text()
-    ad_config = os.environ.get("STELLARDEFENSE_ADMOB_ENV", "")
-    if ad_config:
-        env_file = Path(os.environ["RUNNER_TEMP"]) / "stellardefense-admob.env"
-        env_file.write_text(ad_config)
-        env_file.chmod(0o600)
-        try:
-            content = inject_project(content, read_settings(env_file))
-        finally:
-            env_file.unlink()
-    else:
-        print("AdMob: using the checked-in Google test placements.")
-    project.write_text(content)
 
     presets = ROOT / "export_presets.cfg"
     content = presets.read_text()

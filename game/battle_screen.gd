@@ -94,8 +94,6 @@ func _ready() -> void:
 
 
 func _process(dt: float) -> void:
-	if Ads.busy:
-		return
 	t += dt
 	if sim.support_pending or not support_result.is_empty():
 		support_age += dt
@@ -155,13 +153,11 @@ func _process(dt: float) -> void:
 
 
 func _input(e: InputEvent) -> void:
-	if not Ads.busy and not sim.support_pending and support_result.is_empty() and view_3d.camera_input(e):
+	if not sim.support_pending and support_result.is_empty() and view_3d.camera_input(e):
 		_post_press = -1
 		_ground_pressed = false
 		view_3d.placement_preview(Vector2.INF, false)
 		get_viewport().set_input_as_handled()
-		return
-	if Ads.busy:
 		return
 	if sim.support_pending or not support_result.is_empty():
 		_support_input(e)

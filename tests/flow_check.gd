@@ -81,14 +81,14 @@ func _test_restore() -> void:
 	bad = good.duplicate(true)
 	bad["rite"] = {}
 	_reject(bad, "빈 의식 상태")
-	for key in ["orbit", "spins", "paid", "pulls"]:
+	for key in ["orbit", "spins", "paid"]:
 		bad = good.duplicate(true)
 		bad["rite"].erase(key)
 		_reject(bad, "의식 %s 누락" % key)
 		bad = good.duplicate(true)
 		bad["rite"][key] = "손상"
 		_reject(bad, "의식 %s 형" % key)
-	for key in ["spins", "paid", "pulls"]:
+	for key in ["spins", "paid"]:
 		bad = good.duplicate(true)
 		bad["rite"][key] = -1
 		_reject(bad, "의식 %s 음수" % key)
@@ -147,8 +147,6 @@ func _test_restore() -> void:
 	var count := Run.hero_total()
 	Run.gold = 100000
 	check(not Run.can_respin() and Run.respin().is_empty() and Run.gold == 100000, "확정 후 다시 돌리기 금지")
-	check(Run.pull_target() == -1 and not Run.can_pull(Rite.RINGS - 1)
-			and not Run.apply_ad_reward("card", {"slot": Rite.RINGS - 1}), "확정 후 별 끌어오기 금지")
 	check(Run.confirm_summon() == Run.last_result and Run.hero_total() == count, "편성 중 중복 확정 금지")
 	Run.phase = Run.Phase.BATTLE
 	check(Run.confirm_summon().is_empty() and Run.respin().is_empty(), "전투 중 영웅 추가 금지")

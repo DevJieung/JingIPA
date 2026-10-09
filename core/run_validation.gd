@@ -177,7 +177,7 @@ static func rite_valid(d: Dictionary) -> bool:
 		return false
 	# 한 탄에 돌릴 수 있는 횟수는 무료 일곱 번과 골드가 닿는 유료 스무 번 남짓이다.
 	# 그 수십 배를 넘는 값은 규칙으로는 못 만든다 — 손댄 파일이다.
-	for key in ["spins", "paid", "pulls"]:
+	for key in ["spins", "paid"]:
 		if not rite.get(key) is int or rite[key] < 0 or rite[key] > RITE_COUNT_MAX:
 			return false
 	return rite["paid"] <= rite["spins"]

@@ -11,27 +11,10 @@ var reveal_age := -1.0
 var _burst := false
 var _fx := Fx.new()
 var _materials: Array = []
-var restore_age := -1.0
-var _undo_requested := false
 var _cached_id := -1
-var _restored_cards := 0
 
 func update(dt: float) -> void:
-	if _undo_requested and not Ads.busy:
-		_undo_requested = false
-		if Run.fusion_pending.is_empty():
-			_begin_restore()
 	_fx.update(dt)
-	if restore_age >= 0:
-		restore_age += dt
-		for i in range(_restored_cards, _materials.size()):
-			if restore_age < 0.30 + i * 0.16:
-				break
-			_restored_cards += 1
-			var at := Vector2(240 + i * 200, 428)
-			_fx.burst(at, Look.CRYSTAL, 24, 110, 0.65, 3, 25)
-			_fx.ring(at, Look.GOLD, 15, 112, 0.65, 3)
-		return
 	if reveal_age < 0 or Run.fusion_pending.is_empty():
 		return
 	reveal_age += dt
@@ -56,25 +39,14 @@ func active() -> bool:
 func input(event: InputEvent, ui: Ui) -> bool:
 	if not active():
 		return false
-	if Ads.busy:
-		return true
 	if not event is InputEventMouseButton or not event.pressed or event.button_index != MOUSE_BUTTON_LEFT:
 		return true
 	var id := ui.hit(event.position)
-	if restore_age >= 0:
-		if id == "fusion:restored" and restore_age >= 1.35:
-			restore_age = -1.0
-			_fx.clear()
-		return true
 	if not Run.fusion_pending.is_empty():
 		if id == "fusion:accept":
 			Run.accept_fusion()
 			selected.clear()
 			_result_seen = false
-		elif id == "fusion:undo":
-			_cache_materials()
-			_undo_requested = true
-			Ads.request_reward("fusion_undo", {"fusion_id": int(Run.fusion_pending["id"])})
 		return true
 	_clean_selection()
 	if id == "fusion:close":
@@ -121,9 +93,6 @@ func draw(ci: CanvasItem, ui: Ui) -> void:
 	ui.zone(Look.SCREEN, "fusion:none")
 	Look.material_panel(ci, Rect2(38, 78, 1204, 674), Look.PANEL, Look.GOLD_DEEP)
 	Look.text_left(ci, Vector2(64, 116), "영웅 합성", 32, Look.GOLD)
-	if restore_age >= 0:
-		_draw_restored(ci, ui)
-		return
 	if not Run.fusion_pending.is_empty():
 		_cache_materials()
 		_result_seen = true
@@ -132,7 +101,6 @@ func draw(ci: CanvasItem, ui: Ui) -> void:
 	if _result_seen:
 		selected.clear()
 		_result_seen = false
-		note = "합성을 되돌렸습니다. 결과 영웅을 회수하고 재료 5장을 복구했습니다."
 	_clean_selection()
 	ui.button(ci, Rect2(1122, 98, 94, 42), "닫기", "fusion:close", true, Look.PANEL_EDGE, 20)
 	Look.text_box(ci, Rect2(66, 138, 1030, 30), "5장 합성: 최고 재료보다 +0.5성 보장 · 5성 재료는 각성 위력 상승", 18, Look.CRYSTAL, HORIZONTAL_ALIGNMENT_LEFT)
@@ -224,35 +192,6 @@ func _cache_materials() -> void:
 			_materials.append(Run._hero_in(hero))
 
 
-func _begin_restore() -> void:
-	restore_age = 0.0
-	reveal_age = -1.0
-	_restored_cards = 0
-	_result_seen = false
-	selected.clear()
-	_fx.clear()
-	Sfx.play("summon_charge")
-
-
-func _draw_restored(ci: CanvasItem, ui: Ui) -> void:
-	_fx.draw_back(ci)
-	SummonArt.seal(ci, Vector2(640, 425), 140, -restore_age * 0.6, Look.CRYSTAL, 0.34)
-	for i in range(_materials.size()):
-		var progress := clampf((restore_age - 0.12 - i * 0.16) / 0.5, 0, 1)
-		if progress <= 0:
-			continue
-		var ease := 1.0 - pow(1.0 - progress, 3)
-		var at := Vector2(640, 425).lerp(Vector2(240 + i * 200, 428), ease)
-		at.y -= sin(progress * PI) * 50
-		var size := Vector2(180, 226) * lerpf(0.24, 1.0, ease)
-		HeroCard.draw(ci, Rect2(at - size * 0.5, size), _materials[i])
-	_fx.draw(ci)
-	Look.text_box(ci, Rect2(178, 174, 924, 56), "재료 카드 5장 복구!", 38, Look.GOLD)
-	Look.text_box(ci, Rect2(178, 239, 924, 34), "합성 전의 영웅들이 전당으로 돌아왔습니다", 24, Look.CRYSTAL)
-	Look.text_box(ci, Rect2(178, 574, 924, 40), "결과 영웅을 회수하고 재료 5장을 되살렸습니다.", 23, Look.INK_DIM)
-	ui.button(ci, Rect2(420, 652, 440, 58), "복구한 카드 확인", "fusion:restored", restore_age >= 1.35, Look.GOLD, 26)
-
-
 func _draw_result(ci: CanvasItem, ui: Ui) -> void:
 	var result := Run.fusion_pending
 	var unit := Roster.unit_by_id(String(result["unit"]))
@@ -282,5 +221,4 @@ func _draw_result(ci: CanvasItem, ui: Ui) -> void:
 	_fx.draw(ci)
 	_fx.draw_flash(ci, Look.SCREEN)
 	var ready := reveal_age < 0 or reveal_age > 1.7
-	ui.button(ci, Rect2(606, 580, 530, 58), "영웅 받기", "fusion:accept", ready and not Ads.busy, Look.GOLD, 26)
-	ui.reward_button(ci, Rect2(606, 654, 530, 52), "재료 되돌리기", "fusion:undo", ready and not Ads.busy, Look.PANEL_EDGE, 23)
+	ui.button(ci, Rect2(606, 580, 530, 58), "영웅 받기", "fusion:accept", ready, Look.GOLD, 26)

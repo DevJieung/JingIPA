@@ -191,14 +191,12 @@ godot_run 120 "$TMP/progression.log" res://tests/progression_check.tscn
 expect "별 등급·합성 승급·중간 성장" "판정: 정상" "$TMP/progression.log"
 godot_run 120 "$TMP/wave-scaling.log" res://tests/wave_scaling_check.tscn
 expect "후반 몬스터 수와 체력" "판정: 정상" "$TMP/wave-scaling.log"
-godot_run 120 "$TMP/revive-flow.log" res://tests/revive_flow_check.tscn
-expect "광고 부활 획득 연출" "판정: 정상" "$TMP/revive-flow.log"
 godot_run 120 "$TMP/reroll.log" res://tests/reroll_check.tscn
 expect "무료 다시 돌리기 횟수" "판정: 정상" "$TMP/reroll.log"
 
-step "4-2a. 테마 출현 비율·목록 · 보상 알림 닫기"
+step "4-2a. 테마 출현 비율·목록"
 godot_run 120 "$TMP/theme-notice.log" res://tests/theme_notice_check.tscn
-expect "테마 정보·보상 알림" "판정: 정상" "$TMP/theme-notice.log"
+expect "테마 정보" "판정: 정상" "$TMP/theme-notice.log"
 
 step "4-2b. 50개 테마 주 속성 비중·보스 고정"
 godot_run 120 "$TMP/theme-distribution.log" res://tests/theme_distribution_check.tscn
@@ -287,11 +285,11 @@ else
 	echo "!! 실패: 안 쓰이는 속성이 있습니다 (10% 미만) — 상성표가 한쪽으로 기울었습니다"; fail=1
 fi
 
-step "7-1. AdMob 설정·보상 콜백"
-python3 -m unittest discover -s tests -p test_admob_config.py > "$TMP/admob-config.log" 2>&1
-check $? "AdMob 환경 설정"
-godot_run 60 "$TMP/ads.log" res://tests/ads_check.tscn
-expect "AdMob 광고 종류·보상 콜백" "판정: 정상" "$TMP/ads.log"
+step "7-1. 광고 없는 실행·저장 호환"
+godot_run 120 "$TMP/no-ads.log" res://tests/no_ads_check.tscn
+expect "광고 없는 실행·저장 호환" "판정: 정상" "$TMP/no-ads.log"
+python3 -m unittest discover -s tests -p test_check_no_ads.py > "$TMP/no-ads-package.log" 2>&1
+check $? "APK 광고 SDK·권한 거부"
 
 step "8. 폰트에 없는 글자"
 python3 tools/check_font.py > "$TMP/font.log" 2>&1
@@ -308,12 +306,7 @@ if [ $QUICK -eq 0 ]; then
 	step "9. 안드로이드 APK"
 	# ★ APK 는 **홈 디렉터리**에 굽는다(사용자가 정한 것). 저장소 안(build/)에 두면
 	#   폰으로 옮길 때마다 경로를 찾아 들어가야 하고, 지운 줄 알았던 옛 APK 가 남는다.
-	# ★ 굽는 것은 tools/build_apk.sh 한 곳이다. 광고 플러그인이 들어오면서 Gradle 빌드가
-	#   됐고(use_gradle_build=true), 그것은 JDK 17(build/toolchains/jdk17)을 가리키는
-	#   **따로 둔 편집기 설정**(build/godot-config) 아래에서만 돈다 — 기본 설정의 Java 8 로
-	#   내보내면 Gradle 이 「JVM 11 이상」이라며 거절한다. 여기서 export 를 또 적으면
-	#   그 어긋남이 언젠가 되살아나므로, 서명·플러그인 매니페스트 검사까지 하는 그 대본에
-	#   통째로 맡기고 성공한 새 파일로만 기존 APK 를 교체한다.
+	# 검증 성공한 새 APK만 고정 경로로 교체한다.
 	APK="$HOME/sd-tst.apk"
 	if timeout --signal=TERM --kill-after=15 900 tools/build_apk.sh > "$TMP/apk.log" 2>&1 \
 			&& [ -s "$APK" ]; then

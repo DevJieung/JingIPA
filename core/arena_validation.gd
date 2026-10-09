@@ -86,7 +86,7 @@ static func valid(data: Dictionary) -> bool:
 			return false
 	if not data.get("rite") is Dictionary or not data["rite"].get("orbit") is Array or not data.get("summon_result") is Dictionary:
 		return false
-	for key in ["spins", "paid", "pulls"]:
+	for key in ["spins", "paid"]:
 		if not data["rite"].get(key) is int or data["rite"][key] < 0:
 			return false
 	if data["modal"] == "rite":

@@ -8,10 +8,6 @@
 
 config_version=5
 
-[admob]
-
-general/ios/enabled=false
-
 [application]
 
 config/name="스텔라 디펜스"
@@ -37,7 +33,6 @@ Save="*res://core/save.gd"
 I18n="*res://core/i18n.gd"
 Run="*res://core/run.gd"
 Sfx="*res://core/sound.gd"
-Ads="*res://core/ads.gd"
 Arena="*res://core/arena_run.gd"
 
 [display]
@@ -49,17 +44,9 @@ window/size/window_height_override=625
 window/stretch/mode="canvas_items"
 window/handheld/orientation=4
 
-[editor_plugins]
-
-enabled=PackedStringArray("res://addons/admob/plugin.cfg")
-
 [gui]
 
 theme/custom_font="res://core/fonts/RefugeSans-Bold.otf"
-
-[internationalization]
-
-locale/translations=PackedStringArray("res://addons/admob/gdscript/sample/translations/admob_sample.en.translation", "res://addons/admob/gdscript/sample/translations/admob_sample.pt_BR.translation", "res://addons/admob/gdscript/sample/translations/admob_sample.es.translation", "res://addons/admob/gdscript/sample/translations/admob_sample.zh_CN.translation", "res://addons/admob/gdscript/sample/translations/admob_sample.ja.translation")
 
 [physics]
 
@@ -72,12 +59,4 @@ renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
 anti_aliasing/quality/msaa_2d=2
-environment/defaults/default_clear_color=Color(0.13725491, 0.3647059, 0.28235295, 1)
-
-[rewards]
-
-android/card_change_unit_id="ca-app-pub-3940256099942544/5224354917"
-android/merge_restore_unit_id="ca-app-pub-3940256099942544/5354046379"
-android/revive_unit_id="ca-app-pub-3940256099942544/5354046379"
-android/crystal_unit_id="ca-app-pub-3940256099942544/5354046379"
-android/test_device_ids=PackedStringArray()
+environment/defaults/default_clear_color=Color(0.0627451, 0.12941177, 0.1764706, 1)

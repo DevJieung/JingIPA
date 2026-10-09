@@ -6,7 +6,6 @@ class_name DrawScreen
 ## 규칙(사용자가 정한 것 · core/rite.gd):
 ##  - 탄마다 생명 수정 둘레의 별 다섯이 한 번 돈다. **빛의 문 안에 든 별의 수가 곧 등급**이다.
 ##  - 맘에 안 들면 **문 밖의 별만** 다시 돌린다. 무료 횟수를 다 쓰면 골드를 낸다(두 배씩 오른다).
-##  - 광고를 보면 가장 바깥의 별 하나를 문 안으로 끌어온다.
 ##  - 확정하면 그 등급의 영웅이 쉰 명 중에서 **무작위로** 나온다. 4성부터 연출이 화려해진다.
 ##
 ## ★ **결과는 Run.orbit 이 이미 정했다.** 여기서 별이 도는 것은 연출이고, 멈추는 자리는
@@ -14,7 +13,7 @@ class_name DrawScreen
 ##   그래서 도는 중에도 단추는 바로 듣는다(누르면 별을 제자리에 세우고 처리한다).
 ## ★ 판은 game/rite_board.gd 가 그린다. 문의 폭 · 별의 자리는 전부 Rite 의 함수에서 온다.
 
-enum { PICK, REVEAL, SWAP, REVIVE_REWARD }
+enum { PICK, REVEAL, SWAP }
 
 ## 의식판의 한가운데. 큰 판 하나가 이 화면의 주인이다.
 const BOARD := Vector2(640, 400)
@@ -24,9 +23,8 @@ const HERO_AT := Vector2(414, 438)
 const SKY := Rect2(72, 92, 1136, 600)
 const LEFT := Rect2(96, 128, 264, 528)       ## 문 안의 별 — 지금 몇 성인가
 const RIGHT := Rect2(920, 128, 264, 528)     ## 별마다 문에 들 확률
-const RESPIN_RECT := Rect2(146, 702, 324, 68)
-const GO_RECT := Rect2(490, 698, 300, 76)
-const PULL_RECT := Rect2(810, 702, 324, 68)
+const RESPIN_RECT := Rect2(230, 702, 380, 68)
+const GO_RECT := Rect2(642, 702, 408, 68)
 
 ## 화면에 들어와 첫 별이 멈추기까지. 화면 전환의 페이드(0.28초)가 걷히는 시간을 품는다.
 const ENTRY_FIRST := 0.70
@@ -35,8 +33,6 @@ const RESPIN_FIRST := 0.42
 ## 별과 별 사이. 안쪽 별부터 멈추고, 문이 가장 좁은 바깥 별이 마지막이라 긴장이 끝에 온다.
 ## ★ 다섯이 다 서는 데 1.7초 안쪽이다. 한 판에 백 번 보는 화면이라 더 끌면 고문이다.
 const STOP_GAP := 0.24
-## 끌려오는 별(광고 · 조커)이 문 안에 닿기까지.
-const PULL_SEC := 0.60
 const JOKER_SEC := 0.40
 ## 별이 잠기는 번쩍임이 가시는 시간.
 const LOCK_SEC := 0.45
@@ -54,7 +50,6 @@ var fx := Fx.new()
 var hv := HeroView.new()
 var formation := FormationView.new()
 var fusion := FusionView.new()
-var revive_reward := ReviveRewardView.new()
 var formation_tab := true
 
 var state: int = PICK
@@ -73,17 +68,10 @@ var _leaving: bool = false
 var _sh: Vector2 = Vector2.ZERO
 
 ## 별마다의 움직임. **비어 있으면 그 별은 Run.orbit 의 제자리에 멈춰 서 있다.**
-##   {"from": 시작 각, "to": 끝 각(바퀴 수까지 풀어 쓴 값), "t0": 시작 시각, "dur": 초, "pull": 끌려오는가}
+##   {"from": 시작 각, "to": 끝 각(바퀴 수까지 풀어 쓴 값), "t0": 시작 시각, "dur": 초}
 var _move: Array[Dictionary] = []
 ## 별이 멈춘 시각. 잠기는 순간의 번쩍임에 쓴다.
 var _landed: Array[float] = []
-## 광고로 끌어오기를 청한 궤도와, 그 별이 서 있던 칸. 완료 콜백이 어느 별을 움직일지 여기서 안다.
-var _pull_ring: int = -1
-var _pull_from: int = -1
-## 광고 보상은 받았고 아직 끌려오는 모습을 안 보여 준 별. {"ring", "from"(각)} — 없으면 빈 것.
-## ★ 별은 이미 문 안으로 옮겨져 있다(Run.apply_ad_reward). 보상 알림이 문 자리를 덮고 있는
-##   동안은 옛 자리에 세워 두었다가, 알림이 걷히면 끌려오는 모습을 보여 준다.
-var _pulled: Dictionary = {}
 ## 확정 직전의 별 자리. 조커가 끌어온 별이 어디서 왔는지 연출이 안다.
 var _before: Array[int] = []
 ## 문 안의 별 수가 마지막으로 바뀐 시각 — 왼쪽 판의 별과 등급 글자가 그때 튄다.
@@ -98,7 +86,6 @@ func _init() -> void:
 
 
 func _ready() -> void:
-	Ads.completed.connect(_ad_completed)
 	set_process(true)
 	# ★ 이미 확정한 탄을 이어 하는 경우 — 연출은 건너뛰고 **편성 판부터** 연다.
 	#   영웅은 이미 받았으므로 뽑기 화면을 다시 띄우면 「결정!」을 한 번 더 누르게 되고,
@@ -110,17 +97,9 @@ func _ready() -> void:
 		state = SWAP
 		hv.new_id = String((result.get("unit", {}) as Dictionary).get("id", ""))
 		_focus_latest()
-		if bool(result.get("reward_pending", false)):
-			state = REVIVE_REWARD
-			revive_reward.begin(result)
 	elif Rite.valid(Run.orbit):
 		# 별이 돌다가 Run.orbit 의 자리에 차례로 멈춘다. 이어하기로 들어와도 같은 자리다.
 		_spin(_all_rings(), [])
-
-
-func _exit_tree() -> void:
-	if Ads.completed.is_connected(_ad_completed):
-		Ads.completed.disconnect(_ad_completed)
 
 
 # --------------------------------------------------------------------------- #
@@ -148,7 +127,7 @@ func _spin(rings: Array[int], was: Array[float]) -> void:
 			from = was[ring]
 			var rest := fposmod((to - from) * dir, TAU)
 			to = from + dir * (rest + TAU * ceilf(maxf(0.0, turns - rest / TAU)))
-		_move[ring] = {"from": from, "to": to, "t0": t, "pull": false,
+		_move[ring] = {"from": from, "to": to, "t0": t,
 				"dur": (ENTRY_FIRST if entry else RESPIN_FIRST) + STOP_GAP * float(order)}
 		order += 1
 	if order > 0:
@@ -168,14 +147,12 @@ func _pos(ring: int) -> int:
 
 ## 그 별을 지금 그릴 각. 멈춰 선 별은 언제나 Run.orbit 의 제자리다 — 화면이 따로 기억하지 않는다.
 func _angle(ring: int) -> float:
-	if int(_pulled.get("ring", -1)) == ring:
-		return float(_pulled["from"])
 	var move: Dictionary = _move[ring]
 	if move.is_empty():
 		return Rite.angle(ring, _pos(ring))
 	var k := clampf((t - float(move["t0"])) / float(move["dur"]), 0.0, 1.0)
-	# 도는 별은 끝으로 갈수록 느려져 문 앞에서 기어간다. 끌려오는 별은 부드럽게 당겨진다.
-	var eased := k * k * (3.0 - 2.0 * k) if bool(move["pull"]) else 1.0 - pow(1.0 - k, 3.0)
+	# 도는 별은 끝으로 갈수록 느려져 문 앞에서 기어간다.
+	var eased := 1.0 - pow(1.0 - k, 3.0)
 	return lerpf(float(move["from"]), float(move["to"]), eased)
 
 
@@ -185,15 +162,15 @@ func _sweep(ring: int) -> float:
 	if move.is_empty():
 		return 0.0
 	var k := clampf((t - float(move["t0"])) / float(move["dur"]), 0.0, 1.0)
-	var slope := 6.0 * k * (1.0 - k) if bool(move["pull"]) else 3.0 * pow(1.0 - k, 2.0)
+	var slope := 3.0 * pow(1.0 - k, 2.0)
 	return clampf((float(move["to"]) - float(move["from"])) * slope / float(move["dur"]) * 0.055, -1.3, 1.3)
 
 
-## 그 별의 지금 모습. 도는 별 · 아직 안 끌려온 별은 문 안으로 치지 않는다.
+## 그 별의 지금 모습. 도는 별은 문 안으로 치지 않는다.
 func _look(ring: int) -> int:
 	if not _move[ring].is_empty():
 		return RiteBoard.SPIN
-	if int(_pulled.get("ring", -1)) == ring or not Rite.valid(Run.orbit):
+	if not Rite.valid(Run.orbit):
 		return RiteBoard.OUT
 	return RiteBoard.look_of(ring, _pos(ring))
 
@@ -209,28 +186,24 @@ func _shown_stars() -> int:
 
 ## 별 하나가 멈췄다. 문 안이면 잠기는 소리가 별 수만큼 높아진다 — 몇 번째 별인지 귀로도 세어진다.
 func _land(ring: int, quiet: bool = false) -> void:
-	var pulled := bool(_move[ring].get("pull", false))
 	_move[ring] = {}
 	_landed[ring] = t
 	if not Rite.valid(Run.orbit):
 		return
 	var at := RiteBoard.slot_point(BOARD, ring, _pos(ring))
 	if Rite.in_gate(ring, _pos(ring)):
-		fx.ring(at, Look.GOLD, 12.0, 74.0 if pulled else 46.0, 0.42, 3.0)
-		fx.burst(at, Look.GOLD.lightened(0.3), 20 if pulled else 8, 150.0, 0.45, 3.0, 60.0)
-		if pulled:
-			Sfx.play("gain")
-		elif not quiet:
+		fx.ring(at, Look.GOLD, 12.0, 46.0, 0.42, 3.0)
+		fx.burst(at, Look.GOLD.lightened(0.3), 8, 150.0, 0.45, 3.0, 60.0)
+		if not quiet:
 			Sfx.force("block", -5.0, 0.84 + 0.12 * float(_shown_stars()))
 	elif not quiet:
 		Sfx.play("button", -16.0, 0.75)
 
 
 ## 도는 별을 전부 제자리에 세운다. **연출은 언제든 넘길 수 있어야 한다** — 백 탄을 도는
-## 게임에서 못 넘기는 연출은 고문이다. 끌려오기를 기다리던 별도 같이 세운다.
+## 게임에서 못 넘기는 연출은 고문이다.
 func skip_spin() -> void:
-	var any := not _pulled.is_empty()
-	_pulled = {}
+	var any := false
 	for ring in range(Rite.RINGS):
 		if not _move[ring].is_empty():
 			_land(ring, true)
@@ -239,27 +212,11 @@ func skip_spin() -> void:
 		Sfx.play("block", -6.0, 0.84 + 0.12 * float(_shown_stars()))
 
 
-## 광고 보상 알림이 화면 위쪽(가장 바깥 문이 있는 자리)을 덮고 있는가.
-## ★ Ads 에 물어볼 공개 함수가 없어서 알림의 남은 시간을 직접 읽는다. 값이 없으면 안 덮인 것으로 본다.
-func _notice_up() -> bool:
-	return Ads.busy or (bool(Ads.get("_reward_notice")) and float(Ads.get("_message_left")) > 0.0)
-
-
 func _step_stars() -> void:
 	for ring in range(Rite.RINGS):
 		var move: Dictionary = _move[ring]
 		if not move.is_empty() and t >= float(move["t0"]) + float(move["dur"]):
 			_land(ring)
-	# 광고로 받은 별 — 알림이 걷히면 옛 자리에서 문 안으로 끌려온다(가까운 쪽으로 돈다).
-	if not _pulled.is_empty() and not _notice_up():
-		var ring := int(_pulled["ring"])
-		var from := float(_pulled["from"])
-		_pulled = {}
-		if Rite.valid(Run.orbit):
-			_move[ring] = {"from": from, "t0": t, "dur": PULL_SEC, "pull": true,
-					"to": from + wrapf(Rite.angle(ring, _pos(ring)) - from, -PI, PI)}
-			fx.ring(BOARD, Look.CRYSTAL, 30.0, 110.0, 0.5, 3.0)
-			Sfx.play("summon_charge", -8.0, 1.3)
 	var shown := _shown_stars()
 	if shown != _tally:
 		_tally = shown
@@ -273,8 +230,6 @@ func _process(dt: float) -> void:
 	hv.update(dt)
 	if state == PICK:
 		_step_stars()
-	if state == REVIVE_REWARD:
-		revive_reward.update(dt)
 	if state == REVEAL:
 		rt += dt
 		_reveal_beats()
@@ -289,16 +244,7 @@ func _process(dt: float) -> void:
 ##   (motion) · 뗐다(release) 를 판에 그대로 넘기고, 판이 "굴린 것인지 고른 것인지"를
 ##   정한다(HeroView.release).
 func _input(e: InputEvent) -> void:
-	if Ads.busy or _leaving:
-		return
-	if state == REVIVE_REWARD:
-		if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT \
-				and ui.hit(e.position) == "revive:confirm" and revive_reward.ready():
-			if Run.acknowledge_revive_reward():
-				Sfx.play("button")
-				if main != null:
-					_leaving = true
-					main.go(main.go_shop)
+	if _leaving:
 		return
 	if hv.info >= 0:
 		hv.input(e, ui)
@@ -317,15 +263,13 @@ func _input(e: InputEvent) -> void:
 		if rt > 0.7:
 			_after_reveal()
 		return
-	# 의식판 — 단추 셋은 별이 도는 중에도 바로 듣는다. 빈 자리를 누르면 도는 별만 세운다.
+	# 의식판 — 단추 둘은 별이 도는 중에도 바로 듣는다. 빈 자리를 누르면 도는 별만 세운다.
 	match ui.hit(e.position):
 		"go":
 			Sfx.play("button")
 			_confirm()
 		"rite:respin":
 			_respin()
-		"rite:pull":
-			_request_pull()
 		_:
 			skip_spin()
 
@@ -343,34 +287,6 @@ func _respin() -> void:
 		return
 	_spin(moved, was)
 	fx.ring(BOARD, Look.CRYSTAL, 34.0, 104.0, 0.4, 3.0)
-
-
-## 보상형 광고 — 문 밖의 가장 바깥 별을 문 안으로 끌어온다. 무료 횟수 · 골드와 무관하다.
-func _request_pull() -> void:
-	if state != PICK or _leaving or Ads.busy:
-		return
-	skip_spin()
-	var ring := Run.pull_target()
-	if ring < 0:
-		return
-	_pull_ring = ring
-	_pull_from = _pos(ring)
-	if not Ads.request_reward("card", {"slot": ring}):
-		_pull_ring = -1
-
-
-func _ad_completed(kind: String, rewarded: bool) -> void:
-	if kind != "card" or _leaving or state != PICK or not is_inside_tree() \
-			or (main != null and main.screen != self):
-		return
-	var ring := _pull_ring
-	_pull_ring = -1
-	# ★ 보상은 Run 이 이미 적용했다(별은 문 안에 있다). 화면은 성공을 지어내지 않는다 —
-	#   그 별이 정말 문 안에 들었을 때만, 서 있던 자리에서 끌려오는 모습을 보여 준다.
-	if rewarded and ring >= 0 and Rite.valid(Run.orbit) and Rite.in_gate(ring, _pos(ring)) \
-			and _move[ring].is_empty():
-		_pulled = {"ring": ring, "from": Rite.angle(ring, _pull_from)}
-	queue_redraw()
 
 
 func _swap_input(e: InputEvent) -> void:
@@ -425,7 +341,7 @@ func _swap_input(e: InputEvent) -> void:
 
 
 func _confirm() -> void:
-	if Ads.busy or _leaving:
+	if _leaving:
 		return
 	# ★ 이미 확정한 탄이면 편성 판으로 보낸다. 그냥 돌아가면 「소환」이 죽은 단추가 되고
 	#   _leave() 가 state == PICK 을 거절하므로(아래) 그 판에서 나갈 길이 없어진다.
@@ -571,11 +487,6 @@ func _half_at(full: int) -> float:
 # --------------------------------------------------------------------------- #
 func _draw() -> void:
 	ui.begin()
-	if state == REVIVE_REWARD:
-		Look.camp_backdrop(self)
-		revive_reward.draw(self, ui)
-		_draw_topbar()
-		return
 	_sh = fx.shake_offset()
 	draw_set_transform(_sh, 0.0, Vector2.ONE)
 	_draw_bg()
@@ -632,7 +543,7 @@ func _panel(rect: Rect2) -> void:
 # --------------------------------------------------------------------------- #
 func _draw_pick() -> void:
 	var valid := Rite.valid(Run.orbit)
-	var settled := valid and not _spinning() and _pulled.is_empty()
+	var settled := valid and not _spinning()
 	var shown := _shown_stars()
 	# 지금 확정하면 나올 등급. 조커가 끌어올 별까지 센다(Run.rite_preview) — 화면이 「별 셋」이라
 	# 적어 놓고 4성을 내놓으면 안 된다. 별이 도는 동안에는 멈춘 별만 센다(결과를 미리 말하지 않는다).
@@ -647,11 +558,10 @@ func _draw_pick() -> void:
 		var angle := _angle(ring)
 		var at := RiteBoard.point(BOARD, ring, angle)
 		var look := _look(ring)
-		var pulling := bool(_move[ring].get("pull", false))
 		if look == RiteBoard.SPIN:
 			RiteBoard.draw_trail(self, BOARD, ring, angle, _sweep(ring), 1.0, 1.0,
-					Look.CRYSTAL if pulling else RiteBoard.LIGHT)
-		if look == RiteBoard.HELD or pulling:
+					RiteBoard.LIGHT)
+		if look == RiteBoard.HELD:
 			RiteBoard.draw_tether(self, BOARD, at, 1.0, t)
 		if ring == joker:
 			_draw_pull_hint(ring, angle)
@@ -727,7 +637,7 @@ func _guide_line(settled: bool) -> String:
 		return "다섯 별이 모두 문 안에 들었습니다!"
 	if Run.can_respin():
 		return "문 밖의 별 %d개만 다시 돕니다." % out
-	return "골드가 모자랍니다. 이대로 소환하거나 별을 끌어오세요."
+	return "빛의 문 안에 멈춘 별을 세어 보세요."
 
 
 func _chip(rect: Rect2, passive_id: String, label: String) -> void:
@@ -746,7 +656,7 @@ func _draw_odds(settled: bool, joker: int) -> void:
 	_panel(RIGHT)
 	Look.text_box(self, Rect2(RIGHT.position.x + 12, RIGHT.position.y + 12, RIGHT.size.x - 24, 32),
 			"별마다 문에 들 확률", 20, Look.INK_DIM)
-	var pull := Run.pull_target() if settled else -1
+
 	for row in range(Rite.RINGS):
 		var ring := Rite.RINGS - 1 - row
 		var box := Rect2(RIGHT.position.x + 10, RIGHT.position.y + 54 + row * 84, RIGHT.size.x - 20, 76)
@@ -772,16 +682,13 @@ func _draw_odds(settled: bool, joker: int) -> void:
 			if ring == joker:
 				status = "문 밖 · 조커가 끌어옴"
 				status_col = RiteBoard.LIGHT
-			elif ring == pull:
-				status = "문 밖 · 끌어올 별"
-				status_col = Look.CRYSTAL
 		Look.text_box(self, Rect2(box.position.x + 56, box.position.y + 43, box.size.x - 64, 26),
 				status, 17, status_col, HORIZONTAL_ALIGNMENT_LEFT)
 	Look.text_box(self, Rect2(RIGHT.position.x + 12, RIGHT.end.y - 46, RIGHT.size.x - 24, 32),
 			"문이 넓을수록 잘 듭니다", 17, Look.INK_DIM)
 
 
-## 단추 셋 — 다시 돌리기 · 소환 · 별 끌어오기. id 와 켜짐 조건은 검사기와의 약속이다.
+## 단추 둘 — 다시 돌리기 · 소환. id 와 켜짐 조건은 검사기와의 약속이다.
 func _draw_actions(settled: bool, preview: Dictionary) -> void:
 	var free := Run.respins_left()
 	var can := Run.can_respin()
@@ -808,8 +715,6 @@ func _draw_actions(settled: bool, preview: Dictionary) -> void:
 	var tier := int(preview.get("tier", -1))
 	ui.button(self, GO_RECT, "%s 소환" % Look.star_label(tier) if settled and tier >= 0 else "소환",
 			"go", true, Look.GOLD, 34)
-	ui.reward_button(self, PULL_RECT, "별 끌어오기", "rite:pull",
-			Run.pull_target() >= 0 and not Ads.busy, Look.CRYSTAL, 26)
 
 
 # --------------------------------------------------------------------------- #

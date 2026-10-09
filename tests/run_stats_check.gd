@@ -38,7 +38,6 @@ func _ready() -> void:
 	Run.add_lives(-Run.max_lives())
 	check(Run.phase == Run.Phase.OVER and is_equal_approx(Run.best_player()["damage"], 1085.0), "defeat includes damage from failed wave")
 	check(Run.restore(Save.cur_run) and is_equal_approx(Run.best_player()["damage"], 1085.0), "defeat result survives app restart")
-	check(Run.revive_wave() and is_equal_approx(Run.best_player()["damage"], 85.0), "revive rolls damage back with replayed wave checkpoint")
 	var old := Run.snapshot()
 	old.erase("hero_damage")
 	old.erase("owned_passives")

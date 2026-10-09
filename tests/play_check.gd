@@ -116,10 +116,10 @@ func _step_draw(w: int) -> void:
 	if Run.wave == 1 and Run.rite_stars() < Balance.RITE_FIRST_STARS:
 		_bad("1탄: 판의 첫 의식이 %d성으로 열렸다 (%d성 이상이어야 한다)" % [Run.rite_stars(), Balance.RITE_FIRST_STARS])
 	# ★ 무료 횟수는 **탄마다 새로 찬다.** 지난 탄에 쓴 횟수가 딸려 오면 2탄부터는 처음부터 골드를 낸다.
-	if Run.spins != 0 or Run.paid_spins != 0 or Run.pulls != 0 or Run.respins_left() != Run.free_rerolls():
-		_bad("%d탄: 새 의식인데 돌린 횟수가 남아 있다 (돌림 %d · 유료 %d · 끌어옴 %d · 무료 %d/%d)"
-				% [Run.wave, Run.spins, Run.paid_spins, Run.pulls, Run.respins_left(), Run.free_rerolls()])
-	for id in ["go", "rite:respin", "rite:pull"]:
+	if Run.spins != 0 or Run.paid_spins != 0 or Run.respins_left() != Run.free_rerolls():
+		_bad("%d탄: 새 의식인데 돌린 횟수가 남아 있다 (돌림 %d · 유료 %d · 무료 %d/%d)"
+				% [Run.wave, Run.spins, Run.paid_spins, Run.respins_left(), Run.free_rerolls()])
+	for id in ["go", "rite:respin"]:
 		if zone_of(main.screen, id).is_empty():
 			_bad("%d탄: 의식 화면에 %s 단추가 없다" % [Run.wave, id])
 	# 다시 돌리기 — 공짜가 남아 있다. 문 밖에 별이 있으면 눌러서 돌린다.
@@ -159,23 +159,9 @@ func _step_draw(w: int) -> void:
 		_bad("%d탄: 다시 돌렸는데 이어할 판에 안 담겼다 (앱을 껐다 켜면 공짜 횟수와 별 자리가 되살아난다) — 담긴 것 %s / 실제 %s"
 				% [Run.wave, str(Save.cur_run.get("rite", {})), str(Run.snapshot()["rite"])])
 
-	# 별 끌어오기(광고) — 문 밖에 별이 남아 있으면 골드 · 무료 횟수와 무관하게 켜져 있고,
-	# 다 들었으면 꺼져 있다.
-	u = await _paint()
-	var pull_zone := zone_of(main.screen, "rite:pull")
-	if not pull_zone.is_empty() and bool(pull_zone["on"]) != (Run.pull_target() >= 0):
-		_bad("%d탄: 별 끌어오기 단추가 %s 있는데 끌어올 별은 %d번이다"
-				% [Run.wave, "켜져" if bool(pull_zone["on"]) else "꺼져", Run.pull_target()])
 	var respin_zone := zone_of(main.screen, "rite:respin")
 	if not respin_zone.is_empty() and bool(respin_zone["on"]) != Run.can_respin():
 		_bad("%d탄: 다시 돌리기 단추의 켜짐이 규칙(can_respin %s)과 다르다" % [Run.wave, str(Run.can_respin())])
-	# ★ **보상은 광고를 끝까지 본 뒤에만 온다.** 이 기계에는 광고가 없으므로 눌러도 별은
-	#   그대로여야 하고, 광고 대기 화면이 입력을 잠근 채로 남아도 안 된다.
-	var rite_before: Dictionary = Run.snapshot()["rite"]
-	_tap(u, "rite:pull")
-	if Run.snapshot()["rite"] != rite_before or Ads.busy:
-		_bad("%d탄: 광고를 안 봤는데 별이 끌려왔거나 광고 대기가 걸렸다 (%s → %s · busy %s)"
-				% [Run.wave, str(rite_before), str(Run.snapshot()["rite"]), str(Ads.busy)])
 
 	u = await _paint()
 	var stars_shown := Run.rite_stars()
@@ -227,10 +213,9 @@ func _step_draw(w: int) -> void:
 	var gold_done := Run.gold
 	_tap(again, "go")
 	_tap(again, "rite:respin")
-	_tap(again, "rite:pull")
 	if Run.hero_total() != w + 1:
 		_bad("%d탄: 연출 중에 또 눌렀더니 영웅이 %d명이 됐다" % [Run.wave, Run.hero_total()])
-	if Run.snapshot()["rite"] != rite_done or Run.gold != gold_done or Ads.busy:
+	if Run.snapshot()["rite"] != rite_done or Run.gold != gold_done:
 		_bad("%d탄: 확정한 뒤에 의식 단추가 눌려서 별이나 골드가 바뀌었다" % Run.wave)
 	# ★ 확정하자마자 누른 것은 연출을 넘기지도 못한다 — 넘어가면 방금 무엇이 나왔는지 못 본다
 	#   (연출은 0.7초 뒤부터 넘길 수 있다).
@@ -279,7 +264,7 @@ func _to_battle_via_board(d, hold_ms: int = 900) -> void:
 		return
 	# 편성 판에는 의식 단추가 없어야 한다 — 남아 있으면 확정한 탄에서 또 돌리거나 또 소환한다.
 	await _paint()
-	for id in ["go", "rite:respin", "rite:pull"]:
+	for id in ["go", "rite:respin"]:
 		if bool(zone_of(main.screen, id).get("on", false)):
 			_bad("%d탄: 편성 판에 의식 단추 %s 가 켜진 채 남아 있다" % [Run.wave, id])
 	var u := await _paint()

@@ -35,7 +35,6 @@ func _ready() -> void:
 	Save.cur_run = {}
 	output = arg("--out", output)
 	DirAccess.make_dir_recursive_absolute(output)
-	Ads.set_process(false)
 	main = load("res://game/main.gd").new()
 	add_child(main)
 	Look.text_audit_enabled = true

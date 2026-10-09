@@ -29,28 +29,17 @@ var _bench_choice := -1
 var _field_choice := -1
 var _rite_age := 9.0
 var _spin_rings: Array = []
-var _pull_ring := -1
-var _pull_from := 0.0
-var _pull_draw_ring := -1
-var _pull_age := 9.0
-
 func _ready() -> void:
-	Ads.completed.connect(_ad_completed)
 	_theme_choice = clampi(Arena.theme_index, 0, maxi(0, Roster.THEMES.size() - 1))
 	_theme_page = _theme_choice / 12
 	_track_modal()
 
-func _exit_tree() -> void:
-	if Ads.completed.is_connected(_ad_completed):
-		Ads.completed.disconnect(_ad_completed)
-
 func _process(dt: float) -> void:
 	t += dt
 	_rite_age += dt
-	_pull_age += dt
 	_track_modal()
 	_draw_dt = 0.0
-	if Arena.sim != null and Arena.modal.is_empty() and not _menu_open() and not Ads.busy:
+	if Arena.sim != null and Arena.modal.is_empty() and not _menu_open():
 		Arena.sim.move_selected(_ground_direction(joystick), dt)
 		Arena.sim.step(dt)
 		_draw_dt = dt
@@ -75,8 +64,6 @@ func _track_modal() -> void:
 	_joy_pointer = -99
 	ui.pressed = ""
 	if Arena.modal == "rite" and previous != "rite":
-		_pull_ring = -1
-		_pull_draw_ring = -1
 		_start_spin(range(Rite.RINGS))
 		Sfx.play("flip")
 		Sfx.play_music("ritual")
@@ -92,7 +79,7 @@ func _start_spin(rings: Array) -> void:
 	_rite_age = 0.0
 
 func _input(e: InputEvent) -> void:
-	if _menu_open() or Ads.busy: return
+	if _menu_open(): return
 	if e is InputEventMouseButton and e.device < 0: return
 	if e is InputEventScreenTouch:
 		_pointer(e.index, e.position, e.pressed)
@@ -168,7 +155,6 @@ func _action(id: String) -> void:
 		Arena.confirm_summon()
 		_rite_age = 9
 		Sfx.play("summon_burst")
-	elif id == "rite:pull": _request_pull()
 	elif id.begins_with("shop:tab:"):
 		_shop_tab = id.get_slice(":", 2)
 	elif id.begins_with("upgrade:"): Arena.buy_upgrade(id.get_slice(":", 1))
@@ -194,27 +180,6 @@ func _action(id: String) -> void:
 	_track_modal()
 	queue_redraw()
 
-func _request_pull() -> void:
-	if Arena.modal != "rite" or Arena.phase != Arena.Phase.DRAW or Ads.busy: return
-	var ring := Arena.pull_target()
-	if ring < 0: return
-	_rite_age = 9
-	_pull_ring = ring
-	_pull_from = Rite.angle(ring, int(Arena.orbit[ring]))
-	if not Ads.request_reward("card", {"slot": ring}): _pull_ring = -1
-
-func _ad_completed(kind: String, rewarded: bool) -> void:
-	if kind != "card" or not is_inside_tree() or Arena.modal != "rite" \
-			or Arena.phase != Arena.Phase.DRAW or (main != null and main.screen != self): return
-	var ring := _pull_ring
-	_pull_ring = -1
-	if rewarded and ring >= 0 and Rite.valid(Arena.orbit) and Rite.in_gate(ring, int(Arena.orbit[ring])):
-		_pull_draw_ring = ring
-		_pull_age = 0
-		_rite_age = 9
-		Sfx.play("block", -6.0, 1.1)
-	queue_redraw()
-
 func _tr(key: String) -> String:
 	return Arena.label("arena." + key)
 
@@ -236,10 +201,10 @@ func _draw() -> void:
 		"result": _draw_result()
 
 func _draw_topbar(theme: Dictionary) -> void:
-	Look.fill_round(self, Rect2(0, 0, 1280, 75), 0, Look.PANEL)
-	draw_line(Vector2(0, 74), Vector2(1280, 74), Look.PANEL_EDGE, 2)
+	Look.material_panel(self, Rect2(8, 3, 1264, 72), Look.PANEL, Look.PANEL_EDGE)
+	draw_line(Vector2(24, 75), Vector2(1256, 75), Color(Look.CRYSTAL, 0.18), 1, true)
 	Look.text_box(self, Rect2(24, 10, 250, 30), _tr("title"), 25, Look.GOLD, HORIZONTAL_ALIGNMENT_LEFT)
-	Look.text_box(self, Rect2(350, 12, 210, 32), String(theme.get("en" if I18n.locale == "en" else "ko", "")), 23, Look.INK_DIM)
+	Look.text_box(self, Rect2(350, 12, 210, 32), String(theme.get("ko", "")), 23, Look.INK_DIM)
 	if Arena.sim == null: return
 	var sim = Arena.sim
 	Look.draw_crystal(self, Vector2(36, 55), 9, sim.crystal_hp > 0)
@@ -262,7 +227,7 @@ func _draw_topbar(theme: Dictionary) -> void:
 			break
 
 func _draw_controls() -> void:
-	Look.fill_round(self, Rect2(0, 572, 1280, 228), 0, Look.BG_DEEP)
+	Look.material_panel(self, Rect2(8, 572, 1264, 224), Look.PANEL.darkened(0.34), Look.PANEL_EDGE)
 	draw_line(Vector2(24, 572), Vector2(1256, 572), Look.PANEL_EDGE, 1)
 	var active := Arena.modal.is_empty() and Arena.sim != null and not Arena.sim.done
 	draw_circle(JOY_CENTER + Vector2(0, 3), JOY_RADIUS + 7, Color(0, 0, 0, 0.45))
@@ -346,7 +311,7 @@ func _draw_monster_bars() -> void:
 func _shade() -> void:
 	draw_rect(Look.SCREEN, Color(0.025, 0.05, 0.075, 0.80))
 	ui.zone(Look.SCREEN, "modal:block")
-	Look.material_panel(self, MODAL, Color("#182b32"), Look.PANEL_EDGE)
+	Look.material_panel(self, MODAL, Look.PANEL, Look.PANEL_EDGE)
 	Look.fill_round(self, Rect2(1002, 100, 174, 31), 4, Color("#2d4246"))
 	Look.text_box(self, Rect2(1008, 102, 162, 25), _tr("pause"), 17, Look.GOLD)
 
@@ -362,11 +327,10 @@ func _draw_themes() -> void:
 		var theme: Dictionary = Roster.THEMES[index]
 		var rect := Rect2(64 + (n % 4) * 292, 216 + (n / 4) * 124, 276, 108)
 		var selected := index == _theme_choice
-		Look.outline_round(self, rect, 5, Look.GOLD if selected else Look.PANEL_EDGE, 2 if selected else 1)
-		Look.fill_round(self, rect, 5, Color("#31464e") if selected else Color("#17282e"))
+		Look.material_panel(self, rect, Look.PANEL.lightened(0.10) if selected else Look.PANEL.darkened(0.15), Look.GOLD if selected else Look.PANEL_EDGE)
 		var body := String(theme.get("main_body", "wood"))
 		Look.draw_body(self, rect.position + Vector2(28, 31), 16, body)
-		Look.text_box(self, Rect2(rect.position + Vector2(52, 10), Vector2(210, 45)), String(theme.get("en" if I18n.locale == "en" else "ko", "")), 24, Look.INK, HORIZONTAL_ALIGNMENT_LEFT)
+		Look.text_box(self, Rect2(rect.position + Vector2(52, 10), Vector2(210, 45)), String(theme.get("ko", "")), 24, Look.INK, HORIZONTAL_ALIGNMENT_LEFT)
 		Look.text_box(self, Rect2(rect.position + Vector2(20, 65), Vector2(238, 27)), Balance.body_ko(body), 18, Look.INK_DIM, HORIZONTAL_ALIGNMENT_LEFT)
 		if selected: Look.draw_brackets(self, rect.grow(3), 15, Look.GOLD, 3)
 		ui.zone(rect, "theme:%d" % index)
@@ -393,24 +357,20 @@ func _draw_rite() -> void:
 		var q := clampf(_rite_age / duration, 0, 1)
 		var spinning := ring in _spin_rings and q < 1
 		var angle := final_angle + (1.0 if ring % 2 == 0 else -1.0) * TAU * pow(1 - q, 3) * 2.2 if spinning else final_angle
-		if ring == _pull_draw_ring and _pull_age < DrawScreen.PULL_SEC:
-			var pull_q := clampf(_pull_age / DrawScreen.PULL_SEC, 0, 1)
-			angle = lerp_angle(_pull_from, final_angle, 1 - pow(1 - pull_q, 3))
 		var at := RiteBoard.point(center, ring, angle, scale_value)
 		if spinning: RiteBoard.draw_trail(self, center, ring, angle, 0.34, scale_value)
 		RiteBoard.draw_star(self, at, RiteBoard.SPIN if spinning else RiteBoard.look_of(ring, int(Arena.orbit[ring])), scale_value, t)
 	var preview: Dictionary = Arena.rite_preview()
-	Look.fill_round(self, Rect2(752, 242, 352, 337), 7, Color("#112229"))
+	Look.material_panel(self, Rect2(736, 244, 384, 374), Look.BG_DEEP.lerp(Look.PANEL, 0.45), Look.PANEL_EDGE)
 	Look.text_box(self, Rect2(782, 271, 292, 38), _tr("free_summon") if Arena.heroes.is_empty() else _tr("heroes"), 23, Look.INK_DIM)
 	Look.draw_rarity(self, Vector2(928, 345), int(preview.get("tier", 1)), 15)
 	Look.text_box(self, Rect2(782, 368, 292, 57), Look.star_label(int(preview.get("tier", 1))), 45, Look.GOLD)
-	Look.text_box(self, Rect2(782, 452, 292, 29), _tr("growth_points"), 20, Look.INK_DIM)
+	Look.text_box(self, Rect2(782, 452, 292, 29), "문 안의 별 %d개" % int(preview.get("stars", 1)), 20, Look.INK_DIM)
 	Look.text_box(self, Rect2(782, 494, 292, 42), _tr("summons_cost") + "  %d G" % (0 if Arena.summon_count == 0 else Arena.summon_cost()), 20, Look.INK_DIM)
-	ui.reward_button(self, Rect2(766, 603, 330, 54), "별 끌어오기", "rite:pull", Arena.pull_target() >= 0 and not Ads.busy, Look.CRYSTAL, 22)
 	var cost := Arena.respin_cost()
 	var suffix := "무료 %d" % Arena.respins_left() if cost == 0 else "%d G" % cost
-	ui.button(self, Rect2(168, 686, 362, 55), I18n.t("다시 돌리기") + "  " + I18n.t(suffix), "rite:respin", Arena.can_respin(), Look.GREEN, 22)
-	ui.button(self, Rect2(662, 686, 442, 55), _tr("summon_confirm"), "rite:confirm", not Arena.eligible_units().is_empty(), Look.GOLD, 25)
+	ui.button(self, Rect2(168, 678, 416, 62), I18n.t("다시 돌리기") + "  " + I18n.t(suffix), "rite:respin", Arena.can_respin(), Look.GREEN, 22)
+	ui.button(self, Rect2(616, 678, 488, 62), _tr("summon_confirm"), "rite:confirm", not Arena.eligible_units().is_empty(), Look.GOLD, 25)
 
 func _draw_summon_result() -> void:
 	var result: Dictionary = Arena.summon_result

@@ -92,7 +92,7 @@ func _process(dt: float) -> void:
 	if not _on:
 		return
 	sync_music()
-	if _app_paused or Ads.busy or not Save.music:
+	if _app_paused or not Save.music:
 		return
 	_music_fade = minf(MUSIC_FADE, _music_fade + dt)
 	var ratio := _music_fade / MUSIC_FADE
@@ -119,11 +119,9 @@ func stop_effects() -> void:
 
 
 func sync_music() -> void:
-	var paused := _app_paused or Ads.busy or not Save.music
+	var paused := _app_paused or not Save.music
 	for p in _music_players:
 		p.stream_paused = paused
-	if Ads.busy:
-		stop_effects()
 
 
 func play_music(id: String) -> void:
@@ -151,7 +149,7 @@ func play_music(id: String) -> void:
 ## ★ pitch 를 살짝 흔들면 같은 소리가 이어져도 기계처럼 안 들린다. 발사음처럼
 ##   초당 열 번 나는 것에는 이것이 있고 없고가 크다.
 func play(id: String, vol: float = 0.0, pitch: float = 1.0, jitter: float = 0.0) -> void:
-	if not _on or not Save.sfx or _app_paused or Ads.busy or id == "":
+	if not _on or not Save.sfx or _app_paused or id == "":
 		return
 	var now: float = float(Time.get_ticks_msec()) * 0.001
 	var gap: float = float(GAP.get(id, DEFAULT_GAP))

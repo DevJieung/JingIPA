@@ -58,7 +58,7 @@ func _input(e: InputEvent) -> void:
 		if hv.info < 0 and hv.sel >= 0:
 			hero_info_tab = true
 		return
-	if Ads.busy or fusion.input(e, ui):
+	if fusion.input(e, ui):
 		return
 	if tab == "f":
 		if hero_info_tab and hv.input(e, ui):

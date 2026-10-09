@@ -41,6 +41,17 @@ func build_map(theme: Dictionary) -> void:
 	soil_material.set_shader_parameter("moss_color", moss)
 	soil_material.set_shader_parameter("motif_seed", float(absi(id.hash()) % 1000))
 	soil.material_override = soil_material
+	# A low stone frame carries the same cool metal and brass inlay as the HUD.
+	# It remains outside the playable ground and never occludes spawn silhouettes.
+	var rim := ground.lerp(Color("#9ab1c1"), 0.38)
+	for side in [-1, 1]:
+		StellarModels.part(terrain, "box", Vector3(side * 8.42, 0.01, 0), Vector3(0.18, 0.15, 13.5), rim, 0.16)
+		StellarModels.part(terrain, "box", Vector3(0, 0.01, side * 6.70), Vector3(16.9, 0.15, 0.18), rim, 0.16)
+		for n in range(7):
+			var offset := (n - 3) * 2.12
+			StellarModels.part(terrain, "box", Vector3(offset, 0.105, side * 6.70), Vector3(0.16, 0.035, 0.19), Color("#d7b476"), 0.36)
+		for n in range(5):
+			StellarModels.part(terrain, "box", Vector3(side * 8.42, 0.105, (n - 2) * 2.22), Vector3(0.19, 0.035, 0.16), Color("#d7b476"), 0.36)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = absi(id.hash())
 	# Quiet low relief inside the arena. Trees and large motifs frame its outside.
@@ -55,7 +66,7 @@ func build_map(theme: Dictionary) -> void:
 		_tree(terrain, Vector3((n - 6) * 1.25, 0, -7.0), 0.50 + rng.randf() * 0.2, moss.darkened(0.32), body == "frost")
 	_landmark(terrain, String(Scenery.MAP_MOTIFS.get(id, "gravel")), body, moss, rng)
 	for ring in range(3):
-		StellarModels.part(terrain, "cylinder", Vector3(0, 0.08 + ring * 0.055, 0), Vector3(1.95 - ring * 0.22, 0.11, 1.95 - ring * 0.22), Color("#41576b").lightened(ring * 0.045))
+		StellarModels.part(terrain, "cylinder", Vector3(0, 0.08 + ring * 0.055, 0), Vector3(1.95 - ring * 0.22, 0.11, 1.95 - ring * 0.22), Color("#344b5e").lightened(ring * 0.065))
 	StellarModels.part(terrain, "ring", Vector3(0, 0.25, 0), Vector3(1.63, 0.035, 1.63), Color("#99d5d9"), 0.35, 0.25)
 	for side in [-1, 1]:
 		for z in [-5.8, 5.8]: _lantern(terrain, Vector3(side * 8.0, 0, z), 0.8)

@@ -4,22 +4,22 @@ class_name Look
 ## 색 · 글꼴 · 공통 표식(별 · 속성 · 패시브 문양) 그리기.
 ## 화면들이 저마다 색을 짓지 않게 여기 한곳에 모은다.
 ##
-## 도트 그림과 UI 소재는 Krea로, 읽어야 하는 글자와 도형 표식은 코드로 그린다.
+## 실제 3D 전장과 같은 청흑색 금속·황동·수정빛을 코드 기반 UI에 공유한다.
 ## ★ 포커 시절의 트럼프 카드 · 판타지 문장 카드 그리기는 2026-10-07 에 통째로 걷어냈다
 ##   (뽑기가 별맞춤 의식으로 바뀌었다 — game/rite_board.gd). 등급은 어디서나 별이다.
 
 # 밤의 야영지. 배경은 아주 어둡게 깔고 별빛과 금색만 튀게 한다.
-const BG        := Color("#101b20")
-const BG_DEEP   := Color("#0a1117")
-const PANEL     := Color("#233033")
-const PANEL_EDGE := Color("#746347")
+const BG        := Color("#10212d")
+const BG_DEEP   := Color("#080f19")
+const PANEL     := Color("#172c3b")
+const PANEL_EDGE := Color("#536a7a")
 const NIGHT      := Color("#0c1722")  ## 의식판을 놓는 밤하늘 판
 const NIGHT_EDGE := Color("#060d14")
 
-const INK       := Color("#f4efe4")   ## 밝은 글자
-const INK_DIM   := Color("#c8d2cb")
-const GOLD      := Color("#f6c445")
-const GOLD_DEEP := Color("#a97b12")
+const INK       := Color("#f3f3e9")   ## 밝은 글자
+const INK_DIM   := Color("#b9cad3")
+const GOLD      := Color("#edc879")
+const GOLD_DEEP := Color("#957041")
 const RED       := Color("#e2415a")
 const BLUE      := Color("#4aa3ff")
 const GREEN     := Color("#5ad07a")
@@ -32,7 +32,7 @@ const WALL_DARK  := Color("#241f36")   ## 벽 그림자
 const LANE       := Color("#1c1730")   ## 몬스터가 걷는 길
 const LANE_EDGE  := Color("#2b2445")   ## 길에 그은 줄
 const YARD       := Color("#123527")   ## 영웅이 선 전장(초록 천)
-const GATE       := Color("#f6c445")   ## 문
+const GATE       := Color("#edc879")   ## 문
 const CRYSTAL      := Color("#5fe6ff")
 const CRYSTAL_DEEP := Color("#1f7fa8")
 const CRYSTAL_DEAD := Color("#3a3450")
@@ -53,7 +53,7 @@ const ICE_DEEP := Color("#59bfe6")
 ##   막대인가」를 매번 다시 찾아야 한다. 속성은 줄머리의 동그라미가 따로 말한다.
 ## ★ GOLD(합계·골드) · GREEN(초당 피해) · RED(위험) · CRYSTAL(목숨)과 겹치지 않게 골랐다.
 const DMG_WEAK   := Color("#ff8a3c")   ## 2배 — 뜨거운 주황
-const DMG_NORMAL := Color("#f4efe4")   ## 보통 — 흰 글자와 같은 색
+const DMG_NORMAL := Color("#f3f3e9")   ## 보통 — 흰 글자와 같은 색
 const DMG_RESIST := Color("#847bA2")   ## 반감 — 식은 잿빛
 
 ## 등급별 색 — 반 별 단위의 열 칸(Balance.TIER_ATK). 낮으면 수수하게, 높으면 눈이 부시게.
@@ -76,10 +76,7 @@ const TIER_COLOR := [
 ## 화면 전체. 덮개·섬광·터치 자리처럼 「화면 통째로」를 뜻하는 곳이 전부 이것을 쓴다.
 const SCREEN := Rect2(0, 0, 1280, 800)
 
-## 도트 한 칸의 크기. 판때기와 뽑기 화면의 바탕 도형을 **이 격자에 맞춰** 그린다.
-## ★ 사용자가 정한 것: 「뽑는 화면도 2D 픽셀로, 디자인적으로 이질감이 안 느껴지게」.
-##   캐릭터·몬스터는 96~141px 도트 그림이라 한 칸이 대략 3~4px 로 보인다. 판때기만
-##   매끈한 벡터로 그리면 같은 화면 안에서 **다른 게임 두 개**처럼 보인다.
+## Legacy particle helpers retain their sampling grid; UI surfaces do not snap.
 const PX := 4.0
 
 ## 좌표를 도트 격자에 맞춘다. 반올림이 아니라 **내림**이다 — 반올림하면 같은 도형이
@@ -98,23 +95,10 @@ static func snap_rect(r: Rect2, g: float = PX) -> Rect2:
 	return Rect2(a, b - a)
 
 
-## 도트 판때기 — 계단 모서리 · 두꺼운 테두리 · 위쪽 하이라이트.
-## ★ 둥근 모서리(fill_round)는 원을 네 개 그려서 매끈하다. 도트 화면에서는 그것이
-##   곧 이질감이라, 모서리를 **한 칸씩 깎은 팔각**으로 만든다.
+## Legacy call sites use the same smooth bevel as the native 3D presentation.
 static func px_panel(ci: CanvasItem, rect: Rect2, face: Color, edge: Color,
 		lip: float = 0.0) -> void:
-	var r := snap_rect(rect)
-	var g := PX
-	# 테두리 — 바깥으로 한 칸.
-	ci.draw_rect(Rect2(r.position + Vector2(g, 0), Vector2(r.size.x - g * 2.0, r.size.y)), edge)
-	ci.draw_rect(Rect2(r.position + Vector2(0, g), Vector2(r.size.x, r.size.y - g * 2.0)), edge)
-	var i := Rect2(r.position + Vector2(g, g), r.size - Vector2(g * 2.0, g * 2.0))
-	ci.draw_rect(Rect2(i.position + Vector2(g, 0), Vector2(i.size.x - g * 2.0, i.size.y)), face)
-	ci.draw_rect(Rect2(i.position + Vector2(0, g), Vector2(i.size.x, i.size.y - g * 2.0)), face)
-	if lip > 0.0:
-		# 위쪽 한 줄만 밝게 — 이 한 줄이 있어야 납작한 네모가 아니라 판때기로 보인다.
-		ci.draw_rect(Rect2(i.position + Vector2(g, g), Vector2(i.size.x - g * 2.0, g)),
-				face.lightened(lip))
+	material_panel(ci, rect, face, edge)
 
 static func tier_color(t: int) -> Color:
 	return TIER_COLOR[clampi(t, 0, TIER_COLOR.size() - 1)]
@@ -143,8 +127,8 @@ static func hero_card_edge(element: String) -> Color:
 
 
 static func hero_card_panel(ci: CanvasItem, rect: Rect2, element: String) -> void:
-	fill_round(ci, rect, 5, hero_card_edge(element))
-	fill_round(ci, rect.grow(-3), 4, hero_card_face(element))
+	material_panel(ci, rect, hero_card_face(element), hero_card_edge(element))
+	ci.draw_line(rect.position + Vector2(12, 2), Vector2(rect.end.x - 12, rect.position.y + 2), hero_card_edge(element).lightened(0.3), 2, true)
 
 
 ## 꼭짓점이 위를 보는 별 다섯 개짜리 꼭짓점 열 개. `inner` 는 골의 깊이(바깥 반지름 대비).
@@ -190,8 +174,7 @@ static func draw_rarity_fit(ci: CanvasItem, box: Rect2, tier: int, radius: float
 
 ## 속성을 한 글자로. 칸이 40px 도 안 되는 자리에 「무상성」을 쓸 수는 없다.
 ##
-## ★ 지금은 **그림이 먼저다**(아래 ELEM_ART). 이 글자는 그림이 없을 때의 되돌림 길이다 —
-##   지우지 마라(CLAUDE.md 18-1·10-12 와 같은 규칙).
+## 도형을 쓰기 어려운 텍스트 목록을 위한 짧은 이름이다.
 const ELEM_CHAR := {"none": "무", "fire": "불", "ice": "얼", "elec": "전", "water": "물"}
 ## 몸을 한 글자로. 「나무」·「바위」는 두 자라 한 자로 줄인다.
 const BODY_CHAR := {"aqua": "물", "flame": "불", "wood": "나", "rock": "바", "frost": "얼"}
@@ -215,80 +198,80 @@ static func draw_monster_chip(ci: CanvasItem, at: Vector2, monster: Dictionary, 
 	return w
 
 
-## 속성 아이콘 그림. **공격 속성 다섯**과 **몸 다섯**이 그림 일곱 장을 나눠 쓴다 —
-## 물몸(aqua)과 물 공격은 같은 물방울이고, 나무·바위는 공격 속성이 없어서 저만 쓴다.
-##
-## ★ 사용자가 정한 것: 「불 물 이런식으로 말고 아이콘으로 표기해줘 이것도 이미지생성해서」.
-## ★ **몸과 공격을 같은 그림으로 두는 것이 맞다.** 불 아이콘 옆에 불 아이콘이 서면
-##   그것이 곧 「불은 불에 반만 들어간다」라서, 그림 두 벌을 따로 뽑는 것보다 규칙이
-##   빨리 읽힌다. 대신 **테두리 모양으로** 둘을 가른다 — draw_elem 은 동그라미,
-##   draw_body 는 네모다(아래 주석).
-const ELEM_ART := {"none": "el_none", "fire": "el_fire", "ice": "el_ice",
-	"elec": "el_elec", "water": "el_water"}
-const BODY_ART := {"aqua": "el_water", "flame": "el_fire", "wood": "el_wood",
-	"rock": "el_rock", "frost": "el_ice"}
-## 아이콘 그림 한 장의 실제 크기(px). 화면에서는 반지름에 맞춰 줄여 그린다.
+## Element emblems are small faceted metal inlays, consistent with the real 3D art.
+## A circle means attack element; a rounded square means the monster's body.
 const ELEM_PX := 32.0
 
-
-## 속성 표시 한 개 — **동그라미 받침 위의 아이콘 한 장**.
-##
-## ★ 왜 그림인가: 예전에는 속성 색 동그라미 안에 한글 한 자였다. 그런데 몬스터 옆에
-##   화상 불꽃이 타고 있으면 그 몬스터가 불속성으로 보이는 것처럼, 글자 한 자는
-##   「무엇의 이름인가」를 말하지 못한다. 그림은 옆에 무엇이 있든 제 뜻을 지킨다.
-## ★ 받침을 어둡게 까는 까닭: 테마 바닥이 그림 백 장이라 어떤 곳은 밝고 어떤 곳은
-##   어지럽다. 받침이 없으면 밝은 바닥 위에서 아이콘이 통째로 사라진다
-##   (무늬 밑에 받침을 까는 것과 같은 뜻이다 — battle_screen._aura_mark).
-## ★ **그림이 없어도 게임이 돌아야 한다**(CLAUDE.md 18-1). 없으면 예전 그대로
-##   속성 색 동그라미에 한 글자다 — 그 가지를 지우지 마라.
 static func draw_elem(ci: CanvasItem, c: Vector2, r: float, e: String) -> void:
 	if r < 3.0:
 		return
-	# 받침은 아이콘보다 조금 넓게. 아이콘은 네모라 모서리가 1.49r 까지 나가는데,
-	# 받침이 그보다 훨씬 좁으면 밝은 바닥에서 모서리 몇 점이 배경에 녹는다.
-	if e != "elec":
-		ci.draw_circle(c, r + 2.2, BG_DEEP)
-	if _icon(ci, c, r, String(ELEM_ART.get(e, ""))):
-		return
-	var col := Color(String(Balance.ELEM.get(e, Balance.ELEM["none"])["color"]))
-	ci.draw_circle(c, r, col)
-	var sz := int(r * 1.5)
-	if sz >= 9:
-		text_center(ci, c, elem_char(e), sz, BG_DEEP)
+	var col := Balance.elem_color(e)
+	ci.draw_circle(c + Vector2(0, 1), r + 2, BG_DEEP, true, -1, true)
+	ci.draw_circle(c, r + 1, col.darkened(0.50), true, -1, true)
+	ci.draw_circle(c, r, BG_DEEP.lerp(col, 0.10), true, -1, true)
+	_element_glyph(ci, c, r * 0.79, e, col)
 
-
-## **몬스터의 몸** 표시 한 개 — 네모 받침 위의 아이콘 한 장.
-##
-## ★ 사용자가 정한 것: 「몬스터의 속성을 표기해주자」. 예전에는 몬스터 옆에 「무엇에
-##   약한가」만 붙어 있었고 **그 몬스터가 무엇인지는 어디에도 없었다.** 그래서 화상
-##   불꽃이 붙은 몬스터가 불 몬스터로 보였다.
-## ★ **네모다.** 공격 속성(draw_elem)은 동그라미이므로, 같은 불 아이콘이라도 네모면
-##   「이 몬스터는 불이다」이고 동그라미면 「불이 잘 든다」다. 모양으로 안 가르면
-##   나무 몬스터 옆의 불·얼음 동그라미와 몸 아이콘이 한 줄로 뭉쳐서, 몸이 약점으로
-##   읽힌다. (테마 판의 범례가 이 규칙을 글로도 적어 둔다)
 static func draw_body(ci: CanvasItem, c: Vector2, r: float, body: String) -> void:
 	if r < 3.0:
 		return
 	var col := Balance.body_color(body)
-	var box := Rect2(c.x - r - 2.0, c.y - r - 2.0, (r + 2.0) * 2.0, (r + 2.0) * 2.0)
-	fill_round(ci, box, r * 0.42, Color(col.r * 0.42, col.g * 0.42, col.b * 0.42, 1.0))
-	fill_round(ci, box.grow(-1.5), r * 0.36, BG_DEEP)
-	if _icon(ci, c, r, String(BODY_ART.get(body, ""))):
+	var box := Rect2(c - Vector2.ONE * (r + 2), Vector2.ONE * (r + 2) * 2)
+	fill_round(ci, box, r * 0.21, col.darkened(0.45))
+	fill_round(ci, box.grow(-1), r * 0.16, BG_DEEP.lerp(col, 0.08))
+	var glyph := String({"aqua": "water", "flame": "fire", "frost": "ice"}.get(body, body))
+	_element_glyph(ci, c, r * 0.82, glyph, col)
+
+static func _element_glyph(ci: CanvasItem, c: Vector2, r: float, glyph: String, color: Color) -> void:
+	var light := color.lightened(0.36)
+	var stroke := maxf(1.1, r * 0.18)
+	if glyph == "ice":
+		for i in range(6):
+			var direction := Vector2.from_angle(i * TAU / 6)
+			var normal := direction.orthogonal()
+			ci.draw_line(c, c + direction * r, light, stroke, true)
+			ci.draw_line(c + direction * r * 0.52, c + direction * r * 0.76 + normal * r * 0.25, color, stroke, true)
+			ci.draw_line(c + direction * r * 0.52, c + direction * r * 0.76 - normal * r * 0.25, color, stroke, true)
 		return
-	ci.draw_circle(c, r * 0.86, col)
-	var sz2 := int(r * 1.4)
-	if sz2 >= 9:
-		text_center(ci, c, body_char(body), sz2, BG_DEEP)
-
-
-## 아이콘 그림 한 장을 c 한가운데에 놓는다. 그림이 없으면 거짓.
-##
-## ★ Art.draw_at 은 **발밑**이 기준이라 c.y 에 반쪽 높이를 더해야 한가운데에 온다.
-static func _icon(ci: CanvasItem, c: Vector2, r: float, key: String) -> bool:
-	if key == "":
-		return false
-	var s: float = r * 2.1
-	return Art.draw_fill(ci, String(Roster.ART.get(key, "")), Rect2(c - Vector2.ONE * s * 0.5, Vector2.ONE * s))
+	if glyph == "none":
+		for side in [-1, 1]:
+			var tip := c + Vector2(side * 0.72, -0.86) * r
+			var hilt := c + Vector2(-side * 0.65, 0.78) * r
+			var guard := tip.lerp(hilt, 0.72)
+			ci.draw_line(tip, hilt, light, stroke * 1.2, true)
+			ci.draw_line(guard + Vector2(-side, -0.75) * r * 0.22, guard + Vector2(side, 0.75) * r * 0.22, GOLD, stroke, true)
+		return
+	var points := PackedVector2Array()
+	match glyph:
+		"water":
+			points.append(c + Vector2(0, -r * 1.08))
+			for i in range(25):
+				var angle := lerpf(-0.3, PI + 0.3, i / 24.0)
+				points.append(c + Vector2(cos(angle) * r * 0.72, sin(angle) * r * 0.72 + r * 0.20))
+		"fire":
+			for v in [Vector2(0.22, -1.08), Vector2(0.38, -0.36), Vector2(0.70, -0.55), Vector2(0.83, 0.23), Vector2(0.48, 0.88), Vector2(-0.43, 0.88), Vector2(-0.78, 0.38), Vector2(-0.64, -0.22), Vector2(-0.30, 0.03), Vector2(-0.24, -0.63)]:
+				points.append(c + v * r)
+		"elec":
+			for v in [Vector2(0.20, -1.08), Vector2(-0.72, 0.18), Vector2(-0.09, 0.18), Vector2(-0.26, 1.08), Vector2(0.78, -0.26), Vector2(0.08, -0.26)]:
+				points.append(c + v * r)
+		"wood":
+			for v in [Vector2(0.77, -0.99), Vector2(0.84, -0.03), Vector2(0.38, 0.69), Vector2(-0.35, 0.76), Vector2(-0.78, 0.32), Vector2(-0.66, -0.36)]:
+				points.append(c + v * r)
+		"rock":
+			for v in [Vector2(-0.54, -0.84), Vector2(0.42, -0.94), Vector2(0.87, -0.20), Vector2(0.76, 0.72), Vector2(-0.63, 0.85), Vector2(-0.91, 0.10)]:
+				points.append(c + v * r)
+		_:
+			points = star_points(c, r, 0.48)
+	ci.draw_colored_polygon(points, color)
+	var outline := points.duplicate()
+	outline.append(points[0])
+	ci.draw_polyline(outline, light, maxf(0.7, stroke * 0.46), true)
+	if glyph == "wood":
+		ci.draw_line(c + Vector2(-0.76, 0.95) * r, c + Vector2(0.55, -0.68) * r, light, stroke, true)
+	elif glyph == "rock":
+		var facet := c + Vector2(-0.12, -0.05) * r
+		ci.draw_colored_polygon(PackedVector2Array([points[0], points[1], facet, points[4]]), Color(light, 0.72))
+	else:
+		ci.draw_line(c + Vector2(-0.22, -0.12) * r, c + Vector2(-0.29, 0.40) * r, Color(light, 0.82), stroke, true)
 
 
 ## **면역**을 나타내는 글리프. 속성 동그라미에 어두운 빗금 하나를 긋는다.
@@ -316,25 +299,37 @@ static func hp_color(k: float) -> Color:
 
 
 ## 모서리가 둥근 사각형을 채운다. Godot 에는 이 기본 함수가 없다.
+static var _surface_cache: Dictionary = {}
+
+static func _surface(color: Color, radius: float) -> StyleBoxFlat:
+	var key := "%s:%.1f" % [color.to_html(), radius]
+	if not _surface_cache.has(key):
+		if _surface_cache.size() >= 512:
+			_surface_cache.clear()
+		var style := StyleBoxFlat.new()
+		style.bg_color = color
+		style.set_corner_radius_all(roundi(radius))
+		style.corner_detail = 8
+		style.anti_aliasing = true
+		_surface_cache[key] = style
+	return _surface_cache[key]
+
 static func fill_round(ci: CanvasItem, rect: Rect2, r: float, col: Color) -> void:
 	if rect.size.x <= 0.0 or rect.size.y <= 0.0:
 		return
-	var cut := minf(4.0, minf(r, minf(rect.size.x, rect.size.y) * 0.25))
-	ci.draw_rect(Rect2(rect.position + Vector2(cut, 0), rect.size - Vector2(cut * 2, 0)), col)
-	ci.draw_rect(Rect2(rect.position + Vector2(0, cut), rect.size - Vector2(0, cut * 2)), col)
+	var radius := minf(r * 1.6, minf(rect.size.x, rect.size.y) * 0.5)
+	ci.draw_style_box(_surface(col, radius), rect)
 
-## Shared Krea timber/stone surfaces with readable quiet centers and brass corners.
+## A quiet metal face with a cool rim, warm inlay and a cast shadow.
+## The legacy material argument remains so old screens share this surface too.
 static func material_panel(ci: CanvasItem, rect: Rect2, face: Color = PANEL,
-		edge: Color = PANEL_EDGE, material: String = "wood") -> void:
-	px_panel(ci, Rect2(rect.position + Vector2(0, 4), rect.size), BG_DEEP, BG_DEEP)
-	px_panel(ci, rect, face, edge, 0.15)
-	var inside := rect.grow(-8)
-	var tex := Art.tex("res://art/ui/refuge/%s.png" % material)
-	if tex != null and inside.size.x > 0 and inside.size.y > 0:
-		ci.draw_texture_rect(tex, inside, true, Color(0.75, 0.8, 0.78, 0.16 if material == "wood" else 0.38))
-	for corner in [rect.position + Vector2(6, 6), Vector2(rect.end.x - 10, rect.position.y + 6),
-		Vector2(rect.position.x + 6, rect.end.y - 10), rect.end - Vector2(10, 10)]:
-		ci.draw_rect(Rect2(corner, Vector2(4, 4)), edge.lightened(0.25))
+		edge: Color = PANEL_EDGE, _material: String = "metal") -> void:
+	fill_round(ci, Rect2(rect.position + Vector2(0, 5), rect.size), 9, Color(0.01, 0.02, 0.035, 0.60))
+	fill_round(ci, rect, 9, edge.darkened(0.35))
+	fill_round(ci, rect.grow(-1), 8.5, face)
+	fill_round(ci, Rect2(rect.position + Vector2(2, 2), Vector2(rect.size.x - 4, minf(24, rect.size.y * 0.22))), 8, Color(face.lightened(0.15), 0.24))
+	ci.draw_line(rect.position + Vector2(16, 2), Vector2(rect.end.x - 16, rect.position.y + 2), Color(edge.lightened(0.35), 0.64), 1, true)
+	ci.draw_line(Vector2(rect.position.x + 16, rect.end.y - 2), rect.end - Vector2(16, 2), Color(BG_DEEP, 0.70), 1, true)
 
 static func camp_backdrop(ci: CanvasItem) -> void:
 	StellarBackdrop.draw(ci, SCREEN, Run.theme_for(Run.wave), 0.0, true)
@@ -358,27 +353,9 @@ static func draw_brackets(ci: CanvasItem, rect: Rect2, len_px: float, col: Color
 
 ## 크리스탈 하나. alive 가 거짓이면 깨진 자리를 어둡게 남긴다.
 ##
-## ★ **그림(art/ui/crystal.png)이 먼저다**(사용자가 정한 것: 「크리스탈 전부 이미지생성해서」).
-##   그림이 없으면 아래 도형으로 그대로 그린다 — 그림 없이도 게임이 돌아야 한다는
-##   규칙(18-1)은 이펙트에도 똑같이 걸린다.
-## ★ **아주 작을 때는 도형으로 되돌린다.** 크리스탈은 스무 개가 제단을 빙 둘러 놓이고,
-##   전투 정보판의 줄에서는 반지름이 6.5px 다. 32x50 짜리 도트 그림을 거기까지 줄이면
-##   면(facet)이 뭉개져 그냥 파란 점이 된다 — 도형이 그 크기에서는 훨씬 또렷하다.
-## ★ 깨진 자리도 **같은 그림**을 어둡게 그린다. 한쪽만 그림이면 상점의 크리스탈 탭에서
-##   산 것과 안 산 것이 다른 재질로 보인다(거기서는 깨진 칸이 「되살 자리」로 빛난다).
-const CRYSTAL_PX := 9.0
+## Faceted crystal shares the silhouette and lighting of the real 3D altar.
 static func draw_crystal(ci: CanvasItem, c: Vector2, r: float, alive: bool,
 		glow: float = 0.0) -> void:
-	if r >= CRYSTAL_PX:
-		# 도형과 같은 자리에 놓는다 — 도형은 위가 c.y - r*1.5, 밑동이 c.y + r*1.0 이라
-		# 높이가 2.5r 이고, 그림은 50px 높이다. draw_at 은 **발밑**이 기준이다.
-		if glow > 0.001:
-			var gc: Color = CRYSTAL if alive else Color(1, 1, 1, 1)
-			ci.draw_circle(c, r * ((1.8 + glow) if alive else (1.0 + glow * 1.6)),
-					Color(gc.r, gc.g, gc.b, (0.18 if alive else 0.55) * clampf(glow, 0.0, 1.0)))
-		var md: Color = Color.WHITE if alive else Color(0.30, 0.36, 0.48, 0.80)
-		if Art.draw_at(ci, Roster.ART.get("crystal", ""), c.x, c.y + r, r * 0.05, md):
-			return
 	if not alive:
 		# 깨진 자리 — 밑동만 남는다.
 		# ★ glow 는 **여기서도** 써야 한다. "방금 깨진 칸이 번쩍인다"는 표시가
@@ -743,7 +720,7 @@ static func draw_passive_icon(ci: CanvasItem, c: Vector2, r: float, p: Dictionar
 ##   어느 것이 귀한지가 안 읽힌다.
 static func draw_passive_card(ci: CanvasItem, r: Rect2, p: Dictionary, owned: bool,
 		can: bool, glow: float = 0.0) -> void:
-	var tint := Color(String(p.get("tint", "#f6c445")))
+	var tint := Color(String(p.get("tint", "#edc879")))
 	var rank := int(p.get("rank", 1))
 	var g: float = PX
 	var edge: Color = CRYSTAL if owned else (tint if can else PANEL_EDGE)
@@ -819,13 +796,3 @@ static func wrap_text(ci: CanvasItem, s: String, box: Rect2, size: int, col: Col
 			text_left(ci, Vector2(box.position.x, y), line, size, col)
 		else:
 			text_center(ci, Vector2(box.get_center().x, y), line, size, col)
-
-
-## A film frame and play mark identify rewarded video without verbose labels.
-static func draw_reward_icon(ci: CanvasItem, center: Vector2, radius: float, color: Color) -> void:
-	var box := Rect2(center - Vector2(radius, radius * 0.77), Vector2(radius * 2, radius * 1.54))
-	ci.draw_rect(box, color, false, 1.8)
-	for side in [-1, 1]:
-		for row in [-1, 0, 1]:
-			ci.draw_rect(Rect2(center + Vector2(side * radius * 0.77 - 1, row * radius * 0.45 - 1), Vector2(2, 2)), color)
-	ci.draw_colored_polygon(PackedVector2Array([center + Vector2(-radius * 0.27, -radius * 0.42), center + Vector2(radius * 0.44, 0), center + Vector2(-radius * 0.27, radius * 0.42)]), color)

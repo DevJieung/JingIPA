@@ -367,33 +367,15 @@ func _check_elem() -> void:
 			_bad("%s 가 %s 를 안 건다 — 사용자가 정한 규칙과 다르다"
 					% [Balance.elem_ko(String(pair[0])), Balance.status_ko(String(pair[1]))])
 
-	# 1-3) 아이콘 그림 — **속성 다섯과 몸 다섯이 하나도 안 빠지고 그림을 갖는가**
-	#
-	# ★ 왜 검사가 필요한가: 표에 없는 열쇠가 오면 Look.draw_elem/draw_body 는 **조용히**
-	#   예전 도형(색 동그라미에 한 글자)으로 되돌아간다. 그러면 화면에 아이콘 넷과
-	#   글자 하나가 섞여 서고, 그 한 자리는 사진으로만 잡힌다.
-	# ★ 그림 파일이 실제로 있는지는 _check_art 가 Roster.ART 를 통째로 훑으며 본다.
-	#   여기서는 **짝이 맞는가**만 본다.
-	for e2 in Balance.ELEM:
-		var ka := String(Look.ELEM_ART.get(e2, ""))
-		if ka == "":
-			_bad("속성 %s 에 아이콘 그림이 안 붙어 있다 (Look.ELEM_ART)" % e2)
-		elif not Roster.ART.has(ka):
-			_bad("속성 %s 의 아이콘 %s 가 Roster.ART 에 없다" % [e2, ka])
-		# ★ 되돌림 글자도 같이 본다. elem_char 는 모르는 열쇠에 **「무」를 조용히** 돌려주므로
-		#   빠져 있어도 화면에 「무상성」으로 찍힌다 — 사진으로도 잡기 어려운 거짓말이다.
-		if not Look.ELEM_CHAR.has(e2):
-			_bad("속성 %s 에 되돌림용 한 글자가 없다 (Look.ELEM_CHAR)" % e2)
-	for b2 in Balance.MBODY:
-		var kb := String(Look.BODY_ART.get(b2, ""))
-		if kb == "":
-			_bad("몸 %s 에 아이콘 그림이 안 붙어 있다 (Look.BODY_ART)" % b2)
-		elif not Roster.ART.has(kb):
-			_bad("몸 %s 의 아이콘 %s 가 Roster.ART 에 없다" % [b2, kb])
-		if not Color.html_is_valid(String(Balance.MBODY[b2].get("color", ""))):
-			_bad("몸 %s 의 색이 이상하다 — 화면 네 곳이 이 색으로 몸을 그린다" % b2)
-		if not Look.BODY_CHAR.has(b2):
-			_bad("몸 %s 에 되돌림용 한 글자가 없다 (Look.BODY_CHAR)" % b2)
+	# 1-3) Code-drawn badges retain complete labels and valid shared colors.
+	for elem in Balance.ELEM:
+		if not Look.ELEM_CHAR.has(elem):
+			_bad("속성 이름 표식 누락: " + String(elem))
+	for body in Balance.MBODY:
+		if not Look.BODY_CHAR.has(body):
+			_bad("몸 이름 표식 누락: " + String(body))
+		if not Color.html_is_valid(String(Balance.MBODY[body].get("color", ""))):
+			_bad("몸 색상 오류: " + String(body))
 
 	# 2) 몸 표 — 약점·저항·면역이 실재하는 속성이고 서로 안 겹치는가
 	if Balance.MBODY_ORDER.size() != Balance.MBODY.size():

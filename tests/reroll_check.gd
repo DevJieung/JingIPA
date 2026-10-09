@@ -62,12 +62,12 @@ func _check_allowance(level: int, passive_state: String, cap: int) -> void:
 			"five stars in the gate: nothing to re-spin and no gold taken")
 	_scatter()
 	Run.gold = 0
-	var revision := Run.rite_revision()
+	var revision := Run.spins
 	var saved := Run.snapshot().duplicate(true)
 	Run.begin_draw()
 	check(Run.restore(saved), "consumed allowance survives restore: " + label)
 	check(Run.respins_left() == 0 and Run.respin_cost() == Balance.reroll_cost(1) and Run.paid_spins == 1
-			and Run.spins == expected + 1 and Run.rite_revision() == revision, "restore retains usage and price")
+			and Run.spins == expected + 1 and Run.spins == revision, "restore retains usage and price")
 	check(Run.orbit == Fixture.orbit_for(1), "restore keeps every star where it stopped")
 	Run.confirm_summon()
 	Run.phase = Run.Phase.SHOP
@@ -81,7 +81,7 @@ func _check_allowance(level: int, passive_state: String, cap: int) -> void:
 	else:
 		check(not Run.buy_upgrade("reroll") and Run.lv("reroll") == cap, "passive bonus does not change upgrade cap")
 	Run.begin_draw()
-	check(Run.respins_left() == Run.free_rerolls() and Run.paid_spins == 0 and Run.spins == 0 and Run.pulls == 0,
+	check(Run.respins_left() == Run.free_rerolls() and Run.paid_spins == 0 and Run.spins == 0,
 			"next round refreshes the allowance and the price")
 
 

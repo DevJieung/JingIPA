@@ -8,8 +8,8 @@ var ui := Ui.new()
 var collection := CollectionView.new()
 var t: float = 0.0
 ## 타이틀 한가운데의 의식판 — 이 게임이 무슨 게임인지 한눈에 보이게.
-const EMBLEM := Vector2(640, 472)
-const EMBLEM_SC := 0.84
+const EMBLEM := Vector2(640, 466)
+const EMBLEM_SC := 0.76
 ## 시작을 두 번 눌러 판이 두 번 시작되지 않게.
 var _started: bool = false
 var _wordmark := Wordmark.new()
@@ -58,11 +58,15 @@ func _draw() -> void:
 
 	StellarBackdrop.draw(self, Look.SCREEN, Run.theme_for(1), t, true)
 
-	# 실제 영웅 원화를 배경 양쪽에 배치해 소환과 방어의 두 축을 함께 보여 준다.
-	Art.draw_unit_fit(self, Roster.unit_by_id("brasa"), Rect2(32, 248, 218, 328), Color.WHITE, 9)
-	draw_set_transform(Vector2(1280, 0), 0, Vector2(-1, 1))
-	Art.draw_unit_fit(self, Roster.unit_by_id("thalassa"), Rect2(34, 248, 214, 328), Color.WHITE, 9)
-	draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
+	# The live-rig portrait renders sit on the same metal plinths as the roster.
+	for side in [-1, 1]:
+		var center := Vector2(640 + side * 422, 526)
+		draw_set_transform(center, 0, Vector2(1, 0.24))
+		draw_circle(Vector2.ZERO, 108, Color(Look.BG_DEEP, 0.75), true, -1, true)
+		draw_arc(Vector2.ZERO, 103, 0, TAU, 64, Color(Look.CRYSTAL if side > 0 else Look.GOLD, 0.42), 3, true)
+		draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
+	Art.draw_unit_fit(self, Roster.unit_by_id("brasa"), Rect2(58, 232, 316, 324), Color.WHITE, 9)
+	Art.draw_unit_fit(self, Roster.unit_by_id("thalassa"), Rect2(906, 232, 316, 324), Color.WHITE, 9)
 
 	# 별맞춤 의식판 — 다섯 별이 모두 빛의 문 안에 줄지어 선 5성의 순간을 보여 준다.
 	# (타이틀에서까지 문 밖의 별을 보여 줄 이유가 없다.) 기록 줄 위에 올라앉은 **반원의 관측의**다 —
@@ -100,14 +104,14 @@ func _draw() -> void:
 	]
 	for index in range(records.size()):
 		var record: Array = records[index]
-		var rect := Rect2(220 + index * 286, 482, 270, 100)
+		var rect := Rect2(208 + index * 294, 536, 276, 88)
 		Look.material_panel(self, rect, Look.PANEL, record[2])
-		Look.text_center(self, rect.position + Vector2(135, 26), record[0], 20, Look.INK_DIM)
+		Look.text_center(self, rect.position + Vector2(138, 22), record[0], 20, Look.INK_DIM)
 		if index == 1 and Save.best_tier >= 0:
-			Look.draw_rarity(self, rect.position + Vector2(90, 67), Save.best_tier, 8.0)
-			Look.text_box(self, Rect2(rect.position.x + 150, rect.position.y + 48, 106, 38), record[1], 30, record[2])
+			Look.draw_rarity(self, rect.position + Vector2(90, 60), Save.best_tier, 8.0)
+			Look.text_box(self, Rect2(rect.position.x + 150, rect.position.y + 43, 106, 36), record[1], 30, record[2])
 		else:
-			Look.text_center_fit(self, rect.position + Vector2(135, 67), record[1], 31, record[2], 238, 20)
+			Look.text_center_fit(self, rect.position + Vector2(138, 60), record[1], 31, record[2], 238, 20)
 		if index == 2:
 			Look.text_right(self, rect.position + Vector2(254, 26), "›", 24, Look.GREEN)
 			ui.zone(rect, "collection")
@@ -119,16 +123,16 @@ func _draw() -> void:
 		if Save.cur_run.get("mode") == "arena":
 			var elapsed := maxi(0, int(Save.cur_run.get("sim", {}).get("elapsed", 0.0)))
 			continue_label = I18n.t("계속하기") + "  %02d:%02d" % [elapsed / 60, elapsed % 60]
-		ui.button(self, Rect2(cx - 170.0, 608.0, 340.0, 64.0),
+		ui.button(self, Rect2(cx - 170.0, 642.0, 340.0, 58.0),
 				continue_label, "resume", true, Look.CRYSTAL, 34)
-		ui.button(self, Rect2(cx - 120.0, 688.0, 240.0, 48.0), "새로 시작", "start", true,
+		ui.button(self, Rect2(cx - 120.0, 710.0, 240.0, 44.0), "새로 시작", "start", true,
 				Look.PANEL_EDGE, 26)
 	else:
-		ui.button(self, Rect2(cx - 150.0, 626.0, 300.0, 76.0), "시작", "start", true,
+		ui.button(self, Rect2(cx - 150.0, 654.0, 300.0, 70.0), "시작", "start", true,
 				Look.GOLD, 38)
 
-	Look.fill_round(self, Rect2(266, 745, 748, 40), 4, Color(Look.BG_DEEP, 0.85))
-	Look.text_box(self, Rect2(276, 748, 728, 34), "균열 군단이 생명 수정을 노린다. 별을 맞춰 수호자를 불러 마을을 지켜라!", 20, Look.CRYSTAL)
+	Look.fill_round(self, Rect2(234, 765, 812, 30), 4, Color(Look.BG_DEEP, 0.85))
+	Look.text_box(self, Rect2(244, 766, 792, 27), "균열 군단이 생명 수정을 노린다. 별을 맞춰 수호자를 불러 마을을 지켜라!", 18, Look.CRYSTAL)
 	collection.draw(self, ui)
 
 
@@ -149,12 +153,12 @@ class Wordmark extends Node2D:
 
 	func _draw() -> void:
 		var dark := Color("#101b20")
-		var bronze := Color("#75431d")
-		var edge := Color("#e0ae4e")
-		var light := Color("#fff0b0")
+		var bronze := Color("#715436")
+		var edge := Look.GOLD
+		var light := Color("#fff0c7")
 		var center := Vector2(640, 144)
 		var title := I18n.t("스텔라 디펜스")
-		var size := 94 if I18n.locale == "ko" else 80
+		var size := 84 if I18n.locale == "ko" else 76
 		var font := Look.font(size)
 		var width := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
 		var at := Look._baseline(font, center - Vector2(width * 0.5, 0), size)
@@ -179,7 +183,7 @@ class Wordmark extends Node2D:
 
 		# 그림자 → 청동 측면 → 얇은 금 테두리 → 밝은 안쪽 베벨 → 금속 전면.
 		draw_string_outline(font, at + Vector2(0, 8), title, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 13, Color(dark, 0.8))
-		for depth in range(8, 0, -1):
+		for depth in range(4, 0, -1):
 			draw_string_outline(font, at + Vector2(0, depth), title, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 7, bronze)
 		draw_string_outline(font, at, title, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 7, dark)
 		draw_string_outline(font, at, title, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 4, edge)

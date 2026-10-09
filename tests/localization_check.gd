@@ -49,7 +49,6 @@ func _test_messages() -> void:
 		"무료 3": "Free 3",
 		"5성 소환": "Summon 5-Star",
 		"2.5성 소환": "Summon 2.5-Star",
-		"별 끌어오기": "Pull a star",
 		"불 속성이 많이 등장합니다. 물 영웅을 준비하세요.": "Many Fire enemies ahead. Prepare Water heroes.",
 		"명중 시 2.0초 동안 이동속도 22% 감소": "Hits slow by 22% for 2.0s",
 		"명중 시 3.0초 화상 · 초당 타격 피해의 18%": "Burns for 3.0s · 18% of hit damage per second",

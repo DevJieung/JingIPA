@@ -31,6 +31,12 @@ static func draw(ci: CanvasItem, rect: Rect2, hero: Dictionary, selected: bool =
 		var name_h := 44.0 if narrow else 32.0
 		var name_box := Rect2(rect.position.x + 6, rect.end.y - name_h - caption_h - 5, rect.size.x - 12, name_h)
 		var portrait := Rect2(rect.position + Vector2(12, 29), Vector2(rect.size.x - 24, maxf(18, name_box.position.y - rect.position.y - 35)))
+		# A softly lit plinth gives the native model a grounded silhouette.
+		var foot := Vector2(portrait.get_center().x, portrait.end.y - 2)
+		var plinth := PackedVector2Array()
+		for i in range(32):
+			plinth.append(foot + Vector2(cos(i * TAU / 32), sin(i * TAU / 32) * 0.24) * minf(portrait.size.x * 0.33, 48))
+		ci.draw_colored_polygon(plinth, Color(color, 0.13))
 		Art.draw_unit_fit(ci, unit, portrait, portrait_tint, maxi(0, tier))
 		if narrow:
 			var lines := Look.wrapped_lines(Look.unit_name(unit), name_box.size.x, 18)
@@ -44,8 +50,8 @@ static func draw(ci: CanvasItem, rect: Rect2, hero: Dictionary, selected: bool =
 			Look.text_box(ci, Rect2(rect.position.x + 6, rect.end.y - 26, rect.size.x - 12, 22), caption, 15, Look.INK_DIM)
 	if selected and not locked:
 		# 꺾쇠는 속성·등급 줄을 안 가리면서 「골랐다」를 모양으로 말한다.
-		ci.draw_rect(rect.grow(3), Look.BG_DEEP, false, 7)
-		Look.draw_brackets(ci, rect.grow(3), 18.0, Look.INK, 5.0)
+		Look.fill_round(ci, rect, 5.6, Color(Look.GOLD, 0.10))
+		Look.draw_brackets(ci, rect.grow(3), 15.0, Look.GOLD.lightened(0.2), 3.0)
 		var badge := Rect2(rect.end.x - 28, rect.position.y + 26, 23, 23)
 		if rect.size.x > rect.size.y * 1.7:
 			badge = Rect2(rect.position.x + 7, rect.end.y - 28, 23, 23)

@@ -18,7 +18,7 @@ func _process(_dt: float) -> void:
 
 
 func open() -> void:
-	if Ads.busy or opened or main._fade_dir != 0.0 or main.screen == null or main.screen_modal_open():
+	if opened or main._fade_dir != 0.0 or main.screen == null or main.screen_modal_open():
 		return
 	opened = true
 	page = "menu"
@@ -43,10 +43,6 @@ func close() -> void:
 
 
 func _input(e: InputEvent) -> void:
-	if Ads.dismiss_notice_input(e):
-		return
-	if Ads.busy:
-		return
 	if e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT and ui.hit(e.position).begins_with("language:"):
 		I18n.set_locale(ui.hit(e.position).get_slice(":", 1))
 		main.screen.queue_redraw()
@@ -160,7 +156,7 @@ func _draw_rules() -> void:
 			% [Balance.reroll_cost(0), Balance.reroll_cost(1), Balance.reroll_cost(2), Balance.MAX_LIVES, Balance.LAST_WAVE], 20, Look.CRYSTAL)
 
 
-## 별맞춤 의식의 규칙 한 장 — 그림 하나, 규칙 넷, 그리고 **실제 값에서 뽑은** 확률.
+## 별맞춤 의식의 규칙 한 장 — 그림 하나, 규칙 셋, 그리고 **실제 값에서 뽑은** 확률.
 ##
 ## ★ 숫자를 손으로 적지 않는다. 문의 폭 · 등급 분포 · 무료 횟수 · 패시브 확률이 전부
 ##   Rite 와 Balance 에서 온다 — 밸런스가 문 너비를 다시 잡으면 이 표도 같이 바뀐다.
@@ -169,21 +165,16 @@ func _draw_rite() -> void:
 	var sample := 3
 	RiteBoard.draw_still(self, Vector2(366, 364), 0.42, RiteBoard.sample_orbit(sample), float(Time.get_ticks_msec()) * 0.001, 0.62)
 	Look.text_box(self, Rect2(250, 480, 232, 30), "문 안의 별 %d개 = %s" % [sample, Look.star_label(Rite.tier_of(sample))], 20, Look.GOLD)
-	# 오른쪽 — 규칙 넷. 줄머리의 그림은 판 위의 바로 그 별들이다.
-	var eye := roundi(Balance.PASSIVE_EYE_P * 100.0)
+	# 오른쪽 — 규칙 셋. 줄머리의 그림은 판 위의 바로 그 별들이다.
 	var rows := [
 		[RiteBoard.IN, "문 안의 별 = 등급", "빛의 문 안에 멈춘 별을 세면 됩니다 · 다섯이 다 들면 5성"],
 		[RiteBoard.OUT, "문 밖의 별만 다시 돕니다", "문 안의 별은 잠깁니다 · 다시 돌려서 등급이 내려가지 않습니다"],
 		[RiteBoard.HELD, "가장 안쪽 별은 수정이 붙듭니다", "언제나 문 안 · 최소 %s · 첫 의식은 별 %d개로 시작" % [Look.star_label(Rite.tier_of(Rite.MIN_STARS)), Balance.RITE_FIRST_STARS]],
-		[-1, "별을 문 안으로 끌어오는 방법", "광고 · 조커: 가장 바깥 별 하나 · 도박꾼의 눈: %d%% 확률로 +0.5성" % eye],
 	]
 	for i in range(rows.size()):
 		var y := 240.0 + i * 60.0
 		var icon := Vector2(522, y + 26)
-		if int(rows[i][0]) >= 0:
-			RiteBoard.draw_star(self, icon, int(rows[i][0]), 0.86)
-		else:
-			Look.draw_reward_icon(self, icon, 13, Look.CRYSTAL)
+		RiteBoard.draw_star(self, icon, int(rows[i][0]), 0.86)
 		Look.text_box(self, Rect2(552, y + 2, 478, 28), String(rows[i][1]), 21, Look.INK, HORIZONTAL_ALIGNMENT_LEFT)
 		Look.text_box(self, Rect2(552, y + 30, 478, 24), String(rows[i][2]), 16, Look.INK_DIM, HORIZONTAL_ALIGNMENT_LEFT)
 	# 아래 — 등급이 나올 확률. 첫 줄은 한 번 돌린 그대로, 둘째 줄은 무료 다시 돌리기를 다 쓴 뒤.
@@ -255,6 +246,6 @@ func _draw_languages(rect: Rect2) -> void:
 		var button_rect := Rect2(rect.position + Vector2(index * 76, 0), Vector2(68, rect.size.y))
 		var selected := I18n.locale == code
 		ui.button(self, button_rect, "KOR" if code == "ko" else "ENG", "language:" + code,
-				not Ads.busy, Look.GOLD if selected else Look.PANEL_EDGE, 20)
+				true, Look.GOLD if selected else Look.PANEL_EDGE, 20)
 		if selected:
 			draw_rect(Rect2(button_rect.position + Vector2(19, button_rect.size.y - 9), Vector2(30, 3)), Look.BG_DEEP)

@@ -16,9 +16,6 @@ func _ready() -> void:
 	check(Arena.modal == "theme" and tap(screen, "theme:0") and tap(screen, "theme:start"), "테마 선택 버튼")
 	screen._rite_age = 9.0
 	await paint(screen)
-	var first_rite: Dictionary = Arena.snapshot()["rite"].duplicate(true)
-	check(tap(screen, "rite:pull") and Arena.snapshot()["rite"] == first_rite,
-			"비 Android 광고 버튼은 별을 지급하지 않고 안내")
 	check(tap(screen, "rite:confirm"), "의식 확정 버튼")
 	await paint(screen)
 	check(Arena.heroes.size() == 1 and tap(screen, "close"), "첫 캐릭터 지급·전투 진입 버튼")

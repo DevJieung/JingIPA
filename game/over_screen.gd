@@ -25,24 +25,18 @@ func _ready() -> void:
 
 
 func _process(dt: float) -> void:
-	if not Ads.busy and Run.running and Run.phase == Run.Phase.SWAP and not _leaving and main != null:
-		_leaving = true
-		main.go(main.show_draw)
-		return
 	t += dt
 	fx.update(dt)
 	queue_redraw()
 
 
 func _input(e: InputEvent) -> void:
-	if Ads.busy or _leaving:
+	if _leaving:
 		return
 	if not (e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT):
 		return
 	var id := ui.hit(e.position)
-	if id == "continue":
-		Ads.request_reward("continue")
-	elif id == "again" and main != null:
+	if id == "again" and main != null:
 		Sfx.play("button")
 		Run.finish_defeat()
 		_leaving = true
@@ -68,15 +62,8 @@ func _draw() -> void:
 		Look.text_center(self, Vector2(640, 575), "누적 피해 %s" % _damage_text(float(best["damage"])), 23, Look.INK_DIM)
 	else:
 		Look.text_center(self, Vector2(640, 340), "-", 42, Look.INK_DIM)
-	if not won:
-		Look.text_center_fit(self, Vector2(640, 613), "크리스탈 전체 회복 + 1,000,000 G", 27, Look.CRYSTAL, 1100, 23)
-		ui.reward_button(self, Rect2(340, 641, 600, 64), "광고 보고 부활 + Gold", "continue",
-				Run.reward_allowed("continue"), Look.GOLD, 30)
-		Look.text_box(self, Rect2(280, 712, 720, 34), "대기실에서 준비 후 같은 탄에 다시 도전합니다.", 20, Look.INK_DIM)
-	ui.button(self, Rect2(1090, 740, 150, 36), "타이틀로", "again", true, Look.PANEL_EDGE, 18)
-	fx.draw_back(self)
-	fx.draw(self)
-	fx.draw_flash(self, Look.SCREEN)
+
+	ui.button(self, Rect2(420, 654, 440, 66), "타이틀로", "again", true, Look.GOLD, 29)
 
 
 func _damage_text(value: float) -> String:

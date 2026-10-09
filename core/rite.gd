@@ -98,7 +98,7 @@ static func misses(orbit: Array) -> Array[int]:
 
 ## 끌어올 별 — 문 밖의 별 중 **가장 바깥** 것. 없으면 -1.
 ## ★ 왜 바깥부터인가: 바깥 궤도일수록 문이 좁아 다시 돌려서는 잘 안 든다.
-##   확정으로 끌어오는 수단(광고 · 조커)은 제일 어려운 별에 쓰는 것이 언제나 이득이다.
+##   확정으로 끌어오는 수단(조커)은 제일 어려운 별에 쓰는 것이 언제나 이득이다.
 static func pull_target(orbit: Array) -> int:
 	var out := misses(orbit)
 	return out[-1] if not out.is_empty() else -1
@@ -127,7 +127,7 @@ static func respin(orbit: Array[int], rng: RandomNumberGenerator) -> Array[int]:
 	return moved
 
 
-## 그 궤도의 별을 문 안으로 끌어온다(광고 보상 · 조커).
+## 그 궤도의 별을 문 안으로 끌어온다(조커).
 static func pull(orbit: Array[int], ring: int, rng: RandomNumberGenerator) -> void:
 	if ring >= 0 and ring < orbit.size():
 		orbit[ring] = rng.randi_range(0, gate(ring) - 1)

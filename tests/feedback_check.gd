@@ -43,7 +43,6 @@ func _ready() -> void:
 	main.show_draw()
 	await paint(main.screen)
 	check(main.screen.state == DrawScreen.PICK, "the rite opens on its pick state")
-	check(bool(zone_of(main.screen, "rite:pull").get("on", false)), "star pull available with no gold")
 	# 무료 횟수는 골드가 없어도 눌린다.
 	for attempt in range(Run.free_rerolls()):
 		scatter()
@@ -59,7 +58,6 @@ func _ready() -> void:
 	# 문 안에 별 둘(붙들린 0번과, 제 힘으로 든 1번)을 세워 두고 돌린다 — 둘 다 잠겨 있어야 한다.
 	Run.orbit.assign(Fixture.orbit_for(2))
 	await paint(main.screen)
-	check(bool(zone_of(main.screen, "rite:pull").get("on", false)), "star pull available beside the paid re-spin")
 	var locked: Array[int] = Run.orbit.duplicate()
 	check(await click_screen("rite:respin"), "paid re-spin remains reachable")
 	check(Run.gold == 0 and Run.paid_spins == 1 and Run.spins == Run.free_rerolls() + 1
@@ -67,15 +65,7 @@ func _ready() -> void:
 			"paid re-spin spends the last gold and leaves the stars inside the gate alone")
 	scatter()
 	await paint(main.screen)
-	check(bool(zone_of(main.screen, "rite:pull").get("on", false)), "star pull available with no gold and no re-spins left")
 	check(not tap(main.screen, "rite:respin"), "unaffordable re-spin button stays disabled")
-	# 별 끌어오기는 광고를 끝까지 봐야 준다 — 누르기만 해서는 별도 횟수도 그대로다.
-	var before: Dictionary = Run.snapshot()["rite"]
-	check(await click_screen("rite:pull"), "star pull can be tapped without gold")
-	check(Run.snapshot()["rite"] == before and Run.gold == 0 and not Ads.busy and main.screen.state == DrawScreen.PICK,
-			"tapping the star pull grants nothing until an ad is completed")
-	# 카드 선택 창이 없어졌다 — 별 끌어오기는 화면을 덮는 창을 띄우지 않고, 메뉴도 그대로 열린다.
-	check(not main.screen_modal_open(), "the star pull opens no modal over the rite")
 	main.menu.open()
 	check(main.menu.opened, "exhausted rite leaves menu available")
 	main.menu.close()
@@ -88,8 +78,8 @@ func _ready() -> void:
 	Run.gold = 100000
 	Run.orbit.assign(Fixture.orbit_for(Rite.MAX_STARS))
 	await paint(main.screen)
-	check(not tap(main.screen, "rite:respin") and not tap(main.screen, "rite:pull") and Run.gold == 100000,
-			"with five stars in the gate neither re-spin nor pull can be tapped")
+	check(not tap(main.screen, "rite:respin") and Run.gold == 100000,
+			"with five stars in the gate re-spin cannot be tapped")
 	Run.gold = 0
 	scatter()
 	check(await click_screen("go"), "summon remains reachable with no re-spins left")
