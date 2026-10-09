@@ -31,6 +31,9 @@
   명령/기술 입력,전장4방향 끝,성장/교체/의식과30초 연속 보행·공격 프레임을 촬영한다.
   자료는 `build/arena-right-hud/<해상도>/*_reference.png`, `*_field_six.png`,
   `*_long_walk.gif`, `*_echo_attack.gif`, `hud-report.json`이다.
+  최종 두 해상도 각각 한영68PNG·5,074건/실패0·스크립트/렌더 오류0이며,
+  작은 화면의 이름/명령과30초 보행 연속 프레임·공격·모달을 직접 확인했다.
+  확대 보행 모음은 각 해상도의 `*_long_walk_contact.jpg`다.
   Android/iOS 실기기 시각·FPS 검수는 별도이며 통합 검사·모바일 빌드는 부모 담당이다.
 
 ## 2026-10-09 3D 게임 UI 통일 · 광고 기능 제거
