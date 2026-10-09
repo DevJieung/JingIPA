@@ -251,6 +251,8 @@ func _spawn(m: Dictionary) -> void:
 
 
 static func mpos(mo: Dictionary) -> Vector2:
+	if mo.has("pos"):
+		return Vector2(mo["pos"])
 	return Balance.path_at(float(mo["s"]), float(mo["off"]), int(mo.get("route", 0)))
 
 

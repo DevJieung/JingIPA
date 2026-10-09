@@ -163,12 +163,22 @@ else
 fi
 
 step "4-2. 저장 · 보상 · 메뉴 · 거래 회귀 검사"
+godot_run 120 "$TMP/arena.log" res://tests/arena_check.tscn
+expect "연속 수호전 규칙·저장" "판정: 정상" "$TMP/arena.log"
+godot_run 180 "$TMP/arena-play.log" res://tests/arena_play_check.tscn
+expect "연속 수호전 실제 UI 흐름" "판정: 정상" "$TMP/arena-play.log"
 godot_run 90 "$TMP/stellar-identity.log" res://tests/stellar_identity_check.tscn
 expect "Stellar Defense 명칭·저장 이전" "판정: 정상" "$TMP/stellar-identity.log"
 godot_run 120 "$TMP/stellar-gameplay.log" res://tests/stellar_gameplay_check.tscn
 expect "3D 전환 게임성 보존" "판정: 정상" "$TMP/stellar-gameplay.log"
 godot_run 180 "$TMP/stellar-render.log" res://tests/3d/stellar_render_check.tscn
 expect "3D 전체 모델·랭크 렌더 계약" "판정: 정상" "$TMP/stellar-render.log"
+godot_run 120 "$TMP/limne-model.log" res://tests/limne_model_check.tscn
+expect "Limne GLB·독립 모션·전투 데이터 보존" "판정: 정상" "$TMP/limne-model.log"
+godot_run 180 "$TMP/native-heroes.log" res://tests/native_hero_check.tscn
+expect "Native 전체 영웅·이벤트 모션·데이터 보존" "판정: 정상" "$TMP/native-heroes.log"
+godot_run 180 "$TMP/native-monsters.log" res://tests/native_monster_check.tscn
+expect "Native 전체 몬스터·이동 시계·데이터 보존" "판정: 정상" "$TMP/native-monsters.log"
 godot_run 120 "$TMP/flow.log" res://tests/flow_check.tscn
 expect "게임 흐름" "판정: 정상" "$TMP/flow.log"
 

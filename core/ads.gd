@@ -128,6 +128,8 @@ func reward_format(kind: String) -> String:
 
 
 func _preload_kind() -> String:
+	if Arena.running:
+		return "card"
 	if Run.reward_allowed("fusion_undo", {"fusion_id": int(Run.fusion_pending.get("id", -1))}):
 		return "fusion_undo"
 	if Run.reward_allowed("continue"):
@@ -180,7 +182,8 @@ func dismiss_notice_input(event: InputEvent) -> bool:
 
 
 func request_reward(kind: String, data: Dictionary = {}) -> bool:
-	if busy or not Run.reward_allowed(kind, data):
+	var reward_run: Node = Arena if Arena.running else Run
+	if busy or not reward_run.reward_allowed(kind, data):
 		return false
 	if not _native:
 		notify("광고는 Android 앱에서 이용할 수 있습니다.")
@@ -190,11 +193,13 @@ func request_reward(kind: String, data: Dictionary = {}) -> bool:
 		notify("광고를 사용할 수 없습니다. 잠시 후 다시 시도하세요.")
 		return false
 	_serial += 1
-	_request = {"kind": kind, "data": data.duplicate(true)}
-	_request["data"]["seed"] = Run.run_seed
-	_request["data"]["wave"] = Run.wave
+	_request = {"kind": kind, "mode": "arena" if reward_run == Arena else "legacy", "data": data.duplicate(true)}
+	_request["data"]["seed"] = reward_run.run_seed
+	_request["data"]["wave"] = reward_run.wave
 	if kind == "card":
-		_request["data"]["revision"] = Run.rite_revision()
+		_request["data"]["revision"] = reward_run.rite_revision()
+		if reward_run == Arena:
+			_request["data"]["summon_count"] = Arena.summon_count
 	busy = true
 	_awarded = false
 	_request_deadline = Time.get_ticks_msec() + REQUEST_TIMEOUT_MSEC
@@ -208,6 +213,16 @@ func request_reward(kind: String, data: Dictionary = {}) -> bool:
 	else:
 		_initialize()
 	return true
+
+
+func _reward_run() -> Node:
+	return Arena if String(_request.get("mode", "legacy")) == "arena" else Run
+
+
+func _request_valid() -> bool:
+	if String(_request.get("mode", "legacy")) == "legacy" and Arena.running:
+		return false
+	return _reward_run().reward_allowed(String(_request.get("kind", "")), _request.get("data", {}))
 
 
 func _load(kind: String) -> void:
@@ -313,7 +328,7 @@ func _show() -> void:
 	if not _ad_ready(kind):
 		_load(kind)
 		return
-	if not Run.reward_allowed(String(_request["kind"]), _request["data"]):
+	if not _request_valid():
 		_finish(false, "상태가 변경되어 광고 요청을 취소했습니다.")
 		return
 	_showing = true
@@ -330,7 +345,7 @@ func _show() -> void:
 func _on_earned(_item: RewardedItem, serial: int) -> void:
 	if not busy or not _showing or serial != _serial or _awarded:
 		return
-	_awarded = Run.apply_ad_reward(String(_request["kind"]), _request["data"])
+	_awarded = _request_valid() and _reward_run().apply_ad_reward(String(_request["kind"]), _request["data"])
 	print("AdMob earned reward: kind=%s applied=%s" % [_request["kind"], _awarded])
 
 

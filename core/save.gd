@@ -73,6 +73,9 @@ func _notification(what: int) -> void:
 
 
 func _flush() -> void:
+	if Arena != null and Arena.running:
+		store_run(Arena.snapshot())
+		return
 	if Run != null and Run.running and Run.wave > 0:
 		# ★ **전투 도중에는 새로 담지 않는다.** 되돌리기는 「그 탄의 처음부터 다시」인데
 		#   (Run.restore 주석), 전투 중에 담으면 그 탄에 번 골드와 처치가 담긴 채로
@@ -199,7 +202,10 @@ func _load_checked(cf: ConfigFile, path: String) -> bool:
 	if not state is Dictionary:
 		return false
 	if not state.is_empty():
-		if state.get("v", 0) is int and int(state.get("v", 0)) != Run.SAVE_VERSION:
+		if state.get("mode") == "arena":
+			if not ArenaValidation.valid(state):
+				return false
+		elif state.get("v", 0) is int and int(state.get("v", 0)) != Run.SAVE_VERSION:
 			# 규칙 버전이 달라도 평생 기록과 설정은 보존한다.
 			cf.set_value("cur", "state", {})
 		elif not RunValidation.valid(state, Run.SAVE_VERSION):

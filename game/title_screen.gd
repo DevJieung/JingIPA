@@ -94,7 +94,7 @@ func _draw() -> void:
 
 	# 최고 등급은 여태 뽑은 가장 높은 별이다(Save.best_tier). 별 배지와 숫자를 나란히 적는다.
 	var records := [
-		["최고 탄수", "%d" % Save.best_wave, Look.CRYSTAL],
+		[Arena.label("arena.completed"), "%d" % Save.clears, Look.CRYSTAL],
 		["최고 등급", Look.star_label(Save.best_tier) if Save.best_tier >= 0 else "-", Look.GOLD],
 		["만난 영웅", "%d / %d" % [Save.seen_count(), Roster.UNITS.size()], Look.GREEN],
 	]
@@ -115,8 +115,12 @@ func _draw() -> void:
 	# ★ 하다 만 판이 있으면 **이어하기가 위**에 온다. 자동 저장을 넣은 뜻이 여기 있다 —
 	#   앱을 껐다 켠 사람이 제일 먼저 누르고 싶은 단추가 그것이다.
 	if Save.has_run():
+		var continue_label := "이어하기 — %d탄" % Save.run_wave()
+		if Save.cur_run.get("mode") == "arena":
+			var elapsed := maxi(0, int(Save.cur_run.get("sim", {}).get("elapsed", 0.0)))
+			continue_label = I18n.t("계속하기") + "  %02d:%02d" % [elapsed / 60, elapsed % 60]
 		ui.button(self, Rect2(cx - 170.0, 608.0, 340.0, 64.0),
-				"이어하기 — %d탄" % Save.run_wave(), "resume", true, Look.CRYSTAL, 34)
+				continue_label, "resume", true, Look.CRYSTAL, 34)
 		ui.button(self, Rect2(cx - 120.0, 688.0, 240.0, 48.0), "새로 시작", "start", true,
 				Look.PANEL_EDGE, 26)
 	else:

@@ -1,6 +1,35 @@
 extends RefCounted
 class_name Balance
 
+## 연속 수호전의 초기 밸런스. 원본은 data/game.db의 tuning 표다.
+## 새 키 등록용 기본값이며 DB에서 승인된 수치를 제자리에 내린다.
+const ARENA_HERO_LIMIT := 6
+const ARENA_BOSS_AT := 1080.0
+const ARENA_SUMMON_COST := 70
+const ARENA_CRYSTAL_HP := 1200.0
+const ARENA_HERO_SPEED := 170.0
+const ARENA_HERO_RADIUS := 26.0
+const ARENA_MONSTER_RADIUS := 16.0
+const ARENA_NAV_CELL := 20.0
+const ARENA_SPAWN_INITIAL := 4.0
+const ARENA_SPAWN_MIN := 0.5
+const ARENA_POPULATION_START := 8
+const ARENA_POPULATION_MAX := 48
+const ARENA_HP_SCALE := 2.0
+const ARENA_CRYSTAL_DPS := 8.0
+const ARENA_GROWTH_POINT_SCALE := 2
+const ARENA_GROWTH_BASE := 8
+const ARENA_GROWTH_STEP := 2
+const ARENA_BLAST_COOLDOWN := 18.0
+const ARENA_BLAST_DAMAGE := 200.0
+const ARENA_BLAST_RADIUS := 110.0
+const ARENA_FREEZE_COOLDOWN := 24.0
+const ARENA_FREEZE_SLOW := 0.65
+const ARENA_FREEZE_DURATION := 5.0
+const ARENA_WARD_COOLDOWN := 30.0
+const ARENA_WARD_SHIELD := 160.0
+const ARENA_WARD_DURATION := 8.0
+
 ## 게임의 숫자가 **전부** 여기 있다. 순수 함수만 두고 화면·저장을 모른다.
 ##
 ## 왜 한곳에 모았나: 디펜스 게임은 "이 판이 왜 안 깨지는지"를 사람이 손으로 계산할 수

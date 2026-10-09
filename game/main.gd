@@ -1,7 +1,7 @@
 extends Node2D
 
 ## 화면을 갈아 끼우는 곳. 게임의 진행 순서가 여기 한 줄로 보인다:
-##   타이틀 → [테마 판] → (별맞춤 의식 → 전투 → 상점) 반복 → 끝
+##   타이틀 → 테마 선택 → 첫 의식 → 연속 수호전 → 최종 보스 → 끝
 ##
 ## 화면들은 .tscn 없이 코드로 만든다. 화면 하나가 파일 하나(.gd)라 옮기고 지우기 쉽고,
 ## 헤드리스 검사기가 씬 파일 없이 화면을 그대로 세워 볼 수 있다.
@@ -108,6 +108,8 @@ func _swap(s: Node2D) -> void:
 func screen_modal_open() -> bool:
 	if not is_instance_valid(screen):
 		return false
+	if screen is ArenaScreen:
+		return not Arena.modal.is_empty()
 	if screen is TitleScreen:
 		return screen.collection.opened
 	if screen is DrawScreen:
@@ -123,6 +125,9 @@ func _notification(what: int) -> void:
 	if menu == null:
 		return
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		if screen is ArenaScreen and Arena.modal in ["shop", "bench"]:
+			Arena.close_modal()
+			return
 		if screen is TitleScreen and screen.collection.opened:
 			screen.collection.close()
 			return
@@ -140,9 +145,16 @@ func show_title() -> void:
 
 
 func start_run(seed_value: int = 0) -> void:
-	Run.start_run(seed_value)
-	_theme_shown = -1
-	go(go_draw)
+	Run.running = false
+	Arena.start_run(seed_value)
+	go(show_arena)
+
+func show_arena() -> void:
+	_swap(ArenaScreen.new())
+	Sfx.play_music("camp" if Arena.theme_index < 0 else "ritual" if Arena.modal == "rite" else "theme_" + String(Arena.theme_for(1)["id"]))
+
+func active_run() -> Node:
+	return Arena if screen is ArenaScreen else Run
 
 
 ## 하다 만 판을 이어 한다. 타이틀의 「이어하기」가 부른다.
@@ -151,9 +163,17 @@ func start_run(seed_value: int = 0) -> void:
 ##   전투 한복판을 통째로 담는 대신 그렇게 정했다 — 되돌린 판이 조금이라도 어긋나면
 ##   크리스탈 개수가 안 맞는데, 그건 이 게임에서 제일 못 믿을 어긋남이다.
 func resume_run() -> bool:
+	if Save.cur_run.get("mode") == "arena":
+		if not Arena.restore(Save.cur_run):
+			Save.clear_run()
+			return false
+		Run.running = false
+		go(show_arena)
+		return true
 	if not Run.restore(Save.cur_run):
 		Save.clear_run()
 		return false
+	Arena.running = false
 	_theme_shown = Balance.theme_block(maxi(1, Run.wave))
 	match Run.phase:
 		Run.Phase.OVER:

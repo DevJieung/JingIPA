@@ -95,9 +95,10 @@ func _step_title() -> void:
 	if not (main.screen is TitleScreen):
 		_bad("첫 화면이 타이틀이 아니다")
 		return
-	var u := await _paint()
-	if not _tap(u, "start"):
-		_bad("타이틀의 시작 버튼을 못 눌렀다")
+	# Legacy component regression. The shipping title flow is arena_play_check.
+	Arena.running = false
+	Run.start_run(5301)
+	main.go(main.go_draw)
 	# ★ 1탄 앞에는 **테마 판**이 먼저 뜬다(열 탄마다 한 번). 그것을 넘겨야 뽑기다.
 	if not await _wait_for("theme_screen", 300):
 		_bad("타이틀에서 테마 판으로 안 넘어간다")

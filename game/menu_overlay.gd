@@ -57,7 +57,7 @@ func _input(e: InputEvent) -> void:
 	if not opened and main.screen_modal_open():
 		return
 	if e is InputEventKey and e.pressed and not e.echo:
-		if e.keycode == KEY_ESCAPE or (e.keycode == KEY_SPACE and main.screen is BattleScreen and not Dbg.on):
+		if e.keycode == KEY_ESCAPE or (e.keycode == KEY_SPACE and (main.screen is BattleScreen or main.screen is ArenaScreen) and not Dbg.on):
 			if opened:
 				close()
 			else:
@@ -88,7 +88,7 @@ func _input(e: InputEvent) -> void:
 		if Save.last_error != OK:
 			return
 		close()
-		Run.running = false
+		main.active_run().running = false
 		main.go(main.show_title)
 	Sfx.play("button")
 
@@ -109,7 +109,7 @@ func _draw() -> void:
 		return
 	draw_rect(Look.SCREEN, Color(0.01, 0.02, 0.04, 0.85))
 	Look.material_panel(self, Rect2(220, 86, 840, 638), Look.PANEL, Look.CRYSTAL)
-	Look.text_center(self, Vector2(640, 136), "일시정지" if Run.running else "게임 안내", 38, Look.INK)
+	Look.text_center(self, Vector2(640, 136), "일시정지" if main.active_run().running else "게임 안내", 38, Look.INK)
 	var tabs := [["menu", "메뉴"], ["rules", "플레이 방법"], ["rite", "별맞춤"], ["elements", "속성 상성표"]]
 	for i in range(tabs.size()):
 		ui.tab(self, Rect2(250 + i * 196, 176, 188, 44), tabs[i][1], "page:" + tabs[i][0], page == tabs[i][0], 21)
@@ -122,16 +122,18 @@ func _draw() -> void:
 			_draw_elements()
 		_:
 			_draw_menu()
-	ui.button(self, Rect2(480, 644, 320, 54), "계속하기" if Run.running else "닫기", "resume", true, Look.GOLD, 26)
+	ui.button(self, Rect2(480, 644, 320, 54), "계속하기" if main.active_run().running else "닫기", "resume", true, Look.GOLD, 26)
 	_draw_languages(language_rect)
 
 
 func _draw_menu() -> void:
 	ui.button(self, Rect2(400, 252, 480, 54), "효과음  " + ("켜짐" if Save.sfx else "꺼짐"), "sound", true, Look.PANEL_EDGE, 24)
 	ui.button(self, Rect2(400, 320, 480, 54), "배경음악  " + ("켜짐" if Save.music else "꺼짐"), "music", true, Look.PANEL_EDGE, 24)
-	if Run.running:
+	if main.active_run().running:
 		ui.button(self, Rect2(400, 414, 480, 54), "저장하고 타이틀로", "title", true, Look.CRYSTAL, 24)
-		var hint := "전투 중 종료 시 이번 탄부터 다시 시작합니다." if Run.phase == Run.Phase.BATTLE else "별 자리와 구매 내역이 저장됩니다."
+		var hint := "전투 중 종료 시 이번 탄부터 다시 시작합니다." if main.active_run().phase == Run.Phase.BATTLE else "별 자리와 구매 내역이 저장됩니다."
+		if main.screen is ArenaScreen:
+			hint = Arena.label("arena.save_hint")
 		Look.text_box(self, Rect2(290, 478, 700, 28), hint, 19, Look.INK_DIM)
 	Look.text_center(self, Vector2(640, 602), "Esc  메뉴 열기 / 닫기   ·   Space  전투 일시정지", 18, Look.INK_DIM)
 	if Save.last_error != OK:
@@ -141,6 +143,9 @@ func _draw_menu() -> void:
 
 
 func _draw_rules() -> void:
+	if main.screen is ArenaScreen:
+		main.screen.draw_help(self)
+		return
 	var rows := [
 		["01  별맞춤 의식", "수정을 도는 별 다섯이 멈춥니다 · 빛의 문 안에 든 별의 수가 곧 등급입니다"],
 		["02  확정과 소환", "문 밖의 별만 다시 돌릴 수 있습니다 · 소환하면 그 등급의 영웅이 무작위로 등장합니다"],
@@ -186,7 +191,7 @@ func _draw_rite() -> void:
 	for ring in range(Rite.RINGS):
 		chances.append("항상" if Rite.anchored(ring) else RiteBoard.percent(Rite.chance(ring)))
 	Look.text_box(self, Rect2(250, 516, 780, 26), "별이 문에 들 확률(안쪽 별부터)  %s" % " · ".join(chances), 17, Look.CRYSTAL)
-	var free := Run.free_rerolls()
+	var free: int = main.active_run().free_rerolls()
 	var table := [["한 번 돌렸을 때", Rite.odds(1)], ["무료 %d번 다시 돌린 뒤" % free, Rite.odds(1 + free)]]
 	for star in range(Rite.MIN_STARS, Rite.MAX_STARS + 1):
 		var tier := Rite.tier_of(star)

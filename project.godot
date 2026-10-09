@@ -38,6 +38,7 @@ I18n="*res://core/i18n.gd"
 Run="*res://core/run.gd"
 Sfx="*res://core/sound.gd"
 Ads="*res://core/ads.gd"
+Arena="*res://core/arena_run.gd"
 
 [display]
 

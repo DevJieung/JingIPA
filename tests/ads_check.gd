@@ -136,11 +136,85 @@ func _ready() -> void:
 	check_interstitial_rewards(service)
 	check_repeated_revive_ads(service)
 	check_repeated_fusion_ads(service)
+	check_arena_star_pull_ads(service)
 
 	for path in originals:
 		ProjectSettings.set_setting(path, originals[path])
 	service.queue_free()
 	finish("AdMob placement and callback checks")
+
+
+func check_arena_star_pull_ads(service: FakeAds) -> void:
+	Run.running = false
+	Arena.start_run(90876)
+	Arena.choose_theme(0)
+	Arena.orbit.assign(Fixture.orbit_for(2))
+	var before: Dictionary = Arena.snapshot()["rite"].duplicate(true)
+	var gold_before: int = Arena.gold
+	check(service._preload_kind() == "card", "continuous arena preloads the existing star-pull placement")
+	check(not Arena.reward_allowed("continue") and not Arena.reward_allowed("crystal")
+			and not Arena.reward_allowed("fusion_undo"), "arena does not apply legacy wave rewards")
+	check(service.request_reward("card", {"slot": Arena.pull_target()}), "arena rite starts a star-pull request")
+	check(service._request["mode"] == "arena" and service._request["data"]["summon_count"] == 0,
+			"arena ad captures mode and summon identity")
+	var ad := service.complete_load(service.loads.size() - 1)
+	Arena.sim.step(0.25)
+	check(ad.shown and Arena.snapshot()["rite"] == before and Arena.sim.elapsed == 0,
+			"showing the ad grants nothing and keeps the battlefield paused")
+	ad.listener.on_user_earned_reward.call(null)
+	check(Arena.rite_stars() == 3 and Arena.pulls == 1 and Arena.gold == gold_before,
+			"arena earns one star without charging summon gold")
+	before = Arena.snapshot()["rite"].duplicate(true)
+	ad.listener.on_user_earned_reward.call(null)
+	check(Arena.snapshot()["rite"] == before, "duplicate arena reward callback grants nothing")
+	ad.full_screen_content_callback.on_ad_dismissed_full_screen_content.call()
+	check(not service.busy and ArenaValidation.valid(Arena.snapshot()), "arena rewarded rite remains resumable")
+
+	check(service.request_reward("card", {"slot": Arena.pull_target()}), "next arena star may be requested")
+	ad = service.complete_load(service.loads.size() - 1)
+	Arena.confirm_summon()
+	Arena.close_modal()
+	Arena.gold = Arena.summon_cost()
+	Arena.begin_summon()
+	Arena.orbit.assign(Fixture.orbit_for(3))
+	before = Arena.snapshot()["rite"].duplicate(true)
+	ad.listener.on_user_earned_reward.call(null)
+	check(Arena.snapshot()["rite"] == before and not service._awarded,
+			"late reward from a previous summon cannot alter the new rite on wave 1")
+	ad.full_screen_content_callback.on_ad_dismissed_full_screen_content.call()
+
+	service.request_reward("card", {"slot": Arena.pull_target()})
+	ad = service.complete_load(service.loads.size() - 1)
+	Arena.respin()
+	Arena.orbit.assign(Fixture.orbit_for(3))
+	before = Arena.snapshot()["rite"].duplicate(true)
+	ad.listener.on_user_earned_reward.call(null)
+	check(Arena.snapshot()["rite"] == before, "arena re-spin rejects stale ad reward")
+	ad.full_screen_content_callback.on_ad_dismissed_full_screen_content.call()
+
+	service.request_reward("card", {"slot": Arena.pull_target()})
+	var index := service.loads.size() - 1
+	Arena.confirm_summon()
+	ad = service.complete_load(index)
+	check(not ad.shown and ad.destroyed and not service.busy, "confirmed arena rite cancels late ad loading")
+	Arena.close_modal()
+	check(not service.request_reward("card", {"slot": 4}), "battle rejects star-pull requests")
+
+	Arena.running = false
+	Fixture.fresh(90876)
+	Fixture.stack(2)
+	service.request_reward("card", pull_request())
+	ad = service.complete_load(service.loads.size() - 1)
+	Arena.start_run(90876)
+	Arena.choose_theme(0)
+	Arena.orbit.assign(Fixture.orbit_for(2))
+	before = rite_state()
+	ad.listener.on_user_earned_reward.call(null)
+	check(rite_state() == before and Arena.pulls == 0,
+			"entering arena rejects a legacy ad even with the same seed and wave")
+	ad.full_screen_content_callback.on_ad_dismissed_full_screen_content.call()
+	Arena.running = false
+	Run.running = false
 
 
 func check_interstitial_rewards(service: FakeAds) -> void:

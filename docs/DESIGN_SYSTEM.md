@@ -5,6 +5,126 @@
 역할 정의: [graphic_design_manager](../.codex/agents/graphic_design_manager.toml).
 분담 규칙: [AGENTS.md](../AGENTS.md).
 
+## 2026-10-09 연속 수정 수호전 — 조이스틱 직접 이동
+
+- 사용자 인터뷰의 최신 방향은 한 테마의 연속 전장이다. 영웅은 최대6명이며 선택한
+  영웅만 가상 조이스틱으로 직접 이동한다. 나머지는 자기 위치에서 사거리 안 가장 가까운
+  적을 자동 공격한다. 영웅 체력·사망은 없으며 몬스터는 영웅을 우회하고 우회할 길이
+  없으면 계속 대기한다. 전장 전체를 보여주는 고정 사선 시점이며 카메라 회전·추적 조작은
+  새 전투 UI에 두지 않는다. 이전 발판·전장 배치 화면과 탄수 표시는 새 모드의 기준이 아니다.
+- 기존 native 영웅·몬스터 GLB, 장비 진화, 같은 모델 초상화와 차가운 밤 지형·따뜻한
+  등불을 보존한다. 새 `game/3d/arena_world.gd`는 `StellarWorld`를 상속하고, 지형 안쪽에
+  정해진 두 길 대신 이동 가능한 낮은 지면을 둔다. 모델 보행은 기존 leg bone에 시각적으로
+  더하며 공격 시점·물리 위치·피해 판정은 `ArenaSim`이 소유한다. 방향·보행 시간·이펙트도
+  실제 전투 시계와 함께 멈춘다. 원본 GLB나 기존 native adapter를 이 전환으로 덮어쓰지 않는다.
+- `game/arena_screen.gd`는 상단 수정 체력·보스까지의 시간·골드, 하단6인 선택 카드,
+  왼쪽 가상 조이스틱과 오른쪽 공용 스킬 버튼을 사용한다. 선택은 기존 흰 꺾쇠·체크와
+  전장 금색 링을 함께 사용하며 영웅 체력바는 만들지 않는다. 조이스틱 방향은 고정
+  카메라의 지면 역투영으로 바꿔 화면에서 손가락을 움직인 방향으로 영웅이 이동하게 한다.
+- 기존 `RiteBoard`의 별맞춤 의식을 그대로 사용한다. 처음1회는 무료이며 전투 중 골드로
+  다시 열 수 있다. 의식·능력치/패시브 구매·대기 교체는 어두운 전장 위의 정지 모달이다.
+  영웅당 보유1개, 중복은 뽑힌 성급에 따른 강화 포인트로 자동 누적한다. 결과는 실제
+  이전/이후 성급과 누적량·다음 성급 기준을 표시하며 최종 강화는 별도 표식으로 구별한다.
+  최종 강화 영웅을 이후 후보에서 제외하는 규칙은 게임 상태가 관리한다. 대기 교체는
+  출전/대기 두 줄에서 각각 하나를 선택하고 교체 버튼으로 확인한다.
+- 공용 수동 스킬은 공격·제어·방어 대표1종씩을 첫 구현 범위로 사용한다. 별빛 폭발은
+  금빛 충격, 서리 파동은 지면의 얇은 청백색 확산, 수정 방벽은 수정 주변 투명 보호막이다.
+  버튼의 도형·이름·활성 상태·남은 쿨타임으로 구별하며 넓은 효과가 모델이나 수정 상태를
+  가리지 않게 한다. 스킬 대상은 게임이 자동으로 선택한다.
+- 시각 검수 재현 씬은 `tests/arena_visual_preview.tscn`이다. 실제1280×800/1000×625,
+  한영 모달·최대6인·연속 이동/공격/스킬·선택·고정 카메라·정지·교체를 확인한다.
+- 2026-10-09 실제 GL Compatibility 검수 완료. `python3 tests/arena_visual_review.py`는
+  창 크기별100PNG·6,326검사/실패0·렌더 오류0이다. 실제 레이아웃 좌표는 두 창 모두
+  1280×800이며 PNG 픽셀은 각각1280×800/1000×625다. 최종 고유 PNG는 추가 의식 상태를
+  포함해 각110장이고 크기 불일치0이다. [전체 보고서](../build/arena-visual/report.json).
+- 직접 촬영을 보고 의식판 위 장식과 긴 설명문을 분리하고 공용 스킬 확산 링을 얇게
+  보완했다. `--only polish`로 두 창의 한영32PNG를 다시 촬영했으며 각각2,110/2,118검사,
+  실패0이다. 6인 카드 각각 선택·조이스틱 이동과 나머지 위치 유지도 확인했다.
+  [보완 보고서](../build/arena-visual/polish-report.json).
+- 기존 광고 별 끌어오기는 공통 reward_button과 실제 `Ads.completed` 결과를 사용한다.
+  새 문구·광고 보상값을 만들지 않는다. `--only rite`는 두 창의 한영12PNG·각1,158검사,
+  실패0이다. 실제 창 픽셀 좌표를 `Viewport.push_input(event, false)`로 넣어 의식 버튼,
+  6번째 영웅 선택·조이스틱 이동·해제를 확인했다. 보상 뒤 기존 별이 문 안으로 이동하며
+  수정 수호전은 계속 정지한다. 문 안에 별이 모두 들면 끌어오기 단추는 비활성이다.
+  [의식 보고서](../build/arena-visual/rite-report.json).
+- 한영 테마·무료 의식·중복 강화/최종 강화·능력치/패시브·대기 교체·보스·승패·도움말·
+  타이틀/이어하기 화면과 Brasa/Limne·몬스터 연속 프레임을 직접 확인했다.
+  [작은 창 영문 모음](../build/arena-visual/1000x625/en_contact.jpg),
+  [두 캐릭터 연속 모션](../build/arena-visual/1000x625/ko_native_motion_contact.jpg),
+  [광고 별 이동 연속 프레임](../build/arena-visual/1000x625/en_rite_pull_contact.jpg).
+  타이틀 첫 기록은 `Save.clears`의 수호 완료 횟수, 새 저장의 이어하기는 전투 시간이다.
+  전투 음악은 선택 테마 `theme_<id>`, 의식은 `ritual`, 보스는 기존 등장 효과음을 재사용한다.
+- 날씨는 ArenaWorld의 실제 MultiMesh 개수와 선택 테마를 읽는 override로 그린다.
+  기존 StellarWorld·native 모델/초상화·Sfx 데이터는 이 구현에서 수정하지 않았다.
+  Xvfb/llvmpipe의 실제 렌더·합성 터치 검수이며 Android 실기기 FPS·광고 송출 검수와 구분한다.
+
+## 2026-10-09 영웅 전체 native 3D 제작
+
+- 사용자 요청은 승인된 Limne를 보존하며 나머지49명을 실제 GLB/skin/대기·공격과
+  같은 모델의 초상화로 교체하는 것이다. 적당히 스타일라이즈드된 matte 게임풍을 유지한다.
+- 실제 활성 sprite의 머리·체형·의복·무기를 기준으로 개별 A-pose 래스터 참조를 만든다.
+  이 래스터는 실제 GLB 산출물과 구분한다. 손·무기·몸이 닿지 않는 입력으로
+  재구성하고 실제 조형 좌표에 맞춰 팔·강체 장비 가중치를 작성한다.
+- 대표 Echo/Brasa/Pip는 두 크기 실제 Godot 각각85PNG/오류0과 연속 모션·등급·각성·
+  12명 전투 검수 후 native ready로 연결했다. 초상화33장 여백 실패0이다.
+  Chispa/Lind/Brigid도 같은 검수 뒤 연결했다.
+  전체49명의 개별 A-pose 입력을 검수·등록했다. Phorkys/Solana/Jokull/Rhiannon/
+  Mimic/Protea, Ceniza/Kari/Vidarr/Igni/Volcan, Shift/Thalassa/Snorri/Morrigan/
+  Blank/Candela/Sigrid/Helga와 Lugh/Galene/Zero/Phantom/Caden/Estoque/Nerea/Glaukos도
+  같은 실제 검수를 마쳤다. Finn/Marea/Grey/Carmen/Conor/Brian과 Niamh/Saeta/Keto/Null/Isa/Eira,
+  Triton/Frosti/Donn도 연결해 **현재 Limne 포함50/50**이다. 마지막 Dummy도 실제 Attack 원본의
+  scoped rifle과 fixed hip sidearm을 유지한 별도 분리 자세 원형에서 총구·강체를 맞췄다.
+  새 초상화539장을 같은 모델로 촬영해 전수 알파 잘림0을 확인했고 보호된 Limne11장은 그대로다.
+  총구 메타데이터의 Blender XYZ 회전을 Godot에서도 XYZ로 읽는다.
+  세 모델의 관절 수나 좌표를
+  모든 캐릭터의 고정 규격으로 사용하지 않는다. [제작 기록](NATIVE_HERO_PRODUCTION.md).
+
+- 최신 사용자 범위에 몬스터25종이 포함된다. 연체·사족·날개 등 실제 원본 체형별
+  뼈/IdleLoop/MoveLoop를 작성하고, 기존 `mo.motion_t`만 읽어 둔화·마비·멈춤과 맞춘다.
+  DropSlime1종은 두 화면 크기 각78PNG·보행/상태 효과/12영웅 전투를 검수해 연결했다.
+  여우·드래곤은 과도한 경량화가 표면을 무너뜨려 보존UV의 55k/65k 모델로 보완했다.
+  같은 두 화면 크기·모션·상태·혼합 전투를 실제 검수했다. RapidRay/JellySeer/WaveGiant/EmberImp도
+  검수했다. Magma/Bramble/Vine/Spore/Stone/Idol과 Pyre/Elder/Pebble/Blizzard/Skink/Frost도
+  검수했다. GlacierTitan/RimeWitch/AbyssLeviathan도 같은 두 크기 각78PNG·보행·상태·전투를 직접
+  검수했다. CrystalGolemKing/GlacierDragon도 같은 실제 검수로
+  현재 몬스터25/25를 연결했다. 마지막 TitanBloom은 원형의 표면 찢김을 거절하고
+  원본을 보존한 closed-volume 단일 참조 재구성 후 실제 native 체적의 연속 표면/UV·skin·clip
+  전송으로 보완했다. 각 모델 두 크기78PNG/오류0와 최종25초상화의 알파 잘림0을 확인했다.
+  전체75 실제 모델 모음은 `build/character-3d/review/native-overview-75.png`다.
+  최대 밀도 fixture도 두 크기 각15PNG/오류0, 실제12영웅+41몬스터/25identity와
+  연속12pose/GIF/MP4를 직접 확인했다. 자료는 `build/character-3d/density-review/`다.
+  별도 게임 진행/기기FPS 검증과 구분한다. Pyre의 긴 staff는
+  실측에 맞춘 별도 관절로 유지하고, Elder는 닫힌 나무 몸통·얼굴을 보완한 원형에서 완성했다.
+  41몬스터+12영웅 밀도 검수와 전25완료를 구분한다. 일부 표면은 UV collapse가 손상시켜
+  원형 해상도를 보존하는 예외가 있으며 폴리곤 수로 실기기 성능을 보장하지 않는다.
+  [몬스터 제작 기록](NATIVE_MONSTER_PRODUCTION.md).
+  전체75 native·575초상화를 포함한 새 APK는 고정 `/home/dgxmaruta/sd-tst.apk`에 반영했다.
+  필수 회귀·payload·서명·광고·오디오·DB 제외 검사를 통과했다. iOS는 Xcode/PCK 검증이며
+  서명 IPA/실기기 FPS 검수와 구분한다.
+
+## 2026-10-09 Limne — 승인된 조형·3D 게임 스타일·모션
+
+- 사용자가 현재 Limne를 긍정적으로 평가하고 움직임과 덜 실사 피규어 같은 3D 게임 표현을
+  요청했다. **현재 조형을 보존**하며 이 피드백이 아래 10월 8일의 목표 콘셉트 미달 평가보다
+  최신 작업 기준이다. 새 이미지→3D 생성이나 원본 재설계를 하지 않는다.
+- 남색 단발·갈색 눈·청록 앞치마·코발트 작업복·탱크·두 호스/노즐을 유지한다.
+  머리·피부·옷·고무의 반사와 황동 광택을 낮추고 부드러운 게임 재질로 정리했다.
+  기존 albedo/UV는 보존하며 런타임 의복 거칠기·금속성은 절제된 상수로 둔다.
+- 원래 다섯 직접 제어 노드·bone에 팔꿈치/손목 네 bone을 추가했다. 6초 호흡·작은 체중 이동,
+  팔꿈치 조준·손목 방향 유지·물 분사·0.22초 복귀를 적용한다. 발은 바닥에 고정한다.
+  물줄기는 기존 `fx_w` 이후에만 표시하며 게임 공격 시점·피해·난수·다른 49명은 유지한다.
+  GLB에는 편집 가능한 `IdleLoop`, `WaterSprayAttack`도 보존한다.
+- 물줄기/물방울은 한 번 만든 공유 mesh와 재질을 갱신한다. 매 프레임 mesh/재질을 생성하지 않는다.
+  본체 StandardMaterial3D와 경량 분사 shader는 GL Compatibility에서 검수했다.
+- 현행 재현은 `tools/3d/build_limne.py`→`style_animate_limne.py`이며 승인된 원본은
+  `build/limne-game-motion/before/`, 편집 원본은 같은 폴더의 `limne_game.blend`다.
+  원시 finishing 도구의 재실행은 명시적인 legacy flag로 보호한다.
+- 현재 자료는 `build/limne-game-motion/game-review/`와 `studio/`다. 실제 두 화면 크기
+  각각121PNG/오류0, 60대기·40공격 연속 프레임·6.6초 GIF/MP4·같은 카메라 재질 전후 비교와
+  12고유 영웅 전투를 직접 검수했다. 새 초상화11장 최소 알파 여백23px/잘림0이며,
+  모션 계약174/0·전체 모델2,628/0을 통과했다. 본체173,032삼각형/9bone은 유지하므로
+  모바일 LOD·실기기 FPS 검증은 별도다. [현재 모션·스타일 기록](LIMNE_MOTION_STYLE.md)을 따른다.
+
 ## 2026-10-08 실제 3D 전환 — 현재 아트 방향
 
 - 사용자가 2D 픽셀 인게임을 실제 3D Tower Defense로 전환하도록 요청했다. 이 기준이 과거
@@ -43,6 +163,34 @@
   4px 가장자리 여백 검사 실패 0건, 두 해상도 실제 렌더 오류 0건을 확인했다.
   검수 기록은 [3D 시각 검수](STELLAR_3D_VISUAL_REVIEW.md)를 따른다.
   Android 실기기 프레임률/육안 검수는 수행하지 않았다.
+
+## 2026-10-08 Limne 고급 스타일라이즈드 3D 재작업
+
+- 첫 Blender custom-mesh 테스트는 기능 검사를 통과했으나 사용자가 미적 품질을 거절했다.
+  당시 확정 방향은 **원본 캐릭터를 살린 고급 스타일라이즈드 3D — 애니메이션·게임풍**이었다.
+  원판 눈·반복 타원 머리·볼 스티커·평평한 앞치마·상자 장화의 수준을 기준으로 삼지 않는다.
+- 보존된 남색 단발·갈색 눈·청록 앞치마·코발트 작업복·고무장화·한 탱크와 두 호스를 따른다.
+  `build/limne-pro/concept/limne_target.png`는 내장 image_gen으로 만든 래스터 품질 목표이며
+  실제 GLB 렌더와 구분한다. 실제 native TRELLIS.2 full bf16/1024 shape/768 remesh/2048 PBR
+  output에서 머리·옷·몸체를 보존하고 Blender로 얼굴/목 연속 표면, 눈/눈꺼풀,
+  단일 탱크·원형 노즐·연결된 호스를 작성하는 혼합 제작이다.
+- 당시 표면 제작 entry는 실제 원시 GLB 입력을 쓰는 `tools/3d/finish_limne_pro.py`였다.
+  거절된 v1은 `build/limne-pro/rejected-v1/`에만 보존한다. 실제 workflow는
+  `tools/3d/limne_trellis.json`, high/game .blend·대형 원본·가중치는 `build/limne-pro/` 아래에만 둔다.
+  최종 본체는 원시 2048 base-color/ORM UV를 보존한다. 축소·새 atlas 베이크는 검은 삼각형
+  결함으로 거절했으며 별도 normal map이나 모바일 LOD 최적화 완료를 주장하지 않는다.
+  손/손목은 닫힌 피부 표면으로 작성하고 천 경계는 연속 허리/어깨/소매 표면으로 보수한다.
+- 당시 런타임 `art/models/limne/limne.glb`와 `game/3d/limne_model.gd`는 기존 직접 Body/Arm/Leg
+  pivot 계약을 다섯 bone의 연속 skin으로 연결한다. 등급·각성·캐시·전투 시점과 나머지 49명은
+  유지한다. 실제 여러 시점/1440×1800 studio/두 크기 게임/12프레임 idle·attack과
+  같은 모델 초상화 11장을 촬영하고 직접 검수했다. 홍채의 COLOR_0가 Godot 재질에서 비활성화된 문제는
+  전용 어댑터에서 보정했다. 이전 v1 자료는 현행 품질의 근거가 아니다.
+- 당시 QA 경로는 `build/limne-pro/studio/`, `build/limne-pro/game-review/`이며 최종 두 크기
+  실제 렌더 각45PNG/오류0, 11초상화 여백 실패0, 모델 계약134/0·전체 모델2,628/0을 확인했다.
+  결과는 이전 모델보다 개선된 **실제 3D 실험**이며 목표 콘셉트와 같은
+  전문적인 완성 품질로 통과시킨 것이 아니다. 큰 렌더에는 어깨/소매 톱니 경계·보수부
+  톤 차이·눈 주변의 작은 파편이 남아 있다. 수작업 retopology·모바일 LOD 및 실기기 FPS
+  검증은 미완료다. 결과·제작 근거·한계는 [Limne 3D 테스트](LIMNE_3D_TEST.md)를 따른다.
 
 ## 2026-10-08 자유 배치·모바일 3D 렌더 보정
 
@@ -184,7 +332,8 @@
   기존 `art/portraits/`와 대기 프레임은 리소스 누락 시의 호환용 대체 경로로 보존한다.
 - **캐릭터는 큰 얼굴·짧고 통통한 3D 체형이다.** 2026-10-07의 2D 비례 개편과
   `tools/roster.json`의 얼굴·장비 정체성을 2026-10-08의 절차적 3D 모델에 이어 적용한다.
-  현재 배우 소스는 `game/3d/stellar_models.gd`와 `art/models/manifest.json`이다.
+  현재 배우 소스는 `game/3d/stellar_models.gd`와 `art/models/manifest.json`이며,
+  Limne는 위 실제 GLB 테스트의 custom 메쉬를 사용한다.
   2D 원본의 생성 기록은 `art/chibi-manifest.json`과
   [캐릭터 비례 개편](CHIBI_CHARACTER_REWORK.md)에 보관한다.
   이전 H3/roster/readability 설치 도구로 현재 3D 에셋을 덮어쓰지 않는다.
