@@ -38,9 +38,13 @@ func _ready() -> void:
 	camera.current=true
 	var count := 0
 	var ids := ""
+	var monster_ids := ""
+	var monster_count := 0
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--ids="): ids=arg.substr(6)
+		if arg.begins_with("--monster-ids="): monster_ids=arg.substr(14)
 	for unit in Roster.UNITS:
+		if not monster_ids.is_empty() and ids.is_empty(): continue
 		if ids!="" and not String(unit["id"]) in ids.split(","): continue
 		for grade in range(10):
 			await _render(stage,viewport,camera,unit,grade)
@@ -48,12 +52,17 @@ func _ready() -> void:
 	# Fusion guardians use their canonical base identity at all tiers.
 	for grade in range(10):
 		for unit in Roster.fusion_units(grade):
+			if not monster_ids.is_empty() and ids.is_empty(): continue
 			if ids!="" and not String(unit["base_id"]) in ids.split(","): continue
 			await _render(stage,viewport,camera,unit,grade)
 			count+=1
 	for monster in Roster.MONSTERS:
+		if not monster_ids.is_empty():
+			if not String(monster["id"]) in monster_ids.split(","): continue
+		elif not ids.is_empty(): continue
 		await _render_monster(stage,viewport,camera,monster)
-	print("Stellar 3D portraits generated: %d heroes + 25 monsters"%count)
+		monster_count += 1
+	print("Stellar 3D portraits generated: %d heroes + %d monsters"%[count,monster_count])
 	viewport.queue_free()
 	await get_tree().process_frame
 	get_tree().quit(0)

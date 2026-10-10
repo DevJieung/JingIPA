@@ -14,7 +14,7 @@ from godot_env import ROOT, GODOT, xvfb
 parser = argparse.ArgumentParser()
 parser.add_argument("--res", action="append")
 parser.add_argument("--out-root", type=Path, default=ROOT / "build/arena-visual")
-parser.add_argument("--only", choices=["polish", "help", "rite", "style", "look", "circle", "hud", "road"])
+parser.add_argument("--only", choices=["polish", "help", "rite", "style", "look", "circle", "hud", "road", "motion"])
 args = parser.parse_args()
 report = {"renderer": "gl_compatibility", "device_fps_measured": False, "resolutions": {}}
 for index, resolution in enumerate(args.res or ["1280x800", "1000x625"]):
@@ -46,7 +46,7 @@ for index, resolution in enumerate(args.res or ["1280x800", "1000x625"]):
             shot.thumbnail((426, 267))
             contact.paste(shot, (n % 3 * 426, n // 3 * 267))
         contact.save(out / f"{locale}_contact.jpg", quality=94)
-        for motion in ["move", "limne_move", "skill_blast", "skill_freeze", "skill_ward", "rite_spin", "follow", "echo_attack", "lane", "long_walk", "road_pass"]:
+        for motion in ["move", "limne_move", "skill_blast", "skill_freeze", "skill_ward", "rite_spin", "follow", "echo_attack", "lane", "long_walk", "road_pass", "motion"]:
             files = sorted(out.glob(f"{locale}_{motion}_[0-9][0-9].png"))
             frames = []
             for path in files:
@@ -55,12 +55,12 @@ for index, resolution in enumerate(args.res or ["1280x800", "1000x625"]):
                 frames.append(preview.quantize(colors=128, method=Image.Quantize.FASTOCTREE))
             if frames:
                 frames[0].save(out / f"{locale}_{motion}.gif", save_all=True,
-                               append_images=frames[1:], duration=300 if motion == "road_pass" else 100,
+                               append_images=frames[1:], duration=300 if motion == "road_pass" else 67 if motion == "motion" else 100,
                                loop=0, optimize=False)
     checks = json.loads((out / (f"{args.only}-report.json" if args.only else "report.json")).read_text())
     if "resolution" in checks:
         checks["layout_resolution"] = checks.pop("resolution")
-    reference = {"circle": "ko_circle.png", "road": "ko_road_field_six.png"}.get(args.only, "ko_rite_free.png")
+    reference = {"circle": "ko_circle.png", "road": "ko_road_field_six.png", "motion": "ko_motion_start.png"}.get(args.only, "ko_rite_free.png")
     checks["window_resolution"] = list(Image.open(out / reference).size)
     checks["screenshots"] = {"polish": 32, "help": 2, "rite": 12, "style": 38}.get(args.only, len(list(out.glob("*.png"))))
     checks["render_errors"] = 0

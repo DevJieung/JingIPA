@@ -1,0 +1,477 @@
+[
+  {
+    "id": "drop_slime",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/drop_slime.png",
+    "source": "art/animation/chibi_v1/source/drop_slime.png",
+    "source_rect": [
+      33,
+      0,
+      373,
+      512
+    ],
+    "source_sha256": "b0cf9417e3c2741b0b80411888ea87860556fc68827f7519a8db7102a71c2f4d",
+    "image_sha256": "289ca2ab0dbd1863c7c24331461b6fa0ca324f7df6a6a6906733d07a87648b12",
+    "active_anim": "art/anim/monsters/drop_slime/anim.json",
+    "active_art": "art/monsters/drop_slime.png",
+    "prompt": "a knee-high blob of deep blue-green water, its deep navy body sagging into a heavy teardrop shape held together by a thick black outline, two hollow black dot eyes sunk deep into the mass, clear ripples crossing its surface, and a steel-blue rim along its crown",
+    "kind": "swarm",
+    "element_body": "aqua",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "rapid_ray",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/rapid_ray.png",
+    "source": "art/animation/chibi_v1/source/rapid_ray.png",
+    "source_rect": [
+      21,
+      0,
+      369,
+      512
+    ],
+    "source_sha256": "688c4a60c772ab612df6a6ed56801ea326e5418e18f6d7c719dc00950f4c8ed6",
+    "image_sha256": "ae6f6ac63d526b89e6e9d28a957852a956223105a33f5cbbb41994b6e2f0fb19",
+    "active_anim": "art/anim/monsters/rapid_ray/anim.json",
+    "active_art": "art/monsters/rapid_ray.png",
+    "prompt": "a lean gliding manta ray shaped from bright storm-blue water, wide thin wing fins spread into a flat readable silhouette trailing bright spray, a long whipping tail, teal edges rimming the fins, and two hollow black eye holes set on its flat brow",
+    "kind": "fast",
+    "element_body": "aqua",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "wave_giant",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/wave_giant.png",
+    "source": "art/animation/chibi_v1/source/wave_giant.png",
+    "source_rect": [
+      20,
+      0,
+      417,
+      512
+    ],
+    "source_sha256": "fc934f6151a290bc5e431b71052286e0f3a2e87edb09c4d937ad570b7d9de04f",
+    "image_sha256": "ab52488a99324352c086eead2a509483d420ce4bde94b2fcd0bddb80324d319a",
+    "active_anim": "art/anim/monsters/wave_giant/anim.json",
+    "active_art": "art/monsters/wave_giant.png",
+    "prompt": "a heavy humanoid giant built from churning midnight blue seawater, broad slab shoulders spilling bright white-green foam, thick arms curling into breaking waves with gaps between the curls, two hollow black dots for eyes in a face, and teal accents along the wave crests",
+    "kind": "tank",
+    "element_body": "aqua",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "jelly_seer",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/jelly_seer.png",
+    "source": "art/animation/chibi_v1/source/jelly_seer.png",
+    "source_rect": [
+      33,
+      0,
+      400,
+      512
+    ],
+    "source_sha256": "d5857af9349646c7be6c49d9dcec32fad462cdd1771a39b1712e4ea06fa928d8",
+    "image_sha256": "06c887ca756adf6d7225e9f5e67395beb963518e1cdebc023c44e89a1f45c2a8",
+    "active_anim": "art/anim/monsters/jelly_seer/anim.json",
+    "active_art": "art/monsters/jelly_seer.png",
+    "prompt": "a drifting bell-shaped jellyfish sorcerer with a violet-blue dome, teal veins tracing its heavy hood, long ragged tentacles trailing beneath it in tangled coils, two hollow black dots for eyes on the bell, and a darkened orb cradled in its curled tendrils",
+    "kind": "caster",
+    "element_body": "aqua",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "ember_imp",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/ember_imp.png",
+    "source": "art/animation/chibi_v1/source/ember_imp.png",
+    "source_rect": [
+      25,
+      0,
+      377,
+      512
+    ],
+    "source_sha256": "39f596026e78b8470542fa5072e47aa32f74162441142c9f301a3f23b3bb9724",
+    "image_sha256": "6ecf977fdf82dc5cb30a6cc2a85d83c998c67f583eaeb7dca5c4f42749ffe489",
+    "active_anim": "art/anim/monsters/ember_imp/anim.json",
+    "active_art": "art/monsters/ember_imp.png",
+    "prompt": "a compact imp of glowing coals with a cracked crust body of warm pale ash, bright molten orange light pouring out of the cracks, stubby dark grey limbs, two hollow black dot eyes, and a bright ember tuft burning at the crown of its head with thin smoke curling off",
+    "kind": "swarm",
+    "element_body": "flame",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "blaze_fox",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/blaze_fox.png",
+    "source": "art/animation/chibi_v1/source/blaze_fox.png",
+    "source_rect": [
+      16,
+      0,
+      370,
+      512
+    ],
+    "source_sha256": "bb77b0c3616b7cf434c6eca8c332bcd1f6d9c40595c0889092ae92da66ca6598",
+    "image_sha256": "68c8f4650470458939581f426b1f03cf3bc41299e37cf240098a855090d4f4e7",
+    "active_anim": "art/anim/monsters/blaze_fox/anim.json",
+    "active_art": "art/monsters/blaze_fox.png",
+    "prompt": "a lean sprinting fox with a soot-darkened coat of rust and charcoal, a long ragged tail streaming ember-red fire behind it, scorched black paws, two hollow eye holes in a narrow muzzle, and thin grey smoke curling from its shoulders",
+    "kind": "fast",
+    "element_body": "flame",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "magma_brute",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/magma_brute.png",
+    "source": "art/animation/chibi_v1/source/magma_brute.png",
+    "source_rect": [
+      6,
+      0,
+      405,
+      512
+    ],
+    "source_sha256": "d492532b02a254e52c0b0b42dec5fe6cc12aa9044f52aaaf5535896582a561f0",
+    "image_sha256": "be085cb135a709bfb3a205b09ec69856e2378941656b040624044902892d63fd",
+    "active_anim": "art/anim/monsters/magma_brute/anim.json",
+    "active_art": "art/monsters/magma_brute.png",
+    "prompt": "a massive four-legged beast sheathed in cracked warm grey stone with bright glowing molten orange seams pouring light between its plates, thick heavy legs, a broad low skull with blunt outward horns, two hollow black eye sockets, and smoke drifting off its hot back",
+    "kind": "tank",
+    "element_body": "flame",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "pyre_priest",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/pyre_priest.png",
+    "source": "art/animation/chibi_v1/source/pyre_priest.png",
+    "source_rect": [
+      58,
+      0,
+      373,
+      512
+    ],
+    "source_sha256": "e0fec0bc3953e352e9763d9e80cc4ecd4ede55fbe971fdf3c8d811eccc695848",
+    "image_sha256": "192b4e1fa798b65cc5712d4ba6c193d81533482018af81242b6f3bb5191207e2",
+    "active_anim": "art/anim/monsters/pyre_priest/anim.json",
+    "active_art": "art/monsters/pyre_priest.png",
+    "prompt": "a robed fire priest in deep oxblood and polished brass vestments, a horned skull mask shadowing its face, gripping a long staff crowned with a soot-blackened brazier of embers, ash drifting from one raised hand, and charcoal wrappings over its narrow shoulders",
+    "kind": "caster",
+    "element_body": "flame",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "bramble_imp",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/bramble_imp.png",
+    "source": "art/animation/chibi_v1/source/bramble_imp.png",
+    "source_rect": [
+      17,
+      0,
+      382,
+      512
+    ],
+    "source_sha256": "ec703e8a7f876239f4801b8848207992e311b4cdff36bd16e7768eed4cb02c4a",
+    "image_sha256": "bec245e45d5f32058db1efb9e1879e1d1a865979d8daba7102f355e609e56cd2",
+    "active_anim": "art/anim/monsters/bramble_imp/anim.json",
+    "active_art": "art/monsters/bramble_imp.png",
+    "prompt": "a knotted imp woven from thorny vines and dead leaves, a compact body of tangled twigs with open gaps between them, two hollow black eye holes peering from inside the bramble, short gnarled root legs, and a few ochre leaves caught in its matted growth",
+    "kind": "swarm",
+    "element_body": "wood",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "vine_lynx",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/vine_lynx.png",
+    "source": "art/animation/chibi_v1/source/vine_lynx.png",
+    "source_rect": [
+      9,
+      0,
+      372,
+      512
+    ],
+    "source_sha256": "b4bfe7917353c2e159afb4b51b97f894c1a45a4f968d2f83e9ef61ba4aa5c25c",
+    "image_sha256": "692a8a15d29b6ae5abb7f9efc09d5766ad6a92e997d02a5303bf0c4b7b88c584",
+    "active_anim": "art/anim/monsters/vine_lynx/anim.json",
+    "active_art": "art/monsters/vine_lynx.png",
+    "prompt": "a lean prowling panther bound from green vines and strips of rough bark, a ruff of pointed leaves along its neck, long curved thorn claws, a lashing tail of braided creeper looping back on itself, and two hollow black eyes in a flat mossy face",
+    "kind": "fast",
+    "element_body": "wood",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "elder_treant",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/elder_treant.png",
+    "source": "art/animation/chibi_v1/source/elder_treant.png",
+    "source_rect": [
+      16,
+      0,
+      373,
+      512
+    ],
+    "source_sha256": "3f04a032f132ee20849414123e627bf8d4204ba533264f8db06e72001216f96c",
+    "image_sha256": "c6e1d36b8b0c9f2cffd040514d6092eebd94d2dc3496dff1a1b011693864c479",
+    "active_anim": "art/anim/monsters/elder_treant/anim.json",
+    "active_art": "art/monsters/elder_treant.png",
+    "prompt": "a towering treant with a thick gnarled trunk for a body, deeply cracked well-used bark, two heavy branch arms hanging low with open gaps under them, a dense crown of moss-green leaves, two hollow black eyes sunk in a knothole face, and mossy root feet",
+    "kind": "tank",
+    "element_body": "wood",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "spore_cap",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/spore_cap.png",
+    "source": "art/animation/chibi_v1/source/spore_cap.png",
+    "source_rect": [
+      43,
+      0,
+      403,
+      512
+    ],
+    "source_sha256": "74a27f9cfc8ae664b63aced50e485cde834e674118b3a857d5417883cffdc271",
+    "image_sha256": "fbbf4346a2300c30695cd1ef081b669e36491f5b13e6391ca06a628c68eb2b04",
+    "active_anim": "art/anim/monsters/spore_cap/anim.json",
+    "active_art": "art/monsters/spore_cap.png",
+    "prompt": "a walking mushroom monster with a broad domed cap of deep maroon marked by pale ash spots, two hollow black dot eyes under the shadowed cap rim, a thick fibrous dun stalk for a body, stubby root feet, and spore dust sifting from its gills",
+    "kind": "caster",
+    "element_body": "wood",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "pebble_imp",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/pebble_imp.png",
+    "source": "art/animation/chibi_v1/source/pebble_imp.png",
+    "source_rect": [
+      38,
+      0,
+      374,
+      512
+    ],
+    "source_sha256": "a5980f0e6b0adedd6cec15acecbf358035ca80a448e6f451d7288956d5e7aebd",
+    "image_sha256": "80e9e28c59981f9fde88501a68750dbfef7247ccdea95444f1be2970089d9a2d",
+    "active_anim": "art/anim/monsters/pebble_imp/anim.json",
+    "active_art": "art/monsters/pebble_imp.png",
+    "prompt": "a compact creature stacked from grey and dun river stones, a boulder head with two hollow black eye holes, blunt rock arms, cracked slabs across its chest, moss staining the seams between the stones, and gravel crumbling from its blocky feet",
+    "kind": "swarm",
+    "element_body": "rock",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "crystal_skink",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/crystal_skink.png",
+    "source": "art/animation/chibi_v1/source/crystal_skink.png",
+    "source_rect": [
+      3,
+      0,
+      391,
+      512
+    ],
+    "source_sha256": "0fb4b2fbd512de14f844ac9c0e7f7a3d8c5494b3e6f8425cd8c38f8015646b00",
+    "image_sha256": "daac958caacd528d08cd70f71ea583329b08fa4d1593ce8bd99de291686755db",
+    "active_anim": "art/anim/monsters/crystal_skink/anim.json",
+    "active_art": "art/monsters/crystal_skink.png",
+    "prompt": "a quick darting lizard armoured in jagged amber crystal shards, blunt stone claws, a ridge of citrine spines running down its back, a heavy tail of fused rock, well-used grey hide between the shards, and two hollow black eyes in a wedge-shaped skull",
+    "kind": "fast",
+    "element_body": "rock",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "stone_golem",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/stone_golem.png",
+    "source": "art/animation/chibi_v1/source/stone_golem.png",
+    "source_rect": [
+      16,
+      0,
+      371,
+      512
+    ],
+    "source_sha256": "2d9f43893a260c9e49fe32869be07f43eff73892567492c1a9be4364ef4ada4e",
+    "image_sha256": "cb86b932ce197440a9f28cb4ec16b7389b50cc96d81b385b990a7bdfb8977b47",
+    "active_anim": "art/anim/monsters/stone_golem/anim.json",
+    "active_art": "art/monsters/stone_golem.png",
+    "prompt": "a bulky golem built from well-used dun sandstone slabs, blocky heavy fists hanging past its knees, no neck, a cracked boulder head with one hollow eye socket, ochre lichen in the deep seams, and grit falling from its scarred plates",
+    "kind": "tank",
+    "element_body": "rock",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "runestone_idol",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/runestone_idol.png",
+    "source": "art/animation/chibi_v1/source/runestone_idol.png",
+    "source_rect": [
+      81,
+      0,
+      300,
+      512
+    ],
+    "source_sha256": "16f949f1f7b8d7a8fdd815d797a6996f3f27b61343e7d8f37e58d8a26cee8967",
+    "image_sha256": "336f39dd7e5f12da8e64705883a4b9208d6f95b4ad80697f61bf7975f7fa0c23",
+    "active_anim": "art/anim/monsters/runestone_idol/anim.json",
+    "active_art": "art/monsters/runestone_idol.png",
+    "prompt": "a hovering carved stone idol shaped like a blunt totem pillar, an angular granite face with two hollow black eye holes, well-used rune grooves cut across its cracked surface and stained ochre, chipped edges along its flanks, and a chunk of raw crystal drifting above its flat crown",
+    "kind": "caster",
+    "element_body": "rock",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "frost_imp",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/frost_imp.png",
+    "source": "art/animation/chibi_v1/source/frost_imp.png",
+    "source_rect": [
+      12,
+      0,
+      373,
+      512
+    ],
+    "source_sha256": "6804971cab4a1452303452cbf4c364acb361bd77c511f0eee01b86b18dff1b4a",
+    "image_sha256": "5a49f8754cc76db85d997c2e460c8fc39cc29c7461f8d72d7c954ed7272d5ad2",
+    "active_anim": "art/anim/monsters/frost_imp/anim.json",
+    "active_art": "art/monsters/frost_imp.png",
+    "prompt": "a rounded imp packed from snow and grey-blue ice, two hollow black dot eyes, stubby icicle arms, a jagged frost shard jutting from the top of its head, a rime crust flaking off its shoulders, and dirt frozen into its lower half",
+    "kind": "swarm",
+    "element_body": "frost",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "blizzard_wolf",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/blizzard_wolf.png",
+    "source": "art/animation/chibi_v1/source/blizzard_wolf.png",
+    "source_rect": [
+      10,
+      0,
+      373,
+      512
+    ],
+    "source_sha256": "609f57c46e572e11020344eae2562e88a33190a7b96d1c69f9a6b5dc5d70fede",
+    "image_sha256": "53ba13410f60ba93fbbf14c5c4a5dfea8d69ba517c59db47105ba07aebf41b22",
+    "active_anim": "art/anim/monsters/blizzard_wolf/anim.json",
+    "active_art": "art/monsters/blizzard_wolf.png",
+    "prompt": "a lean sprinting wolf with a frost-matted coat of slate and steel blue, long icicle fangs, a ridge of ice crystals along its spine, frozen tufts on its haunches, and two hollow black eyes above a narrow scarred muzzle",
+    "kind": "fast",
+    "element_body": "frost",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "glacier_titan",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/glacier_titan.png",
+    "source": "art/animation/chibi_v1/source/glacier_titan.png",
+    "source_rect": [
+      17,
+      0,
+      400,
+      512
+    ],
+    "source_sha256": "d5cfb7a699f9f18a9dc3abc26a6e1afde08050d3efca52f9b4df81210b8712db",
+    "image_sha256": "6f3a1c69e67902dfb99b9745dc26661b7bea70b68ffd12568be6a9efcf3dc71e",
+    "active_anim": "art/anim/monsters/glacier_titan/anim.json",
+    "active_art": "art/monsters/glacier_titan.png",
+    "prompt": "a hulking giant carved from clouded glacier ice, broad angular shoulders of thick frozen slabs, massive blunt fists, jagged icicles jutting from its back, deep fracture lines running through its grey-blue chest, and two black pits for eyes in a flat brow",
+    "kind": "tank",
+    "element_body": "frost",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "rime_witch",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/rime_witch.png",
+    "source": "art/animation/chibi_v1/source/rime_witch.png",
+    "source_rect": [
+      53,
+      0,
+      376,
+      512
+    ],
+    "source_sha256": "786972b9c30cb333e2886d8761cd1a3d04fb9e78532d9bf8e878ef28436953ea",
+    "image_sha256": "502a6a95579abba94f030f025d26d1ba26bf82e5ae7f33f57374db887638f4a0",
+    "active_anim": "art/anim/monsters/rime_witch/anim.json",
+    "active_art": "art/monsters/rime_witch.png",
+    "prompt": "a gaunt ice witch in a long deep indigo robe trimmed with frosted crystal, a tall pointed shard crown set above a tall stiff crest of hair, gripping a crooked staff topped with a grey-blue gem, and rime dusting her narrow sleeves and collar",
+    "kind": "caster",
+    "element_body": "frost",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "abyss_leviathan",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/abyss_leviathan.png",
+    "source": "art/animation/chibi_v1/source/abyss_leviathan.png",
+    "source_rect": [
+      26,
+      0,
+      376,
+      512
+    ],
+    "source_sha256": "5fecb8040d95ef065b838445a0c3da4d84b68487b4cd124bb9ac4c752f68005e",
+    "image_sha256": "fae128e39da23b4f4d809ce0fe9d75ea3a1cf3e4e5c169248617a20785912360",
+    "active_anim": "art/anim/monsters/abyss_leviathan/anim.json",
+    "active_art": "art/monsters/abyss_leviathan.png",
+    "prompt": "a colossal serpentine sea leviathan rearing up, a massive fanged maw, broad ridged fins running along a coiling midnight blue body, thick polished scales darkened with grime, two black pits for eyes, and heavy torrents of water spilling from its jaws",
+    "kind": "boss",
+    "element_body": "aqua",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "flame_dragon",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/flame_dragon.png",
+    "source": "art/animation/chibi_v1/source/flame_dragon.png",
+    "source_rect": [
+      27,
+      0,
+      378,
+      512
+    ],
+    "source_sha256": "d7eba7e93bc70dd989257ffce335bafd42ed9db2557348d08907f564549d7c94",
+    "image_sha256": "2597009864ddebad4915eb4e95e68078b73733bf4f48db1794a8fd6dafc4eed3",
+    "active_anim": "art/anim/monsters/flame_dragon/anim.json",
+    "active_art": "art/monsters/flame_dragon.png",
+    "prompt": "a colossal dragon of scorched crimson and charcoal scale, vast leathery wings spread wide with torn membranes, a spiked pale ash crest down its neck, thick armoured belly plates, two black eye pits, and molten red seams deep inside its open jaws",
+    "kind": "boss",
+    "element_body": "flame",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "titan_bloom",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/titan_bloom.png",
+    "source": "art/animation/chibi_v1/source/titan_bloom.png",
+    "source_rect": [
+      27,
+      0,
+      388,
+      512
+    ],
+    "source_sha256": "be88aaa4116b4286ad5ae76011430dcaf1a6cbfc5efbdce3b4d5c49c235fab0e",
+    "image_sha256": "feb76e6635ef6535014accac430e18da29db12a02f4ff08912cbd4d23a9ec18c",
+    "active_anim": "art/anim/monsters/titan_bloom/anim.json",
+    "active_art": "art/monsters/titan_bloom.png",
+    "prompt": "a colossal carnivorous flower monster, an enormous petal maw of deep magenta lined with long fangs, three thick writhing vine necks tipped with snapping buds, a bulbous mossy base of rotting leaves, and huge clawed roots curling into the ground",
+    "kind": "boss",
+    "element_body": "wood",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "crystal_golem_king",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/crystal_golem_king.png",
+    "source": "art/animation/chibi_v1/source/crystal_golem_king.png",
+    "source_rect": [
+      38,
+      0,
+      377,
+      512
+    ],
+    "source_sha256": "5e9ff068d096f325135fa74c6f2c8bb59bbe5cf8e02a88c2008e40cfa0a76185",
+    "image_sha256": "a083e045f099a9880c6814e178d6432b9e95e56cc4c6a966856ec85ab2358dff",
+    "active_anim": "art/anim/monsters/crystal_golem_king/anim.json",
+    "active_art": "art/monsters/crystal_golem_king.png",
+    "prompt": "a titanic golem king assembled from massive well-used granite slabs, enormous violet crystal shards erupting from its shoulders and back, a broad crownlike stone head, two black eye pits, a deep purple core sunk in its cracked chest, and huge blocky fists",
+    "kind": "boss",
+    "element_body": "rock",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "glacier_dragon",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/monster-native/inputs/glacier_dragon.png",
+    "source": "art/animation/chibi_v1/source/glacier_dragon.png",
+    "source_rect": [
+      24,
+      0,
+      376,
+      512
+    ],
+    "source_sha256": "f056d80e291b62f8c048258e0b2dcc4bd737151d36643672873d9fa752f07909",
+    "image_sha256": "d726124ede60e1fdd23df6bbdefbae3567088ae8b7571ad940351d8cb0d4a9b6",
+    "active_anim": "art/anim/monsters/glacier_dragon/anim.json",
+    "active_art": "art/monsters/glacier_dragon.png",
+    "prompt": "a colossal ice dragon rearing up, vast frozen wings of grey-blue crystal, a long spined neck sheathed in cracked glacier armour, huge curved ice horns arching over its skull, two black eye pits, and freezing mist pouring in a plume from its open jaws",
+    "kind": "boss",
+    "element_body": "frost",
+    "workflow_overrides": {}
+  }
+]

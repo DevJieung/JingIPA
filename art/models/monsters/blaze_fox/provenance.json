@@ -18,6 +18,8 @@
     "RearR"
   ],
   "clips": [
+    "Attack",
+    "Die",
     "IdleLoop",
     "MoveLoop"
   ],
@@ -26,8 +28,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/blaze_fox/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/blaze_fox/game.blend",
-  "glb_sha256": "310e6ac6fb20f662dbc6ce114ef5b00778d0f6b3a7e39542dee9d58c37b6fbf8",
-  "glb_bytes": 3673048,
+  "glb_sha256": "3158bd4b7cd2147d070863f146d81da13f61fedaa072835ea570259b331eefd4",
+  "glb_bytes": 3695888,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -62,5 +64,49 @@
     "glb_sha256": "310e6ac6fb20f662dbc6ce114ef5b00778d0f6b3a7e39542dee9d58c37b6fbf8",
     "report": "build/character-3d/monster-review/report.json",
     "artist_note": "Directly inspected actual GL Compatibility at1280x800 and1000x625: orange four-legged fox with cream ruff/dark paws/flame tail and red winged dragon with ivory belly/horns/tail remain coherent from front,side,back; independent diagonal stride,tail and wing motion in continuous MoveLoop frames; Burn/Frost/Stun and mixed12hero battle remain readable. Rejected destructive14k/28k LODs preserved; accepted UV-retaining54,979/64,871 triangle runtime variants. No device FPS claim."
+  },
+  "motion": {
+    "version": 2,
+    "library": "tools/3d/monster_motion.py",
+    "fps": 30,
+    "frames": {
+      "IdleLoop": 90,
+      "MoveLoop": 15,
+      "Attack": 30,
+      "Die": 24
+    },
+    "move_cycle_seconds": 0.5,
+    "travel_per_move_cycle_world_units": 0.82,
+    "attack_phase_map": "clip_time = (siege_phase - 0.3) mod 1; strike frame 21/30 lands at the phase wrap",
+    "params": {
+      "move_frames": 15,
+      "gait": "gallop",
+      "stance": 0.35,
+      "front_swing": 0.45,
+      "rear_swing": 0.5,
+      "leg_lift": 0.09,
+      "leg_reach": 0.11,
+      "pitch": 0.09,
+      "bounce": 0.045,
+      "stretch": 0.05,
+      "roll": 0.03,
+      "yaw": 0.02,
+      "head_nod": 0.07,
+      "tail_v": 0.25,
+      "tail_h": 0.1,
+      "splay": 0.0,
+      "undulate": 0.0,
+      "attack": "pounce",
+      "death": "sink",
+      "spawn": "rise",
+      "hover": 0.0,
+      "turn_rate": 12.0,
+      "turn_max": 10.0,
+      "bank": 0.22
+    },
+    "authored_at": "2026-10-10T18:47:20",
+    "tool": "tools/3d/author_monster_motion.py",
+    "geometry_digest": "6d49cc9a6649843268395cbad5c9aaa56e399308046e08c877c273486c34c944",
+    "geometry_unchanged": true
   }
 }

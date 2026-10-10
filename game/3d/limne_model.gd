@@ -10,6 +10,8 @@ static var _tube: ArrayMesh
 static var _spray_mesh: ArrayMesh
 static var _drop_mesh: SphereMesh
 static var _drop_material: StandardMaterial3D
+const HIP := 0.45
+const STRIDE := 1.45
 var _hoses: Array[ShaderMaterial] = []
 var _skeleton: Skeleton3D
 var _bone_bindings: Array[Dictionary] = []
@@ -18,10 +20,13 @@ var _hand_deltas: Array[Transform3D] = [Transform3D.IDENTITY,Transform3D.IDENTIT
 var _streams: Array[Node3D] = []
 var _drops: Array[MeshInstance3D] = []
 var _spray_material: ShaderMaterial
-var _elbow_angle := 0.0
+var _elbow_angles: Array[float] = [0.0,0.0]
 var _spray_strength := 0.0
 var _motion_time := 0.0
 var _aim_amount := 0.0
+var _leg_binds: Array[Transform3D] = []
+var _loco := HeroLocomotion.new()
+var _clock := 0.0
 
 static func create() -> Node3D:
 	var scene: PackedScene = load(SOURCE)
@@ -104,6 +109,8 @@ func _ready() -> void:
 				if index >= 0:
 					_joint_bindings.append({"index":index,"side":side,"part":part,
 						"root_rest":skeleton_to_root*_skeleton.get_bone_global_rest(index)})
+		_loco.stride = STRIDE
+		for side in ["L","R"]: _leg_binds.append((get_node("Leg"+side) as Node3D).transform)
 		_setup_spray()
 		update_visuals()
 		return
@@ -122,9 +129,13 @@ func _ready() -> void:
 func update_visuals() -> void:
 	if _skeleton != null:
 		var root_to_skeleton := _skeleton.global_transform.affine_inverse()*global_transform
+		# Upper body answers the aim direction immediately; legs stay with the root.
+		var twist := Transform3D(Basis(Vector3.UP,_loco.aim_delta),Vector3.ZERO)
 		for binding in _bone_bindings:
 			var control: Node3D = binding["control"]
-			var target: Transform3D = root_to_skeleton*control.transform*binding["control_bind_inverse"]*binding["root_rest"]
+			var local := control.transform
+			if not String(control.name).begins_with("Leg"): local = twist*local
+			var target: Transform3D = root_to_skeleton*local*binding["control_bind_inverse"]*binding["root_rest"]
 			var index: int = binding["index"]
 			var parent := _skeleton.get_bone_parent(index)
 			if parent >= 0: target = _skeleton.get_bone_global_pose(parent).affine_inverse()*target
@@ -137,14 +148,14 @@ func update_visuals() -> void:
 			var arm: Node3D = get_node("Arm"+side)
 			var bind_arm := Transform3D(Basis.IDENTITY,Vector3(sign_value*0.32,1.035,0))
 			var arm_delta := arm.transform*bind_arm.affine_inverse()
-			var elbow := _around(Vector3(sign_value*0.34,0.82,-0.14),Basis(Vector3.RIGHT,_elbow_angle))
+			var elbow := _around(Vector3(sign_value*0.34,0.82,-0.14),Basis(Vector3.RIGHT,_elbow_angles[n]))
 			var delta := arm_delta*elbow
 			if binding["part"] == "Hand":
 				# Counter-rotate the palm, so the nozzle stays aligned with the
 				# character's -Z forward even while its elbow lifts the wrist.
 				delta = delta*_around(Vector3(sign_value*0.347,0.565,-0.213),delta.basis.inverse())
-				_hand_deltas[n] = delta
-			_skeleton.set_bone_pose(int(binding["index"]),root_to_skeleton*delta*binding["root_rest"])
+				_hand_deltas[n] = twist*delta
+			_skeleton.set_bone_pose(int(binding["index"]),root_to_skeleton*twist*delta*binding["root_rest"])
 		_update_spray()
 		return
 	if _hoses.size() != 2: return
@@ -163,24 +174,73 @@ func update_visuals() -> void:
 static func _around(point: Vector3, rotation: Basis) -> Transform3D:
 	return Transform3D(rotation,point-rotation*point)
 
+## World inputs (presentation only; see HeroLocomotion).
+func set_locomotion(velocity: Vector3, dt: float) -> void:
+	_loco.set_locomotion(velocity, dt)
+
+func face_toward(direction: Vector2, dt: float) -> void:
+	_loco.face_toward(direction, dt)
+
 func animate_visual(time: float, age: float = 9.0, wind: float = 0.6, battle: bool = false) -> void:
+	var clock_dt := clampf(time-_clock,0.0,0.1)
+	_clock = time
 	_motion_time = time
 	wind = maxf(wind,0.04)
+	if not battle:
+		_loco.clear_battle()
+		_loco.sync_yaw(rotation.y)
+	elif _loco.update(clock_dt):
+		rotation.y = _loco.yaw
 	var active := battle and age>=0.0 and age<wind+0.22
 	_aim_amount = smoothstep(0.0,0.72,age/wind) if active and age<wind else 1.0-smoothstep(0.0,1.0,(age-wind)/0.22) if active else 0.0
+	var aim := _aim_amount
 	var release := maxf(0.0,age-wind)
-	var recoil := exp(-release*28.0)*sin(release*48.0)*0.025 if active and age>=wind else 0.0
+	var settle := 1.0-smoothstep(0.0,1.0,release/0.22)
+	var kick := exp(-release*18.0)*sin(release*TAU*3.2)*settle if active and age>=wind else 0.0
+	var charge := clampf((age/wind-0.6)/0.4,0.0,1.0) if active and age<wind else 0.0
+	var tremble := sin(age*TAU*12.0)*0.0025*charge
+	# Idle: breathing, weight shift and a slow look-around; feet planted.
 	var breath := sin(time*TAU/3.0)*0.008
 	var sway := sin(time*TAU/6.0)
+	var look := 0.06*pow(sin(clampf((time-2.4)/2.2,0.0,1.0)*PI),2.0)
+	# Locomotion: distance-driven cycle, authored like the native WalkLoop.
+	var weight := _loco.walk_weight()
+	var phi := fposmod(_loco.walk_phase,1.0)
+	var theta_l := 0.6*cos(TAU*phi)*weight
+	var bounce := -0.8*HIP*(1.0-cos(theta_l))
+	var lean := 0.10*weight+_loco.lean_pitch
+	var walk_yaw := 0.08*cos(TAU*phi)*weight
+	var walk_roll := 0.03*cos(TAU*(phi-0.1))*weight+_loco.lean_roll
+	var walk_x := -0.012*1.63*cos(TAU*(phi-0.1))*weight
+	var idle_w := 1.0-weight
 	var body: Node3D = get_node("Body")
-	body.position = Vector3(sway*0.004,breath,0)
-	body.rotation = Vector3(-_aim_amount*0.03-recoil,0,sway*0.007*(1.0-_aim_amount))
+	var body_offset := Vector3(sway*0.006*idle_w+walk_x,breath*idle_w+bounce-aim*0.012+tremble,aim*0.01-kick*0.02)
+	var body_rotation := Vector3(-aim*0.05+kick*0.07+lean+0.006*sin(time*TAU/3.0+0.6)*idle_w,
+		walk_yaw+(0.02*sin(time*TAU/6.0+1.0)+look)*idle_w,
+		sway*0.012*idle_w*(1.0-aim)+walk_roll)
+	# Rotate about the hips so the planted feet do not slide with the lean.
+	var body_basis := Basis.from_euler(body_rotation)
+	var hip := Vector3(0,HIP,0)
+	body.transform = Transform3D(body_basis,body_offset+hip-body_basis*hip)
 	for side in ["L","R"]:
+		var n := 0 if side=="L" else 1
 		var sign_value := -1.0 if side=="L" else 1.0
 		var arm: Node3D = get_node("Arm"+side)
-		arm.position = Vector3(sign_value*0.32,1.035+breath,0)
-		arm.rotation = Vector3(_aim_amount*0.035,0,sin(time*TAU/3.0+sign_value*0.3)*0.015*(1.0-_aim_amount))
-	_elbow_angle = _aim_amount*0.86
+		var shoulder := body.transform*Vector3(sign_value*0.32,1.035,0)
+		var arm_swing := -0.45*cos(TAU*phi)*(1.0 if side=="L" else -1.0)*weight*(1.0-aim)
+		var idle_swing := sin(time*TAU/3.0+sign_value*0.3)*0.015*idle_w*(1.0-aim)
+		var raise := aim*0.06+kick*(-0.10)
+		arm.transform = Transform3D(body_basis*Basis.from_euler(Vector3(arm_swing+raise,0,idle_swing-sign_value*aim*0.06)),shoulder+Vector3(0,aim*0.012,0))
+		var bend := 0.86*aim+(0.85+0.25*maxf(0.0,cos(TAU*phi)*(1.0 if side=="R" else -1.0)))*weight*(1.0-aim)
+		_elbow_angles[n] = bend+0.05*sin(time*TAU/3.0+n)*idle_w*(1.0-aim)+kick*0.12
+		var leg: Node3D = get_node("Leg"+side)
+		if weight <= 0.0005:
+			leg.transform = _leg_binds[n]
+		else:
+			var theta := theta_l if side=="L" else -theta_l
+			var local := fposmod(phi-0.5 if side=="L" else phi,1.0)
+			var lift := 0.032*1.63*pow(sin(PI*clampf(local/0.5,0.0,1.0)),2.0) if local < 0.5 else 0.0
+			leg.transform = Transform3D(Basis(Vector3.RIGHT,theta),_leg_binds[n].origin+Vector3(0,lift*weight,0))
 	# A visual release burst follows the already-existing gameplay release time.
 	_spray_strength = sin(clampf(release/0.13,0,1)*PI) if active and age>=wind and release<0.13 else 0.0
 	update_visuals()

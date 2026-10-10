@@ -2,26 +2,49 @@ extends Node3D
 class_name NativeCharacterModel
 
 ## Native skinned character presentation. Battle events are read-only inputs.
+##
+## Pose composition per rendered sample (never accumulated between frames):
+##   base   = IdleLoop(time) blended toward WalkLoop(distance phase) by speed
+##   upper  = Attack(anticipation q = age / wind, release at 1.0 s, recovery) riding
+##            on the base body delta while aiming, firing or recovering
+##   lean   = turn / acceleration lean about the hips
+##   fade   = cross-fade from the pose captured at the last state change
+##   twist  = immediate upper-body yaw toward the aim direction (HeroLocomotion)
+## Legs always come from the locomotion layer, so walking and attacking combine.
 const MANIFEST := "res://art/models/native_heroes.json"
+const ATTACK_RELEASE := 1.0      # seconds into the Attack clip where the release pose sits
+const RECOVERY := 0.5            # seconds of release action after fire
+const CANCEL_FADE := 0.25
+const FIRE_FLASH := 0.13
+const UPPER_FADE_OUT := 0.22
 static var _manifest: Dictionary = {}
 static var _flash_mesh: SphereMesh
 var _spec: Dictionary = {}
 var _skeleton: Skeleton3D
 var _player: AnimationPlayer
-var _idle := ""
-var _attack := ""
+var _clips: Array[Animation] = []        # 0 idle, 1 walk, 2 attack (null when absent)
+var _tracks: Array = []                  # per clip: Array of [pos, rot, scale] track indices per bone
+var _rest: Array[Transform3D] = []
+var _upper: Array[bool] = []
+var _body_bone := -1
 var _bindings: Array[Dictionary] = []
 var _socket_bones: Array[int] = []
 var _socket_rest: Array[Transform3D] = []
 var _flashes: Array[MeshInstance3D] = []
 var _reactor_materials: Array[StandardMaterial3D] = []
+var _loco := HeroLocomotion.new()
 var _clock := 0.0
 var _phase_clock := 0.0
 var _mode := 0
 var _wind := 0.0
 var _fire_strength := 0.0
 var _blend_clock := -9.0
+var _blend_time := 0.1
 var _blend_from: Array[Transform3D] = []
+var _composed: Array[Transform3D] = []
+var _hip := 0.48
+var _artillery := false
+var _aim_progress := 0.0
 
 static func manifest() -> Dictionary:
 	if _manifest.is_empty() and FileAccess.file_exists(MANIFEST):
@@ -57,22 +80,7 @@ static func create(id: String) -> Node3D:
 	return root
 
 static func _style(node: Node, metal: float) -> void:
-	if node is MeshInstance3D:
-		for i in node.mesh.get_surface_count():
-			var mat := node.mesh.surface_get_material(i) as StandardMaterial3D
-			if mat == null: continue
-			mat.metallic_specular = 0.16
-			mat.clearcoat_enabled = false
-			if mat.albedo_texture != null:
-				mat.roughness_texture = null
-				mat.metallic_texture = null
-				mat.roughness = 0.84
-				mat.metallic = metal
-			var arrays: Array = node.mesh.surface_get_arrays(i)
-			if arrays[Mesh.ARRAY_COLOR] != null and not arrays[Mesh.ARRAY_COLOR].is_empty():
-				mat.vertex_color_use_as_albedo = true
-				mat.vertex_color_is_srgb = false
-	for child in node.get_children(): _style(child,metal)
+	StellarShading.style(node, metal)
 
 func _ready() -> void:
 	_spec = manifest().get("heroes",{}).get(String(get_meta("native_id","")),{})
@@ -81,9 +89,38 @@ func _ready() -> void:
 	if _skeleton == null or _player == null:
 		push_error("Native character requires actual skin and motion clips")
 		return
+	_artillery = String(_spec.get("attack","")) == "artillery"
+	_hip = float(_spec.get("height",1.65))*0.29
+	_loco.stride = float(_spec.get("motion",{}).get("stride",1.5))
+	var names := {"IdleLoop":"","WalkLoop":"","Attack":""}
 	for name in _player.get_animation_list():
-		if String(name).ends_with("IdleLoop"): _idle = name
-		if String(name).ends_with("Attack"): _attack = name
+		for suffix in names.keys():
+			if String(name).ends_with(suffix): names[suffix] = String(name)
+	_clips.resize(3)
+	_tracks.resize(3)
+	var count := _skeleton.get_bone_count()
+	for i in count:
+		_rest.append(_skeleton.get_bone_rest(i))
+		var bone := _skeleton.get_bone_name(i)
+		_upper.append(not bone.begins_with("SkinLeg"))
+		if bone == "SkinBody": _body_bone = i
+	var order := ["IdleLoop","WalkLoop","Attack"]
+	for c in 3:
+		var clip: Animation = _player.get_animation(names[order[c]]) if names[order[c]] != "" else null
+		_clips[c] = clip
+		var map: Array = []
+		for i in count: map.append([-1,-1,-1])
+		if clip != null:
+			for t in clip.get_track_count():
+				var path := clip.track_get_path(t)
+				if path.get_subname_count() < 1: continue
+				var bone := _skeleton.find_bone(String(path.get_subname(0)))
+				if bone < 0: continue
+				match clip.track_get_type(t):
+					Animation.TYPE_POSITION_3D: map[bone][0] = t
+					Animation.TYPE_ROTATION_3D: map[bone][1] = t
+					Animation.TYPE_SCALE_3D: map[bone][2] = t
+		_tracks[c] = map
 	var skeleton_to_root := global_transform.affine_inverse()*_skeleton.global_transform
 	for name in ["Body","ArmL","ArmR","LegL","LegR"]:
 		var index := _skeleton.find_bone("Skin"+name)
@@ -102,7 +139,11 @@ func _ready() -> void:
 		_socket_rest.append(Transform3D(basis,Vector3(float(xyz[0]),float(xyz[1]),float(xyz[2]))))
 	_setup_flash()
 	_collect_reactors(self)
+	_composed = _rest.duplicate()
 	animate_visual(0)
+	# Stand-alone previews (portraits, review scenes) get the same per-instance
+	# hit-flash/rim materials as world actors; already prepared instances are skipped.
+	StellarShading.prepare_instance(self)
 
 func _collect_reactors(node: Node) -> void:
 	if node is MeshInstance3D:
@@ -117,66 +158,123 @@ func _collect_reactors(node: Node) -> void:
 			_reactor_materials.append(instance)
 	for child in node.get_children(): _collect_reactors(child)
 
+## --- world inputs -----------------------------------------------------------
+func set_locomotion(velocity: Vector3, dt: float) -> void:
+	_loco.set_locomotion(velocity, dt)
+
+func face_toward(direction: Vector2, dt: float) -> void:
+	_loco.face_toward(direction, dt)
+
 func visual_event(e: Dictionary) -> void:
 	var type := String(e.get("t",""))
 	if type == "retarget": return # Root bridge updates actual facing.
 	if type == "aim":
-		_capture_transition()
-		_mode = 1
+		# The anticipation must be fully blended in before the actual release, so
+		# the fade never outlasts the aim window; a zero-wind shot snaps at once.
 		_wind = maxf(0.0,float(e.get("w",0.0)))
+		_capture_transition(minf(0.16 if _mode == 0 else 0.08, _wind*0.6))
+		_mode = 1
 		_fire_strength = 0.0
 		_phase_clock = _clock
+		_aim_progress = 0.0
 	elif type == "fire":
-		_capture_transition()
+		# Continuous when the anticipation reached its hold pose and its fade has
+		# finished; otherwise a short fade from whatever is on screen.
+		var settled := _mode == 1 and _aim_progress >= 0.98 and _clock-_blend_clock >= _blend_time
+		if not settled: _capture_transition(0.05)
 		_mode = 2
 		_phase_clock = _clock
 		_fire_strength = 1.0
-		if _wind<=0.04: _blend_clock = _clock-0.045
 		_update_flash()
 	elif type == "cancel":
-		_capture_transition()
+		_capture_transition(CANCEL_FADE)
 		_mode = 3
 		_phase_clock = _clock
 
-func _capture_transition() -> void:
+func _capture_transition(duration: float) -> void:
 	_blend_clock = _clock
-	_blend_from.clear()
-	if _skeleton != null:
-		for i in _skeleton.get_bone_count(): _blend_from.append(_skeleton.get_bone_pose(i))
+	_blend_time = duration
+	_blend_from = _composed.duplicate()
 
+## --- per-sample composition -------------------------------------------------
 func animate_visual(time: float, age: float = 9.0, raw_wind: float = 0.0, battle: bool = false) -> void:
+	var clock_dt := clampf(time-_clock, 0.0, 0.1)
 	_clock = time
 	if _player == null or _skeleton == null: return
 	if not battle:
 		_mode = 0
 		_fire_strength = 0.0
+		_loco.clear_battle()
+		_loco.sync_yaw(rotation.y)
 	var elapsed := maxf(0,time-_phase_clock)
 	if _mode == 1 and age > maxf(raw_wind,0.0)+0.04:
-		_capture_transition()
+		_capture_transition(CANCEL_FADE)
 		_mode = 3
 		_phase_clock = time
 		elapsed = 0
-	if _mode in [2,3] and elapsed >= 0.30: _mode = 0
-	if _mode == 0:
-		_sample(_idle,fposmod(time,6.0))
-	elif _mode == 1:
-		var q := clampf(age/raw_wind,0,1) if raw_wind>0 else 1.0
-		_sample(_attack,q)
+	if _mode == 2 and elapsed >= RECOVERY:
+		_capture_transition(UPPER_FADE_OUT)
+		_mode = 0
+	if _mode == 3 and elapsed >= 0.30: _mode = 0
+	_fire_strength = maxf(0,1.0-elapsed/FIRE_FLASH) if _mode==2 else 0.0
+	if battle and _loco.update(clock_dt): rotation.y = _loco.yaw
+	var count := _skeleton.get_bone_count()
+	var pose := _sample(0, fposmod(time, _length(0)))
+	var weight := _loco.walk_weight()
+	if weight > 0.001 and _clips[1] != null:
+		var walk := _sample(1, fposmod(_loco.walk_phase, 1.0)*_length(1))
+		for i in count: pose[i] = pose[i].interpolate_with(walk[i], weight)
+	if _mode == 1 or _mode == 2:
+		var at := 0.0
+		if _mode == 1:
+			_aim_progress = clampf(age/raw_wind,0,1) if raw_wind>0 else 1.0
+			at = ATTACK_RELEASE*_aim_progress
+		else:
+			at = ATTACK_RELEASE+minf(elapsed,RECOVERY)
+		var attack := _sample(2, minf(at, _length(2)))
+		var body_delta := Transform3D.IDENTITY
+		if _body_bone >= 0: body_delta = pose[_body_bone]*_rest[_body_bone].affine_inverse()
+		for i in count:
+			if _upper[i]: pose[i] = body_delta*attack[i]
+	var lean_roll := _loco.lean_roll
+	var lean_pitch := _loco.lean_pitch
+	if absf(lean_roll) > 0.0005 or absf(lean_pitch) > 0.0005:
+		var hip := Vector3(0,_hip,0)
+		var lean := Transform3D(Basis.from_euler(Vector3(lean_pitch,0,lean_roll)), Vector3.ZERO)
+		lean = Transform3D(lean.basis, hip-lean.basis*hip)
+		for i in count:
+			if _upper[i]: pose[i] = lean*pose[i]
+	var blend := clampf((time-_blend_clock)/_blend_time,0,1) if _blend_time > 0.0 else 1.0
+	if blend < 1.0 and _blend_from.size() == count:
+		var eased := blend*blend*(3.0-2.0*blend)
+		for i in count: pose[i] = _blend_from[i].interpolate_with(pose[i], eased)
+	_composed = pose
+	var twist := _loco.aim_delta
+	if absf(twist) > 0.0005:
+		var turn := Transform3D(Basis(Vector3.UP, twist), Vector3.ZERO)
+		for i in count:
+			_skeleton.set_bone_pose(i, turn*pose[i] if _upper[i] else pose[i])
 	else:
-		_sample(_attack,1.0+minf(elapsed,0.30))
-	_fire_strength = maxf(0,1.0-elapsed/0.13) if _mode==2 else 0.0
-	var blend := clampf((time-_blend_clock)/0.045,0,1)
-	if blend<1 and _blend_from.size()==_skeleton.get_bone_count():
-		for i in _skeleton.get_bone_count():
-			_skeleton.set_bone_pose(i,_blend_from[i].interpolate_with(_skeleton.get_bone_pose(i),blend))
+		for i in count: _skeleton.set_bone_pose(i, pose[i])
 	_sync_controls_from_skin()
 	_update_flash()
 
-func _sample(clip: String, value: float) -> void:
-	if clip == "": return
-	if _player.current_animation != clip: _player.play(clip)
-	_player.seek(value,true)
-	_player.pause()
+func _length(c: int) -> float:
+	return _clips[c].length if _clips[c] != null else 1.0
+
+func _sample(c: int, at: float) -> Array[Transform3D]:
+	var result: Array[Transform3D] = _rest.duplicate()
+	var clip := _clips[c]
+	if clip == null: return result
+	var map: Array = _tracks[c]
+	for i in result.size():
+		var tracks: Array = map[i]
+		if tracks[0] < 0 and tracks[1] < 0 and tracks[2] < 0: continue
+		var origin: Vector3 = clip.position_track_interpolate(tracks[0], at) if tracks[0] >= 0 else _rest[i].origin
+		var rotation: Quaternion = clip.rotation_track_interpolate(tracks[1], at) if tracks[1] >= 0 else _rest[i].basis.get_rotation_quaternion()
+		var scale: Vector3 = clip.scale_track_interpolate(tracks[2], at) if tracks[2] >= 0 else _rest[i].basis.get_scale()
+		result[i] = Transform3D(Basis(rotation).scaled(scale), origin)
+	return result
 
 func _sync_controls_from_skin() -> void:
 	var skeleton_to_root := global_transform.affine_inverse()*_skeleton.global_transform
@@ -209,8 +307,12 @@ func _socket_transform(n: int) -> Transform3D:
 
 func fire_strength() -> float: return _fire_strength
 func visual_phase() -> int: return _mode
+func walk_weight() -> float: return _loco.walk_weight()
+func aim_twist() -> float: return _loco.aim_delta
 
 func _setup_flash() -> void:
+	# A small soft core at the release socket. The actual muzzle flash, projectile
+	# and impact are drawn by the world VFX from weapon_transform()/fire_strength().
 	if _flash_mesh == null:
 		_flash_mesh = SphereMesh.new()
 		_flash_mesh.radius = 0.055
@@ -219,7 +321,11 @@ func _setup_flash() -> void:
 		_flash_mesh.rings = 4
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.albedo_color = Color(String(_spec.get("effect_color","#9de8ff")))
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	var color := Color(String(_spec.get("effect_color","#9de8ff")))
+	color.a = 0.7
+	mat.albedo_color = color
 	for n in maxi(1,_socket_bones.size()):
 		var mesh := MeshInstance3D.new()
 		mesh.name = "NativeRelease"+str(n)
@@ -235,10 +341,9 @@ func _update_flash() -> void:
 		material.emission_energy_multiplier = 0.18+0.9*_fire_strength
 	for n in _flashes.size():
 		var mouth := global_transform.affine_inverse()*(_socket_transform(n) if n<_socket_bones.size() else weapon_transform())
-		var artillery := String(_spec.get("attack","")) == "artillery"
-		if artillery: mouth.origin += mouth.basis*Vector3(0,0,-0.06)
+		if _artillery: mouth.origin += mouth.basis*Vector3(0,0,-0.06)
 		_flashes[n].transform = mouth
-		_flashes[n].scale = (Vector3(0.9,0.9,3.2) if artillery else Vector3(0.5,0.5,1.5))*maxf(_fire_strength,0.01)
+		_flashes[n].scale = (Vector3(0.45,0.45,1.6) if _artillery else Vector3(0.26,0.26,0.8))*maxf(_fire_strength,0.01)
 		_flashes[n].visible = _fire_strength>0.01
 
 static func _find_type(node: Node, type: String) -> Node:

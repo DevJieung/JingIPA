@@ -17,6 +17,8 @@
     "ArmR"
   ],
   "clips": [
+    "Attack",
+    "Die",
     "IdleLoop",
     "MoveLoop"
   ],
@@ -25,8 +27,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/frost_imp/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/frost_imp/game.blend",
-  "glb_sha256": "92ce965169196151a4b68198fc5219bed87d309b3dab1ce57991b8bf757341c7",
-  "glb_bytes": 1942564,
+  "glb_sha256": "27b6a66d746d6f1449df096422635fa7d1bee751464223f2e4b78a09f38928a9",
+  "glb_bytes": 1961352,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -61,5 +63,45 @@
     "glb_sha256": "92ce965169196151a4b68198fc5219bed87d309b3dab1ce57991b8bf757341c7",
     "report": "build/character-3d/monster-review/report.json",
     "artist_note": "Direct actual two resolutions78PNG/errors0, original/native four views, continuous Idle/Move, all status effects and mixed12hero battle reviewed. Pyre whole measured Staff/holding hand remains coherent; closed-trunk Elder native mask/body/canopy recover identity without open voids. Pebble/Blizzard retained native UV surfaces resolve rejected collapse shards, with larger runtime geometry honestly recorded rather than claimed optimized FPS. Amber skink quadruped and cream-blue frost imp retain anatomy/colors and stable loop silhouette. Current source/editable/proof SHA frozen; mobile FPS not measured."
+  },
+  "motion": {
+    "version": 2,
+    "library": "tools/3d/monster_motion.py",
+    "fps": 30,
+    "frames": {
+      "IdleLoop": 90,
+      "MoveLoop": 13,
+      "Attack": 30,
+      "Die": 24
+    },
+    "move_cycle_seconds": 0.4333,
+    "travel_per_move_cycle_world_units": 0.7107,
+    "attack_phase_map": "clip_time = (siege_phase - 0.3) mod 1; strike frame 21/30 lands at the phase wrap",
+    "params": {
+      "move_frames": 13,
+      "stance": 0.5,
+      "leg_swing": 0.42,
+      "leg_lift": 0.07,
+      "leg_reach": 0.04,
+      "bounce": 0.035,
+      "roll": 0.08,
+      "yaw": 0.08,
+      "lean": 0.03,
+      "arm_swing": 0.5,
+      "arm_out": 0.05,
+      "head_bob": 0.06,
+      "impact": false,
+      "attack": "smash",
+      "death": "sink",
+      "spawn": "rise",
+      "hover": 0.0,
+      "turn_rate": 9.0,
+      "turn_max": 7.0,
+      "bank": 0.08
+    },
+    "authored_at": "2026-10-10T18:47:43",
+    "tool": "tools/3d/author_monster_motion.py",
+    "geometry_digest": "ca738e2783fd15dc85d24681aa08b03f236b303c85bd4d3f1d8a3163d973fddf",
+    "geometry_unchanged": true
   }
 }

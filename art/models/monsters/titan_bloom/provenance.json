@@ -17,6 +17,8 @@
     "RootR"
   ],
   "clips": [
+    "Attack",
+    "Die",
     "IdleLoop",
     "MoveLoop"
   ],
@@ -25,8 +27,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/titan_bloom/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/titan_bloom/game.blend",
-  "glb_sha256": "ceef7b53ef047ba03a1679de9aa62d8392d584f88adf34c879f400eef6d14fb3",
-  "glb_bytes": 12819484,
+  "glb_sha256": "8b188c5f121b99bd43f8a79482b6833387d3ed822066ac6c5674437c06f05df0",
+  "glb_bytes": 12840532,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "raw_gltf_triangles": 178603,
@@ -70,5 +72,38 @@
     "glb_sha256": "ceef7b53ef047ba03a1679de9aa62d8392d584f88adf34c879f400eef6d14fb3",
     "report": "build/character-3d/monster-review/report.json",
     "artist_note": "Directly inspected repaired native flower maw/fangs, three red buds, curved vines/root feet in studio four views and bothactual Godot sizes. Closed surface removed broken fragments; 24idle/32move, status and12hero battle/orbit preserve identity. Retained source paint remainsrough; no raster parity or deviceFPS claim."
+  },
+  "motion": {
+    "version": 2,
+    "library": "tools/3d/monster_motion.py",
+    "fps": 30,
+    "frames": {
+      "IdleLoop": 90,
+      "MoveLoop": 36,
+      "Attack": 30,
+      "Die": 24
+    },
+    "move_cycle_seconds": 1.2,
+    "travel_per_move_cycle_world_units": 1.968,
+    "attack_phase_map": "clip_time = (siege_phase - 0.3) mod 1; strike frame 21/30 lands at the phase wrap",
+    "params": {
+      "move_frames": 36,
+      "stance": 0.55,
+      "root_lift": 0.04,
+      "root_reach": 0.08,
+      "heave": 0.04,
+      "writhe": 0.15,
+      "attack": "maw",
+      "death": "sink",
+      "spawn": "rise",
+      "hover": 0.0,
+      "turn_rate": 4.0,
+      "turn_max": 2.5,
+      "bank": 0.02
+    },
+    "authored_at": "2026-10-10T18:48:04",
+    "tool": "tools/3d/author_monster_motion.py",
+    "geometry_digest": "a15c0dc4ebd5cc3a80213060b7bd8f5661c96d55a8f959ac41c124869a1e84ef",
+    "geometry_unchanged": true
   }
 }

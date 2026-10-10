@@ -24,13 +24,14 @@
   ],
   "clips": [
     "Attack",
-    "IdleLoop"
+    "IdleLoop",
+    "WalkLoop"
   ],
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/conor/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/conor/game.blend",
   "height": 1.65,
-  "glb_bytes": 5045404,
-  "glb_sha256": "d0052adb91f4fe281973abbdd5962adac827e9fb99c30e57baf94f3419f915e6",
+  "glb_bytes": 5090204,
+  "glb_sha256": "1a5e73ff45127b17ce3ff28fb0527f014805379ad892c68b11a5477c8b0bca42",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -69,5 +70,27 @@
       "two-resolution mixed battle"
     ],
     "artist_note": "Direct studio, 4 runtime views, both 1280x800/1000x625 galleries and continuous attack contacts reviewed. Finn separated cuff no longer drags a hip flap; all distinct palettes/back equipment retained. One-nozzle Marea, long rifle Grey, dual pistols Carmen/Conor, large cannon Brian stay coherent through release/recovery, feet fixed. Same frozen model grades/awakening and selected mixed battle inspected; moderate matte style retained. Device FPS unmeasured."
+  },
+  "motion": {
+    "version": 2,
+    "tool": "tools/3d/author_native_motion.py",
+    "authored_utc": "2026-10-10T09:37:07Z",
+    "clips": {
+      "IdleLoop": 6.0,
+      "WalkLoop": 1.0,
+      "Attack": 1.5,
+      "attack_release_time": 1.0
+    },
+    "stride": 1.3,
+    "leg_swing": 0.4,
+    "leg_top": 0.1199,
+    "grip": "dual",
+    "lead": "R",
+    "kind": "rifle",
+    "bounce_scale": 1.0,
+    "previous_glb_sha256": "d0052adb91f4fe281973abbdd5962adac827e9fb99c30e57baf94f3419f915e6",
+    "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/conor/game.motion-v1.blend",
+    "geometry_base_sha256": "d0052adb91f4fe281973abbdd5962adac827e9fb99c30e57baf94f3419f915e6",
+    "geometry_bytes_preserved": true
   }
 }

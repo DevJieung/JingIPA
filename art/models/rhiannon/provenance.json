@@ -22,13 +22,14 @@
   ],
   "clips": [
     "Attack",
-    "IdleLoop"
+    "IdleLoop",
+    "WalkLoop"
   ],
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/rhiannon/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/rhiannon/game.blend",
   "height": 1.65,
-  "glb_bytes": 4917792,
-  "glb_sha256": "d5cdf3b50071779a37f254f56353d29a51197030bdebe757c6ed0390ce34dcd2",
+  "glb_bytes": 4953404,
+  "glb_sha256": "b5c1043d787b5810105d62eda0b9390bd9a3379145410844c8462dd12b081edd",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -67,5 +68,27 @@
       "two-resolution mixed battle"
     ],
     "artist_note": "Artist directly inspected original identity and actual studio multi-view, both-size Godot gallery/idle/attack contacts/grades/awakening/mixed battle. Complete bow/ice blade and relaxed arm/gauntlet shapes remain coherent; Phorkys cylinder equipment and rifle aim use measured native landmarks, <0.1mm sole displacement; no visible gear tears or detached garment. Mobile FPS not measured."
+  },
+  "motion": {
+    "version": 2,
+    "tool": "tools/3d/author_native_motion.py",
+    "authored_utc": "2026-10-10T09:36:33Z",
+    "clips": {
+      "IdleLoop": 6.0,
+      "WalkLoop": 1.0,
+      "Attack": 1.5,
+      "attack_release_time": 1.0
+    },
+    "stride": 1.4457,
+    "leg_swing": 0.62,
+    "leg_top": 0.3128,
+    "grip": "none",
+    "lead": "R",
+    "kind": "cast",
+    "bounce_scale": 1.0,
+    "previous_glb_sha256": "d5cdf3b50071779a37f254f56353d29a51197030bdebe757c6ed0390ce34dcd2",
+    "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/rhiannon/game.motion-v1.blend",
+    "geometry_base_sha256": "d5cdf3b50071779a37f254f56353d29a51197030bdebe757c6ed0390ce34dcd2",
+    "geometry_bytes_preserved": true
   }
 }

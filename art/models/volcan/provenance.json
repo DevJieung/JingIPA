@@ -22,13 +22,14 @@
   ],
   "clips": [
     "Attack",
-    "IdleLoop"
+    "IdleLoop",
+    "WalkLoop"
   ],
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/volcan/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/volcan/game.blend",
   "height": 1.7,
-  "glb_bytes": 5188484,
-  "glb_sha256": "af31f09737b8fcb38f2f8b2846f846592fb2793d87c308950a6f543929ee3b0c",
+  "glb_bytes": 5224092,
+  "glb_sha256": "ddd552927e738483c82aac548fad7f7c296bac911f5bcd9bd4b79cf09aaee941",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -67,5 +68,27 @@
       "two-resolution mixed battle"
     ],
     "artist_note": "Directly inspected both-resolution turnarounds, 0/4/9/awakened gallery, continuous idle/attack contacts and actual selected mixed battle. Ceniza pressure pack stays on torso while right gun aims; Kari left twin-barrel stays rigid with distinct mouths; Vidarr cyan gauntlet hoses remain connected; Igni blade silhouette and Volcan heavy equipment preserve active-sprite identity. No visible limb tearing, floating pieces or foot displacement in reviewed sequences."
+  },
+  "motion": {
+    "version": 2,
+    "tool": "tools/3d/author_native_motion.py",
+    "authored_utc": "2026-10-10T09:36:42Z",
+    "clips": {
+      "IdleLoop": 6.0,
+      "WalkLoop": 1.0,
+      "Attack": 1.5,
+      "attack_release_time": 1.0
+    },
+    "stride": 1.3617,
+    "leg_swing": 0.56,
+    "leg_top": 0.3093,
+    "grip": "none",
+    "lead": "R",
+    "kind": "cast",
+    "bounce_scale": 0.85,
+    "previous_glb_sha256": "af31f09737b8fcb38f2f8b2846f846592fb2793d87c308950a6f543929ee3b0c",
+    "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/volcan/game.motion-v1.blend",
+    "geometry_base_sha256": "af31f09737b8fcb38f2f8b2846f846592fb2793d87c308950a6f543929ee3b0c",
+    "geometry_bytes_preserved": true
   }
 }

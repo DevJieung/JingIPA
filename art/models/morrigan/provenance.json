@@ -23,13 +23,14 @@
   ],
   "clips": [
     "Attack",
-    "IdleLoop"
+    "IdleLoop",
+    "WalkLoop"
   ],
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/morrigan/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/morrigan/game.blend",
   "height": 1.65,
-  "glb_bytes": 5217852,
-  "glb_sha256": "1f47f86f6838f210d64018a019e6c92ff78b9c4445026d003396f4658e3c9df4",
+  "glb_bytes": 5254616,
+  "glb_sha256": "723b31608c9828a8f3975243369e4cc9cbbd3f65e657d74a382730079c001de2",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -68,5 +69,27 @@
       "two-resolution mixed battle"
     ],
     "artist_note": "Direct source-to-native identity, full rest and attack turnarounds, continuous runtime idle/attack phases, rank0/4/9 and awakening, and both-resolution selected mixed-battle views inspected. Shift segmented rear hoop, Thalassa teal coat/pressure valves, Snorri winch/anchor, Morrigan leaf armor/chain, Blank human ivory suit, Candela hood/chain, Sigrid triple rear fans and Helga right-hand blue blade retain individual source silhouettes. No visible palm/body strips, equipment tearing or foot jumps in reviewed sequences."
+  },
+  "motion": {
+    "version": 2,
+    "tool": "tools/3d/author_native_motion.py",
+    "authored_utc": "2026-10-10T09:36:46Z",
+    "clips": {
+      "IdleLoop": 6.0,
+      "WalkLoop": 1.0,
+      "Attack": 1.5,
+      "attack_release_time": 1.0
+    },
+    "stride": 1.3,
+    "leg_swing": 0.4,
+    "leg_top": 0.2415,
+    "grip": "none",
+    "lead": "R",
+    "kind": "cast",
+    "bounce_scale": 1.0,
+    "previous_glb_sha256": "1f47f86f6838f210d64018a019e6c92ff78b9c4445026d003396f4658e3c9df4",
+    "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/morrigan/game.motion-v1.blend",
+    "geometry_base_sha256": "1f47f86f6838f210d64018a019e6c92ff78b9c4445026d003396f4658e3c9df4",
+    "geometry_bytes_preserved": true
   }
 }

@@ -23,13 +23,14 @@
   ],
   "clips": [
     "Attack",
-    "IdleLoop"
+    "IdleLoop",
+    "WalkLoop"
   ],
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/snorri/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/snorri/game.blend",
   "height": 1.7,
-  "glb_bytes": 5974448,
-  "glb_sha256": "0b4b65278033a2562cb12a7e3b70a9e0a710a7de10e464fad1844f8965bf1f9c",
+  "glb_bytes": 6011208,
+  "glb_sha256": "b0c1d56ef22d36a9391300f72ca10f0c248c3d54585c86291d7d76f6008fca64",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -68,5 +69,27 @@
       "two-resolution mixed battle"
     ],
     "artist_note": "Direct source-to-native identity, full rest and attack turnarounds, continuous runtime idle/attack phases, rank0/4/9 and awakening, and both-resolution selected mixed-battle views inspected. Shift segmented rear hoop, Thalassa teal coat/pressure valves, Snorri winch/anchor, Morrigan leaf armor/chain, Blank human ivory suit, Candela hood/chain, Sigrid triple rear fans and Helga right-hand blue blade retain individual source silhouettes. No visible palm/body strips, equipment tearing or foot jumps in reviewed sequences."
+  },
+  "motion": {
+    "version": 2,
+    "tool": "tools/3d/author_native_motion.py",
+    "authored_utc": "2026-10-10T09:36:43Z",
+    "clips": {
+      "IdleLoop": 6.0,
+      "WalkLoop": 1.0,
+      "Attack": 1.5,
+      "attack_release_time": 1.0
+    },
+    "stride": 1.3617,
+    "leg_swing": 0.56,
+    "leg_top": 0.31,
+    "grip": "none",
+    "lead": "R",
+    "kind": "cast",
+    "bounce_scale": 0.85,
+    "previous_glb_sha256": "0b4b65278033a2562cb12a7e3b70a9e0a710a7de10e464fad1844f8965bf1f9c",
+    "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/snorri/game.motion-v1.blend",
+    "geometry_base_sha256": "0b4b65278033a2562cb12a7e3b70a9e0a710a7de10e464fad1844f8965bf1f9c",
+    "geometry_bytes_preserved": true
   }
 }

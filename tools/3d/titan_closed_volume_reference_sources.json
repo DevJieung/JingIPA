@@ -1,0 +1,27 @@
+[
+  {
+    "id": "titan_bloom",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-references-retry/titan_bloom/closed-volume.png",
+    "source": "art/animation/chibi_v1/source/titan_bloom.png",
+    "source_rect": [
+      27,
+      0,
+      388,
+      512
+    ],
+    "source_sha256": "be88aaa4116b4286ad5ae76011430dcaf1a6cbfc5efbdce3b4d5c49c235fab0e",
+    "image_sha256": "8938babc3c9f4451c479ff96a906f03874fb5a9b1c92a985ffa21ea96917b455",
+    "active_anim": "art/anim/monsters/titan_bloom/anim.json",
+    "active_art": "art/monsters/titan_bloom.png",
+    "prompt": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-references-retry/titan_bloom/closed-volume-prompt.txt",
+    "kind": "boss",
+    "element_body": "wood",
+    "workflow_overrides": {},
+    "reference_type": "built-in image_gen transparent RASTER bind-reference; NOT an actual native GLB",
+    "original": "build/monster-native/inputs/titan_bloom.png",
+    "original_sha256": "feb76e6635ef6535014accac430e18da29db12a02f4ff08912cbd4d23a9ec18c",
+    "prompt_sha256": "046f5044e73b3707f5eaa9ff765bc4463ac2d3a573b11f2f35082df84c580285",
+    "reference_review": "Direct original active sprite and revised built-in image_gen raster inspected: huge pink/magenta petal maw/ivory teeth, olive closed thick-leaf bulb, upper red vine buds, curled branch arms and clawed root feet retained. Single transparent creature and closed/thick volumes replace dense razor-thin leaf overlap.",
+    "retry_basis": "One bounded closed-volume reference retry: initial actual raw GLB and high source both have severe torn/faceted topology, not a game-only LOD defect. Original reference/raw/high/game and visual rejection proof preserved."
+  }
+]

@@ -24,13 +24,14 @@
   ],
   "clips": [
     "Attack",
-    "IdleLoop"
+    "IdleLoop",
+    "WalkLoop"
   ],
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/pip/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/pip/game.blend",
   "height": 1.56,
-  "glb_bytes": 4977892,
-  "glb_sha256": "05bb4dbf5a3297538a423259b68123e7afe7128fc2055f4edc24b94c285d3998",
+  "glb_bytes": 5022684,
+  "glb_sha256": "cc04148db6a4b5c747bf5ef2f26681b2982e4e7a60b3468f134c6b46ddc4ef03",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -68,5 +69,27 @@
       "grades",
       "battle_selected"
     ]
+  },
+  "motion": {
+    "version": 2,
+    "tool": "tools/3d/author_native_motion.py",
+    "authored_utc": "2026-10-10T09:36:25Z",
+    "clips": {
+      "IdleLoop": 6.0,
+      "WalkLoop": 1.0,
+      "Attack": 1.5,
+      "attack_release_time": 1.0
+    },
+    "stride": 1.3,
+    "leg_swing": 0.4,
+    "leg_top": 0.1878,
+    "grip": "none",
+    "lead": "L",
+    "kind": "tool",
+    "bounce_scale": 1.0,
+    "previous_glb_sha256": "cc04148db6a4b5c747bf5ef2f26681b2982e4e7a60b3468f134c6b46ddc4ef03",
+    "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/pip/game.motion-v1.blend",
+    "geometry_base_sha256": "05bb4dbf5a3297538a423259b68123e7afe7128fc2055f4edc24b94c285d3998",
+    "geometry_bytes_preserved": true
   }
 }

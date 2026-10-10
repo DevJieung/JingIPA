@@ -1,0 +1,789 @@
+[
+  {
+    "id": "chispa",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/chispa.png",
+    "source": "art/animation/chibi_v1/source/chispa.png",
+    "source_rect": [
+      49,
+      0,
+      283,
+      433
+    ],
+    "active_idle": "art/anim/chispa/chispa_roster_v1_idle.png",
+    "source_sha256": "43c01e854dc03e2d7f43214b023c51d5ef11a13627012f89ba0f2fa853bb6b8e",
+    "image_sha256": "76cda4dff32c5a23db64c8372732db00e835fcb9aa5905a391b58cc712f59243",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "lind",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/lind.png",
+    "source": "art/animation/chibi_v1/source/lind.png",
+    "source_rect": [
+      49,
+      0,
+      290,
+      432
+    ],
+    "active_idle": "art/anim/lind/lind_roster_v1_idle.png",
+    "source_sha256": "85803267f50cdb92f14529e7a871fad1c853e03f9c38af3ca441528f0cc8c915",
+    "image_sha256": "ea4e3df49ac7607eb6e964ce9d2dddc7a5d0f448bc87372932c4997975f30e8c",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "brigid",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/brigid.png",
+    "source": "art/animation/chibi_v1/source/brigid.png",
+    "source_rect": [
+      22,
+      0,
+      359,
+      435
+    ],
+    "active_idle": "art/anim/brigid/brigid_roster_v1_idle.png",
+    "source_sha256": "aed0db078566698eea67fee2d690936e37872f2c7882e1284650166e7f04741e",
+    "image_sha256": "3402aa27a3d8db4c06edc0b5b40d5ae429a3392533176763ac1b1b03a8b7662e",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "pip",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/pip.png",
+    "identity": "Cream segmented automaton, navy helmet and joints, black simple eyes, orange exposed central gear and hooked wrench",
+    "workflow_overrides": {},
+    "source": "art/animation/chibi_v1/source/pip.png",
+    "source_rect": [
+      48,
+      0,
+      333,
+      421
+    ],
+    "active_idle": "art/anim/pip/pip_roster_v1_idle.png",
+    "source_sha256": "579b49536950d2a804fbbaa8eaacb4d6d9e2f00ab7b6303644a51b20a898157f",
+    "image_sha256": "b2e0a56f6c79e6eb6f0ea6642a215f51945699e3434ea4733e331af8fb1e19ba",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "phorkys",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/phorkys.png",
+    "source": "art/animation/chibi_v1/source/phorkys.png",
+    "source_rect": [
+      37,
+      0,
+      302,
+      443
+    ],
+    "active_idle": "art/anim/phorkys/phorkys_roster_v1_idle.png",
+    "source_sha256": "c6b17e7dd2552a6a2c11cea5948289db93f09b9f0e1f7f91e7e7a3e13b6a04a8",
+    "image_sha256": "29094f14ec885e326273d1df6e01bf03586bc53873a32a42278cbd63a8166c55",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "solana",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/solana.png",
+    "source": "art/animation/chibi_v1/source/solana.png",
+    "source_rect": [
+      53,
+      0,
+      361,
+      422
+    ],
+    "active_idle": "art/anim/solana/solana_roster_v1_idle.png",
+    "source_sha256": "bb94a393d7f16d64896c11ce7b56516e37bf81c8e9834fc6f394fbf5fb04f84b",
+    "image_sha256": "871c2d952d61e0e800336fb2d51d5fac5ea244578d9047492f4734c37b72103c",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "jokull",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/jokull.png",
+    "source": "art/animation/chibi_v1/source/jokull.png",
+    "source_rect": [
+      38,
+      0,
+      376,
+      407
+    ],
+    "active_idle": "art/anim/jokull/jokull_roster_v1_idle.png",
+    "source_sha256": "c362f18daf06d8888beda8e9925bfeefeb1852f3e7145162b2e3c205df6f330b",
+    "image_sha256": "af6ad14a11f6e315f9894d4b14b257a619b4694c3236b35bb8ecd5f14b8c60ef",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "rhiannon",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/rhiannon.png",
+    "source": "art/animation/chibi_v1/source/rhiannon.png",
+    "source_rect": [
+      55,
+      0,
+      321,
+      421
+    ],
+    "active_idle": "art/anim/rhiannon/rhiannon_roster_v1_idle.png",
+    "source_sha256": "25203745324f2c3bb24368d2e943476ae8cfd929e3addc6956644f8c20d2d8ca",
+    "image_sha256": "15bcd4f3e62fbf38c85d7deec4ac5a8f42e9fcb78cfda91e4e1a609bd6c01959",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "mimic",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/mimic.png",
+    "source": "art/animation/chibi_v1/source/mimic.png",
+    "source_rect": [
+      43,
+      0,
+      323,
+      424
+    ],
+    "active_idle": "art/anim/mimic/mimic_roster_v1_idle.png",
+    "source_sha256": "83670e51f339e890469d20ef0a4ac195d9cf3b6f078b488482e2bfcc8ce0697f",
+    "image_sha256": "8fbc93b397fdf880e42e4bc4e53c64144586c2235647a4550cab0c5f93701aa8",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "protea",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/protea.png",
+    "source": "art/animation/chibi_v1/source/protea.png",
+    "source_rect": [
+      20,
+      0,
+      361,
+      433
+    ],
+    "active_idle": "art/anim/protea/protea_roster_v1_idle.png",
+    "source_sha256": "852a749ef3741103529a8fd89d467b369f76b1c88c77efd8270ea9a86f4a70c9",
+    "image_sha256": "c549d1002637fe346818d58323e772c1f355a39200e5edac30df79d60f5352c5",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "ceniza",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/ceniza.png",
+    "source": "art/animation/chibi_v1/source/ceniza.png",
+    "source_rect": [
+      57,
+      0,
+      297,
+      403
+    ],
+    "active_idle": "art/anim/ceniza/ceniza_roster_v1_idle.png",
+    "source_sha256": "a59d7c2bb11551f011983f02125ac186e9e2e483093e91cfc5471a7ca9be0499",
+    "image_sha256": "74fb7afd84d7f1c0544a792a5e22a198bc6fc34bb626d66d20201f34414880da",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "vidarr",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/vidarr.png",
+    "source": "art/animation/chibi_v1/source/vidarr.png",
+    "source_rect": [
+      30,
+      0,
+      322,
+      398
+    ],
+    "active_idle": "art/anim/vidarr/vidarr_roster_v1_idle.png",
+    "source_sha256": "ff089d22c5f1e3884e65b16eb737051b3a349e6f3bb77bbc208d94bc603c37ce",
+    "image_sha256": "af30525936e2017de4d74e652c6b56dcb4b38ebc52ca7c837006664b6b4ad8e4",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "finn",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/finn.png",
+    "source": "art/animation/chibi_v1/source/finn.png",
+    "source_rect": [
+      66,
+      0,
+      303,
+      385
+    ],
+    "active_idle": "art/anim/finn/finn_roster_v1_idle.png",
+    "source_sha256": "c04983452761359d7f143a60523b71f01eeb1097e51bdf15aafda5b7bd0489d4",
+    "image_sha256": "986677a2361aa76a5dadb832b0afa740354655eadd8d96a22832d69a070f4d9e",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "dummy",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/dummy.png",
+    "source": "art/animation/chibi_v1/source/dummy.png",
+    "source_rect": [
+      61,
+      0,
+      277,
+      488
+    ],
+    "active_idle": "art/anim/dummy/dummy_roster_v1_idle.png",
+    "source_sha256": "34466bb4da64286364655cf961d49d491e734600572b3fdaa31dace29397c818",
+    "image_sha256": "8de885d6eaa641755622cbc27a83a73264ad2bd58f75d79e253201024493fc60",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "marea",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/marea.png",
+    "source": "art/animation/chibi_v1/source/marea.png",
+    "source_rect": [
+      57,
+      0,
+      279,
+      394
+    ],
+    "active_idle": "art/anim/marea/marea_roster_v1_idle.png",
+    "source_sha256": "14bb0d75c30bee46078cc2d6b41758a140136562c2d0ef3693d221b47945d671",
+    "image_sha256": "bcf07a02335903c911c4833e69166148e258e6700afc88d6b486014317dd67c8",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "igni",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/igni.png",
+    "source": "art/animation/chibi_v1/source/igni.png",
+    "source_rect": [
+      43,
+      0,
+      288,
+      402
+    ],
+    "active_idle": "art/anim/igni/igni_roster_v1_idle.png",
+    "source_sha256": "468b8df5418d5f17cf85370f06876fb77babd38d42674e785176bec7ceda78ec",
+    "image_sha256": "b21d730d297c9a79efd2762db6afc387170d87a9a0c5ad08abb06981e35ee786",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "kari",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/kari.png",
+    "source": "art/animation/chibi_v1/source/kari.png",
+    "source_rect": [
+      54,
+      0,
+      335,
+      452
+    ],
+    "active_idle": "art/anim/kari/kari_roster_v1_idle.png",
+    "source_sha256": "563ba9fcd17a8997ec7491ad4da98171decd53b7d263757fcd81579563a03bc5",
+    "image_sha256": "8a86aa95cd93193fa4fbfcdb17535b4fcf6f0627109d64b950663c7f503a8f06",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "donn",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/donn.png",
+    "source": "art/animation/chibi_v1/source/donn.png",
+    "source_rect": [
+      50,
+      0,
+      296,
+      369
+    ],
+    "active_idle": "art/anim/donn/donn_roster_v1_idle.png",
+    "source_sha256": "c202421528a781a284d619df5d573a50372e81a62fa28ce1149caa6f73d07c43",
+    "image_sha256": "fa28bfb95ae3493507b99306da349a1da41b41b09ab12049670e9d2b29bc3750",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "echo",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/echo.png",
+    "identity": "Silver bob, two green round glasses, ivory work shirt, charcoal trousers, gloves, gray boots, one connected metal bow assembly and quiver; slim archer",
+    "workflow_overrides": {},
+    "source": "art/animation/chibi_v1/source/echo.png",
+    "source_rect": [
+      48,
+      0,
+      350,
+      454
+    ],
+    "active_idle": "art/anim/echo/echo_roster_v1_idle.png",
+    "source_sha256": "ab66b4d8f5014032c7364a22228c44ee74cafe56f0c46cd87dc19dc2498c8a7d",
+    "image_sha256": "7f8324469ce93ae55f24462e17226a52f130eb0f7d524c1d6bfc78e312de145d",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "glaukos",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/glaukos.png",
+    "source": "art/animation/chibi_v1/source/glaukos.png",
+    "source_rect": [
+      55,
+      0,
+      369,
+      405
+    ],
+    "active_idle": "art/anim/glaukos/glaukos_roster_v1_idle.png",
+    "source_sha256": "014a0c5896d3c22e85160c5257e6c4da8bcd5b50393961c35ba1b6c2aa4eb368",
+    "image_sha256": "07d79ae1cc6679c08cc01a4b9856cd36a4ddade0e37e06cdcf2b143a3bef689a",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "volcan",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/volcan.png",
+    "source": "art/animation/chibi_v1/source/volcan.png",
+    "source_rect": [
+      57,
+      0,
+      340,
+      420
+    ],
+    "active_idle": "art/anim/volcan/volcan_roster_v1_idle.png",
+    "source_sha256": "e0fa3b8b1bfb68cd25240e91584a7c5660ac5553e768908b6aa106459929e38c",
+    "image_sha256": "69bf2a1fc6dabf0ffa849209672b0d2d56cb9f47b91711e5bc2eb9130bc9c18a",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "eira",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/eira.png",
+    "source": "art/animation/chibi_v1/source/eira.png",
+    "source_rect": [
+      25,
+      0,
+      355,
+      478
+    ],
+    "active_idle": "art/anim/eira/eira_roster_v1_idle.png",
+    "source_sha256": "9df5aaf8d52f5eea0875f6d3a3b1c369f16b950f3cf1cba94ec6800153682b11",
+    "image_sha256": "466f5cf5a3bcca8bb76f959f9699f550dbc80b9b75af881e0206a9a0c07867c4",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "conor",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/conor.png",
+    "source": "art/animation/chibi_v1/source/conor.png",
+    "source_rect": [
+      68,
+      0,
+      303,
+      432
+    ],
+    "active_idle": "art/anim/conor/conor_roster_v1_idle.png",
+    "source_sha256": "f76960af72a0a9e53176f08623715da588aeda56920fedd38e37fb08d44b1f8d",
+    "image_sha256": "b1573e8859b8340a1397b4365b6a69cbeafe1b4bd57857470c52507f781b3db0",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "shift",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/shift.png",
+    "source": "art/animation/chibi_v1/source/shift.png",
+    "source_rect": [
+      31,
+      0,
+      292,
+      437
+    ],
+    "active_idle": "art/anim/shift/shift_roster_v1_idle.png",
+    "source_sha256": "f5d72c9da5c856cf947dfc802a51356107382c02e2dc1c290a2f451669e17aff",
+    "image_sha256": "2736d94204c85a106c7b32de28ed013c3884c9b41e32870abfe9fd2f6e003c8e",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "thalassa",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/thalassa.png",
+    "source": "art/animation/chibi_v1/source/thalassa.png",
+    "source_rect": [
+      38,
+      0,
+      310,
+      400
+    ],
+    "active_idle": "art/anim/thalassa/thalassa_aoe_v1_idle.png",
+    "source_sha256": "c359dd7a8e42b68dabf6cc1ca46779844b704e8c75545b66a100fb7bdb2316fe",
+    "image_sha256": "7337e0070582fd9bac1ce31652036e1af89e3535b70949781537a2b1c6c57984",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "carmen",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/carmen.png",
+    "source": "art/animation/chibi_v1/source/carmen.png",
+    "source_rect": [
+      64,
+      0,
+      318,
+      435
+    ],
+    "active_idle": "art/anim/carmen/carmen_roster_v1_idle.png",
+    "source_sha256": "15405cc6b770a00d5ef41094f6d67289d522bd4daf8a0b2f2c2b1e93e1318ea9",
+    "image_sha256": "123161cd1cb6b48505e008e0aae3e27101195f9b3741720668ca9d55dc26d991",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "snorri",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/snorri.png",
+    "source": "art/animation/chibi_v1/source/snorri.png",
+    "source_rect": [
+      36,
+      0,
+      333,
+      449
+    ],
+    "active_idle": "art/anim/snorri/snorri_roster_v1_idle.png",
+    "source_sha256": "276b30e4984d79bb125a3e6bdb72c1c351a8dfef0b8678cd4a8ea39212c3f734",
+    "image_sha256": "91d0299e2071459cfa6e5c0f2fb4b43eaf3783bce771407b9df1ad837e9a0575",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "niamh",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/niamh.png",
+    "source": "art/animation/chibi_v1/source/niamh.png",
+    "source_rect": [
+      61,
+      0,
+      349,
+      435
+    ],
+    "active_idle": "art/anim/niamh/niamh_roster_v1_idle.png",
+    "source_sha256": "bc6a1a4b1d6937dc83ee4fd7ff8c42f67acf9b53d14ba69a157e595e4d20d9f8",
+    "image_sha256": "b5954b9e7ac85dcfd7f9b0a633332aad0d3f9aeeb3119a2dcd459fe6d722b028",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "phantom",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/phantom.png",
+    "source": "art/animation/chibi_v1/source/phantom.png",
+    "source_rect": [
+      48,
+      0,
+      331,
+      414
+    ],
+    "active_idle": "art/anim/phantom/phantom_roster_v1_idle.png",
+    "source_sha256": "545deabc3abf9ce46843323c6de446b0eb97ffe5d545ab23d89566b049de7f80",
+    "image_sha256": "b8979d10454df676816b65ceb9a161060a3c74437ccdebbe5a384644c92a7031",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "triton",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/triton.png",
+    "source": "art/animation/chibi_v1/source/triton.png",
+    "source_rect": [
+      29,
+      0,
+      307,
+      450
+    ],
+    "active_idle": "art/anim/triton/triton_roster_v1_idle.png",
+    "source_sha256": "83db84227993491282f8eba6cc28b8a1c67f9ce7f95a5811e0c167431f892fda",
+    "image_sha256": "c414776de5d44672b19898292d55194433ea5a4fcebb9d20bc8df7e007b55c86",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "saeta",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/saeta.png",
+    "source": "art/animation/chibi_v1/source/saeta.png",
+    "source_rect": [
+      33,
+      0,
+      356,
+      428
+    ],
+    "active_idle": "art/anim/saeta/saeta_roster_v1_idle.png",
+    "source_sha256": "e10a69900b147a15a688514a37074b580b637deb1cdcd545312f1f30b2cae8e9",
+    "image_sha256": "b0cc7aae1182ce0a30b6a63c35aaa472aa4f33fcba273ea0f15aade041e5767a",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "helga",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/helga.png",
+    "source": "art/animation/chibi_v1/source/helga.png",
+    "source_rect": [
+      48,
+      0,
+      309,
+      414
+    ],
+    "active_idle": "art/anim/helga/helga_roster_v1_idle.png",
+    "source_sha256": "41f411d0199635892f4241c4349b0cd3186feaaa498ca0b95c90b5a14a34f471",
+    "image_sha256": "c1377e3409009f335bec677aad160a31c7dbc74a6d7b918f55dfd5ab4f1cd74f",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "morrigan",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/morrigan.png",
+    "source": "art/animation/chibi_v1/source/morrigan.png",
+    "source_rect": [
+      65,
+      0,
+      314,
+      488
+    ],
+    "active_idle": "art/anim/morrigan/morrigan_roster_v1_idle.png",
+    "source_sha256": "1ff2a52377ee8609201d998fd21cd8bf0b314d1f916cbbad2c861093a2a37154",
+    "image_sha256": "35bc4eb382106ddd7e62a55e0da7c30b7d005631511efe1d2e18a6fc2bb6bf9f",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "blank",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/blank.png",
+    "source": "art/animation/chibi_v1/source/blank.png",
+    "source_rect": [
+      36,
+      0,
+      296,
+      385
+    ],
+    "active_idle": "art/anim/blank/blank_aoe_v1_idle.png",
+    "source_sha256": "c02a718085aa3a29e8af1e14f076f61c96a6389aa87c73e34fe6725489b470c0",
+    "image_sha256": "1d3590b1e37437cc00a4d2750bba6e11d8a96d9b99e8441578566e89e7bc1875",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "keto",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/keto.png",
+    "source": "art/animation/chibi_v1/source/keto.png",
+    "source_rect": [
+      34,
+      0,
+      366,
+      419
+    ],
+    "active_idle": "art/anim/keto/keto_roster_v1_idle.png",
+    "source_sha256": "61c8a582d96f1f47616c45b11400abb6f00932af9539bb1e3fb26a90a7ab6e5a",
+    "image_sha256": "02e57d1826a8bc05d1b62ea214d68ca64807812fd30e64e4f3e3c367b668c031",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "candela",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/candela.png",
+    "source": "art/animation/chibi_v1/source/candela.png",
+    "source_rect": [
+      56,
+      0,
+      281,
+      413
+    ],
+    "active_idle": "art/anim/candela/candela_roster_v1_idle.png",
+    "source_sha256": "69fc7b5689e9948aacac52057974ef6f702bb1fcff9c501cf2f08a88887f282a",
+    "image_sha256": "09836deede9e8d44d1e00244ffe8d791432a27549a6150a9f72b51dd137818e3",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "sigrid",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/sigrid.png",
+    "source": "art/animation/chibi_v1/source/sigrid.png",
+    "source_rect": [
+      34,
+      0,
+      312,
+      402
+    ],
+    "active_idle": "art/anim/sigrid/sigrid_aoe_v1_idle.png",
+    "source_sha256": "4ad91d9789c2960eaf9a2c9741b8ededb488e9576cb59f5915d408f5caff8c0f",
+    "image_sha256": "1835775a096c22f7d01a15117ad85d083c2d1499075802f6a40e43c24fe15e4e",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "caden",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/caden.png",
+    "source": "art/animation/chibi_v1/source/caden.png",
+    "source_rect": [
+      36,
+      0,
+      302,
+      446
+    ],
+    "active_idle": "art/anim/caden/caden_roster_v1_idle.png",
+    "source_sha256": "57708a8c0b71f4f4ff4f8eba582d3957a6b1ead68402093e1c8b533ecea575f8",
+    "image_sha256": "56c5f5f9dc514cf5c1d9735b27ccee250e10da2460c0fdeee3f8bf6b39b083ec",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "grey",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/grey.png",
+    "source": "art/animation/chibi_v1/source/grey.png",
+    "source_rect": [
+      38,
+      0,
+      380,
+      444
+    ],
+    "active_idle": "art/anim/grey/grey_roster_v1_idle.png",
+    "source_sha256": "47051498b1a5c559282af40e7ad53a8047b18f0c0a7f686f4b505bf26e0092fa",
+    "image_sha256": "ef7b28a8f00439fc57f13cea168074aa42bda04691989e5cb7508919f3c46ccb",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "galene",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/galene.png",
+    "source": "art/animation/chibi_v1/source/galene.png",
+    "source_rect": [
+      59,
+      0,
+      283,
+      406
+    ],
+    "active_idle": "art/anim/galene/galene_roster_v1_idle.png",
+    "source_sha256": "bd6021c7627eed4388e3664efa79c561ee641e1db7e4156f89b31a85ac5abf48",
+    "image_sha256": "ee064e5bc33bc4b8630d63bfcb5038d54a1d8f397f7bfe9f87598f547b89d27f",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "estoque",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/estoque.png",
+    "source": "art/animation/chibi_v1/source/estoque.png",
+    "source_rect": [
+      48,
+      0,
+      322,
+      428
+    ],
+    "active_idle": "art/anim/estoque/estoque_roster_v1_idle.png",
+    "source_sha256": "1b079f9e911fb1779b01b94608bd7d138b5f44cfc7821e834889828308555721",
+    "image_sha256": "a193c851c2b08c50593d7a32063a275cc78d4ddea95084113d6600c6f8611580",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "frosti",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/frosti.png",
+    "source": "art/animation/chibi_v1/source/frosti.png",
+    "source_rect": [
+      57,
+      0,
+      288,
+      432
+    ],
+    "active_idle": "art/anim/frosti/frosti_roster_v1_idle.png",
+    "source_sha256": "6680f37662383e8d7e408cf69e9b41514dc62460b621e4a56a891c14b8417145",
+    "image_sha256": "347c7698f7f036910b1607e83ddb2bf4fd4576536226ba42f5e12c12c420a7b5",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "lugh",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/lugh.png",
+    "source": "art/animation/chibi_v1/source/lugh.png",
+    "source_rect": [
+      69,
+      0,
+      311,
+      397
+    ],
+    "active_idle": "art/anim/lugh/lugh_aoe_v1_idle.png",
+    "source_sha256": "22d0c236cc679da02512af1ca84529ceec5c77882bace134eaca2d2db910b974",
+    "image_sha256": "3200814771479b0cc3c84a39a08387a70ee74f28e652c1ccc86b5eca00616595",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "null",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/null.png",
+    "source": "art/animation/chibi_v1/source/null.png",
+    "source_rect": [
+      40,
+      0,
+      378,
+      453
+    ],
+    "active_idle": "art/anim/null/null_roster_v1_idle.png",
+    "source_sha256": "93525043110f7ae0c5f7bce80e44d0fa78193324dc383322ac4c362774a77e65",
+    "image_sha256": "db3482b83405a009cdf4c954ad14e3f2231a95251533437eaed1edfb6a561e75",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "nerea",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/nerea.png",
+    "source": "art/animation/chibi_v1/source/nerea.png",
+    "source_rect": [
+      46,
+      0,
+      325,
+      423
+    ],
+    "active_idle": "art/anim/nerea/nerea_roster_v1_idle.png",
+    "source_sha256": "4f138a9e5773f64516a2fe2a4b1070572edf3b84546db5ae155c57200ce3abab",
+    "image_sha256": "32073816f06dd66284fa7611769396d099caf6a2ec3fecad343bb48d5f1d7081",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "brasa",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/brasa.png",
+    "identity": "Dark spiky hair, broad red-and-gold armor, four red shield-like back petals and amber chest furnace; heavy rescue warrior",
+    "workflow_overrides": {},
+    "source": "art/animation/chibi_v1/source/brasa.png",
+    "source_rect": [
+      26,
+      0,
+      315,
+      399
+    ],
+    "active_idle": "art/anim/brasa/brasa_aoe_v1_idle.png",
+    "source_sha256": "95471cd61532a92189f1fab063fcc217c34d05ebc4f9b062627bcede9fe7d8ac",
+    "image_sha256": "f7fd6a6e8506bd7b25efb5355d036687a5b20d33b6b3087d9532c6f687ce7661",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "isa",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/isa.png",
+    "source": "art/animation/chibi_v1/source/isa.png",
+    "source_rect": [
+      25,
+      0,
+      349,
+      411
+    ],
+    "active_idle": "art/anim/isa/isa_roster_v1_idle.png",
+    "source_sha256": "6887fe103f3bfbc8f3db8966b4a9011f0431bc528a32bd1df3e10b8674b1a4cd",
+    "image_sha256": "c05d824f8bc4114703bc04f528b51d49ac438e443628d2c59500e8530c7de2b3",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "brian",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/brian.png",
+    "source": "art/animation/chibi_v1/source/brian.png",
+    "source_rect": [
+      33,
+      0,
+      353,
+      458
+    ],
+    "active_idle": "art/anim/brian/brian_roster_v1_idle.png",
+    "source_sha256": "7315783a244f93a422ef25340f73a21cffa0ca4df7cf53990e0a4a08784d57c7",
+    "image_sha256": "c55b397f296adc65f30c3dca79ded09ea54767f79ae9f6360267b5fc3cf0c17f",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  },
+  {
+    "id": "zero",
+    "workflow_overrides": {},
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/hero-native/inputs/zero.png",
+    "source": "art/animation/chibi_v1/source/zero.png",
+    "source_rect": [
+      37,
+      0,
+      344,
+      426
+    ],
+    "active_idle": "art/anim/zero/zero_roster_v1_idle.png",
+    "source_sha256": "19f92e0e3b782c175e27d3115b98816d7c950a302fd12a940769970a27bc74a0",
+    "image_sha256": "174af282b9af3ad4cc7f95c1ebe0f569107f74a9f3ec1f04d83484b5055e75dc",
+    "preprocess": "exact source cell; alpha crop; 18px transparent margin"
+  }
+]

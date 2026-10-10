@@ -15,6 +15,8 @@
     "TentacleR"
   ],
   "clips": [
+    "Attack",
+    "Die",
     "IdleLoop",
     "MoveLoop"
   ],
@@ -23,8 +25,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/jelly_seer/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/jelly_seer/game.blend",
-  "glb_sha256": "e4aa9762fcc6ed376aa0d8db70c8947094d324a39ebdc32c8ac9d35b804e3be5",
-  "glb_bytes": 4085908,
+  "glb_sha256": "4bf1008729558372e3c244441859200d292279364023d7eab9356c8dd2b0359b",
+  "glb_bytes": 4098396,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -59,5 +61,36 @@
     "glb_sha256": "e4aa9762fcc6ed376aa0d8db70c8947094d324a39ebdc32c8ac9d35b804e3be5",
     "report": "build/character-3d/monster-review/report.json",
     "artist_note": "Direct original and actual studio/runtime front, side, back, three-quarter, both resolutions and continuous IdleLoop/MoveLoop viewed. Ray paired fins/one tail and cyan face, jelly cap/tentacle beard/dark orb and wave giant foam silhouette preserved. No pose cracks or loop jumps; independently phased movement and status/mixed battle remain readable at small size. Device FPS unmeasured."
+  },
+  "motion": {
+    "version": 2,
+    "library": "tools/3d/monster_motion.py",
+    "fps": 30,
+    "frames": {
+      "IdleLoop": 90,
+      "MoveLoop": 36,
+      "Attack": 30,
+      "Die": 24
+    },
+    "move_cycle_seconds": 1.2,
+    "travel_per_move_cycle_world_units": 1.968,
+    "attack_phase_map": "clip_time = (siege_phase - 0.3) mod 1; strike frame 21/30 lands at the phase wrap",
+    "params": {
+      "move_frames": 36,
+      "pulse": 0.14,
+      "thrust": 0.05,
+      "trail": 0.25,
+      "attack": "burst",
+      "death": "sink",
+      "spawn": "descend",
+      "hover": 0.1,
+      "turn_rate": 6.0,
+      "turn_max": 4.0,
+      "bank": 0.1
+    },
+    "authored_at": "2026-10-10T18:47:15",
+    "tool": "tools/3d/author_monster_motion.py",
+    "geometry_digest": "5e3547a9c1d8c7b32a831c55171670e1095150adb6a15730af4219b09a816983",
+    "geometry_unchanged": true
   }
 }

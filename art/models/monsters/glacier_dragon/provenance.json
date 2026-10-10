@@ -20,6 +20,8 @@
     "LegR"
   ],
   "clips": [
+    "Attack",
+    "Die",
     "IdleLoop",
     "MoveLoop"
   ],
@@ -28,8 +30,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/glacier_dragon/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/glacier_dragon/game.blend",
-  "glb_sha256": "10c549a8768556ae1c1574662f10b513e63c637d45b4df8b08929288a41b812c",
-  "glb_bytes": 4858944,
+  "glb_sha256": "702fb87561c96cab9c837b5b703f72847e6984e55eff793c4ddf4cfabdc56d5c",
+  "glb_bytes": 4884236,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -64,5 +66,43 @@
     "glb_sha256": "10c549a8768556ae1c1574662f10b513e63c637d45b4df8b08929288a41b812c",
     "report": "build/character-3d/monster-review/report.json",
     "artist_note": "Direct actual GL Compatibility two-resolution 78PNG four views, Idle/Move continuous frames, Burn/Frost/Stun and twelve heroes battle inspected. Original long ice horns, grey-blue wings, pale segmented belly, two clawed arms/two feet and spined tail retained; nine-bone wings and tail move without disconnected surfaces or texture collapse."
+  },
+  "motion": {
+    "version": 2,
+    "library": "tools/3d/monster_motion.py",
+    "fps": 30,
+    "frames": {
+      "IdleLoop": 90,
+      "MoveLoop": 30,
+      "Attack": 30,
+      "Die": 24
+    },
+    "move_cycle_seconds": 1.0,
+    "travel_per_move_cycle_world_units": 1.64,
+    "attack_phase_map": "clip_time = (siege_phase - 0.3) mod 1; strike frame 21/30 lands at the phase wrap",
+    "params": {
+      "move_frames": 30,
+      "stance": 0.5,
+      "leg_swing": 0.28,
+      "leg_lift": 0.05,
+      "leg_reach": 0.05,
+      "flap": 0.3,
+      "twist": 0.08,
+      "bounce": 0.04,
+      "pitch": 0.03,
+      "tail_h": 0.15,
+      "tail_v": 0.08,
+      "attack": "bite",
+      "death": "sink",
+      "spawn": "drop",
+      "hover": 0.0,
+      "turn_rate": 4.0,
+      "turn_max": 2.5,
+      "bank": 0.12
+    },
+    "authored_at": "2026-10-10T18:48:09",
+    "tool": "tools/3d/author_monster_motion.py",
+    "geometry_digest": "a9fcf24552365f83ba71762eb0749271c33100d9e558b34254baa483d713a559",
+    "geometry_unchanged": true
   }
 }

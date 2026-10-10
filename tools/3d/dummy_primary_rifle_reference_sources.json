@@ -1,0 +1,19 @@
+[
+  {
+    "id": "dummy",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/references-retry/dummy/primary-rifle-apose.png",
+    "reference_type": "built-in image_gen original-sprite A-pose raster; NOT native GLB",
+    "original": "build/hero-native/inputs/dummy.png",
+    "original_sha256": "8de885d6eaa641755622cbc27a83a73264ad2bd58f75d79e253201024493fc60",
+    "style_reference": "build/limne-game-motion/game-review/1280x800/gallery_three_quarter.png",
+    "style_reference_sha256": "c7f8ff1757ae154261522e8b937a77164a027c1ba820d9c9d4bfb3fcc9fc885c",
+    "prompt": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/references-retry/dummy/primary-rifle-prompt.txt",
+    "prompt_sha256": "d0ba9266504d2834a3cf633a25295085fb1e3acb87830b0623745d086b56783a",
+    "image_sha256": "cb6e700e80d1234d9796de4eb419bb27d4fab342f34b6a1b334b0bdd15c1004b",
+    "workflow_overrides": {},
+    "reference_review": "Direct original IDLE+ATTACK read: original attack reveals long wood/black scoped primary rifle, retained alongside fixed hip sidearm. New rig-ready separated hands/native rifle Apose; blank automaton face, cream joints, charcoal vest/shorts, brown molded shell/knee pad/boots preserved.",
+    "secondary_original": "build/hero-native/inputs/dummy-original-attack-cell.png",
+    "secondary_original_sha256": "0d89e76cdeb43689b1f2217de79b9243db3ed9c175a0674110fb960fc24b2de5",
+    "retry_basis": "Original attack primary weapon was absent from idle-based reconstruction. Reject torn hip-pistol extraction; bounded native reconstruction uses exact attack rifle."
+  }
+]

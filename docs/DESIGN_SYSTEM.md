@@ -5,6 +5,47 @@
 역할 정의: [graphic_design_manager](../.codex/agents/graphic_design_manager.toml).
 분담 규칙: [AGENTS.md](../AGENTS.md).
 
+## 2026-10-10 모션·VFX 개편 — 프로덕션 수준 캐릭터 움직임과 전투 이펙트
+
+- 사용자가 전투 화면의 캐릭터 움직임·샷·이펙트를 "초보 같다"고 평가하고 상용 3D 게임
+  수준으로 다시 만들라고 요청했다(목표 참고 `tobe.png`, 당시 화면 `Voc.jpg`). 조형·정체성·
+  랭크 장식·초상화·게임 수치·피해 시점·난수는 바꾸지 않고 **움직임·이펙트·조명·재질**만 재제작했다.
+- 작업은 세 전담 디자인 담당으로 나눴고 메인이 월드 연동을 맡았다. 상세 기준은 각 문서가 보유한다:
+  [영웅 모션](HERO_MOTION.md) · [몬스터 모션](MONSTER_MOTION_3D.md) · [VFX·조명·재질](VFX_LIGHTING.md).
+- **영웅 49명+Limne**: Blender `tools/3d/author_native_motion.py`가 편집 원본 `game.blend`에서
+  `IdleLoop` 6s(호흡·체중 이동·시선)·`WalkLoop`(다리 교차+반대편 팔 스윙·2회 바운스·골반 롤·
+  전진 기울기)·`Attack` 1.5s(예비 → 1.0s 해방 스냅 → 반동·오버슈트·정착)를 무기 유형별 안무
+  (활·소총·검·캐스터·포병·도구)로 작성한다. 런타임 `native_character_model.gd`+`hero_locomotion.gd`는
+  클립을 직접 샘플해 하체 보행+상체 공격 레이어, 거리 기반 보행 위상, 부드러운 요 회전(180° 0.23s)과
+  상체 조준 보정(±1.2rad 즉시)을 합성한다. 기하·가중치·소켓·재질 바이트는 이전과 동일하다.
+- **몬스터 25종**: `tools/3d/author_monster_motion.py`+`monster_motion.py`가 체형별
+  `IdleLoop`·`MoveLoop`(보폭을 `PATH_SPEED`에 맞춤: 갤럽·트롯·점프·날갯짓·슬리더·뿌리 끌기 등)·
+  `Attack`(수정 포위 타격)·`Die`를 작성한다. 런타임 `native_monster_model.gd`는 등장·회전(뱅킹)·
+  피격 스쿼시·사망 쓰러짐/디졸브·포위 위상 매핑을 상태기계로 합성한다. TitanBloom은 보수된
+  원본에 클립만 다시 썼다.
+- **VFX·조명·재질**: `stellar_vfx.gd`가 MultiMesh 풀(탄 120·총구 24·버스트 64·광선 16·베기 12·
+  장판 24+12)과 돔·점광원 펄스로 무기·속성별 탄·트레일·총구 섬광·착탄 링/스파크/연기·광선·
+  연쇄 번개·장판 룬·사망/등장/상태/기술 효과를 그린다(`art/vfx/*.gdshader`, 절차 생성
+  `sprites.png`/`noise.png`). `stellar_lighting.gd`는 달빛 키(부드러운 그림자)+등불 필+후방
+  림, ACES·글로우 임계 0.84·깊이 안개. `stellar_shading.gd`는 공유 재질을 roughness 0.70·
+  specular 0.33·rim 0.34로 올리고 인스턴스별 override로 피격 섬광(최대 1.5, 무늬 유지)과
+  해시 디졸브를 준다. 접지 그림자는 코어+반그림자, 날씨 입자는 빌보드 모트다.
+- **월드 연동 계약**(`stellar_world.gd`/`arena_world.gd`, 메인 소유): 영웅 `set_locomotion(v, dt)` →
+  `face_toward(dir, dt)` → `animate_visual`; 몬스터 생성 시 `visual_event("spawn")`, 매 프레임
+  `face_toward` → `set_hit_flash(mo.flash)` → `set_siege(phase|-1)` → `animate_visual(motion_t, moving)`;
+  시뮬 이벤트의 `sid`(spawn_id)로 `visual_event(type, e)` 라우팅; 사망한 몸은 `advance_death(dt)`가
+  끝날 때까지(최대 1.6s) 유지. 이 계약은 `tests/arena_motion_check.tscn`(30건)이 검사하며
+  `tools/verify.sh`·CI 선행 검사에 포함했다. 시뮬 사전·난수·저장은 쓰기 금지다.
+- 전후 비교 자료: `build/motion-overhaul/before/`·`before-arena/`(개편 전), `heroes/`(50명 해방·
+  달리기·보행 중 공격 시트, 전투 전후 GIF), `monsters/`(25종 before_after 시트, 로스터 시트),
+  `vfx/`(두 해상도·두 분대·어두운 테마 촬영, `compare_battle_before_after.jpg`), `after-arena/`
+  (같은 전투 시나리오 재촬영). 개별 원본은 `build/character-3d/review/<id>/`,
+  `monster-review/<id>/`, `build/motion-overhaul/vfx/<해상도>/`다.
+- 한계: 머리·무릎 뼈 없음(시선 분리·무릎 굽힘 없음), 초상화는 재촬영하지 않아 전투 모델이
+  카드보다 약간 더 반짝인다, 밝은 눈 테마에서 가산 이펙트가 흰색 쪽으로 몰린다(`vfx_wash`로 완화),
+  Android/iOS 실기기 FPS·발열 미측정. GPUParticles·Decal·instance uniform은 Compatibility
+  호환을 위해 쓰지 않았다.
+
 ## 2026-10-10 도로 확대·중앙 영웅 우회
 
 - 사용자 요청에 따라 `ArenaGeometry.ROAD_WIDTH`를90→116logical로 넓혔다.

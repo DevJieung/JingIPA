@@ -10,7 +10,6 @@ var projectiles := Node3D.new()
 var selection := Node3D.new()
 var placement := Node3D.new()
 var weather: MultiMeshInstance3D
-var zone_nodes: Array[Node3D] = []
 var texts: Array[Dictionary] = []
 var _text_gap := 0.0
 var crystals: Array[Node3D] = []
@@ -18,8 +17,13 @@ var hero_nodes: Dictionary = {}
 var _native_pending: Dictionary = {}
 var _native_direction: Dictionary = {}
 var monster_nodes: Dictionary = {}
-var bullet_nodes: Array[Node3D] = []
 var effects: Array[Dictionary] = []
+var vfx: StellarVfx
+## Per-hero locomotion input for this frame ({"v": Vector3 world units/s, "dt": float,
+## "walking": bool, "dir": Vector2 or INF}). Stage subclasses fill it before sync.
+var _hero_motion: Dictionary = {}
+## Monsters whose simulation entry is gone but whose death presentation still plays.
+var _dying: Dictionary = {}
 var theme_id := ""
 var yaw := -0.12
 var zoom := 1.0
@@ -50,40 +54,12 @@ func _ready() -> void:
 	camera.far = 80
 	camera.current = true
 	camera_update()
-	var environment := WorldEnvironment.new()
-	var env := Environment.new()
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color("#142535")
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color("#a9c2d5")
-	env.ambient_light_energy = 0.23
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.fog_enabled = true
-	env.fog_light_color = Color("#263a51")
-	env.fog_density = 0.004
-	env.fog_sky_affect = 0
-	# Compatibility supports this inexpensive bloom implementation. Its intensity is
-	# restrained so crystals and lanterns glow while equipment remains legible.
-	env.glow_enabled = true
-	env.glow_intensity = 0.16
-	env.glow_hdr_threshold = 0.93
-	environment.environment = env
-	add_child(environment)
-	var moon := DirectionalLight3D.new()
-	moon.light_color = Color("#c3dcf1")
-	moon.light_energy = 0.88
-	moon.rotation_degrees = Vector3(-46,-38,0)
-	moon.shadow_enabled = true
-	moon.directional_shadow_max_distance = 40
-	moon.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
-	moon.shadow_bias = 0.025
-	moon.shadow_normal_bias = 0.7
-	add_child(moon)
-	var fill := DirectionalLight3D.new()
-	fill.light_color = Color("#ffd7a1")
-	fill.light_energy = 0.30
-	fill.rotation_degrees = Vector3(-30,145,0)
-	add_child(fill)
+	StellarLighting.setup(self)
+	vfx = StellarVfx.new()
+	vfx.name = "Vfx"
+	vfx.projectiles = projectiles
+	vfx.effects = effects
+	add_child(vfx)
 
 func camera_update() -> void:
 	camera.size = 18.5 / zoom
@@ -200,10 +176,17 @@ func build_map(theme: Dictionary) -> void:
 	weather=MultiMeshInstance3D.new()
 	weather.multimesh=MultiMesh.new()
 	weather.multimesh.transform_format=MultiMesh.TRANSFORM_3D
-	weather.multimesh.mesh=StellarModels.primitive("sphere")
+	# Soft camera-facing motes (rain / snow / embers / pollen) instead of lit micro-spheres.
+	weather.multimesh.mesh=QuadMesh.new()
 	weather.multimesh.instance_count=34
-	weather.material_override=StellarModels.material(Color("#b6d6df") if body in ["aqua","frost"] else Color("#e8a45d") if body=="flame" else Color("#839d82"),0,0.2)
+	var weather_material := ShaderMaterial.new()
+	weather_material.shader=preload("res://art/vfx/weather.gdshader")
+	weather_material.set_shader_parameter("sprites",preload("res://art/vfx/sprites.png"))
+	weather_material.set_shader_parameter("tint",Color("#cfe6f2") if body in ["aqua","frost"] else Color("#ffb066") if body=="flame" else Color("#a9c9b4"))
+	weather_material.set_shader_parameter("brightness",0.42)
+	weather.material_override=weather_material
 	weather.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	weather.custom_aabb=AABB(Vector3(-20,-2,-20),Vector3(40,10,40))
 	add_child(weather)
 	weather_update(0.0)
 	_selected = Vector2.INF
@@ -217,7 +200,7 @@ func weather_update(time: float) -> void:
 		var z := cos(n*9.8)*6.0
 		var y := fposmod(n*0.71-time*(1.0 if body=="aqua" else 0.42),2.7)+0.2
 		if body=="flame": y=fposmod(n*0.71+time*0.47,2.7)+0.2
-		var size := Vector3(0.012,0.13,0.012) if body=="aqua" else Vector3(0.025,0.025,0.025)
+		var size := Vector3(0.035,0.22,0.035) if body=="aqua" else Vector3(0.075,0.075,0.075)
 		weather.multimesh.set_instance_transform(n,Transform3D(Basis.from_scale(size),Vector3(x+sin(time+n)*0.14,y,z)))
 
 func _reserved(p: Vector2, distance: float) -> bool:
@@ -375,21 +358,34 @@ func sync_heroes(heroes: Array, time: float, battle: bool = false) -> void:
 				node.animate_visual(time+float(i)*0.31,ft,raw_wind,battle)
 				for pending in _native_pending[i]: node.visual_event(pending)
 				_native_pending.erase(i)
-			var direction: Vector2 = _native_direction.get(i,data.get("fx_d",Vector2(0,1))) if battle else Vector2(0,1)
-			if direction.length_squared()>0.001: node.rotation.y = atan2(-direction.x,-direction.y)
+			var motion: Dictionary = _hero_motion.get(i,{}) if battle else {}
+			if node.has_method("set_locomotion"):
+				node.call("set_locomotion",motion.get("v",Vector3.ZERO),float(motion.get("dt",0.0)))
+			var heading: Vector2 = motion.get("dir",Vector2.INF)
+			if not heading.is_finite():
+				heading = _native_direction.get(i,data.get("fx_d",Vector2(0,1))) if battle else Vector2(0,1)
+			_face(node,heading,battle,float(motion.get("dt",0.0)))
 			node.animate_visual(time+float(i)*0.31,ft,raw_wind,battle)
 			continue
 		_native_pending.erase(i)
 		_native_direction.erase(i)
-		var direction: Vector2 = data.get("fx_d",Vector2(0,1)) if battle else Vector2(0,1)
-		if direction.length_squared()>0.001: node.rotation.y = atan2(-direction.x,-direction.y)
+		var motion: Dictionary = _hero_motion.get(i,{}) if battle else {}
+		if node.has_method("set_locomotion"):
+			node.call("set_locomotion",motion.get("v",Vector3.ZERO),float(motion.get("dt",0.0)))
+		var direction: Vector2 = motion.get("dir",Vector2.INF)
+		if not direction.is_finite(): direction = data.get("fx_d",Vector2(0,1)) if battle else Vector2(0,1)
+		_face(node,direction,battle,float(motion.get("dt",0.0)))
 		var wind := maxf(0.04,raw_wind)
-		var attack := 0.0
-		if battle and ft<wind+0.22:
-			attack = ft/wind if ft<=wind else maxf(0,1-(ft-wind)/0.22)
 		if node is LimneModel:
 			node.animate_visual(time+float(i)*0.31,ft,wind,battle)
 			continue
+		if node.has_method("animate_visual"):
+			# Any adapter that owns its own pose (duck-typed) receives the same clock.
+			node.call("animate_visual",time+float(i)*0.31,ft,raw_wind,battle)
+			continue
+		var attack := 0.0
+		if battle and ft<wind+0.22:
+			attack = ft/wind if ft<=wind else maxf(0,1-(ft-wind)/0.22)
 		var body: Node3D = node.get_node("Body")
 		body.rotation.x = -attack*0.11
 		body.position.y = sin(time*2.7+i)*0.012
@@ -405,6 +401,42 @@ func sync_heroes(heroes: Array, time: float, battle: bool = false) -> void:
 		if int(source)>=heroes.size(): _native_pending.erase(source)
 	for source in _native_direction.keys():
 		if int(source)>=heroes.size(): _native_direction.erase(source)
+
+## Facing is a presentation decision: adapters that own smooth turning receive a
+## target direction; everything else snaps as before. Logical direction, +y = south.
+func _face(node: Node3D, direction: Vector2, smooth: bool, dt: float = 0.0) -> void:
+	if direction.length_squared() <= 0.001: return
+	if smooth and node.has_method("face_toward"):
+		node.call("face_toward", direction, dt)
+	else:
+		node.rotation.y = atan2(-direction.x, -direction.y)
+
+## Presentation lookups for effect code: the live node of a simulation hero index
+## or of a monster spawn id (null when absent).
+func hero_node(index: int) -> Node3D:
+	var prefix := str(index) + ":"
+	for key in hero_nodes:
+		if String(key).begins_with(prefix): return hero_nodes[key]
+	return null
+
+func monster_node(sid: int) -> Node3D:
+	return monster_nodes.get(sid)
+
+## Which way a monster should face; the arena overrides this with actual velocity.
+func _monster_heading(_mo: Dictionary, p: Vector2, ahead: Vector2) -> Vector2:
+	return ahead - p
+
+## Stunned or blocked bodies stand; the simulator's clock still owns the pose.
+func _monster_moving(mo: Dictionary) -> bool:
+	if float(mo.get("stun_t", 0.0)) > 0.0: return false
+	if mo.has("vel"): return Vector2(mo["vel"]).length_squared() > 0.0001
+	return true
+
+## Arena crystal siege phase in [0,1) while the body stands at the altar, else -1.
+func _monster_siege(mo: Dictionary, p: Vector2) -> float:
+	if not mo.has("siege_t"): return -1.0
+	if p.distance_to(Balance.ARENA_CENTER) > Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS: return -1.0
+	return float(mo["siege_t"])
 
 func _native_event(e: Dictionary) -> void:
 	var type := String(e.get("t",""))
@@ -435,21 +467,23 @@ func sync_battle(sim, time: float, lives: int, dt: float = 0.016) -> void:
 			var model := StellarModels.monster(mo["m"])
 			actors.add_child(model)
 			monster_nodes[key] = model
+			if model.has_method("visual_event"): model.call("visual_event", "spawn", {"p": BattleSim.mpos(mo)})
 		var node: Node3D = monster_nodes[key]
 		var p := BattleSim.mpos(mo)
 		var ahead := Balance.path_at(float(mo["s"])+4,float(mo["off"]),int(mo.get("route",0)))
-		var d := ahead-p
 		var native_monster := bool(node.get_meta("_stellar_native_monster", false))
+		_face(node, _monster_heading(mo, p, ahead), true, dt)
 		if native_monster:
 			# The simulator's forward-only clock already includes pause, slow,
 			# stun and battle speed. Authored locomotion owns the body movement.
 			node.position = world(p,0.14)
 			node.rotation.z = 0.0
-			node.call("animate_visual", float(mo.get("motion_t",0.0))+float(mo.get("motion_phase",0.0)))
+			if node.has_method("set_hit_flash"): node.call("set_hit_flash", float(mo.get("flash", 0.0)))
+			if node.has_method("set_siege"): node.call("set_siege", _monster_siege(mo, p))
+			node.call("animate_visual", float(mo.get("motion_t",0.0))+float(mo.get("motion_phase",0.0)), _monster_moving(mo))
 		else:
 			node.position = world(p,0.14+sin(time*10+key)*0.035)
 			node.rotation.z = sin(time*10+key)*0.035
-		if d.length_squared()>0.001: node.rotation.y = atan2(-d.x,-d.y)
 		node.get_node("StellarBurn").visible=float(mo.get("burn_t",0))>0
 		node.get_node("StellarFrost").visible=float(mo.get("slow_t",0))>0
 		node.get_node("StellarStun").visible=float(mo.get("stun_t",0))>0
@@ -457,44 +491,18 @@ func sync_battle(sim, time: float, lives: int, dt: float = 0.016) -> void:
 		node.get_node("StellarStun").rotation.y=time*5
 		if not native_monster and float(mo.get("stun_t",0))>0: node.rotation.z = sin(time*35+key)*0.025
 	for key in monster_nodes.keys():
-		if not keep.has(key):
-			monster_nodes[key].free()
-			monster_nodes.erase(key)
-	while bullet_nodes.size()<mini(120,sim.bullets.size()):
-		var bullet := Node3D.new()
-		StellarModels.part(bullet,"sphere",Vector3.ZERO,Vector3(0.10,0.10,0.22),Color("#fff4c6"),0,1.2)
-		projectiles.add_child(bullet)
-		bullet_nodes.append(bullet)
-	for i in range(bullet_nodes.size()):
-		var node: Node3D = bullet_nodes[i]
-		node.visible = i<sim.bullets.size()
-		if not node.visible: continue
-		var b: Dictionary = sim.bullets[i]
-		node.position = world(b["p"],0.64)
-		var d: Vector2 = b["v"]
-		if d.length_squared()>0.01: node.rotation.y = atan2(-d.x,-d.y)
-		var geometry: MeshInstance3D = node.get_child(0)
-		geometry.material_override = StellarModels.material(b["c"],0,0.9)
-		geometry.scale = Vector3(0.12,0.12,0.33) if String(b["kind"])=="pierce" else Vector3(0.16,0.16,0.16) if String(b["kind"])=="splash" else Vector3(0.095,0.095,0.17)
+		if keep.has(key): continue
+		var node: Node3D = monster_nodes[key]
+		if _dying.has(key) and node.has_method("advance_death"):
+			# The body finishes its authored death before the instance is released.
+			var age := float(_dying[key]) + dt
+			_dying[key] = age
+			if age < 1.6 and not bool(node.call("advance_death", dt)): continue
+		node.free()
+		monster_nodes.erase(key)
+		_dying.erase(key)
+	vfx.sync(sim, time)
 	for i in range(crystals.size()): crystals[i].visible = i<lives
-	while zone_nodes.size()<mini(24,sim.zones.size()):
-		var zone := Node3D.new()
-		for n in range(9):
-			var a := n*TAU/9
-			StellarModels.part(zone,"cone",Vector3(cos(a)*0.66,0.06,sin(a)*0.66),Vector3(0.13,0.33,0.13),Color("#acd6dd"),0.1,0.4)
-		StellarModels.compact(zone)
-		add_child(zone)
-		zone_nodes.append(zone)
-	for i in range(zone_nodes.size()):
-		var node: Node3D=zone_nodes[i]
-		node.visible=i<sim.zones.size()
-		if not node.visible: continue
-		var zone: Dictionary=sim.zones[i]
-		node.position=world(zone["at"],0.16)
-		var radius := float(zone["r"])/UNIT
-		node.scale=Vector3(radius,0.55+sin(time*12+i)*0.15,radius)
-		node.rotation.y=time*0.7
-		for child in node.get_children(): child.material_override=StellarModels.material(zone["c"],0.1,0.45)
 	update_effects(dt)
 
 func set_selection(at: Vector2, available: bool, radius: float = 0.0) -> void:
@@ -549,37 +557,17 @@ func event(e: Dictionary) -> void:
 	if type in ["hit","zone_tick"] and e.has("n") and _text_gap<=0 and texts.size()<24:
 		texts.append({"p":Vector2(e.get("mp",e.get("p",Vector2.ZERO))),"n":float(e["n"]),"color":Color("#ffd390") if bool(e.get("big",false)) else Color("#e5f4f6"),"age":0.0,"big":bool(e.get("big",false))})
 		_text_gap=0.07
-	if effects.size()>=72: return
-	if type in ["beam","bolt","ric"]:
-		var a: Vector2 = e.get("a",Vector2.ZERO)
-		var b: Vector2 = e.get("b",Vector2.ZERO)
-		var node := Node3D.new()
-		var color: Color = e.get("c",Color("#b4deff"))
-		StellarModels.link(node,world(a,0.74),world(b,0.53),0.065 if type=="beam" else 0.035,color,0.1,1.2)
-		add_child(node)
-		effects.append({"node":node,"age":0.0,"life":0.20,"kind":"beam"})
-	elif type in ["hit","splash","zone_tick","die","leak","block","wildfire"]:
-		var node := Node3D.new()
-		var p: Vector2 = e.get("p",Vector2.ZERO)
-		node.position=world(p,0.25)
-		var color: Color = e.get("c",Color("#eacb81"))
-		var radius := float(e.get("r",22.0))/UNIT
-		for i in range(5 if type=="die" else 3):
-			var a := TAU*i/5.0
-			StellarModels.part(node,"cone",Vector3(sin(a)*radius*0.34,0.2,cos(a)*radius*0.34),Vector3(0.08,0.42,0.08),color,0,0.9,Vector3(cos(a)*0.6,0,-sin(a)*0.6))
-		add_child(node)
-		effects.append({"node":node,"age":0.0,"life":0.33,"kind":"burst"})
+	var sid := int(e.get("sid", 0))
+	if sid != 0 and monster_nodes.has(sid):
+		var node: Node3D = monster_nodes[sid]
+		if node.has_method("visual_event"):
+			node.call("visual_event", type, e)
+			if type in ["die", "leak"] and node.has_method("advance_death") and not _dying.has(sid): _dying[sid] = 0.0
+	vfx.event(e)
 
 func update_effects(dt: float) -> void:
 	_text_gap=maxf(0,_text_gap-dt)
 	for i in range(texts.size()-1,-1,-1):
 		texts[i]["age"]+=dt
 		if texts[i]["age"]>0.65: texts.remove_at(i)
-	for i in range(effects.size()-1,-1,-1):
-		var fx: Dictionary = effects[i]
-		fx["age"] += dt
-		if fx["age"]>=fx["life"]:
-			fx["node"].free()
-			effects.remove_at(i)
-		elif fx["kind"]=="burst":
-			fx["node"].scale=Vector3.ONE*(1.0+fx["age"]*2.0)
+	vfx.update(dt)

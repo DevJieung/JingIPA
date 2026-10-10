@@ -120,7 +120,46 @@ func _motion_contract(first: LimneModel, second: LimneModel) -> void:
 		check(_poses_close(before, _bone_poses(skeleton), 0.002), "no pose jump at attack boundary %.2f" % boundary)
 	first.animate_visual(0.0, 0.365, 0.30, false)
 	check(is_zero_approx(first.spray_strength()), "non-battle previews do not emit combat water")
+	_locomotion_contract(first, skeleton, idle)
 	check(_render_resources(first) == resources, "motion reuses nodes, meshes and materials across frames")
+
+
+func _locomotion_contract(model: LimneModel, skeleton: Skeleton3D, idle: Array[Transform3D]) -> void:
+	var legs: Array[int] = []
+	for side in ["L", "R"]:
+		var index := skeleton.find_bone("SkinLeg" + side)
+		if index >= 0: legs.append(index)
+	var clock := 100.0
+	model.animate_visual(clock, 9.0, 0.3, true)
+	for frame in range(30):
+		clock += 1.0 / 60.0
+		model.set_locomotion(Vector3(0, 0, 3.4), 1.0 / 60.0)
+		model.face_toward(Vector2(0, 1), 1.0 / 60.0)
+		model.animate_visual(clock, 9.0, 0.3, true)
+	var walking := _bone_poses(skeleton)
+	var legs_move := false
+	for index in legs:
+		if not walking[index].is_equal_approx(idle[index]): legs_move = true
+		check(walking[index].origin.distance_to(idle[index].origin) < 0.10, "walking keeps the leg pivot near its rest: " + str(index))
+	check(legs_move, "velocity drives an actual leg cycle")
+	check((model.basis * Vector3.FORWARD).dot(Vector3(0, 0, 1)) > 0.999, "the body faces its travel direction")
+	for frame in range(60): model.animate_visual(clock, 9.0, 0.3, true)
+	check(_bone_poses(skeleton) == walking, "paused redraws hold the walking pose exactly")
+	for frame in range(30):
+		clock += 1.0 / 60.0
+		model.set_locomotion(Vector3.ZERO, 1.0 / 60.0)
+		model.face_toward(Vector2(0, 1), 1.0 / 60.0)
+		model.animate_visual(clock, 9.0, 0.3, true)
+	for index in legs:
+		check(skeleton.get_bone_pose_position(index).distance_to(idle[index].origin) < 0.025, "stopping restores the planted leg within half a second")
+	model.face_toward(Vector2(0, -1), 1.0 / 60.0)
+	for frame in range(15):
+		clock += 1.0 / 60.0
+		model.set_locomotion(Vector3.ZERO, 1.0 / 60.0)
+		model.animate_visual(clock, 9.0, 0.3, true)
+	check((model.basis * Vector3.FORWARD).dot(Vector3(0, 0, -1)) > 0.999, "a 180 degree turn completes within a quarter second")
+	model.animate_visual(clock + 1.0, 9.0, 0.3, false)
+	model.rotation = Vector3.ZERO
 
 
 func _battle_contract(unit: Dictionary) -> void:
@@ -159,6 +198,7 @@ func _battle_contract(unit: Dictionary) -> void:
 				limne_count += 1
 				check(model.get_meta("model_source", "") == MODEL_PATH, "combat uses Limne GLB during idle and attack")
 		check(limne_count == 1, "imported hero coexists with the other eleven hero identities")
+	var turn_clock := 1.0
 	for direction in [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT]:
 		var visual_heroes := sim.heroes.duplicate(true)
 		for hero in visual_heroes:
@@ -166,7 +206,11 @@ func _battle_contract(unit: Dictionary) -> void:
 			hero["fx_w"] = 0.30
 			hero["fx_d"] = direction
 		var visual_before := visual_heroes.duplicate(true)
-		world.sync_heroes(visual_heroes, 1.0, true)
+		# Turning is smoothed by the adapters (180 degrees within a quarter second),
+		# so each new target gets rendered frames before the nozzle must agree.
+		for frame in range(16):
+			turn_clock += 1.0 / 60.0
+			world.sync_heroes(visual_heroes, turn_clock, true)
 		for model in world.hero_nodes.values():
 			if not model is LimneModel: continue
 			check(model.spray_strength() > 0.5, "world connects release timing to water strength")

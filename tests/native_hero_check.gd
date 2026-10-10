@@ -132,10 +132,89 @@ func _character_contract(unit: Dictionary) -> void:
 			check(release != null and not release.visible, id + ": artillery pressure ends after actual release recovery")
 	first.animate_visual(clock, 1, 0.30, false)
 	check(is_zero_approx(first.fire_strength()), id + ": previews clear combat state")
+	_locomotion_contract(first, second, skeleton, row, id, idle)
 	check(_resources(first) == resources, id + ": motion reuses nodes, meshes and materials")
 	check(unit == original, id + ": model creation leaves roster data unchanged")
 	first.free()
 	second.free()
+
+## Velocity drives a distance-based gait on the legs only, turning is smooth but
+## finishes within a quarter second, the torso twists toward the aim at once so
+## gun sockets agree with the fire direction, and stopping settles back to idle.
+func _locomotion_contract(model: NativeCharacterModel, other: NativeCharacterModel, skeleton: Skeleton3D,
+		row: Dictionary, id: String, idle: Array[Transform3D]) -> void:
+	var legs: Array[int] = []
+	for side in ["L", "R"]:
+		var index := skeleton.find_bone("SkinLeg" + side)
+		if index >= 0: legs.append(index)
+	var clock := 100.0
+	model.animate_visual(clock, 9, 0.3, true)
+	for frame in range(30):
+		clock += 1.0 / 60.0
+		model.set_locomotion(Vector3(0, 0, 3.4), 1.0 / 60.0)
+		model.face_toward(Vector2(0, 1), 1.0 / 60.0)
+		model.animate_visual(clock, 9, 0.3, true)
+	var walking := _poses(skeleton)
+	var legs_move := false
+	for index in legs:
+		if not walking[index].is_equal_approx(idle[index]): legs_move = true
+		check(walking[index].origin.distance_to(idle[index].origin) < 0.10, id + ": walking keeps the leg pivot grounded")
+	check(legs_move, id + ": velocity drives an actual leg cycle")
+	check(_poses(_skeleton(other)) != walking, id + ": cached cards do not share locomotion")
+	check((model.basis * Vector3.FORWARD).dot(Vector3(0, 0, 1)) > 0.999, id + ": the body faces its travel direction")
+	for frame in range(60): model.animate_visual(clock, 9, 0.3, true)
+	check(_poses(skeleton) == walking, id + ": paused redraws hold the walking pose exactly")
+	# Attacking while walking keeps the leg cycle and still releases on time.
+	model.visual_event({"t": "aim", "w": 0.2})
+	for frame in range(12):
+		clock += 1.0 / 60.0
+		model.set_locomotion(Vector3(0, 0, 3.4), 1.0 / 60.0)
+		model.face_toward(Vector2(0, 1), 1.0 / 60.0)
+		model.animate_visual(clock, frame / 60.0, 0.2, true)
+	check(model.visual_phase() == 1 and is_zero_approx(model.fire_strength()), id + ": aiming while walking emits nothing")
+	model.visual_event({"t": "fire"})
+	clock += 0.065
+	model.set_locomotion(Vector3(0, 0, 3.4), 0.065)
+	model.face_toward(Vector2(0, 1), 0.065)
+	model.animate_visual(clock, 0.265, 0.2, true)
+	check(model.visual_phase() == 2 and model.fire_strength() > 0.01, id + ": firing while walking keeps the release timing")
+	var legs_still_walk := false
+	var fired := _poses(skeleton)
+	for index in legs:
+		if not fired[index].is_equal_approx(idle[index]): legs_still_walk = true
+	check(legs_still_walk, id + ": the legs keep walking through the attack")
+	for frame in range(40):
+		clock += 1.0 / 60.0
+		model.set_locomotion(Vector3.ZERO, 1.0 / 60.0)
+		model.face_toward(Vector2(0, 1), 1.0 / 60.0)
+		model.animate_visual(clock, 9, 0.2, true)
+	for index in legs:
+		check(skeleton.get_bone_pose_position(index).distance_to(idle[index].origin) < 0.025, id + ": stopping restores the authored leg position within half a second")
+	# Aim twist: a target 50 degrees off the root is answered by the torso at once.
+	var twisted := Vector2(0, 1).rotated(deg_to_rad(50.0))
+	model.visual_event({"t": "aim", "w": 0.0})
+	model.face_toward(twisted, 0.0)
+	model.animate_visual(clock, 0.0, 0.0, true)
+	var world_forward := Vector3(twisted.x, 0, twisted.y)
+	if String(row.get("attack", "")) in ["gun", "rifle"]:
+		var forward := (model.weapon_transform(-1).basis * Vector3.FORWARD).normalized()
+		check(forward.dot(world_forward) > 0.95, id + ": the gun answers a new aim direction on the same frame")
+	check(absf(model.aim_twist()) > 0.3, id + ": the torso twists toward an off-axis target")
+	for frame in range(15):
+		clock += 1.0 / 60.0
+		model.face_toward(twisted, 1.0 / 60.0)
+		model.animate_visual(clock, 0.0, 0.0, true)
+	check((model.basis * Vector3.FORWARD).dot(world_forward) > 0.999 and absf(model.aim_twist()) < 0.01,
+		id + ": the root catches up and the twist relaxes")
+	model.visual_event({"t": "cancel"})
+	model.face_toward(Vector2(0, -1), 0.0)
+	for frame in range(15):
+		clock += 1.0 / 60.0
+		model.animate_visual(clock, 9, 0.0, true)
+	check((model.basis * Vector3.FORWARD).dot(Vector3(0, 0, -1)) > 0.999, id + ": a 180 degree turn completes within a quarter second")
+	model.animate_visual(clock + 1.0, 9, 0.0, true)
+	model.animate_visual(clock + 1.0, 9, 0.0, false)
+	model.rotation = Vector3.ZERO
 
 func _artillery_release_contract(model: NativeCharacterModel, other: NativeCharacterModel,
 		skeleton: Skeleton3D, row: Dictionary, id: String) -> void:
@@ -199,17 +278,21 @@ func _world_contract(unit: Dictionary) -> void:
 	if model != null:
 		world.sync_heroes(visual, 40.065, true)
 		check(model.visual_phase() == 2 and model.fire_strength() > 0.01, "pre-spawn fast release survives the effect limit")
-		var facing := model.basis * Vector3.FORWARD
-		check(facing.dot(Vector3.RIGHT) > 0.999, "actual fire direction persists despite stale aim data")
 		var release := model.fire_strength()
 		world.sync_heroes(visual, 40.065, true)
 		check(model.visual_phase() == 2 and is_equal_approx(model.fire_strength(), release), "paused simulation clock holds the native release pose")
+		# Turning may be smoothed by the adapter; the body must face the actual fire
+		# direction within a quarter second, and never the stale aim direction.
+		for frame in range(1, 16): world.sync_heroes(visual, 40.065 + frame / 60.0, true)
+		var facing := model.basis * Vector3.FORWARD
+		check(facing.dot(Vector3.RIGHT) > 0.999, "actual fire direction persists despite stale aim data")
 		world.event({"t": "aim", "src": 0, "d": Vector2.LEFT, "w": 0.0})
 		visual[0]["fx_t"] = 0
 		visual[0]["fx_w"] = 0
-		world.sync_heroes(visual, 40.1, true)
-		check(is_zero_approx(model.fire_strength()) and (model.basis * Vector3.FORWARD).dot(Vector3.LEFT) > 0.999,
-			"new zero-wind aim clears old release and retargets")
+		world.sync_heroes(visual, 40.4, true)
+		check(is_zero_approx(model.fire_strength()), "new zero-wind aim clears old release")
+		for frame in range(1, 16): world.sync_heroes(visual, 40.4 + frame / 60.0, true)
+		check((model.basis * Vector3.FORWARD).dot(Vector3.LEFT) > 0.999, "new zero-wind aim retargets the body")
 		world.event({"t": "fire", "src": 0, "d": Vector2.DOWN})
 		world.sync_heroes(visual, 40.5, true)
 		world.sync_heroes(visual, 40.565, true)

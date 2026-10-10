@@ -23,13 +23,14 @@
   ],
   "clips": [
     "Attack",
-    "IdleLoop"
+    "IdleLoop",
+    "WalkLoop"
   ],
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/nerea/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/nerea/game.blend",
   "height": 1.7,
-  "glb_bytes": 4883524,
-  "glb_sha256": "ce8b7a457a9285cac748e7556515fd23e80598db1eeb4785f8ef1e8a4fc8a890",
+  "glb_bytes": 4923716,
+  "glb_sha256": "68100f04e54f1e1fc3498f3aecc8005d81028ae63bfecaa444a195573b912efc",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -68,5 +69,27 @@
       "two-resolution mixed battle"
     ],
     "artist_note": "Direct actual Godot two-resolution galleries, continuous idle/attack contact frames,0/4/9 and actual awakened model,12unique hero mixedbattle inspected. Preserve Lugh green canister/beard purpleworkwear, Galene navy coat/brown cylinders, Zero ivory automaton/chain, Phantom white ponytail/swordL, Caden purplehair/lime armor/swordR, Estoque brown hair/glasses/gold-redworkwear/swordR, Nerea white hair/navyarmor/bigbackslab/cyanbladeR and Glaukos greenhair/cyanworkgear/largecleaverL. Feet fixed, cuffs/waist continuous, coherent retained UV matte surfaces and weapon shape throughout strike/recovery. No deviceFPS claim."
+  },
+  "motion": {
+    "version": 2,
+    "tool": "tools/3d/author_native_motion.py",
+    "authored_utc": "2026-10-10T09:36:58Z",
+    "clips": {
+      "IdleLoop": 6.0,
+      "WalkLoop": 1.0,
+      "Attack": 1.5,
+      "attack_release_time": 1.0
+    },
+    "stride": 1.3617,
+    "leg_swing": 0.56,
+    "leg_top": 0.3095,
+    "grip": "none",
+    "lead": "R",
+    "kind": "sword",
+    "bounce_scale": 0.85,
+    "previous_glb_sha256": "ce8b7a457a9285cac748e7556515fd23e80598db1eeb4785f8ef1e8a4fc8a890",
+    "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/nerea/game.motion-v1.blend",
+    "geometry_base_sha256": "ce8b7a457a9285cac748e7556515fd23e80598db1eeb4785f8ef1e8a4fc8a890",
+    "geometry_bytes_preserved": true
   }
 }

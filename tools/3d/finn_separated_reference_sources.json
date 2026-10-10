@@ -1,0 +1,16 @@
+[
+  {
+    "id": "finn",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/references-retry/finn/separated-apose.png",
+    "reference_type": "built-in image_gen original-sprite A-pose raster; NOT native GLB",
+    "original": "build/hero-native/inputs/finn.png",
+    "original_sha256": "986677a2361aa76a5dadb832b0afa740354655eadd8d96a22832d69a070f4d9e",
+    "style_reference": "build/limne-game-motion/game-review/1280x800/gallery_three_quarter.png",
+    "prompt": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/references-retry/finn/prompt.txt",
+    "image_sha256": "1fbf442fdbb7b4d94c2cda0cfe6724dfc41e88c46f5292d235729709468fffb8",
+    "workflow_overrides": {},
+    "reference_review": "Directly inspected wider separated A-pose. Knife/cuff/palm outside hip by full palm gap; lime hair/green eye/purple jacket/boots/one green forearmguard preserved; prior candidate cloth bridge motivates bounded retry.",
+    "reference_branch": "finn separated cuff/hip v4; v3 originals and proof preserved",
+    "prompt_sha256": "fad267b09f223e3c14e2eeda0ce9304dab6a8abbc2ed813b67b03802d8342f35"
+  }
+]

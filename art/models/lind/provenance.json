@@ -23,13 +23,14 @@
   ],
   "clips": [
     "Attack",
-    "IdleLoop"
+    "IdleLoop",
+    "WalkLoop"
   ],
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/lind/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/lind/game.blend",
   "height": 1.65,
-  "glb_bytes": 4868208,
-  "glb_sha256": "48147149db522b9b540c3a078f95964cbbcd77669f71d4408a5590bb5cb7adc6",
+  "glb_bytes": 4904972,
+  "glb_sha256": "a76da0999c1fc89c63b603f7bff56df37e3e98aeab5a8ad10514dc2d2f1ca6ab",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -68,5 +69,27 @@
       "two-resolution mixed battle"
     ],
     "artist_note": "Original identity/color/held gear preserved. Direct native multiple-view, clean sole and continuous prepare/release/recovery inspected. Chispa levels gray weapon forward; Lind cyan chain/cells remain coherent; Brigid complete bow/string and quiver do not tear. Both real game resolutions preserve silhouette and grade/awakening detail."
+  },
+  "motion": {
+    "version": 2,
+    "tool": "tools/3d/author_native_motion.py",
+    "authored_utc": "2026-10-10T09:36:28Z",
+    "clips": {
+      "IdleLoop": 6.0,
+      "WalkLoop": 1.0,
+      "Attack": 1.5,
+      "attack_release_time": 1.0
+    },
+    "stride": 1.4457,
+    "leg_swing": 0.62,
+    "leg_top": 0.3156,
+    "grip": "none",
+    "lead": "R",
+    "kind": "cast",
+    "bounce_scale": 1.0,
+    "previous_glb_sha256": "48147149db522b9b540c3a078f95964cbbcd77669f71d4408a5590bb5cb7adc6",
+    "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/lind/game.motion-v1.blend",
+    "geometry_base_sha256": "48147149db522b9b540c3a078f95964cbbcd77669f71d4408a5590bb5cb7adc6",
+    "geometry_bytes_preserved": true
   }
 }

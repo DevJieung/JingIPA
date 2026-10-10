@@ -246,8 +246,16 @@ func _spawn(m: Dictionary) -> void:
 		"gold": Balance.kill_gold(wave, kind),
 		"crush": int(k.get("crush", 1)),
 	})
-	events.append({"t": "spawn", "p": mpos(monsters[-1])})
+	events.append({"t": "spawn", "p": mpos(monsters[-1]), "sid": int(monsters[-1].get("spawn_id", 0))})
 	_spawn_route += 1
+
+
+## 화면이 어느 몸을 때렸는지 찾는 열쇠. 연속 수호전의 spawn_id 이며 옛 전투에는 없다(0).
+## 표현 전용이다 — 판정·피해·난수는 이 값을 읽지 않는다.
+func _sid(mi: int) -> int:
+	if mi < 0 or mi >= monsters.size():
+		return 0
+	return int(monsters[mi].get("spawn_id", 0))
 
 
 static func mpos(mo: Dictionary) -> Vector2:
@@ -399,7 +407,7 @@ func _move_monsters(dt: float) -> void:
 			if float(mo["cast_t"]) <= 0.0:
 				mo["cast_t"] = Balance.CURSE_EVERY
 				curse_t = Balance.CURSE_SEC
-				events.append({"t": "curse", "p": mpos(mo)})
+				events.append({"t": "curse", "p": mpos(mo), "sid": int(mo.get("spawn_id", 0))})
 
 
 ## 몬스터 좌표와 피격 반지름을 한 걸음에 한 번만 계산해 둔다.
@@ -584,7 +592,7 @@ func _shoot(hi: int, tgt: int, dmg: float, kind: String, crit: bool,
 				"el": elem, "src": hi})
 			var em: float = _hurt(mi, dmg, crit, hi, elem)
 			events.append({"t": "hit", "p": _mp[mi], "c": col, "kind": kind,
-				"crit": crit, "em": em, "el": elem, "n": dmg * em, "src": hi})
+				"crit": crit, "em": em, "el": elem, "n": dmg * em, "src": hi, "sid": _sid(mi)})
 			_on_hit_extras(mi, dmg, hi)
 		return
 
@@ -861,7 +869,7 @@ func _push(mi: int) -> void:
 	# 동시 명중은 거리를 합치되 시간을 늘려 한 번의 밀림보다 빨라지지 않게 한다.
 	mo["push_t"] = Balance.RIDER_PUSH_SEC * maxf(1.0, (remaining + d) / Balance.RIDER_PUSH)
 	events.append({"t": "push", "p": _mp[mi] if mi < _mp.size() else mpos(mo),
-		"h": float(mo["h"])})
+		"h": float(mo["h"]), "sid": int(mo.get("spawn_id", 0))})
 
 
 ## 남은 거리의 제곱 감쇠를 적분한다. 프레임 크기와 관계없이 같은 거리로 끝난다.
@@ -892,7 +900,7 @@ func _impact(b: Dictionary, mi: int) -> void:
 	#   **깎인 몫이 아니라 때린 세기**를 적는다 — 마지막 한 대만 「5」로 뜨면 제일 센
 	#   한 방이 화면에서 제일 약해 보인다. 「이 탄의 몇 할을 깎았나」는 정보판이 따로 센다.
 	events.append({"t": "hit", "p": b["p"], "c": b["c"], "kind": kind,
-		"crit": bool(b["crit"]), "em": em, "el": elem, "n": dmg * em, "src": src})
+		"crit": bool(b["crit"]), "em": em, "el": elem, "n": dmg * em, "src": src, "sid": _sid(mi)})
 
 	match kind:
 		"splash":
@@ -987,7 +995,7 @@ func _chain(from_i: int, dmg: float, jumps: int, decay: float, hop: float,
 	# Only native chain attacks carry their character's Shot artwork. Passive
 	# lightning keeps the common effect without changing damage attribution.
 	events.append({"t": "bolt", "a": at, "b": _mp[best], "c": col, "p": _mp[best],
-		"em": cem, "n": dmg * cem, "el": elem, "shot_src": shot_src})
+		"em": cem, "n": dmg * cem, "el": elem, "shot_src": shot_src, "sid": _sid(best)})
 	seen.append(best)
 	_chain(best, dmg * decay, jumps - 1, decay, hop, seen, col, src, elem, shot_src)
 
@@ -1010,7 +1018,7 @@ func _slow(mi: int, amount: float, sec: float) -> void:
 	mo["slow_t"] = max(float(mo["slow_t"]), sec)
 	if fresh:
 		events.append({"t": "frost", "p": _mp[mi] if mi < _mp.size() else mpos(mo),
-			"h": float(mo["h"])})
+			"h": float(mo["h"]), "sid": int(mo.get("spawn_id", 0))})
 
 
 ## ★ 상성 배수를 **붙이는 순간에 미리 곱해** 둔다. 화상 도트는 매 걸음 _move_monsters()
@@ -1211,7 +1219,7 @@ func _stun(mi: int, mult: float = 1.0) -> void:
 		return
 	mo["stun_t"] = float(sp["sec"])
 	events.append({"t": "stun", "p": _mp[mi] if mi < _mp.size() else mpos(mo),
-		"h": float(mo["h"])})
+		"h": float(mo["h"]), "sid": int(mo.get("spawn_id", 0))})
 
 
 ## 영웅 발판과 몬스터 중심으로 사거리를 판정한다. 가장 가까운 유효 대상만 고른다.
@@ -1319,7 +1327,7 @@ func _reap() -> void:
 		run.kills += 1
 		run.add_gold(g)
 		events.append({"t": "die", "p": dp, "c": Color(String(mo["m"]["color"])),
-			"h": float(mo["h"]), "gold": g})
+			"h": float(mo["h"]), "gold": g, "sid": int(mo.get("spawn_id", 0))})
 
 	for i in arrived:
 		var mo2: Dictionary = monsters[i]
@@ -1333,7 +1341,7 @@ func _reap() -> void:
 		#   보이지도 않는 효과다 — 막느냐 못 막느냐로 두어야 손에 잡힌다.
 		if crush > 0 and run.has("bulwark") and _rng.randf() < Balance.PASSIVE_BULWARK_P:
 			leak_n += 1
-			events.append({"t": "block", "p": ap, "h": float(mo2["h"])})
+			events.append({"t": "block", "p": ap, "h": float(mo2["h"]), "sid": int(mo2.get("spawn_id", 0))})
 			continue
 		leak_n += 1
 		if crush > 0:
@@ -1342,7 +1350,7 @@ func _reap() -> void:
 			var idx: int = maxi(0, run.lives - 1)
 			run.add_lives(-crush)
 			events.append({"t": "leak", "p": ap, "i": idx, "n": crush,
-				"c": Color(String(mo2["m"]["color"])), "h": float(mo2["h"])})
+				"c": Color(String(mo2["m"]["color"])), "h": float(mo2["h"]), "sid": int(mo2.get("spawn_id", 0))})
 
 	var alive: Array = []
 	var remap := {}

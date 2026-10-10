@@ -13,13 +13,13 @@
   "surface_strategy": "preserved original 2048 base-color/ORM UV maps; no reduction or atlas rebake",
   "runtime_normal_map": false,
   "source_sha256": "740bb0a0b9d182230363946e665407103a26e337cbe5594d53fa1c8a1f25e8a6",
-  "glb_sha256": "b0d3f0231076fecf1c7a7c8750a9e579365da6b03cea1ac42562fa83c1b29d92",
+  "glb_sha256": "5c40f1b1a9d386263d3e79b3de30d542b78e3760ce84f50b2adb83b8cadea53d",
   "height": 1.63,
   "source_front": "-y",
   "rig": "nine continuous skin bones; original five controls plus elbow/palm articulation",
   "runtime_color_correction": "LimneModel enables radial iris COLOR_0 omitted by Godot material import; skin COLOR_0 already active",
-  "quality_status": "Accepted shape; user-requested game style and motion revision",
-  "glb_bytes": 17091528,
+  "quality_status": "Accepted shape; game style retained; motion 2 (walk cycle, turn, aim twist, recoil) mirrored in editable clips",
+  "glb_bytes": 17118968,
   "glb_meshes": 63,
   "glb_materials": 22,
   "embedded_images": 2,
@@ -34,6 +34,20 @@
   ],
   "animation_clips": [
     "IdleLoop",
+    "WalkLoop",
     "WaterSprayAttack"
-  ]
+  ],
+  "motion": {
+    "version": 2,
+    "tool": "tools/3d/style_animate_limne.py",
+    "runtime": "game/3d/limne_model.gd (procedural; clips mirror it)",
+    "geometry_base": "build/limne-game-motion/before-motion2/limne.glb",
+    "geometry_bytes_preserved": true,
+    "clips": {
+      "IdleLoop": 6.0,
+      "WalkLoop": 1.0,
+      "WaterSprayAttack": 1.0,
+      "wind_in_clip": 0.6
+    }
+  }
 }

@@ -23,13 +23,14 @@
   ],
   "clips": [
     "Attack",
-    "IdleLoop"
+    "IdleLoop",
+    "WalkLoop"
   ],
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/saeta/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/saeta/game.blend",
   "height": 1.65,
-  "glb_bytes": 4931756,
-  "glb_sha256": "8d459d3aace5a7ee8bd0833a803b132521166d0fc3736f15a3edfcf1e96260a4",
+  "glb_bytes": 4971528,
+  "glb_sha256": "6d941ddcf38ffa12df7441190fe49c7cef87d596b161464133f075d54cf6ab2a",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -68,5 +69,27 @@
       "two-resolution mixed battle"
     ],
     "artist_note": "Actual native rest and attack multiview plus both two-resolution galleries/40frame attack contacts/grades0,4,9,awakening and selected 12unique hero battle directly inspected. Whole bows/string and hands move together, boots remain fixed, back quivers/cloaks retain their original silhouettes. Eira measured lower gray bow frame is bound to weapon, separate from boot/Body; no trailing black stretched connection. Matte game palette/face readable, no device FPS assertion."
+  },
+  "motion": {
+    "version": 2,
+    "tool": "tools/3d/author_native_motion.py",
+    "authored_utc": "2026-10-10T09:37:09Z",
+    "clips": {
+      "IdleLoop": 6.0,
+      "WalkLoop": 1.0,
+      "Attack": 1.5,
+      "attack_release_time": 1.0
+    },
+    "stride": 1.5256,
+    "leg_swing": 0.66,
+    "leg_top": 0.3069,
+    "grip": "none",
+    "lead": "L",
+    "kind": "bow",
+    "bounce_scale": 1.0,
+    "previous_glb_sha256": "8d459d3aace5a7ee8bd0833a803b132521166d0fc3736f15a3edfcf1e96260a4",
+    "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/saeta/game.motion-v1.blend",
+    "geometry_base_sha256": "8d459d3aace5a7ee8bd0833a803b132521166d0fc3736f15a3edfcf1e96260a4",
+    "geometry_bytes_preserved": true
   }
 }

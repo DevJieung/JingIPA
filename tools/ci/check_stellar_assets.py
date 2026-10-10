@@ -23,7 +23,8 @@ def main():
         assert len(portraits) == 550, "Incomplete 3D hero and awakened portrait set"
         for portrait in portraits:
             check_texture(archive, names, portrait)
-        for module in ["stellar_models", "stellar_world", "stellar_view", "stellar_portraits", "stellar_backdrop"]:
+        for module in ["stellar_models", "stellar_world", "stellar_view", "stellar_portraits", "stellar_backdrop",
+                       "stellar_vfx", "stellar_lighting", "stellar_shading"]:
             source = f"assets/game/3d/{module}.gd"
             assert source in names or source + ".remap" in names, f"Missing 3D renderer: {module}"
         for module in ["core/arena_run", "core/arena_validation", "core/arena_geometry", "game/arena_sim", "game/arena_screen",
@@ -32,6 +33,17 @@ def main():
             assert source in names or source + ".remap" in names, f"Missing continuous battle module: {module}"
         check_imported_resource(archive, names, "assets/art/models/arena_ground.gdshader")
         check_imported_resource(archive, names, "assets/art/models/arena_road.gdshader")
+        check_imported_resource(archive, names, "assets/art/models/contact_shadow.gdshader")
+        # Battle VFX, lighting and shading of the 2026-10 motion overhaul.
+        for shader in ["vfx_projectile", "vfx_muzzle", "vfx_burst", "vfx_burst_mix", "vfx_beam", "vfx_zone",
+                       "vfx_zone_base", "vfx_slash", "vfx_dome", "vfx_status", "weather"]:
+            check_imported_resource(archive, names, f"assets/art/vfx/{shader}.gdshader")
+        check_imported_resource(archive, names, "assets/art/vfx/vfx_common.gdshaderinc")
+        for texture in ["sprites", "noise"]:
+            check_texture(archive, names, f"assets/art/vfx/{texture}.png")
+        for module in ["hero_locomotion"]:
+            source = f"assets/game/3d/{module}.gd"
+            assert source in names or source + ".remap" in names, f"Missing motion module: {module}"
         assert not any(name in names for name in ("assets/asis.jpg", "assets/asis.jpg.import",
                        "assets/tobe.png", "assets/tobe.png.import")), "Design references must not ship"
         catalog = json.loads(archive.read("assets/core/locales/ui.json"))

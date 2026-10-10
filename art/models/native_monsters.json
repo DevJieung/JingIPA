@@ -8,11 +8,22 @@
       "shape": "blob",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "e8a74c2e910b766f17b18538f7dade9cb318d629c6cdc16cef820ab1aeab9497",
-      "ready": true
+      "glb_sha256": "c7b94924ab396c9a90fc0f26fafc2f57aea5b8b200d67334c2fb852d2078fd71",
+      "ready": true,
+      "motion": {
+        "cycle": 0.4667,
+        "death": "splat",
+        "spawn": "drop",
+        "hover": 0.0,
+        "turn_rate": 9.0,
+        "turn_max": 7.0,
+        "bank": 0.06
+      }
     },
     "blaze_fox": {
       "path": "res://art/models/monsters/blaze_fox/blaze_fox.glb",
@@ -21,11 +32,22 @@
       "shape": "quadruped",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "310e6ac6fb20f662dbc6ce114ef5b00778d0f6b3a7e39542dee9d58c37b6fbf8",
-      "ready": true
+      "glb_sha256": "3158bd4b7cd2147d070863f146d81da13f61fedaa072835ea570259b331eefd4",
+      "ready": true,
+      "motion": {
+        "cycle": 0.5,
+        "death": "sink",
+        "spawn": "rise",
+        "hover": 0.0,
+        "turn_rate": 12.0,
+        "turn_max": 10.0,
+        "bank": 0.22
+      }
     },
     "flame_dragon": {
       "path": "res://art/models/monsters/flame_dragon/flame_dragon.glb",
@@ -34,11 +56,22 @@
       "shape": "dragon",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "b64da6437241afa4fb3230a79cbdf06cb6458aa9f4c3f3026c4c15e98bb96d01",
-      "ready": true
+      "glb_sha256": "067802de60e08989422fd0b8a366c704a31fcfeb21268feaf8d2924c69a8a3c2",
+      "ready": true,
+      "motion": {
+        "cycle": 1.0,
+        "death": "sink",
+        "spawn": "drop",
+        "hover": 0.0,
+        "turn_rate": 4.0,
+        "turn_max": 2.5,
+        "bank": 0.12
+      }
     },
     "rapid_ray": {
       "path": "res://art/models/monsters/rapid_ray/rapid_ray.glb",
@@ -47,11 +80,22 @@
       "shape": "ray",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "b6f228e758b044fa3c70bfcfdf78e588e2b4334e98bd1594e370c9e0a1320c46",
-      "ready": true
+      "glb_sha256": "b91ff592a25d55024442401db3b2e1369824d3cd5f246bb121c6986a6492c67e",
+      "ready": true,
+      "motion": {
+        "cycle": 0.7,
+        "death": "sink",
+        "spawn": "descend",
+        "hover": 0.12,
+        "turn_rate": 12.0,
+        "turn_max": 10.0,
+        "bank": 0.35
+      }
     },
     "jelly_seer": {
       "path": "res://art/models/monsters/jelly_seer/jelly_seer.glb",
@@ -60,11 +104,22 @@
       "shape": "jelly",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "e4aa9762fcc6ed376aa0d8db70c8947094d324a39ebdc32c8ac9d35b804e3be5",
-      "ready": true
+      "glb_sha256": "4bf1008729558372e3c244441859200d292279364023d7eab9356c8dd2b0359b",
+      "ready": true,
+      "motion": {
+        "cycle": 1.2,
+        "death": "sink",
+        "spawn": "descend",
+        "hover": 0.1,
+        "turn_rate": 6.0,
+        "turn_max": 4.0,
+        "bank": 0.1
+      }
     },
     "wave_giant": {
       "path": "res://art/models/monsters/wave_giant/wave_giant.glb",
@@ -73,11 +128,22 @@
       "shape": "biped",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "cebb995bdcda7d3517b8db4a7b1dd8346a8240c0dd439e07af8a466000a66107",
-      "ready": true
+      "glb_sha256": "4d6d373f47589048b47efb115bf6dca4895a0f74bcc9e15532ed3b6de18f15f0",
+      "ready": true,
+      "motion": {
+        "cycle": 1.0,
+        "death": "topple",
+        "spawn": "rise",
+        "hover": 0.0,
+        "turn_rate": 5.0,
+        "turn_max": 3.5,
+        "bank": 0.03
+      }
     },
     "ember_imp": {
       "path": "res://art/models/monsters/ember_imp/ember_imp.glb",
@@ -86,11 +152,22 @@
       "shape": "biped",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "4063d4d40bdcce1b31058c8cafb5859da18c930e29e5e6f6ffa14118f3fa4c5e",
-      "ready": true
+      "glb_sha256": "d3f1bf00f9009358eab258e3bea105dfaac9067884d229c34f69e550785a8662",
+      "ready": true,
+      "motion": {
+        "cycle": 0.4333,
+        "death": "sink",
+        "spawn": "rise",
+        "hover": 0.0,
+        "turn_rate": 9.0,
+        "turn_max": 7.0,
+        "bank": 0.08
+      }
     },
     "magma_brute": {
       "path": "res://art/models/monsters/magma_brute/magma_brute.glb",
@@ -99,11 +176,22 @@
       "shape": "quadruped",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "357fb3b2b7a192ca83c21846a21d7c1621993d01e3ac2d41df7ecadc48ef4393",
-      "ready": true
+      "glb_sha256": "0e28c7a5e6d7813d5677ec7da0202f7a579f57320190969db5a02e95eb1929e8",
+      "ready": true,
+      "motion": {
+        "cycle": 0.8667,
+        "death": "sink",
+        "spawn": "rise",
+        "hover": 0.0,
+        "turn_rate": 5.0,
+        "turn_max": 3.5,
+        "bank": 0.04
+      }
     },
     "pyre_priest": {
       "path": "res://art/models/monsters/pyre_priest/pyre_priest.glb",
@@ -112,11 +200,22 @@
       "shape": "biped",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "e691c0c3dfc67a6f194626c14a121196f8db5a0564741234cf7ae8ba5135dec7",
-      "ready": true
+      "glb_sha256": "70e2be9f3d9223122cde158414c7f0a9dc541c8d1342ef8d7e65fc27dba2d4cc",
+      "ready": true,
+      "motion": {
+        "cycle": 0.7667,
+        "death": "sink",
+        "spawn": "rise",
+        "hover": 0.0,
+        "turn_rate": 7.0,
+        "turn_max": 5.0,
+        "bank": 0.05
+      }
     },
     "bramble_imp": {
       "path": "res://art/models/monsters/bramble_imp/bramble_imp.glb",
@@ -125,11 +224,22 @@
       "shape": "biped",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "68539c9b9bf8360ffe3a718ba88a0080f0d73554b5340e66ca34f982700092c5",
-      "ready": true
+      "glb_sha256": "9e2359ae8d53063e8dd0426c931905bbc896d66e6e05c3b0718f8472ad6bd8ec",
+      "ready": true,
+      "motion": {
+        "cycle": 0.4333,
+        "death": "sink",
+        "spawn": "rise",
+        "hover": 0.0,
+        "turn_rate": 9.0,
+        "turn_max": 7.0,
+        "bank": 0.08
+      }
     },
     "vine_lynx": {
       "path": "res://art/models/monsters/vine_lynx/vine_lynx.glb",
@@ -138,11 +248,22 @@
       "shape": "quadruped",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "c8f7fd79f617e044231b38a0d79fd256db28a1644891ce19d56adfce1869ed58",
-      "ready": true
+      "glb_sha256": "a8fc0d4dec5851c5e575a6a68dc8322da451c99e9aa3f52726f235ba3e3ec5ee",
+      "ready": true,
+      "motion": {
+        "cycle": 0.5,
+        "death": "sink",
+        "spawn": "rise",
+        "hover": 0.0,
+        "turn_rate": 12.0,
+        "turn_max": 10.0,
+        "bank": 0.16
+      }
     },
     "elder_treant": {
       "path": "res://art/models/monsters/elder_treant/elder_treant.glb",
@@ -151,11 +272,22 @@
       "shape": "tree",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "7d4a9fb1067e0a86f3523f4811e2ca5eec8d90f69124e3309c68d8401c49bd45",
-      "ready": true
+      "glb_sha256": "dd3e6adef0cc903404e3a699a95bd0f9707c743091cb7f6bf3434643611b27aa",
+      "ready": true,
+      "motion": {
+        "cycle": 1.1,
+        "death": "topple_back",
+        "spawn": "rise",
+        "hover": 0.0,
+        "turn_rate": 4.5,
+        "turn_max": 3.0,
+        "bank": 0.02
+      }
     },
     "spore_cap": {
       "path": "res://art/models/monsters/spore_cap/spore_cap.glb",
@@ -164,11 +296,22 @@
       "shape": "mushroom",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "5908d32db9549a434090b7b1d7336d43c28bd2b8978e308ffb402528041c65bc",
-      "ready": true
+      "glb_sha256": "dc941cc00234ab933f2725d69b61b5f2eb95fa6ca1e9b67c556abdbba5d19fff",
+      "ready": true,
+      "motion": {
+        "cycle": 0.5667,
+        "death": "sink",
+        "spawn": "drop",
+        "hover": 0.0,
+        "turn_rate": 7.0,
+        "turn_max": 5.0,
+        "bank": 0.05
+      }
     },
     "stone_golem": {
       "path": "res://art/models/monsters/stone_golem/stone_golem.glb",
@@ -177,11 +320,22 @@
       "shape": "biped",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "eb788f2a660dd85f805fb81325ef8ccdf1f34c75a7e9f5936d3ec705d954bedb",
-      "ready": true
+      "glb_sha256": "08bb540ebe1467c03aafc899335cd0a58a181f7dce49079df6838854b912b7a6",
+      "ready": true,
+      "motion": {
+        "cycle": 1.0,
+        "death": "topple",
+        "spawn": "rise",
+        "hover": 0.0,
+        "turn_rate": 5.0,
+        "turn_max": 3.5,
+        "bank": 0.03
+      }
     },
     "runestone_idol": {
       "path": "res://art/models/monsters/runestone_idol/runestone_idol.glb",
@@ -190,11 +344,22 @@
       "shape": "idol",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "bc1ef9ac17bca20b8349763399e662c9b9dc2d93080b5161ebcfce127592a73f",
-      "ready": true
+      "glb_sha256": "7fbd467e810f8eab36b1e545c98b885ed20f5e01b279d83e3664edb7320cf849",
+      "ready": true,
+      "motion": {
+        "cycle": 1.6,
+        "death": "topple_side",
+        "spawn": "descend",
+        "hover": 0.08,
+        "turn_rate": 6.0,
+        "turn_max": 4.0,
+        "bank": 0.08
+      }
     },
     "pebble_imp": {
       "path": "res://art/models/monsters/pebble_imp/pebble_imp.glb",
@@ -203,11 +368,22 @@
       "shape": "biped",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "94f476e5d3c58894db229e483070020f6e915b23a509f1cdbedd28d53dac0a31",
-      "ready": true
+      "glb_sha256": "fff46942c37cf4ed1765c9279b059a143330d0fcba350a81c55a19c173c391fe",
+      "ready": true,
+      "motion": {
+        "cycle": 0.4333,
+        "death": "sink",
+        "spawn": "rise",
+        "hover": 0.0,
+        "turn_rate": 9.0,
+        "turn_max": 7.0,
+        "bank": 0.08
+      }
     },
     "frost_imp": {
       "path": "res://art/models/monsters/frost_imp/frost_imp.glb",
@@ -216,11 +392,22 @@
       "shape": "biped",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "92ce965169196151a4b68198fc5219bed87d309b3dab1ce57991b8bf757341c7",
-      "ready": true
+      "glb_sha256": "27b6a66d746d6f1449df096422635fa7d1bee751464223f2e4b78a09f38928a9",
+      "ready": true,
+      "motion": {
+        "cycle": 0.4333,
+        "death": "sink",
+        "spawn": "rise",
+        "hover": 0.0,
+        "turn_rate": 9.0,
+        "turn_max": 7.0,
+        "bank": 0.08
+      }
     },
     "blizzard_wolf": {
       "path": "res://art/models/monsters/blizzard_wolf/blizzard_wolf.glb",
@@ -229,11 +416,22 @@
       "shape": "quadruped",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "5a40821ced0857ca9f3551e858272c8e5330859afc95e571dc572012bcab406b",
-      "ready": true
+      "glb_sha256": "0184936648f5d6eeea94b10041bcd5a2905a2b62abdd29cccf582ebfa4232351",
+      "ready": true,
+      "motion": {
+        "cycle": 0.5,
+        "death": "sink",
+        "spawn": "rise",
+        "hover": 0.0,
+        "turn_rate": 12.0,
+        "turn_max": 10.0,
+        "bank": 0.16
+      }
     },
     "crystal_skink": {
       "path": "res://art/models/monsters/crystal_skink/crystal_skink.glb",
@@ -242,11 +440,22 @@
       "shape": "quadruped",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "9a7550383752d5bdd95918d667611bcb7d212de667785fd249020c03fd4a616d",
-      "ready": true
+      "glb_sha256": "50227ac846c90e01cccf553fc14b3952243be101175fcce37bc60bdf7b54d19c",
+      "ready": true,
+      "motion": {
+        "cycle": 0.5,
+        "death": "sink",
+        "spawn": "rise",
+        "hover": 0.0,
+        "turn_rate": 12.0,
+        "turn_max": 10.0,
+        "bank": 0.16
+      }
     },
     "glacier_titan": {
       "path": "res://art/models/monsters/glacier_titan/glacier_titan.glb",
@@ -255,11 +464,22 @@
       "shape": "biped",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "24bcbbefee0826471e64369d162b83898e8240ef233c3748120933234c4f8686",
-      "ready": true
+      "glb_sha256": "505cad9dfa77915de97cf5c90c3048c28f13db65b5b9a73a150282f71a9e2959",
+      "ready": true,
+      "motion": {
+        "cycle": 1.0,
+        "death": "topple",
+        "spawn": "rise",
+        "hover": 0.0,
+        "turn_rate": 5.0,
+        "turn_max": 3.5,
+        "bank": 0.03
+      }
     },
     "rime_witch": {
       "path": "res://art/models/monsters/rime_witch/rime_witch.glb",
@@ -268,11 +488,22 @@
       "shape": "biped",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "0437c78decd4d17e60a35a707dd3af8affbfa6978e8654c648471a2026c21134",
-      "ready": true
+      "glb_sha256": "d6d537be41a15f0d8e655e3ac6fe3d4df618adfc32883bfe266aa848ed1938ca",
+      "ready": true,
+      "motion": {
+        "cycle": 0.7667,
+        "death": "sink",
+        "spawn": "rise",
+        "hover": 0.0,
+        "turn_rate": 7.0,
+        "turn_max": 5.0,
+        "bank": 0.05
+      }
     },
     "abyss_leviathan": {
       "path": "res://art/models/monsters/abyss_leviathan/abyss_leviathan.glb",
@@ -281,11 +512,22 @@
       "shape": "serpent",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "2ac241d78ad154b615fc9085a64c36d0ea53c56d917565e8437205cdbcfa78ac",
-      "ready": true
+      "glb_sha256": "a0f6a7dad7c7ec8a2ab56d935edd5364f09486bb881a5cacc4ac9ea13ab9b8e3",
+      "ready": true,
+      "motion": {
+        "cycle": 1.1,
+        "death": "sink",
+        "spawn": "rise",
+        "hover": 0.0,
+        "turn_rate": 4.0,
+        "turn_max": 2.5,
+        "bank": 0.04
+      }
     },
     "titan_bloom": {
       "path": "res://art/models/monsters/titan_bloom/titan_bloom.glb",
@@ -294,11 +536,22 @@
       "shape": "plant",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "ceef7b53ef047ba03a1679de9aa62d8392d584f88adf34c879f400eef6d14fb3",
-      "ready": true
+      "glb_sha256": "8b188c5f121b99bd43f8a79482b6833387d3ed822066ac6c5674437c06f05df0",
+      "ready": true,
+      "motion": {
+        "cycle": 1.2,
+        "death": "sink",
+        "spawn": "rise",
+        "hover": 0.0,
+        "turn_rate": 4.0,
+        "turn_max": 2.5,
+        "bank": 0.02
+      }
     },
     "crystal_golem_king": {
       "path": "res://art/models/monsters/crystal_golem_king/crystal_golem_king.glb",
@@ -307,11 +560,22 @@
       "shape": "biped",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "17a6fb3ddc409abbeb636320bdb482869df7e04b121ece88c59cffa21da5c96d",
-      "ready": true
+      "glb_sha256": "7f829af41db570724340e62fad7b74420b6625b32a6d630482910c88042e831c",
+      "ready": true,
+      "motion": {
+        "cycle": 1.2,
+        "death": "topple",
+        "spawn": "rise",
+        "hover": 0.0,
+        "turn_rate": 4.0,
+        "turn_max": 2.5,
+        "bank": 0.02
+      }
     },
     "glacier_dragon": {
       "path": "res://art/models/monsters/glacier_dragon/glacier_dragon.glb",
@@ -320,11 +584,22 @@
       "shape": "dragon",
       "metallic": 0.0,
       "clips": [
+        "Attack",
+        "Die",
         "IdleLoop",
         "MoveLoop"
       ],
-      "glb_sha256": "10c549a8768556ae1c1574662f10b513e63c637d45b4df8b08929288a41b812c",
-      "ready": true
+      "glb_sha256": "702fb87561c96cab9c837b5b703f72847e6984e55eff793c4ddf4cfabdc56d5c",
+      "ready": true,
+      "motion": {
+        "cycle": 1.0,
+        "death": "sink",
+        "spawn": "drop",
+        "hover": 0.0,
+        "turn_rate": 4.0,
+        "turn_max": 2.5,
+        "bank": 0.12
+      }
     }
   },
   "ready_ids": [

@@ -14,6 +14,8 @@
     "Crown"
   ],
   "clips": [
+    "Attack",
+    "Die",
     "IdleLoop",
     "MoveLoop"
   ],
@@ -22,8 +24,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/drop_slime/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/drop_slime/game.blend",
-  "glb_sha256": "e8a74c2e910b766f17b18538f7dade9cb318d629c6cdc16cef820ab1aeab9497",
-  "glb_bytes": 892816,
+  "glb_sha256": "c7b94924ab396c9a90fc0f26fafc2f57aea5b8b200d67334c2fb852d2078fd71",
+  "glb_bytes": 905832,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -58,5 +60,36 @@
     "glb_sha256": "e8a74c2e910b766f17b18538f7dade9cb318d629c6cdc16cef820ab1aeab9497",
     "report": "build/character-3d/monster-review/report.json",
     "artist_note": "Actual active sprite and native3D front/side/back/3quarter inspected. Navy-teal teardrop blob, two hollow black eyes and pooled lobed ground base preserved; 24idle/32squash-glide frames have a clean seam/anchored base. Both-resolution factory/world battle and Burn/Frost/Stun readability checked. No humanoid legs or face accessories introduced. Device FPS unmeasured."
+  },
+  "motion": {
+    "version": 2,
+    "library": "tools/3d/monster_motion.py",
+    "fps": 30,
+    "frames": {
+      "IdleLoop": 90,
+      "MoveLoop": 14,
+      "Attack": 30,
+      "Die": 24
+    },
+    "move_cycle_seconds": 0.4667,
+    "travel_per_move_cycle_world_units": 0.7653,
+    "attack_phase_map": "clip_time = (siege_phase - 0.3) mod 1; strike frame 21/30 lands at the phase wrap",
+    "params": {
+      "move_frames": 14,
+      "jump": 0.3,
+      "squash": 0.16,
+      "lean": 0.05,
+      "attack": "slam",
+      "death": "splat",
+      "spawn": "drop",
+      "hover": 0.0,
+      "turn_rate": 9.0,
+      "turn_max": 7.0,
+      "bank": 0.06
+    },
+    "authored_at": "2026-10-10T18:47:10",
+    "tool": "tools/3d/author_monster_motion.py",
+    "geometry_digest": "358b03c46d4d9132f2404019352a5457cd5e19016bccf4a5664b26a7d65ad56e",
+    "geometry_unchanged": true
   }
 }

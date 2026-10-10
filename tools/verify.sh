@@ -109,7 +109,13 @@ else
 fi
 
 step "2. 임포트 (파스 오류 없이)"
+# 다른 작업자(디자인 담당·촬영 도구)가 같은 순간 임포트를 돌리면 .godot/imported 가 서로 덮인다.
+# tools/godot_import.sh 와 같은 잠금을 잡고 돌린다.
+mkdir -p build
+exec 8> build/godot-import.lock
+flock 8
 godot_run 300 "$TMP/import.log" --import
+flock -u 8
 forbid "임포트" "SCRIPT ERROR" "$TMP/import.log"
 forbid "임포트" "Parse Error" "$TMP/import.log"
 forbid "임포트" "Compile Error" "$TMP/import.log"
@@ -171,6 +177,8 @@ godot_run 120 "$TMP/arena-route.log" res://tests/arena_route_check.tscn
 expect "원형 전장·도로 이동·가변 조이스틱" "판정: 정상" "$TMP/arena-route.log"
 godot_run 180 "$TMP/arena-pose.log" res://tests/arena_pose_check.tscn
 expect "50명 연속 보행·정지 자세 누적 방지" "판정: 정상" "$TMP/arena-pose.log"
+godot_run 180 "$TMP/arena-motion.log" res://tests/arena_motion_check.tscn
+expect "월드→모델 보행·방향·피격·포위·사망 연동" "판정: 정상" "$TMP/arena-motion.log"
 godot_run 180 "$TMP/arena-play.log" res://tests/arena_play_check.tscn
 expect "연속 수호전 실제 UI 흐름" "판정: 정상" "$TMP/arena-play.log"
 godot_run 90 "$TMP/stellar-identity.log" res://tests/stellar_identity_check.tscn

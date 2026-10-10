@@ -6,9 +6,7 @@ var _walk: Dictionary = {}
 var _ward: Node3D
 var _ward_material: StandardMaterial3D
 var _crystal_light: OmniLight3D
-var _skill_fx: Array[Dictionary] = []
 var _weather_body := "wood"
-var _skill_ring: TorusMesh
 
 func camera_update() -> void:
 	# Constant magnification: enlarging the arena never shrinks its actors.
@@ -18,18 +16,7 @@ func camera_update() -> void:
 
 func _ready() -> void:
 	super._ready()
-	for child in get_children():
-		if child is WorldEnvironment:
-			child.environment.background_color = Color("#0b1c2b")
-			child.environment.fog_light_color = Color("#16364c")
-			child.environment.fog_density = 0.008
-			child.environment.ambient_light_color = Color("#94b9d9")
-			child.environment.ambient_light_energy = 0.24
-			child.environment.glow_intensity = 0.26
-		elif child is DirectionalLight3D and child.shadow_enabled:
-			child.light_energy = 0.86
-			child.rotation_degrees = Vector3(-56, -32, 0)
-			child.directional_shadow_max_distance = 65
+	StellarLighting.apply_arena(self)
 
 func build_map(theme: Dictionary) -> void:
 	var id := String(theme.get("id", "wood"))
@@ -199,10 +186,17 @@ func build_map(theme: Dictionary) -> void:
 	weather = MultiMeshInstance3D.new()
 	weather.multimesh = MultiMesh.new()
 	weather.multimesh.transform_format = MultiMesh.TRANSFORM_3D
-	weather.multimesh.mesh = StellarModels.primitive("sphere")
+	# Soft camera-facing motes (snow / embers / pollen) instead of lit micro-spheres.
+	weather.multimesh.mesh = QuadMesh.new()
 	weather.multimesh.instance_count = 56
-	weather.material_override = StellarModels.material(Color("#c6e2ef") if snowy else Color("#e8a45d") if body == "flame" else Color("#8eafb3"), 0, 0.35)
+	var weather_material := ShaderMaterial.new()
+	weather_material.shader = preload("res://art/vfx/weather.gdshader")
+	weather_material.set_shader_parameter("sprites", preload("res://art/vfx/sprites.png"))
+	weather_material.set_shader_parameter("tint", Color("#d5ecf8") if snowy else Color("#ffb066") if body == "flame" else Color("#a9c9c6"))
+	weather_material.set_shader_parameter("brightness", 0.5 if snowy else 0.42)
+	weather.material_override = weather_material
 	weather.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	weather.custom_aabb = AABB(Vector3(-40, -2, -40), Vector3(80, 12, 80))
 	add_child(weather)
 	weather_update(0)
 
@@ -297,16 +291,18 @@ func weather_update(time: float) -> void:
 		var z := cos(n * 9.8) * (half.y + 2)
 		var y := fposmod(n * 0.71 - time * 0.35, 4.0) + 0.2
 		if _weather_body == "flame": y = fposmod(n * 0.71 + time * 0.47, 4.0) + 0.2
-		var size := Vector3.ONE * (0.016 + (n % 3) * 0.009)
+		var size := Vector3.ONE * (0.07 + (n % 3) * 0.03)
 		weather.multimesh.set_instance_transform(n, Transform3D(Basis.from_scale(size), Vector3(x + sin(time * 0.4 + n) * 0.35, y, z)))
 
 func sync_heroes(heroes: Array, time: float, battle: bool = false) -> void:
-	# Remove our previous additive gait before sampling clips. AnimationPlayer
+	# Adapters without their own locomotion still receive the legacy additive gait.
+	# Remove the previous frame's deltas before clips are sampled: AnimationPlayer
 	# can skip constant translation tracks on seek, so adding to their last pose
 	# each frame makes legs stretch upward indefinitely (also on paused redraws).
 	for key in _walk:
 		if not hero_nodes.has(key): continue
 		var node: Node3D = hero_nodes[key]
+		if node.has_method("set_locomotion"): continue
 		var track: Dictionary = _walk[key]
 		var skeleton: Skeleton3D = track.get("skeleton")
 		if is_instance_valid(skeleton):
@@ -315,55 +311,69 @@ func sync_heroes(heroes: Array, time: float, battle: bool = false) -> void:
 		if node is LimneModel:
 			var rests: Dictionary = track.get("leg_rests", {})
 			for side in rests: node.get_node("Leg" + side).transform = rests[side]
-	super.sync_heroes(heroes, time, battle)
+	# Locomotion input comes from simulation positions only; the simulator never
+	# learns about it. Velocity is in world units per second, dt is the simulated
+	# interval since the previous rendered sample (0 on paused redraws).
+	_hero_motion.clear()
 	var keep: Dictionary = {}
 	for i in range(heroes.size()):
 		var data: Dictionary = heroes[i]
 		var hero: Dictionary = data["h"] if battle else data
 		var key := "%d:%s:%d" % [i, hero["unit"]["id"], int(hero["tier"])]
 		keep[key] = true
-		if not hero_nodes.has(key): continue
-		var node: Node3D = hero_nodes[key]
-		var p: Vector2 = data["pos"] if battle else hero.get("pos", Balance.ARENA_CENTER)
-		var track: Dictionary = _walk.get(key, {"p": p, "time": time, "phase": 0.0, "skeleton": _find_skeleton(node)})
-		if node is LimneModel and not track.has("leg_rests"):
-			track["leg_rests"] = {"L": node.get_node("LegL").transform, "R": node.get_node("LegR").transform}
+		if not battle: continue
+		var p: Vector2 = data["pos"]
+		var track: Dictionary = _walk.get(key, {"p": p, "time": time, "phase": 0.0, "v": Vector3.ZERO, "walking": false})
 		var delta: Vector2 = p - Vector2(track["p"])
 		var elapsed := maxf(0.0, time - float(track["time"]))
 		var moved := delta.length() > 0.025 and delta.length() < 70
-		var walking: bool = battle and (moved if elapsed > 0.00001 else bool(track.get("walking", false)))
-		track["base_poses"] = {}
-		if walking:
-			if elapsed > 0.00001:
-				track["phase"] = float(track["phase"]) + delta.length() * 0.11
+		if elapsed > 0.00001:
+			track["walking"] = moved
+			track["v"] = Vector3(delta.x, 0, delta.y) / (UNIT * elapsed) if moved else Vector3.ZERO
+			if moved:
 				track["direction"] = delta
-			var phase := float(track["phase"])
-			var skeleton: Skeleton3D = track["skeleton"]
-			if skeleton != null and not node is LimneModel:
-				for side in ["L", "R"]:
-					var bone := skeleton.find_bone("SkinLeg" + side)
-					if bone < 0: bone = skeleton.find_bone("Leg" + side)
-					if bone < 0: continue
-					track["base_poses"][bone] = skeleton.get_bone_pose(bone)
-					var wave := sin(phase + (0.0 if side == "L" else PI))
-					skeleton.set_bone_pose_rotation(bone, skeleton.get_bone_pose_rotation(bone) * Quaternion(Vector3.RIGHT, wave * 0.29))
-					var shift := skeleton.get_bone_pose_position(bone)
-					shift.y += maxf(0.0, wave) * 0.045
-					skeleton.set_bone_pose_position(bone, shift)
-				if node.has_method("_sync_controls_from_skin"): node.call("_sync_controls_from_skin")
-			if node is LimneModel:
-				for side in ["L", "R"]:
-					var leg: Node3D = node.get_node("Leg" + side)
-					leg.rotation.x += sin(phase + (0.0 if side == "L" else PI)) * 0.29
-				node.update_visuals()
-			node.position.y += absf(sin(phase)) * 0.025
-			if float(data.get("fx_t", 9.0)) > float(data.get("fx_w", 0.0)) + 0.3:
-				var direction: Vector2 = track.get("direction", Vector2.DOWN)
-				node.rotation.y = atan2(-direction.x, -direction.y)
-		track["walking"] = walking
+				track["phase"] = float(track["phase"]) + delta.length() * 0.11
+		var walking := bool(track["walking"])
+		var attacking := float(data.get("fx_t", 9.0)) <= float(data.get("fx_w", 0.0)) + 0.3
+		_hero_motion[i] = {"v": track["v"], "dt": elapsed, "walking": walking,
+			"dir": Vector2(track.get("direction", Vector2.DOWN)) if walking and not attacking else Vector2.INF}
 		track["p"] = p
 		track["time"] = time
 		_walk[key] = track
+	super.sync_heroes(heroes, time, battle)
+	for i in range(heroes.size()):
+		var data: Dictionary = heroes[i]
+		var hero: Dictionary = data["h"] if battle else data
+		var key := "%d:%s:%d" % [i, hero["unit"]["id"], int(hero["tier"])]
+		if not hero_nodes.has(key) or not _walk.has(key): continue
+		var node: Node3D = hero_nodes[key]
+		if node.has_method("set_locomotion"): continue
+		var track: Dictionary = _walk[key]
+		if not track.has("skeleton"): track["skeleton"] = _find_skeleton(node)
+		if node is LimneModel and not track.has("leg_rests"):
+			track["leg_rests"] = {"L": node.get_node("LegL").transform, "R": node.get_node("LegR").transform}
+		track["base_poses"] = {}
+		if not bool(track.get("walking", false)): continue
+		var phase := float(track["phase"])
+		var skeleton: Skeleton3D = track["skeleton"]
+		if skeleton != null and not node is LimneModel:
+			for side in ["L", "R"]:
+				var bone := skeleton.find_bone("SkinLeg" + side)
+				if bone < 0: bone = skeleton.find_bone("Leg" + side)
+				if bone < 0: continue
+				track["base_poses"][bone] = skeleton.get_bone_pose(bone)
+				var wave := sin(phase + (0.0 if side == "L" else PI))
+				skeleton.set_bone_pose_rotation(bone, skeleton.get_bone_pose_rotation(bone) * Quaternion(Vector3.RIGHT, wave * 0.29))
+				var shift := skeleton.get_bone_pose_position(bone)
+				shift.y += maxf(0.0, wave) * 0.045
+				skeleton.set_bone_pose_position(bone, shift)
+			if node.has_method("_sync_controls_from_skin"): node.call("_sync_controls_from_skin")
+		if node is LimneModel:
+			for side in ["L", "R"]:
+				var leg: Node3D = node.get_node("Leg" + side)
+				leg.rotation.x += sin(phase + (0.0 if side == "L" else PI)) * 0.29
+			node.update_visuals()
+		node.position.y += absf(sin(phase)) * 0.025
 	for key in _walk.keys():
 		if not keep.has(key): _walk.erase(key)
 
@@ -374,18 +384,13 @@ func _find_skeleton(root: Node) -> Skeleton3D:
 		if found != null: return found
 	return null
 
+func _monster_heading(mo: Dictionary, p: Vector2, _ahead: Vector2) -> Vector2:
+	var velocity: Vector2 = mo.get("vel", Vector2.ZERO)
+	if velocity.length_squared() > 0.001: return velocity
+	return Balance.ARENA_CENTER - p
+
 func sync_battle(sim, time: float, lives: int, dt: float = 0.016) -> void:
 	super.sync_battle(sim, time, lives, dt)
-	for mo in sim.monsters:
-		var key := int(mo.get("spawn_id", 0))
-		if not monster_nodes.has(key): continue
-		var node: Node3D = monster_nodes[key]
-		var velocity: Vector2 = mo.get("vel", Vector2.ZERO)
-		if velocity.length_squared() > 0.001:
-			node.rotation.y = atan2(-velocity.x, -velocity.y)
-		else:
-			var toward: Vector2 = Balance.ARENA_CENTER - Vector2(mo["pos"])
-			if toward.length_squared() > 0.01: node.rotation.y = atan2(-toward.x, -toward.y)
 	for crystal in crystals: crystal.visible = sim.crystal_hp > 0
 	if is_instance_valid(_ward): _ward.visible = sim.shield > 0
 	if is_instance_valid(_crystal_light):
@@ -414,39 +419,7 @@ func event(e: Dictionary) -> void:
 		if float(e.get("n", 0.0)) > 0:
 			super.event({"t": "leak", "p": Balance.ARENA_CENTER, "c": Look.RED, "r": 42.0})
 		return
-	if type not in ["arena_blast", "arena_freeze", "arena_ward"]:
-		super.event(e)
+	if type in ["arena_blast", "arena_freeze", "arena_ward"]:
+		vfx.arena_event(e)
 		return
-	if _skill_fx.size() >= 6: return
-	var node := Node3D.new()
-	node.position = world(Vector2(e.get("p", Balance.ARENA_CENTER)), 0.12)
-	var color := Look.GOLD if type == "arena_blast" else Look.CRYSTAL if type == "arena_ward" else Look.ICE
-	var radius := float(e.get("r", 70.0)) / UNIT
-	if type == "arena_freeze": radius *= 0.5
-	if _skill_ring == null:
-		_skill_ring = TorusMesh.new()
-		_skill_ring.inner_radius = 0.47
-		_skill_ring.outer_radius = 0.5
-		_skill_ring.rings = 48
-		_skill_ring.ring_segments = 6
-	var ring := StellarModels.part(node, "ring", Vector3.ZERO, Vector3(radius * 2.0, 0.04, radius * 2.0), color, 0.1, 0.25)
-	ring.mesh = _skill_ring
-	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	for n in range(8):
-		var a := TAU * n / 8.0
-		StellarModels.part(node, "cone", Vector3(cos(a) * radius * 0.75, 0.18, sin(a) * radius * 0.75), Vector3(0.07, 0.42, 0.07), color, 0, 0.15)
-	add_child(node)
-	_skill_fx.append({"node": node, "age": 0.0, "life": 0.65, "kind": type})
-
-func update_effects(dt: float) -> void:
-	super.update_effects(dt)
-	for i in range(_skill_fx.size() - 1, -1, -1):
-		var fx: Dictionary = _skill_fx[i]
-		fx["age"] += dt
-		if fx["age"] >= fx["life"]:
-			fx["node"].free()
-			_skill_fx.remove_at(i)
-		else:
-			var q := float(fx["age"]) / float(fx["life"])
-			fx["node"].scale = Vector3.ONE * (0.08 + q * 0.95 if fx["kind"] == "arena_freeze" else 0.82 + q * 0.7)
-			fx["node"].position.y = 0.12 + q * 0.18
+	super.event(e)

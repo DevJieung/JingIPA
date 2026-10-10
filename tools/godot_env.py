@@ -66,15 +66,44 @@ def xvfb(display: int, res: str, settle: float = 1.5) -> Iterator[dict[str, str]
 
         with xvfb(93, "1280x800") as env:
             subprocess.run([str(GODOT), "--path", str(ROOT), ...], env=env)
+
+    ★ 요청한 번호가 이미 쓰이고 있으면(다른 도구·다른 세션이 같이 도는 중) 그 다음
+      번호를 차례로 시도한다. 실제로 서버가 뜬 번호가 DISPLAY 에 들어간다 — 같은 번호를
+      둘이 같이 쓰다 화면을 못 잡는 대신, 각자 다른 화면에서 돈다.
     """
     exe = ensure_xvfb()
-    env = godot_env(display)
     w, h = res.split("x")
-    proc = subprocess.Popen([str(exe), f":{display}", "-screen", "0", f"{w}x{h}x24",
-                             "-nolisten", "tcp"], env=env,
-                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    proc = None
+    env: dict[str, str] = {}
+    for candidate in range(display, display + 80):
+        if Path(f"/tmp/.X{candidate}-lock").exists() or Path(f"/tmp/.X11-unix/X{candidate}").exists():
+            continue
+        env = godot_env(candidate)
+        proc = subprocess.Popen([str(exe), f":{candidate}", "-screen", "0", f"{w}x{h}x24",
+                                 "-nolisten", "tcp"], env=env,
+                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        deadline = time.time() + max(settle, 4.0)
+        ready = False
+        while time.time() < deadline:
+            if proc.poll() is not None:
+                break           # 그 사이 다른 쪽이 같은 번호를 잡았다 — 다음 번호로
+            if Path(f"/tmp/.X{candidate}-lock").exists() and Path(f"/tmp/.X11-unix/X{candidate}").exists():
+                ready = True
+                break
+            time.sleep(0.1)
+        if ready:
+            time.sleep(min(settle, 1.0))   # 서버가 뜬 직후 바로 붙으면 화면을 못 잡는다
+            break
+        if proc.poll() is None:
+            proc.terminate()
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+        proc = None
+    if proc is None:
+        raise SystemExit(f"빈 X 디스플레이를 찾지 못했습니다 (:{display} 부터 80개)")
     try:
-        time.sleep(settle)          # 서버가 뜨기 전에 Godot 을 띄우면 화면을 못 잡는다
         yield env
     finally:
         proc.terminate()

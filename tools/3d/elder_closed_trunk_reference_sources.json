@@ -1,0 +1,27 @@
+[
+  {
+    "id": "elder_treant",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-references-retry/elder_treant/closed-trunk.png",
+    "source": "art/animation/chibi_v1/source/elder_treant.png",
+    "source_rect": [
+      16,
+      0,
+      373,
+      512
+    ],
+    "source_sha256": "3f04a032f132ee20849414123e627bf8d4204ba533264f8db06e72001216f96c",
+    "image_sha256": "db2525997b0c16b65a77ae1c0d91007e4477ff3513a2dca997eb31fe60f48d73",
+    "active_anim": "art/anim/monsters/elder_treant/anim.json",
+    "active_art": "art/monsters/elder_treant.png",
+    "prompt": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-references-retry/elder_treant/closed-trunk-prompt.txt",
+    "kind": "tank",
+    "element_body": "wood",
+    "workflow_overrides": {},
+    "reference_type": "built-in image_gen creature bind-reference raster; NOT a native GLB",
+    "original": "build/monster-native/inputs/elder_treant.png",
+    "original_sha256": "c6e1d36b8b0c9f2cffd040514d6092eebd94d2dc3496dff1a1b011693864c479",
+    "prompt_sha256": "df1fde5e4c81563da4014a5ce82815709bf75624358a4aac9b6e06a8aeec028d",
+    "reference_review": "Direct actual original and new closed-volume reference reviewed: solid brown wood trunk, broad ivory bark mask/two opaque dark eye insets, olive leaf clusters, two branch hands/two root feet; preserve ID and remove open thin trunk ambiguity.",
+    "retry_basis": "Previous actual raw/high PBR geometry lost original mask/trunk and had large voids/facets; integrity/recipe valid. One bounded closed-volume reference retry; canonical original/reference preserved."
+  }
+]

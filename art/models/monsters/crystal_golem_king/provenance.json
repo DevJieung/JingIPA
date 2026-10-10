@@ -17,6 +17,8 @@
     "ArmR"
   ],
   "clips": [
+    "Attack",
+    "Die",
     "IdleLoop",
     "MoveLoop"
   ],
@@ -25,8 +27,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/crystal_golem_king/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/crystal_golem_king/game.blend",
-  "glb_sha256": "17a6fb3ddc409abbeb636320bdb482869df7e04b121ece88c59cffa21da5c96d",
-  "glb_bytes": 6091072,
+  "glb_sha256": "7f829af41db570724340e62fad7b74420b6625b32a6d630482910c88042e831c",
+  "glb_bytes": 6113788,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -61,5 +63,45 @@
     "glb_sha256": "17a6fb3ddc409abbeb636320bdb482869df7e04b121ece88c59cffa21da5c96d",
     "report": "build/character-3d/monster-review/report.json",
     "artist_note": "Direct actual two-resolution 78PNG native QA: four views, full idle/move sequence, Burn/Frost/Stun and twelve hero battle with orbit/selection. Original crownlike stone head, three large purple crystals, chest core and blocky fists/feet retain coherent surfaces throughout authored six-bone motion."
+  },
+  "motion": {
+    "version": 2,
+    "library": "tools/3d/monster_motion.py",
+    "fps": 30,
+    "frames": {
+      "IdleLoop": 90,
+      "MoveLoop": 36,
+      "Attack": 30,
+      "Die": 24
+    },
+    "move_cycle_seconds": 1.2,
+    "travel_per_move_cycle_world_units": 1.968,
+    "attack_phase_map": "clip_time = (siege_phase - 0.3) mod 1; strike frame 21/30 lands at the phase wrap",
+    "params": {
+      "move_frames": 36,
+      "stance": 0.5,
+      "leg_swing": 0.28,
+      "leg_lift": 0.05,
+      "leg_reach": 0.06,
+      "bounce": 0.035,
+      "roll": 0.08,
+      "yaw": 0.04,
+      "lean": 0.02,
+      "arm_swing": 0.16,
+      "arm_out": 0.04,
+      "head_bob": 0.03,
+      "impact": true,
+      "attack": "smash",
+      "death": "topple",
+      "spawn": "rise",
+      "hover": 0.0,
+      "turn_rate": 4.0,
+      "turn_max": 2.5,
+      "bank": 0.02
+    },
+    "authored_at": "2026-10-10T18:48:06",
+    "tool": "tools/3d/author_monster_motion.py",
+    "geometry_digest": "8b5f5948f246216ffe8183e9afbedd372ad0eb94814754627e691d4e964f9b4d",
+    "geometry_unchanged": true
   }
 }

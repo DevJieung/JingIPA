@@ -11,7 +11,10 @@
 | `core/arena_run.gd` | 연속 수호전 진행, 영웅 성장/교체, 상점, 저장/복구 |
 | `game/arena_sim.gd` | 전투 시간, 이동/길찾기, 피해, 보스, 공용 스킬 |
 | `game/arena_screen.gd` | 사용자 입력과 전투/모달 표시 |
-| `game/3d/arena_view.gd`, `arena_world.gd` | 시뮬레이터 상태를 실제 3D 전장으로 표현 |
+| `game/3d/arena_view.gd`, `arena_world.gd` | 시뮬레이터 상태를 실제 3D 전장으로 표현, 모델 어댑터에 보행·방향·피격·포위·사망 입력 전달 |
+| `game/3d/native_character_model.gd`, `hero_locomotion.gd`, `limne_model.gd` | 영웅 클립 샘플링·보행/공격 레이어·회전·조준 보정 |
+| `game/3d/native_monster_model.gd` | 몬스터 클립 샘플링·등장/피격/사망/포위 반응 |
+| `game/3d/stellar_vfx.gd`, `stellar_lighting.gd`, `stellar_shading.gd` | 탄·섬광·착탄·광선·장판·기술 이펙트, 조명·후처리, 캐릭터 재질·피격 섬광·디졸브 |
 | `core/combat_stats.gd` | 상태를 변경하지 않는 강화·패시브·영웅 능력치·DPS 계산 |
 | `core/run.gd`, `game/battle_sim.gd` | 두 모드가 공유하는 영웅/경제/전투 규칙과 이전 웨이브 저장 호환 |
 | `core/arena_validation.gd`, `run_validation.gd` | 현재 상태를 바꾸기 전 저장 데이터 검증 |
@@ -40,7 +43,8 @@
 | `art/models/` | 실제 GLB, 모델 메타데이터, 랭크별 초상화 |
 | `art/anim/`, `themes/`, `music/`, `sfx/` | 현재 코드/호환 화면/제작 검사가 참조하는 에셋 |
 | `tests/` | 저장·규칙·실제 UI 회귀 검사와 시각 검수 씬 |
-| `tools/3d/`, `sprite/`, `audio/` | 재현 가능한 제작·검수 도구 |
+| `tools/3d/`, `sprite/`, `audio/`, `vfx/` | 재현 가능한 제작·검수 도구(모션 클립 작성, VFX 텍스처 생성 포함) |
+| `art/vfx/` | 전투 이펙트 셰이더와 절차 생성 스프라이트 아틀라스·노이즈 |
 | `build/`, `.godot/`, `android/build/` | 생성물과 로컬 캐시, Git 제외 |
 
 DB 승인 절차와 배포 제외 검사는 [GAME_DB.md](GAME_DB.md)를 따른다.

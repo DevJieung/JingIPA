@@ -16,6 +16,8 @@
     "Tail"
   ],
   "clips": [
+    "Attack",
+    "Die",
     "IdleLoop",
     "MoveLoop"
   ],
@@ -24,8 +26,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/rapid_ray/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/rapid_ray/game.blend",
-  "glb_sha256": "b6f228e758b044fa3c70bfcfdf78e588e2b4334e98bd1594e370c9e0a1320c46",
-  "glb_bytes": 2287380,
+  "glb_sha256": "b91ff592a25d55024442401db3b2e1369824d3cd5f246bb121c6986a6492c67e",
+  "glb_bytes": 2303772,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -60,5 +62,39 @@
     "glb_sha256": "b6f228e758b044fa3c70bfcfdf78e588e2b4334e98bd1594e370c9e0a1320c46",
     "report": "build/character-3d/monster-review/report.json",
     "artist_note": "Direct original and actual studio/runtime front, side, back, three-quarter, both resolutions and continuous IdleLoop/MoveLoop viewed. Ray paired fins/one tail and cyan face, jelly cap/tentacle beard/dark orb and wave giant foam silhouette preserved. No pose cracks or loop jumps; independently phased movement and status/mixed battle remain readable at small size. Device FPS unmeasured."
+  },
+  "motion": {
+    "version": 2,
+    "library": "tools/3d/monster_motion.py",
+    "fps": 30,
+    "frames": {
+      "IdleLoop": 90,
+      "MoveLoop": 21,
+      "Attack": 30,
+      "Die": 24
+    },
+    "move_cycle_seconds": 0.7,
+    "travel_per_move_cycle_world_units": 1.148,
+    "attack_phase_map": "clip_time = (siege_phase - 0.3) mod 1; strike frame 21/30 lands at the phase wrap",
+    "params": {
+      "move_frames": 21,
+      "flap": 0.28,
+      "twist": 0.1,
+      "bounce": 0.05,
+      "pitch": 0.06,
+      "tail_h": 0.22,
+      "tail_v": 0.12,
+      "attack": "dive",
+      "death": "sink",
+      "spawn": "descend",
+      "hover": 0.12,
+      "turn_rate": 12.0,
+      "turn_max": 10.0,
+      "bank": 0.35
+    },
+    "authored_at": "2026-10-10T18:47:11",
+    "tool": "tools/3d/author_monster_motion.py",
+    "geometry_digest": "77f2626bec3f9c96d6137d6c77da06f66c9a78dbabe230911b49de9b12684ead",
+    "geometry_unchanged": true
   }
 }

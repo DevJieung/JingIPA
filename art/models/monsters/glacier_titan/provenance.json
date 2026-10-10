@@ -17,6 +17,8 @@
     "ArmR"
   ],
   "clips": [
+    "Attack",
+    "Die",
     "IdleLoop",
     "MoveLoop"
   ],
@@ -25,8 +27,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/glacier_titan/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/glacier_titan/game.blend",
-  "glb_sha256": "24bcbbefee0826471e64369d162b83898e8240ef233c3748120933234c4f8686",
-  "glb_bytes": 11047416,
+  "glb_sha256": "505cad9dfa77915de97cf5c90c3048c28f13db65b5b9a73a150282f71a9e2959",
+  "glb_bytes": 11068716,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -61,5 +63,45 @@
     "glb_sha256": "24bcbbefee0826471e64369d162b83898e8240ef233c3748120933234c4f8686",
     "report": "build/character-3d/monster-review/report.json",
     "artist_note": "Actual GL Compatibility four views, 24 idle/32 move continuous frames, three status effects and 12 heroes mixed battle directly inspected at 1280x800 and 1000x625. Glacier continuous ice plates/fists/feet retain original body; Rime seven-bone full staff remains rigid with hand throughout motion; Leviathan retains coiled serpent belly and fins without humanoid legs. Full-native surface preservation on Glacier/Rime is a quality fallback, not mobile FPS validation."
+  },
+  "motion": {
+    "version": 2,
+    "library": "tools/3d/monster_motion.py",
+    "fps": 30,
+    "frames": {
+      "IdleLoop": 90,
+      "MoveLoop": 30,
+      "Attack": 30,
+      "Die": 24
+    },
+    "move_cycle_seconds": 1.0,
+    "travel_per_move_cycle_world_units": 1.64,
+    "attack_phase_map": "clip_time = (siege_phase - 0.3) mod 1; strike frame 21/30 lands at the phase wrap",
+    "params": {
+      "move_frames": 30,
+      "stance": 0.5,
+      "leg_swing": 0.34,
+      "leg_lift": 0.05,
+      "leg_reach": 0.05,
+      "bounce": 0.05,
+      "roll": 0.11,
+      "yaw": 0.05,
+      "lean": 0.02,
+      "arm_swing": 0.22,
+      "arm_out": 0.05,
+      "head_bob": 0.05,
+      "impact": true,
+      "attack": "smash",
+      "death": "topple",
+      "spawn": "rise",
+      "hover": 0.0,
+      "turn_rate": 5.0,
+      "turn_max": 3.5,
+      "bank": 0.03
+    },
+    "authored_at": "2026-10-10T18:47:51",
+    "tool": "tools/3d/author_monster_motion.py",
+    "geometry_digest": "2e75bb91eb2fde1675daf3d8c3c69679a202ab2965699d6f5a5a9b9b06fac507",
+    "geometry_unchanged": true
   }
 }

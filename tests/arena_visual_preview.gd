@@ -12,6 +12,9 @@ func _ready() -> void:
 	if has_arg("--road-only"):
 		await _road_only()
 		return
+	if has_arg("--motion-only"):
+		await _motion_only()
+		return
 	if has_arg("--hud-only"):
 		await _hud_only()
 		return
@@ -187,6 +190,79 @@ func _ready() -> void:
 	file = null
 	print("Arena visual review: " + out_dir)
 	finish("Arena native 3D and mobile UI")
+
+## Battle motion overhaul proof: mixed weapon types walking while attacking,
+## monsters spawning, being hit, dying and besieging the crystal, one skill.
+## Positions and damage come from the real simulator; only capture timing is scripted.
+func _motion_only() -> void:
+	for locale in ["ko", "en"]:
+		I18n.set_locale(locale)
+		Arena.start_run(20261010)
+		main = load("res://game/main.gd").new()
+		add_child(main)
+		await frames(3)
+		main.show_arena()
+		screen = main.screen
+		screen.set_process(false)
+		Arena.choose_theme(0)
+		Arena.confirm_summon()
+		Arena.close_modal()
+		Arena.heroes.clear()
+		Arena.bench.clear()
+		var ids := ["echo", "kari", "jokull", "brasa", "triton", "limne"]
+		for i in range(ids.size()):
+			Arena.gain_hero(Roster.unit_by_id(ids[i]), 3 + i)
+			Arena.heroes[i]["position"] = Balance.ARENA_CENTER + Vector2.from_angle(-PI * 0.5 + i * TAU / 6) * 150
+		Arena.sim.refresh_heroes()
+		Arena.sim.monsters.clear()
+		Arena.selected = 0
+		Arena.gold = 69
+		var pool := Roster.theme_pool(Arena.theme_for(1))
+		for n in range(14):
+			Arena.sim._spawn(pool[n % pool.size()])
+			var mo: Dictionary = Arena.sim.monsters[-1]
+			var lane := n % ArenaGeometry.ROUTE_COUNT
+			mo["pos"] = ArenaGeometry.route_points(lane)[22 + (n / ArenaGeometry.ROUTE_COUNT) * 4]
+			mo["route"] = lane
+			mo["hp"] = float(mo["max"]) * (0.08 if n < 6 else 0.6)
+			mo["vel"] = ArenaGeometry.road_direction(mo["pos"])
+		for n in range(2):
+			Arena.sim._spawn(pool[(n + 2) % pool.size()])
+			var mo: Dictionary = Arena.sim.monsters[-1]
+			mo["pos"] = Balance.ARENA_CENTER + Vector2.from_angle(n * PI + 0.4) * (Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS - 1)
+			mo["hp"] = 1000000.0
+			mo["max"] = 1000000.0
+		Arena.sim._rebuild_navigation()
+		Arena.sim._cache_positions()
+		await _capture(locale + "_motion_start")
+		# The first draw creates the 3D view; pin the camera afterwards so the
+		# whole field stays in frame while the selected archer walks.
+		screen.view_3d._follow_offset = Vector3.ZERO
+		screen.view_3d._camera_initialized = true
+		screen.view_3d._apply_camera(Vector3.ZERO)
+		# Fifteen captures per second of real simulated battle, the selected
+		# archer walking a circle while every guardian keeps attacking.
+		for n in range(48):
+			for tick in range(4):
+				var phase := (n * 4 + tick) * (1.0 / 60) * 1.4
+				Arena.sim.heroes[0]["pos"] = Balance.ARENA_CENTER + Vector2(0, -150) + Vector2.from_angle(phase) * 60
+				Arena.sim.heroes[0]["h"]["position"] = Arena.sim.heroes[0]["pos"]
+				screen._process(1.0 / 60)
+			if n == 30:
+				Arena.sim.skill_cooldowns["blast"] = 0.0
+				await paint(screen)
+				check(tap(screen, "skill:blast"), "starburst fires during the motion capture")
+			await _capture(locale + "_motion_%02d" % n)
+		check(Arena.sim.monsters.size() < 16, "weak monsters actually died on camera")
+		check(screen.view_3d.world.hero_nodes.size() == 6, "six mixed-weapon heroes stayed live")
+		main.queue_free()
+		main = null
+		screen = null
+		await frames(4)
+	var file := FileAccess.open(out_dir + "/motion-report.json", FileAccess.WRITE)
+	file.store_string(JSON.stringify({"checks": checks, "failures": failures, "text_boxes": _audit_count}, "  ") + "\n")
+	file = null
+	finish("Battle motion overhaul capture")
 
 func _road_only() -> void:
 	var trajectories: Array = []

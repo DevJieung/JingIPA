@@ -17,6 +17,8 @@
     "ArmR"
   ],
   "clips": [
+    "Attack",
+    "Die",
     "IdleLoop",
     "MoveLoop"
   ],
@@ -25,8 +27,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/ember_imp/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/ember_imp/game.blend",
-  "glb_sha256": "4063d4d40bdcce1b31058c8cafb5859da18c930e29e5e6f6ffa14118f3fa4c5e",
-  "glb_bytes": 4370896,
+  "glb_sha256": "d3f1bf00f9009358eab258e3bea105dfaac9067884d229c34f69e550785a8662",
+  "glb_bytes": 4389680,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -61,5 +63,45 @@
     "glb_sha256": "4063d4d40bdcce1b31058c8cafb5859da18c930e29e5e6f6ffa14118f3fa4c5e",
     "report": "build/character-3d/monster-review/report.json",
     "artist_note": "Direct original ash-face/flame identity, retained native four views, actual Idle/Move continuous frames, all three status states and 12-hero mixed battle in both resolutions reviewed. Coherent 65k UV-preserving surface replaces rejected fragmented 28k LOD; orange authored local flame crown material restores elemental reading while other UV/color remain. Bone gait keeps rocky silhouette and face clear. Device FPS not measured."
+  },
+  "motion": {
+    "version": 2,
+    "library": "tools/3d/monster_motion.py",
+    "fps": 30,
+    "frames": {
+      "IdleLoop": 90,
+      "MoveLoop": 13,
+      "Attack": 30,
+      "Die": 24
+    },
+    "move_cycle_seconds": 0.4333,
+    "travel_per_move_cycle_world_units": 0.7107,
+    "attack_phase_map": "clip_time = (siege_phase - 0.3) mod 1; strike frame 21/30 lands at the phase wrap",
+    "params": {
+      "move_frames": 13,
+      "stance": 0.5,
+      "leg_swing": 0.42,
+      "leg_lift": 0.07,
+      "leg_reach": 0.04,
+      "bounce": 0.02,
+      "roll": 0.05,
+      "yaw": 0.06,
+      "lean": 0.03,
+      "arm_swing": 0.35,
+      "arm_out": 0.04,
+      "head_bob": 0.04,
+      "impact": false,
+      "attack": "smash",
+      "death": "sink",
+      "spawn": "rise",
+      "hover": 0.0,
+      "turn_rate": 9.0,
+      "turn_max": 7.0,
+      "bank": 0.08
+    },
+    "authored_at": "2026-10-10T18:47:18",
+    "tool": "tools/3d/author_monster_motion.py",
+    "geometry_digest": "33b4758aea70f1df2fd597f3ea87e81d808e51859641e38b93bda18c1dff157e",
+    "geometry_unchanged": true
   }
 }

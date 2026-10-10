@@ -23,13 +23,14 @@
   ],
   "clips": [
     "Attack",
-    "IdleLoop"
+    "IdleLoop",
+    "WalkLoop"
   ],
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/ceniza/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/ceniza/game.blend",
   "height": 1.65,
-  "glb_bytes": 5122592,
-  "glb_sha256": "653cbf77d2620f58104d45c75e3c05cd15c8e600b159649c2fe91b428f552a21",
+  "glb_bytes": 5161384,
+  "glb_sha256": "f78990e6db18ca203889b28c548b572e96de0184a93a9e118c7e9771f86d2db9",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -68,5 +69,27 @@
       "two-resolution mixed battle"
     ],
     "artist_note": "Directly inspected both-resolution turnarounds, 0/4/9/awakened gallery, continuous idle/attack contacts and actual selected mixed battle. Ceniza pressure pack stays on torso while right gun aims; Kari left twin-barrel stays rigid with distinct mouths; Vidarr cyan gauntlet hoses remain connected; Igni blade silhouette and Volcan heavy equipment preserve active-sprite identity. No visible limb tearing, floating pieces or foot displacement in reviewed sequences."
+  },
+  "motion": {
+    "version": 2,
+    "tool": "tools/3d/author_native_motion.py",
+    "authored_utc": "2026-10-10T09:36:38Z",
+    "clips": {
+      "IdleLoop": 6.0,
+      "WalkLoop": 1.0,
+      "Attack": 1.5,
+      "attack_release_time": 1.0
+    },
+    "stride": 1.4457,
+    "leg_swing": 0.62,
+    "leg_top": 0.3185,
+    "grip": "two_hand",
+    "lead": "R",
+    "kind": "rifle",
+    "bounce_scale": 1.0,
+    "previous_glb_sha256": "653cbf77d2620f58104d45c75e3c05cd15c8e600b159649c2fe91b428f552a21",
+    "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/ceniza/game.motion-v1.blend",
+    "geometry_base_sha256": "653cbf77d2620f58104d45c75e3c05cd15c8e600b159649c2fe91b428f552a21",
+    "geometry_bytes_preserved": true
   }
 }

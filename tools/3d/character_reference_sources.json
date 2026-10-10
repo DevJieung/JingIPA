@@ -1,0 +1,31 @@
+[
+  {
+    "id": "echo",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/references/echo/target.png",
+    "reference_type": "built-in image_gen raster, NOT native GLB",
+    "original": "build/hero-native/inputs/echo.png",
+    "style_reference": "build/limne-game-motion/game-review/1280x800/gallery_three_quarter.png",
+    "image_sha256": "a76c3f5b100e39810665f50391374786d7eee105a92f3554334468fa2796d895",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "brasa",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/references/brasa/target.png",
+    "reference_type": "built-in image_gen raster, NOT native GLB",
+    "original": "build/hero-native/inputs/brasa.png",
+    "style_reference": "build/limne-game-motion/game-review/1280x800/gallery_three_quarter.png",
+    "image_sha256": "01c1bf58a5be51df06b8ffc92a88b678c194cbb24bdcb2e4cab1ef67631cf688",
+    "prompt": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/references/brasa/prompt.txt",
+    "workflow_overrides": {}
+  },
+  {
+    "id": "pip",
+    "image": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/references/pip/target.png",
+    "reference_type": "built-in image_gen raster, NOT native GLB",
+    "original": "build/hero-native/inputs/pip.png",
+    "style_reference": "build/limne-game-motion/game-review/1280x800/gallery_three_quarter.png",
+    "image_sha256": "7ebbe54595a52671e22c8c58b80b4d7fc529039e82229a42d195cda5cfb278d4",
+    "prompt": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/references/pip/prompt.txt",
+    "workflow_overrides": {}
+  }
+]

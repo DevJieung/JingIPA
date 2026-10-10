@@ -17,6 +17,8 @@
     "ArmR"
   ],
   "clips": [
+    "Attack",
+    "Die",
     "IdleLoop",
     "MoveLoop"
   ],
@@ -25,8 +27,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/stone_golem/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/stone_golem/game.blend",
-  "glb_sha256": "eb788f2a660dd85f805fb81325ef8ccdf1f34c75a7e9f5936d3ec705d954bedb",
-  "glb_bytes": 4464816,
+  "glb_sha256": "08bb540ebe1467c03aafc899335cd0a58a181f7dce49079df6838854b912b7a6",
+  "glb_bytes": 4486076,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -61,5 +63,45 @@
     "glb_sha256": "eb788f2a660dd85f805fb81325ef8ccdf1f34c75a7e9f5936d3ec705d954bedb",
     "report": "build/character-3d/monster-review/report.json",
     "artist_note": "Direct actual two-resolution 78 PNG each, original identity/native multiview, continuous Idle/Move, status states and 12-hero mixed battlefield reviewed. Separate quadruped rock armor/tail, root humanoid mask/branches, cat vine body, mushroom cap/stalk, biped stone fists and legless idol/crown anatomy retained with matching authored clips; coherent UV/matte surfaces and readable small faces, no collapsed shards or fake humanoid limbs. Device FPS remains unmeasured."
+  },
+  "motion": {
+    "version": 2,
+    "library": "tools/3d/monster_motion.py",
+    "fps": 30,
+    "frames": {
+      "IdleLoop": 90,
+      "MoveLoop": 30,
+      "Attack": 30,
+      "Die": 24
+    },
+    "move_cycle_seconds": 1.0,
+    "travel_per_move_cycle_world_units": 1.64,
+    "attack_phase_map": "clip_time = (siege_phase - 0.3) mod 1; strike frame 21/30 lands at the phase wrap",
+    "params": {
+      "move_frames": 30,
+      "stance": 0.5,
+      "leg_swing": 0.34,
+      "leg_lift": 0.05,
+      "leg_reach": 0.05,
+      "bounce": 0.05,
+      "roll": 0.11,
+      "yaw": 0.05,
+      "lean": 0.02,
+      "arm_swing": 0.22,
+      "arm_out": 0.05,
+      "head_bob": 0.05,
+      "impact": true,
+      "attack": "smash",
+      "death": "topple",
+      "spawn": "rise",
+      "hover": 0.0,
+      "turn_rate": 5.0,
+      "turn_max": 3.5,
+      "bank": 0.03
+    },
+    "authored_at": "2026-10-10T18:47:40",
+    "tool": "tools/3d/author_monster_motion.py",
+    "geometry_digest": "a1e1ac28aabb588b6e5dd4f50147d90c2f99b6a54e43637b7786fc4f2f4258c2",
+    "geometry_unchanged": true
   }
 }

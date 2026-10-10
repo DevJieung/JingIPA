@@ -127,6 +127,7 @@ func _spawn(monster: Dictionary) -> void:
 	if String(mo["kind"]) == "boss":
 		boss_alive = true
 	events[-1]["p"] = point
+	events[-1]["sid"] = _serial
 
 func step(dt: float) -> void:
 	if done or not run.running or not String(run.modal).is_empty() or dt <= 0.0:
@@ -322,7 +323,7 @@ func _move_monsters(dt: float) -> void:
 			if float(mo["cast_t"]) <= 0.0:
 				mo["cast_t"] = Balance.CURSE_EVERY
 				curse_t = Balance.CURSE_SEC
-				events.append({"t": "curse", "p": current})
+				events.append({"t": "curse", "p": current, "sid": int(mo.get("spawn_id", 0))})
 		var pushed := _advance_push(mo, dt)
 		if pushed > 0.0:
 			var push_to := current - ArenaGeometry.road_direction(current) * pushed
@@ -379,7 +380,7 @@ func _push(mi: int) -> void:
 	mo["push"] = used + distance
 	mo["push_left"] = remaining + distance
 	mo["push_t"] = Balance.RIDER_PUSH_SEC * maxf(1.0, (remaining + distance) / Balance.RIDER_PUSH)
-	events.append({"t": "push", "p": mpos(mo), "h": float(mo["h"])})
+	events.append({"t": "push", "p": mpos(mo), "h": float(mo["h"]), "sid": int(mo.get("spawn_id", 0))})
 
 func _damage_crystal(damage: float, at: Vector2) -> void:
 	if run.has("bulwark") and _rng.randf() < Balance.PASSIVE_BULWARK_P:

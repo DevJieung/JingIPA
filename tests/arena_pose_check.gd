@@ -28,10 +28,10 @@ func _ready() -> void:
 		for frame in range(120): world.sync_heroes([data], 30.0, true)
 		for bone in rests:
 			check(skeleton.get_bone_pose(bone).is_equal_approx(paused[bone]), String(unit["id"]) + " paused redraw cannot accumulate gait")
-		world.sync_heroes([data], 30.1, true)
+		for frame in range(1, 31): world.sync_heroes([data], 30.0 + frame / 60.0, true)
 		for bone in rests:
 			check(skeleton.get_bone_pose_position(bone).distance_to(rests[bone].origin) < 0.025,
-				String(unit["id"]) + " stopping restores authored leg position")
+				String(unit["id"]) + " stopping restores authored leg position within half a second")
 		world.sync_heroes([], 30.1, true)
 	world.queue_free()
 	await frames(2)

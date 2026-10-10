@@ -23,13 +23,14 @@
   ],
   "clips": [
     "Attack",
-    "IdleLoop"
+    "IdleLoop",
+    "WalkLoop"
   ],
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/brigid/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/brigid/game.blend",
   "height": 1.65,
-  "glb_bytes": 4909312,
-  "glb_sha256": "bd13adfc3082be2eb78eca197f335fd37de2e3bd6954de19b0225d1d30ca0bc9",
+  "glb_bytes": 4949088,
+  "glb_sha256": "b66b6a506f7f81b9e240e7bb020dbee9a88ba8801ac7bae5c595ce14c0fc62a1",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -68,5 +69,27 @@
       "two-resolution mixed battle"
     ],
     "artist_note": "Original identity/color/held gear preserved. Direct native multiple-view, clean sole and continuous prepare/release/recovery inspected. Chispa levels gray weapon forward; Lind cyan chain/cells remain coherent; Brigid complete bow/string and quiver do not tear. Both real game resolutions preserve silhouette and grade/awakening detail."
+  },
+  "motion": {
+    "version": 2,
+    "tool": "tools/3d/author_native_motion.py",
+    "authored_utc": "2026-10-10T09:36:29Z",
+    "clips": {
+      "IdleLoop": 6.0,
+      "WalkLoop": 1.0,
+      "Attack": 1.5,
+      "attack_release_time": 1.0
+    },
+    "stride": 1.5256,
+    "leg_swing": 0.66,
+    "leg_top": 0.3154,
+    "grip": "none",
+    "lead": "L",
+    "kind": "bow",
+    "bounce_scale": 1.0,
+    "previous_glb_sha256": "bd13adfc3082be2eb78eca197f335fd37de2e3bd6954de19b0225d1d30ca0bc9",
+    "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/brigid/game.motion-v1.blend",
+    "geometry_base_sha256": "bd13adfc3082be2eb78eca197f335fd37de2e3bd6954de19b0225d1d30ca0bc9",
+    "geometry_bytes_preserved": true
   }
 }

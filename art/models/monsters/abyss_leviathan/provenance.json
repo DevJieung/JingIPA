@@ -17,6 +17,8 @@
     "FinR"
   ],
   "clips": [
+    "Attack",
+    "Die",
     "IdleLoop",
     "MoveLoop"
   ],
@@ -25,8 +27,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/abyss_leviathan/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/abyss_leviathan/game.blend",
-  "glb_sha256": "2ac241d78ad154b615fc9085a64c36d0ea53c56d917565e8437205cdbcfa78ac",
-  "glb_bytes": 5435492,
+  "glb_sha256": "a0f6a7dad7c7ec8a2ab56d935edd5364f09486bb881a5cacc4ac9ea13ab9b8e3",
+  "glb_bytes": 5456256,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -61,5 +63,37 @@
     "glb_sha256": "2ac241d78ad154b615fc9085a64c36d0ea53c56d917565e8437205cdbcfa78ac",
     "report": "build/character-3d/monster-review/report.json",
     "artist_note": "Actual GL Compatibility four views, 24 idle/32 move continuous frames, three status effects and 12 heroes mixed battle directly inspected at 1280x800 and 1000x625. Glacier continuous ice plates/fists/feet retain original body; Rime seven-bone full staff remains rigid with hand throughout motion; Leviathan retains coiled serpent belly and fins without humanoid legs. Full-native surface preservation on Glacier/Rime is a quality fallback, not mobile FPS validation."
+  },
+  "motion": {
+    "version": 2,
+    "library": "tools/3d/monster_motion.py",
+    "fps": 30,
+    "frames": {
+      "IdleLoop": 90,
+      "MoveLoop": 33,
+      "Attack": 30,
+      "Die": 24
+    },
+    "move_cycle_seconds": 1.1,
+    "travel_per_move_cycle_world_units": 1.804,
+    "attack_phase_map": "clip_time = (siege_phase - 0.3) mod 1; strike frame 21/30 lands at the phase wrap",
+    "params": {
+      "move_frames": 33,
+      "sway": 0.04,
+      "weave": 0.1,
+      "fin": 0.2,
+      "tail_h": 0.28,
+      "attack": "strike",
+      "death": "sink",
+      "spawn": "rise",
+      "hover": 0.0,
+      "turn_rate": 4.0,
+      "turn_max": 2.5,
+      "bank": 0.04
+    },
+    "authored_at": "2026-10-10T18:47:58",
+    "tool": "tools/3d/author_monster_motion.py",
+    "geometry_digest": "9e428ca738888760f6b06371fb44fea4949f48ac925da38526a5209018b9c4e5",
+    "geometry_unchanged": true
   }
 }

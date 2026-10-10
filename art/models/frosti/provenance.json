@@ -22,13 +22,14 @@
   ],
   "clips": [
     "Attack",
-    "IdleLoop"
+    "IdleLoop",
+    "WalkLoop"
   ],
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/frosti/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/frosti/game.blend",
   "height": 1.7,
-  "glb_bytes": 5118616,
-  "glb_sha256": "cb8be8b8e481107cc7cb8c65a91d4d35d79267d38c3366e3a2d960199f81cfce",
+  "glb_bytes": 5154224,
+  "glb_sha256": "e8ce15c47bf0573703b428a23a173a2e728e64a4de574ba9deee0d6d4b53fa02",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -67,5 +68,27 @@
       "two-resolution mixed battle"
     ],
     "artist_note": "Direct actual 1280/1000 multiview, grades, awakening, 24 idle and 40 aim/release/recovery frames plus mixed 12-hero battle reviewed. Preserve Triton/Frosti original vertical back cannon rather than invent handheld weapons; fixed equipment shares Body motion and short pale pressure pulses occur only at actual physical top port after fire. Donn continuous glove/forearm guards and fixed three back cartridges retained; no stretched fingers or gear seams in motion. Foot contact and matte original navy/iceblue/lime-purple identity remain legible in small battlefield."
+  },
+  "motion": {
+    "version": 2,
+    "tool": "tools/3d/author_native_motion.py",
+    "authored_utc": "2026-10-10T09:37:17Z",
+    "clips": {
+      "IdleLoop": 6.0,
+      "WalkLoop": 1.0,
+      "Attack": 1.5,
+      "attack_release_time": 1.0
+    },
+    "stride": 1.3617,
+    "leg_swing": 0.56,
+    "leg_top": 0.3202,
+    "grip": "none",
+    "lead": "R",
+    "kind": "artillery",
+    "bounce_scale": 0.7,
+    "previous_glb_sha256": "cb8be8b8e481107cc7cb8c65a91d4d35d79267d38c3366e3a2d960199f81cfce",
+    "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/frosti/game.motion-v1.blend",
+    "geometry_base_sha256": "cb8be8b8e481107cc7cb8c65a91d4d35d79267d38c3366e3a2d960199f81cfce",
+    "geometry_bytes_preserved": true
   }
 }

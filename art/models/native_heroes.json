@@ -19,8 +19,19 @@
           ]
         }
       ],
-      "glb_sha256": "9ae84461f14ebf40f676d86c8ce1fa8373c427769b46e60638fa79a7c56d7f04",
-      "ready": true
+      "glb_sha256": "433916b4b38401cdaae021d64e9257061a002926b96649b8584f2492b143c7e3",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.5533,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "brasa": {
       "path": "res://art/models/brasa/brasa.glb",
@@ -40,8 +51,19 @@
           ]
         }
       ],
-      "glb_sha256": "1a9e4fba5d440a0f2890eebe8506d37ba104f39285d5321bdb679e2fca96a0d7",
-      "ready": true
+      "glb_sha256": "268eb8a3623cdd366fe006dc4bbdcd33b427dc5dfaf28d4612fa5b9df7f26172",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "pip": {
       "path": "res://art/models/pip/pip.glb",
@@ -61,8 +83,19 @@
           ]
         }
       ],
-      "glb_sha256": "05bb4dbf5a3297538a423259b68123e7afe7128fc2055f4edc24b94c285d3998",
-      "ready": true
+      "glb_sha256": "cc04148db6a4b5c747bf5ef2f26681b2982e4e7a60b3468f134c6b46ddc4ef03",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "chispa": {
       "path": "res://art/models/chispa/chispa.glb",
@@ -87,8 +120,19 @@
           ]
         }
       ],
-      "glb_sha256": "214264ce512cb4e1044d10a375262358847f5e24635bd90fe4bb018f7e20a489",
-      "ready": true
+      "glb_sha256": "e67682425ee89db112dc7fe545b3496b92af0e5979f08fd42939bbb0b2f683bb",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.4457,
+        "grip": "two_hand",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "lind": {
       "path": "res://art/models/lind/lind.glb",
@@ -108,8 +152,19 @@
           ]
         }
       ],
-      "glb_sha256": "48147149db522b9b540c3a078f95964cbbcd77669f71d4408a5590bb5cb7adc6",
-      "ready": true
+      "glb_sha256": "a76da0999c1fc89c63b603f7bff56df37e3e98aeab5a8ad10514dc2d2f1ca6ab",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.4457,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "brigid": {
       "path": "res://art/models/brigid/brigid.glb",
@@ -129,8 +184,19 @@
           ]
         }
       ],
-      "glb_sha256": "bd13adfc3082be2eb78eca197f335fd37de2e3bd6954de19b0225d1d30ca0bc9",
-      "ready": true
+      "glb_sha256": "b66b6a506f7f81b9e240e7bb020dbee9a88ba8801ac7bae5c595ce14c0fc62a1",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.5256,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "phorkys": {
       "path": "res://art/models/phorkys/phorkys.glb",
@@ -155,8 +221,19 @@
           ]
         }
       ],
-      "glb_sha256": "cf9e7fa462863b3e101bd3ae1bcd5df2c426ea29ee3e1345664af5c91f4076bc",
-      "ready": true
+      "glb_sha256": "fe9cb4d6ba8ff37e6343f6e036c2cad16db8f28538ef6f0bec86432e96267740",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3617,
+        "grip": "two_hand",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "solana": {
       "path": "res://art/models/solana/solana.glb",
@@ -176,8 +253,19 @@
           ]
         }
       ],
-      "glb_sha256": "27db2cdf3b3da5668b0cc4c64d88e756a2f39fdbc547bfac35bc4f821ba7fe1d",
-      "ready": true
+      "glb_sha256": "86de4ff71f3301ec700119094fc4c6e728b13f378defbcb2a1212d5d8f4bbc0e",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.5256,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "jokull": {
       "path": "res://art/models/jokull/jokull.glb",
@@ -197,8 +285,19 @@
           ]
         }
       ],
-      "glb_sha256": "3b624378ff9b8c1555b9adb535ddd633f9acca5bda7286d7309985ec0b130441",
-      "ready": true
+      "glb_sha256": "1967a03f71dfaec61eeb7047cb9f19289ea56ba0cb886142d919120f715d8c00",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3617,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "rhiannon": {
       "path": "res://art/models/rhiannon/rhiannon.glb",
@@ -218,8 +317,19 @@
           ]
         }
       ],
-      "glb_sha256": "d5cdf3b50071779a37f254f56353d29a51197030bdebe757c6ed0390ce34dcd2",
-      "ready": true
+      "glb_sha256": "b5c1043d787b5810105d62eda0b9390bd9a3379145410844c8462dd12b081edd",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.4457,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "mimic": {
       "path": "res://art/models/mimic/mimic.glb",
@@ -239,8 +349,19 @@
           ]
         }
       ],
-      "glb_sha256": "95a208ad1142209e2b7bd1c37831eb4280cf820f33afec64d0da6d5eb35b8b71",
-      "ready": true
+      "glb_sha256": "a505edbcca8e71cb888dbc5171b76096a1c0077453d7ce0300571b90dcdd6a76",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "protea": {
       "path": "res://art/models/protea/protea.glb",
@@ -260,8 +381,19 @@
           ]
         }
       ],
-      "glb_sha256": "707d11a3d06c9848c3d7833c84e7d28c7337f2b4efd9f66b416aa3c80c981e97",
-      "ready": true
+      "glb_sha256": "1374f3a51f37746aca0b555ea501f8f0a59fda96805431f15d40e4d21bf99589",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.5256,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "ceniza": {
       "path": "res://art/models/ceniza/ceniza.glb",
@@ -286,8 +418,19 @@
           ]
         }
       ],
-      "glb_sha256": "653cbf77d2620f58104d45c75e3c05cd15c8e600b159649c2fe91b428f552a21",
-      "ready": true
+      "glb_sha256": "f78990e6db18ca203889b28c548b572e96de0184a93a9e118c7e9771f86d2db9",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.4457,
+        "grip": "two_hand",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "vidarr": {
       "path": "res://art/models/vidarr/vidarr.glb",
@@ -307,8 +450,19 @@
           ]
         }
       ],
-      "glb_sha256": "5c864f28a8014f969a789fb7f8b4f9f0bb63f100c8c2c97023970ea340a7418d",
-      "ready": true
+      "glb_sha256": "a7bdf034d66c08320f36760ea272c50225caa8eec3742fc60cd3b5bf8059e58c",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3617,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "finn": {
       "path": "res://art/models/finn/finn.glb",
@@ -328,8 +482,19 @@
           ]
         }
       ],
-      "glb_sha256": "222a05c0ba3303f1af81502c20ae40d6db75919b047c4cf3a2f23bf7c710c1b2",
-      "ready": true
+      "glb_sha256": "ec4a3c677f21120d2ddabfe469b6cc47a7728d0aa39db16366908dde289c1937",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.4457,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "marea": {
       "path": "res://art/models/marea/marea.glb",
@@ -354,8 +519,19 @@
           ]
         }
       ],
-      "glb_sha256": "0961b199e9b8c06c7c1b6f5d1344315e5805f82eb78f257ea54ff42094ec8eb3",
-      "ready": true
+      "glb_sha256": "496a8784db62bc83a40856fac75a1d298220579eb756f82b87ed99de465e4ccb",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3617,
+        "grip": "two_hand",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "igni": {
       "path": "res://art/models/igni/igni.glb",
@@ -375,8 +551,19 @@
           ]
         }
       ],
-      "glb_sha256": "7005f28adca8c618d46c536062e26d96ccf8b25c6390d08dd2c912e2f8c6e84f",
-      "ready": true
+      "glb_sha256": "d820fdd46f1839f4134925d8fecee9f020d9d3f7091df61316a6d2cb6412612b",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.4457,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "kari": {
       "path": "res://art/models/kari/kari.glb",
@@ -414,8 +601,19 @@
           ]
         }
       ],
-      "glb_sha256": "224492bc926c551ac640014b77a817270a4e3dc1655510d2c83ed06991df1f46",
-      "ready": true
+      "glb_sha256": "0dce3b4477cc41fa138489837ac85c65fb461415e3d1e91437a04ba4790e7891",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.4457,
+        "grip": "one_hand",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "donn": {
       "path": "res://art/models/donn/donn.glb",
@@ -443,8 +641,19 @@
           ]
         }
       ],
-      "glb_sha256": "6b8a5b4324e18b36cade3114ee9a57bd7a4dc904b90f73f4c4b47c99e9846f73",
-      "ready": true
+      "glb_sha256": "21ac35a589e4eb77998982d90f94e739461028024ab19b4bed5535d8d9444080",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3617,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "glaukos": {
       "path": "res://art/models/glaukos/glaukos.glb",
@@ -464,8 +673,19 @@
           ]
         }
       ],
-      "glb_sha256": "bb8cab2d4507ced085cf0b60587b85db19adb018e6a695f27967328b91fec0be",
-      "ready": true
+      "glb_sha256": "9915b6e86613a0bba721e211bdc7ab6410e0774e06eea080e86cf4a1858471bf",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3617,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "volcan": {
       "path": "res://art/models/volcan/volcan.glb",
@@ -485,8 +705,19 @@
           ]
         }
       ],
-      "glb_sha256": "af31f09737b8fcb38f2f8b2846f846592fb2793d87c308950a6f543929ee3b0c",
-      "ready": true
+      "glb_sha256": "ddd552927e738483c82aac548fad7f7c296bac911f5bcd9bd4b79cf09aaee941",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3617,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "eira": {
       "path": "res://art/models/eira/eira.glb",
@@ -506,8 +737,19 @@
           ]
         }
       ],
-      "glb_sha256": "092e7e4c1b23c3e30c2940a59ab3f10c2ea160e13443589e8e762eb60ec975bd",
-      "ready": true
+      "glb_sha256": "67f156124a906ff51814b0ed2965e1896efb3f747a4763d020c59593f4b0c113",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.5256,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "conor": {
       "path": "res://art/models/conor/conor.glb",
@@ -545,8 +787,19 @@
           ]
         }
       ],
-      "glb_sha256": "d0052adb91f4fe281973abbdd5962adac827e9fb99c30e57baf94f3419f915e6",
-      "ready": true
+      "glb_sha256": "1a5e73ff45127b17ce3ff28fb0527f014805379ad892c68b11a5477c8b0bca42",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3,
+        "grip": "dual",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "shift": {
       "path": "res://art/models/shift/shift.glb",
@@ -566,8 +819,19 @@
           ]
         }
       ],
-      "glb_sha256": "934044755cc4365aa22a2a552b72c219556ba0db293dabcb37faea0ebad51454",
-      "ready": true
+      "glb_sha256": "db72a91a66015d4c639514904319d814ca0f670fe91a713f918c6490279a954e",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.4457,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "thalassa": {
       "path": "res://art/models/thalassa/thalassa.glb",
@@ -587,8 +851,19 @@
           ]
         }
       ],
-      "glb_sha256": "3404e35337f0a5692c78a1b96b5a0e854bd13d4c7b6aa78fdb44c06b455df058",
-      "ready": true
+      "glb_sha256": "4cd6dcce5c55753a30b03728f63612a63a56b2281f0a3836e4cce6d7284b35bf",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.4457,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "snorri": {
       "path": "res://art/models/snorri/snorri.glb",
@@ -608,8 +883,19 @@
           ]
         }
       ],
-      "glb_sha256": "0b4b65278033a2562cb12a7e3b70a9e0a710a7de10e464fad1844f8965bf1f9c",
-      "ready": true
+      "glb_sha256": "b0c1d56ef22d36a9391300f72ca10f0c248c3d54585c86291d7d76f6008fca64",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3617,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "niamh": {
       "path": "res://art/models/niamh/niamh.glb",
@@ -629,8 +915,19 @@
           ]
         }
       ],
-      "glb_sha256": "998fa62fdd525c3f16324702a4196722e5569570270982c76e00b1fee57608fd",
-      "ready": true
+      "glb_sha256": "cdad72a2f347492977597620e5e0a91ae6227a03677fd1b0b192f75234f5bbe7",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.5256,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "phantom": {
       "path": "res://art/models/phantom/phantom.glb",
@@ -650,8 +947,19 @@
           ]
         }
       ],
-      "glb_sha256": "5313a047c8b122c8ce68f42a57a440a11f355ba9d67359e52f0e0e6d3bcfb49e",
-      "ready": true
+      "glb_sha256": "19fc9640ae91b6f01c3f8a2b0bfee8802956eae930da3c570f5c8629cd3cd397",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.4457,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "triton": {
       "path": "res://art/models/triton/triton.glb",
@@ -681,8 +989,19 @@
           ]
         }
       ],
-      "glb_sha256": "e6169d9a4c327220baf54b0671d8fe85d845b31ae91c199f39382a06208fae17",
-      "ready": true
+      "glb_sha256": "6fa26ad07c031ae42c19d33b15215c35f0fe0e9e0720bf24efa5cddfc4fe0616",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3617,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "saeta": {
       "path": "res://art/models/saeta/saeta.glb",
@@ -702,8 +1021,19 @@
           ]
         }
       ],
-      "glb_sha256": "8d459d3aace5a7ee8bd0833a803b132521166d0fc3736f15a3edfcf1e96260a4",
-      "ready": true
+      "glb_sha256": "6d941ddcf38ffa12df7441190fe49c7cef87d596b161464133f075d54cf6ab2a",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.5256,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "helga": {
       "path": "res://art/models/helga/helga.glb",
@@ -723,8 +1053,19 @@
           ]
         }
       ],
-      "glb_sha256": "b23d5de2141062837e5840788c0c7a32b1e731e877ee7fe327248220b2e91483",
-      "ready": true
+      "glb_sha256": "f41c7fad692ca55b917d3d1ca20b95958bc24bd7461bc5d23132e4814f22cf0c",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3617,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "morrigan": {
       "path": "res://art/models/morrigan/morrigan.glb",
@@ -744,8 +1085,19 @@
           ]
         }
       ],
-      "glb_sha256": "1f47f86f6838f210d64018a019e6c92ff78b9c4445026d003396f4658e3c9df4",
-      "ready": true
+      "glb_sha256": "723b31608c9828a8f3975243369e4cc9cbbd3f65e657d74a382730079c001de2",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "blank": {
       "path": "res://art/models/blank/blank.glb",
@@ -765,8 +1117,19 @@
           ]
         }
       ],
-      "glb_sha256": "01707a98235858003fa1f653c2ef92a5ebee6be7caca2bd4aea0e799b82eae52",
-      "ready": true
+      "glb_sha256": "fde8e97ca87ab21fd15c6c9d74df343b2d9fb49bcfef924219f568ba53dc86de",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3617,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "keto": {
       "path": "res://art/models/keto/keto.glb",
@@ -786,8 +1149,19 @@
           ]
         }
       ],
-      "glb_sha256": "05213523285994ca0ec46652e083d2ff20c7c55a613f7d75150fc59713562912",
-      "ready": true
+      "glb_sha256": "6a14ade975117721228384b4680c6b874c6988fe45456cf35288b3f28caf29ed",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.5256,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "candela": {
       "path": "res://art/models/candela/candela.glb",
@@ -807,8 +1181,19 @@
           ]
         }
       ],
-      "glb_sha256": "4440eb6b9648cdda23a0676f3e1b1f140c648985962ad99e5a146cb9f6e1a2f5",
-      "ready": true
+      "glb_sha256": "d686f32c7fe48ef7bfdc7ac034fba7c531d34e6236c8925e571aa42171037ca1",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.4457,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "sigrid": {
       "path": "res://art/models/sigrid/sigrid.glb",
@@ -828,8 +1213,19 @@
           ]
         }
       ],
-      "glb_sha256": "32fe3e8b5051d10ff61ddf3a2452ed411f83dc28deea4538f0c667ea481504fc",
-      "ready": true
+      "glb_sha256": "4e70bf718435fe427ee3c696aabbc9a033a1cf9cdfc2bf1ac8e849e687bdbaba",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3617,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "dummy": {
       "path": "res://art/models/dummy/dummy.glb",
@@ -859,8 +1255,19 @@
           ]
         }
       ],
-      "glb_sha256": "94861a0ae0fee785e27a229b72699768cbcbf44da8c84c4c633043fa479fba56",
-      "ready": true
+      "glb_sha256": "7fe3c175535cfa9d3bf3224b41a9fba508dd74bc957a707194150f6fcff7d2ed",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.4457,
+        "grip": "two_hand",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "carmen": {
       "path": "res://art/models/carmen/carmen.glb",
@@ -898,8 +1305,19 @@
           ]
         }
       ],
-      "glb_sha256": "b54dc48c4533c8f7612edd12ef9828ec8aa54e13e74ab818912949b2da2fa44e",
-      "ready": true
+      "glb_sha256": "26170440bd18b057e186b96ef71f99dd8394f3febbb5a2b243f951e385fc2c3c",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3,
+        "grip": "dual",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "caden": {
       "path": "res://art/models/caden/caden.glb",
@@ -919,8 +1337,19 @@
           ]
         }
       ],
-      "glb_sha256": "7e27870e7a4a9cc81b8dda85c1cf15ff7fb6b737b1177d33523d500723613cb8",
-      "ready": true
+      "glb_sha256": "4687ead04fd32ca3fe5d8ec40d046cbeb8c6bd3389ca354e335a3295634a1eff",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.4457,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "grey": {
       "path": "res://art/models/grey/grey.glb",
@@ -945,8 +1374,19 @@
           ]
         }
       ],
-      "glb_sha256": "e021d99564c8257b2243ccaab4afe8339c365dee193b6cc9dc15ae4bf192bdbb",
-      "ready": true
+      "glb_sha256": "f6487c5d1f5d1e8fe6a05a27dc6f78a1ca196122122892bd23c3e0031949f281",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.4457,
+        "grip": "two_hand",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "galene": {
       "path": "res://art/models/galene/galene.glb",
@@ -966,8 +1406,19 @@
           ]
         }
       ],
-      "glb_sha256": "a91ccb980efc4cafa0d409d0d62bdec2aed3253bdd9555ac398fbf77ecdfc6bd",
-      "ready": true
+      "glb_sha256": "d36135074fb2b2248f3ed522ac924185b6067ca2cf0f522137cc706e494a5390",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3617,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "estoque": {
       "path": "res://art/models/estoque/estoque.glb",
@@ -987,8 +1438,19 @@
           ]
         }
       ],
-      "glb_sha256": "a6413538ea2d8e3fcecfa5ec6fe6bbd99b544c392ff53c35587c78b733a16201",
-      "ready": true
+      "glb_sha256": "4f27a2218d1db971eeb6c53552a2fdac2cbd177571c15e40aff543fa9de3aee7",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.4457,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "frosti": {
       "path": "res://art/models/frosti/frosti.glb",
@@ -1018,8 +1480,19 @@
           ]
         }
       ],
-      "glb_sha256": "cb8be8b8e481107cc7cb8c65a91d4d35d79267d38c3366e3a2d960199f81cfce",
-      "ready": true
+      "glb_sha256": "e8ce15c47bf0573703b428a23a173a2e728e64a4de574ba9deee0d6d4b53fa02",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3617,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "lugh": {
       "path": "res://art/models/lugh/lugh.glb",
@@ -1039,8 +1512,19 @@
           ]
         }
       ],
-      "glb_sha256": "8459e8d9aab8a35a99fbca6c54dfb65ff73bffb6eb951a584dee486a2e0ae1a7",
-      "ready": true
+      "glb_sha256": "294e06e22734d3335cb310283dcf0037621bac220fd214c302a4e8d478ba873c",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3617,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "null": {
       "path": "res://art/models/null/null.glb",
@@ -1060,8 +1544,19 @@
           ]
         }
       ],
-      "glb_sha256": "dff8d58302a619fb4b83eb875bb3ad282cef9957ca23b3dce355ca5fac1eba5f",
-      "ready": true
+      "glb_sha256": "d0b19fcb95c73356491b5d9befbbf7b7c840f6977052baa85024f4a887cd6076",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.5256,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "nerea": {
       "path": "res://art/models/nerea/nerea.glb",
@@ -1081,8 +1576,19 @@
           ]
         }
       ],
-      "glb_sha256": "ce8b7a457a9285cac748e7556515fd23e80598db1eeb4785f8ef1e8a4fc8a890",
-      "ready": true
+      "glb_sha256": "68100f04e54f1e1fc3498f3aecc8005d81028ae63bfecaa444a195573b912efc",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3617,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "isa": {
       "path": "res://art/models/isa/isa.glb",
@@ -1102,8 +1608,19 @@
           ]
         }
       ],
-      "glb_sha256": "29776134e01bba5d73dff0e77ba7e8feef0fcf9a6e95ed08e1660509324bd00b",
-      "ready": true
+      "glb_sha256": "aa7e751052bcf560e262aff18be7e1161c8bc44c152155793b6902d54556f5d7",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.5256,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "brian": {
       "path": "res://art/models/brian/brian.glb",
@@ -1128,8 +1645,19 @@
           ]
         }
       ],
-      "glb_sha256": "89aa96c70b279a72b116a0e9799c90b399fedf427a4e2e86064d16ae4a8aaf1c",
-      "ready": true
+      "glb_sha256": "fc71efac4571ab6b4d1490056592e5325a4c06c392469ab2b90dde7829b1153d",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3617,
+        "grip": "two_hand",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     },
     "zero": {
       "path": "res://art/models/zero/zero.glb",
@@ -1149,8 +1677,19 @@
           ]
         }
       ],
-      "glb_sha256": "151ac099a9d28e704de4daa3a5607ccbf1cc60069c091ab2b74516b0223e866c",
-      "ready": true
+      "glb_sha256": "64d1354278c919db1b5a3e2643427f96d654baa36f4a22333c812ee652ba25af",
+      "ready": true,
+      "motion": {
+        "version": 2,
+        "stride": 1.3617,
+        "grip": "none",
+        "clips": [
+          "IdleLoop",
+          "WalkLoop",
+          "Attack"
+        ],
+        "attack_release_time": 1.0
+      }
     }
   },
   "ready_ids": [
