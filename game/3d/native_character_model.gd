@@ -7,7 +7,12 @@ class_name NativeCharacterModel
 ##   base   = IdleLoop(time) blended toward WalkLoop(distance phase) by speed
 ##   upper  = Attack(anticipation q = age / wind, release at 1.0 s, recovery) riding
 ##            on the base body delta while aiming, firing or recovering
-##   lean   = turn / acceleration lean about the hips
+##   gait   = speed shaping of the walk (HeroLocomotion.run_factor / slow_factor):
+##            longer leg swing, flight arc, lean and arm pump at a run; deeper vault
+##            and hip roll at a heavy walk
+##   lunge  = melee only: a visual step toward the cut on the release (root offset
+##            re-added over the world's simulated position, never accumulated)
+##   lean   = turn / acceleration / gait lean about the hips
 ##   fade   = cross-fade from the pose captured at the last state change
 ##   twist  = immediate upper-body yaw toward the aim direction (HeroLocomotion)
 ## Legs always come from the locomotion layer, so walking and attacking combine.
@@ -17,6 +22,25 @@ const RECOVERY := 0.5            # seconds of release action after fire
 const CANCEL_FADE := 0.25
 const FIRE_FLASH := 0.13
 const UPPER_FADE_OUT := 0.22
+## Run shaping at HeroLocomotion.run_factor() == 1 (5.1 world units/s, spd 1.50):
+## leg swing +35 %, knee lift +70 %, the walking vault replaced by a 0.11 u flight arc
+## (both feet off the ground while the legs are spread), arms pumping 55 % more with
+## 0.32 rad extra elbow flexion. A heavy walk (2.0 u/s, spd 0.60) deepens the vault.
+const RUN_LEG_SWING := 0.35
+const RUN_LIFT := 0.7
+const RUN_FLIGHT := 0.11
+const RUN_ARM := 0.55
+const RUN_ELBOW := 0.32
+const SLOW_STOMP := 0.35
+## Melee lunge (presentation only; the simulator's position and the damage moment do
+## not move): the sword hero steps LUNGE_REACH toward the cut over the 3-frame strike
+## (LUNGE_IN), holds through the follow-through and is back on its post by LUNGE_OUT,
+## inside the 0.5 s recovery. Standing heroes plant the weapon-side leg forward.
+const LUNGE_REACH := 0.17
+const LUNGE_HOP := 0.045
+const LUNGE_IN := 0.09
+const LUNGE_HOLD := 0.20
+const LUNGE_OUT := 0.46
 static var _manifest: Dictionary = {}
 static var _flash_mesh: SphereMesh
 var _spec: Dictionary = {}
@@ -45,6 +69,14 @@ var _composed: Array[Transform3D] = []
 var _hip := 0.48
 var _artillery := false
 var _aim_progress := 0.0
+var _height_scale := 1.0
+var _lead := "R"                         # weapon hand (first release socket side)
+var _melee := false
+var _legs: Dictionary = {}               # side -> leg bone index
+var _arm_chains: Dictionary = {}         # side -> [Arm, Forearm, Hand, Weapon] bone indices
+var _arm_pump: Dictionary = {"L": 1.0, "R": 1.0}
+var _lunge_applied := Vector3.ZERO
+var _lunge_position := Vector3.INF
 
 static func manifest() -> Dictionary:
 	if _manifest.is_empty() and FileAccess.file_exists(MANIFEST):
@@ -91,6 +123,11 @@ func _ready() -> void:
 		return
 	_artillery = String(_spec.get("attack","")) == "artillery"
 	_hip = float(_spec.get("height",1.65))*0.29
+	_height_scale = float(_spec.get("height",1.65))/1.65
+	var release_sockets: Array = _spec.get("sockets",[])
+	_lead = "L" if not release_sockets.is_empty() and String(release_sockets[0].get("bone","")).ends_with("L") else "R"
+	_melee = Balance.is_melee(Roster.unit_by_id(String(get_meta("native_id",""))))
+	_arm_pump = _pump_multipliers()
 	_loco.stride = float(_spec.get("motion",{}).get("stride",1.5))
 	var names := {"IdleLoop":"","WalkLoop":"","Attack":""}
 	for name in _player.get_animation_list():
@@ -104,6 +141,14 @@ func _ready() -> void:
 		var bone := _skeleton.get_bone_name(i)
 		_upper.append(not bone.begins_with("SkinLeg"))
 		if bone == "SkinBody": _body_bone = i
+	for side in ["L","R"]:
+		var leg := _skeleton.find_bone("SkinLeg"+side)
+		if leg >= 0: _legs[side] = leg
+		var chain: Array[int] = []
+		for part in ["Arm","Forearm","Hand","Weapon"]:
+			var index := _skeleton.find_bone("Skin"+part+side)
+			if index >= 0: chain.append(index)
+		_arm_chains[side] = chain
 	var order := ["IdleLoop","WalkLoop","Attack"]
 	for c in 3:
 		var clip: Animation = _player.get_animation(names[order[c]]) if names[order[c]] != "" else null
@@ -218,12 +263,27 @@ func animate_visual(time: float, age: float = 9.0, raw_wind: float = 0.0, battle
 	if _mode == 3 and elapsed >= 0.30: _mode = 0
 	_fire_strength = maxf(0,1.0-elapsed/FIRE_FLASH) if _mode==2 else 0.0
 	if battle and _loco.update(clock_dt): rotation.y = _loco.yaw
+	var lunge := _lunge_curve(elapsed) if battle and _melee and _mode == 2 else 0.0
+	_apply_lunge(lunge, elapsed, battle)
 	var count := _skeleton.get_bone_count()
 	var pose := _sample(0, fposmod(time, _length(0)))
 	var weight := _loco.walk_weight()
+	var phi := fposmod(_loco.walk_phase, 1.0)
+	var run := 0.0
+	var slow := 0.0
 	if weight > 0.001 and _clips[1] != null:
-		var walk := _sample(1, fposmod(_loco.walk_phase, 1.0)*_length(1))
+		var walk := _sample(1, phi*_length(1))
 		for i in count: pose[i] = pose[i].interpolate_with(walk[i], weight)
+		run = _loco.run_factor()*weight
+		slow = _loco.slow_factor()*weight
+		if run > 0.001 or slow > 0.001: _shape_gait(pose, walk, phi, run, slow)
+	if lunge > 0.0 and weight < 0.5:
+		# A standing cut steps into the target: weapon-side leg forward, the other braced.
+		var stance := lunge*(1.0-weight*2.0)
+		for side in _legs:
+			var i: int = _legs[side]
+			var angle := (0.42 if side == _lead else -0.22)*stance
+			pose[i] = Transform3D(Basis(Vector3.RIGHT,angle)*pose[i].basis, pose[i].origin)
 	if _mode == 1 or _mode == 2:
 		var at := 0.0
 		if _mode == 1:
@@ -236,8 +296,8 @@ func animate_visual(time: float, age: float = 9.0, raw_wind: float = 0.0, battle
 		if _body_bone >= 0: body_delta = pose[_body_bone]*_rest[_body_bone].affine_inverse()
 		for i in count:
 			if _upper[i]: pose[i] = body_delta*attack[i]
-	var lean_roll := _loco.lean_roll
-	var lean_pitch := _loco.lean_pitch
+	var lean_roll := _loco.lean_roll+0.045*slow*cos(TAU*(phi-0.1))
+	var lean_pitch := _loco.lean_pitch+_loco.gait_lean()*weight
 	if absf(lean_roll) > 0.0005 or absf(lean_pitch) > 0.0005:
 		var hip := Vector3(0,_hip,0)
 		var lean := Transform3D(Basis.from_euler(Vector3(lean_pitch,0,lean_roll)), Vector3.ZERO)
@@ -261,6 +321,95 @@ func animate_visual(time: float, age: float = 9.0, raw_wind: float = 0.0, battle
 
 func _length(c: int) -> float:
 	return _clips[c].length if _clips[c] != null else 1.0
+
+## 0..1 step toward the cut from the release: snap in over the strike, hold through
+## the follow-through, ease back before the recovery ends.
+static func _lunge_curve(t: float) -> float:
+	if t < LUNGE_IN:
+		var x := t/LUNGE_IN
+		return 1.0-(1.0-x)*(1.0-x)
+	if t < LUNGE_HOLD: return 1.0
+	var y := clampf((t-LUNGE_HOLD)/(LUNGE_OUT-LUNGE_HOLD),0.0,1.0)
+	return 1.0-y*y*(3.0-2.0*y)
+
+## The world writes `position` from the simulation before every animate_visual; the
+## lunge is added on top of that value and taken off again first when the world has
+## not reset it (event replays call animate_visual twice), so nothing accumulates.
+func _apply_lunge(lunge: float, elapsed: float, battle: bool) -> void:
+	var offset := Vector3.ZERO
+	if lunge > 0.0 and battle:
+		var heading := Basis(Vector3.UP, rotation.y+_loco.aim_delta)
+		var hop := LUNGE_HOP*sin(PI*clampf(elapsed/(LUNGE_IN+0.07),0.0,1.0))
+		offset = heading*Vector3(0.0, hop*_height_scale, -LUNGE_REACH*_height_scale*lunge)
+	if _lunge_applied != Vector3.ZERO and position.is_equal_approx(_lunge_position): position -= _lunge_applied
+	if offset != Vector3.ZERO: position += offset
+	_lunge_applied = offset
+	_lunge_position = position
+
+## How much each arm swings in the authored walk (tools/3d/author_native_motion.py,
+## walk_pose multipliers), so the run pump scales the same arms by the same ratio and
+## never pulls a two-handed rifle grip apart.
+func _pump_multipliers() -> Dictionary:
+	var kind := String(_spec.get("attack",""))
+	var grip := String(_spec.get("motion",{}).get("grip","none"))
+	var mult := {"L":1.0,"R":1.0}
+	match kind:
+		"bow": mult[_lead] = 0.45
+		"sword": mult[_lead] = 0.7
+		"rifle":
+			if grip == "two_hand": mult = {"L":0.0,"R":0.0}
+			elif grip == "dual": mult = {"L":0.7,"R":0.7}
+			else: mult[_lead] = 0.5
+		"cast": mult = {"L":0.9,"R":0.9}
+		"artillery": mult = {"L":0.75,"R":0.75}
+		"tool": mult = {"L":0.8,"R":0.8}
+	return mult
+
+## Speed shaping of the sampled walk (presentation only, recomputed every sample): a
+## run lengthens the leg swing and knee lift, replaces the walking vault (body lowest
+## with the legs spread) by a flight arc (body and legs highest with the legs spread,
+## both feet off the ground) and pumps the arms; a heavy walk deepens the vault.
+func _shape_gait(pose: Array[Transform3D], walk: Array[Transform3D], phi: float, run: float, slow: float) -> void:
+	var vault := 0.0
+	if _body_bone >= 0: vault = walk[_body_bone].origin.y-_rest[_body_bone].origin.y
+	var flight := RUN_FLIGHT*_height_scale*(0.5+0.5*cos(TAU*2.0*phi))
+	var lift_all := run*flight
+	var upper_shift := -run*vault+slow*SLOW_STOMP*vault
+	var legs: Array = _legs.values()
+	for i in pose.size():
+		if i in legs:
+			var origin := pose[i].origin
+			var lift := origin.y-_rest[i].origin.y
+			origin.y = _rest[i].origin.y+lift*(1.0+RUN_LIFT*run)+lift_all
+			var q := (pose[i].basis*_rest[i].basis.inverse()).get_rotation_quaternion()
+			if q.w < 0.0: q = -q
+			var angle := q.get_angle()
+			if angle > 0.0001 and run > 0.001:
+				var scaled := Quaternion(q.get_axis().normalized(), angle*(1.0+RUN_LEG_SWING*run))
+				pose[i] = Transform3D(Basis(scaled)*_rest[i].basis, origin)
+			else:
+				pose[i] = Transform3D(pose[i].basis, origin)
+		else:
+			pose[i].origin.y += upper_shift+lift_all
+	if run > 0.001: _pump_arms(pose, phi, run)
+
+func _pump_arms(pose: Array[Transform3D], phi: float, run: float) -> void:
+	var axis := Vector3.RIGHT
+	if _body_bone >= 0: axis = (pose[_body_bone].basis*Vector3.RIGHT).normalized()
+	for side in _arm_chains:
+		var chain: Array = _arm_chains[side]
+		var mult := float(_arm_pump.get(side,1.0))
+		if chain.is_empty() or mult <= 0.0: continue
+		var swing := -0.48*cos(TAU*phi)*(1.0 if side == "L" else -1.0)*mult*RUN_ARM*run
+		var shoulder: Vector3 = pose[chain[0]].origin
+		var turn := Basis(axis, swing)
+		var about_shoulder := Transform3D(turn, shoulder-turn*shoulder)
+		for i in chain: pose[i] = about_shoulder*pose[i]
+		if chain.size() > 1:
+			var elbow: Vector3 = pose[chain[1]].origin
+			var flex := Basis(axis, RUN_ELBOW*run*mult)
+			var about_elbow := Transform3D(flex, elbow-flex*elbow)
+			for n in range(1, chain.size()): pose[chain[n]] = about_elbow*pose[chain[n]]
 
 func _sample(c: int, at: float) -> Array[Transform3D]:
 	var result: Array[Transform3D] = _rest.duplicate()

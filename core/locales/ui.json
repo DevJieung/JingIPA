@@ -715,6 +715,10 @@
     "arena.rules.growth": "Spend kill gold on rituals, upgrades and passives. Duplicates grant growth points; fully strengthened heroes leave the summon pool.",
     "arena.rules.boss": "Defend one battlefield until the final boss. Ritual, growth and reserve screens pause the battle.",
     "arena.save_hint": "Save and resume battlefield positions and growth.",
-    "arena.blocked": "Blocked"
+    "arena.blocked": "Blocked",
+    "이동속도": "Move speed",
+    "근접": "Melee",
+    "근접 · 칼이 닿는 적 1명을 벤다": "Melee · cuts the one enemy within blade reach",
+    "근접 · 부채꼴 안 최대 %d명을 벤다": "Melee · cuts up to {0} enemies in the fan ahead"
   }
 }

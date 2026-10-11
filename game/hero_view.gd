@@ -436,6 +436,8 @@ static func attack_target(u: Dictionary) -> String:
 		"beam":
 			return "단일 · 목표에 광선이 즉시 명중"
 	var count := int(spec.get("pierce", 1)) + (1 if Run.has("pierce") else 0)
+	if Balance.is_melee(u):
+		return "근접 · 부채꼴 안 최대 %d명을 벤다" % count if count > 1 else "근접 · 칼이 닿는 적 1명을 벤다"
 	return "다중 · 최대 %d명 관통" % count if count > 1 else "단일 · 적 1명에게 발사"
 
 

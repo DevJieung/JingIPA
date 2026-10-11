@@ -627,7 +627,7 @@ func _bad(msg: String) -> void:
 ##   그러면 검사가 **조용히 아무것도 안 재고** 통과한다. 서른 명을 여든 명으로 갈아
 ##   끼울 때 실제로 여섯 자리가 그렇게 죽어 있었다. 조건으로 고르면 로스터가 어떻게
 ##   바뀌든 그 방식을 쓰는 캐릭터가 있는 한 검사가 산다.
-func _find(bullet: String = "", elem: String = "", role: String = "") -> String:
+func _find(bullet: String = "", elem: String = "", role: String = "", ranged_only: bool = false) -> String:
 	for u in Roster.UNITS:
 		if bullet != "" and String(u.get("bullet", "")) != bullet:
 			continue
@@ -635,18 +635,32 @@ func _find(bullet: String = "", elem: String = "", role: String = "") -> String:
 			continue
 		if role != "" and String(u.get("role", "")) != role:
 			continue
+		if ranged_only and Balance.is_melee(u):
+			continue
 		return String(u["id"])
 	return ""
 
 
 ## 방식마다 하나씩. 없는 방식은 건너뛴다(빈 문자열은 부르는 쪽이 거른다).
+## ★ 거점 전투에서는 근접(검)의 짧은 사거리가 발판에서 길에 안 닿을 수 있다. 방식을 재는
+##   자리에는 원거리 영웅을 먼저 고르고, 근접의 산수는 4번이 따로 하나 더 잰다.
 func _one_per_bullet(kinds: Array) -> Array:
 	var out: Array = []
 	for k in kinds:
-		var id := _find(String(k))
+		var id := _find(String(k), "", "", true)
+		if id == "":
+			id = _find(String(k))
 		if id != "":
 			out.append(id)
 	return out
+
+
+## 첫 근접(검) 영웅. 탄 없이 _strike 가 깎는 값도 같은 산수여야 한다.
+func _find_melee() -> String:
+	for u in Roster.UNITS:
+		if Balance.is_melee(u):
+			return String(u["id"])
+	return ""
 
 
 func _selftest() -> void:
@@ -747,6 +761,10 @@ func _selftest() -> void:
 	#   (장판은 「직격」이 아예 없어서 이 검사로는 못 잰다. 7번이 대신 잰다)
 	var probes := _one_per_bullet(["shot", "splash", "chain", "pierce", "beam",
 			"ricochet"])
+	# ★ 근접(검)도 하나 — 탄이 없는 _strike 의 직격이 같은 산수인지 본다.
+	var melee_probe := _find_melee()
+	if melee_probe != "" and not probes.has(melee_probe):
+		probes.append(melee_probe)
 	for uid in probes:
 		var w := 12
 		if not _setup([{"id": uid, "n": 1}], {}, [], w, 424242):

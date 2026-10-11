@@ -7,8 +7,10 @@ render_mode unshaded, blend_add, depth_draw_never, cull_disabled, skip_vertex_tr
 //   COLOR:     effect colour        CUSTOM: x birth (vfx seconds)  y size  z element  w kind
 // Kinds: 0 hit 1 splash 2 zone_tick 3 die 4 leak 5 block 6 push 7 frost 8 stun 9 curse
 //        10 spawn 11 wildfire 12 blast 13 freeze 14 ward 15 muzzle_smoke 16 ric_spark
-//        17 beam_cap 18 bolt_cap 19 cast_release
-// Parts (UV2.x): 0 ground ring, 1 flash billboard, 2 sparks x8, 3 motes x8, 5 facing ring.
+//        17 beam_cap 18 bolt_cap 19 cast_release 20 slash_hit (blade contact: origin is the
+//        3D point on the body, -Z = the blade's travel direction there)
+// Parts (UV2.x): 0 ground ring, 1 flash billboard, 2 sparks x8, 3 motes x8, 5 facing ring
+// (kind 20 draws its crescent cut mark in part 5).
 uniform sampler2D sprites : source_color, filter_linear_mipmap, repeat_disable;
 uniform float vfx_time = 0.0;
 // 1 on bright snow/ice fields: additive layers wash to white there, so they are
@@ -83,6 +85,7 @@ vec4 flash_params(int k, int e) {
 	if (k == 17) return vec4(0.52, 0.20, float(star), 0.0);
 	if (k == 18) return vec4(0.46, 0.13, 2.0, 0.0);
 	if (k == 19) return vec4(0.55, 0.16, 2.0, 0.0);
+	if (k == 20) return vec4(0.30, 0.08, float(star), 0.0);
 	return vec4(0.0, 0.1, 0.0, 0.0);
 }
 
@@ -102,6 +105,7 @@ vec4 spark_params(int k) {
 	if (k == 16) return vec4(5.0, 2.4, 0.20, 1.0);
 	if (k == 17) return vec4(4.0, 2.0, 0.22, 1.0);
 	if (k == 18) return vec4(6.0, 2.2, 0.22, 0.9);
+	if (k == 20) return vec4(7.0, 3.6, 0.26, 1.5);
 	return vec4(0.0, 0.0, 0.1, 1.0);
 }
 
@@ -114,6 +118,7 @@ vec4 spark_shape(int k) {
 	if (k == 13) return vec4(0.0, 1.0, 0.4, 0.0);
 	if (k == 15) return vec4(0.9, 0.15, 0.6, 0.0);
 	if (k == 16) return vec4(0.3, 0.5, 0.8, 0.0);
+	if (k == 20) return vec4(0.72, 0.30, 0.9, 0.0);
 	return vec4(0.0, 0.55, 1.0, 0.0);
 }
 
@@ -132,6 +137,7 @@ vec4 mote_params(int k, float size) {
 	if (k == 13) return vec4(1.20, 1.05, size * 0.30, 0.14);
 	if (k == 14) return vec4(1.50, 0.80, 0.90, 0.10);
 	if (k == 19) return vec4(1.00, 0.45, 0.45, 0.08);
+	if (k == 20) return vec4(0.30, 0.42, 0.14, 0.06);
 	return vec4(0.0, 0.1, 0.0, 0.0);
 }
 
@@ -216,7 +222,7 @@ void vertex() {
 		vec3 along = normalize(now + vec3(0.0, 0.0001, 0.0));
 		vec3 side = cross(along, cam_fwd);
 		side = length(side) < 0.02 ? cam_right : normalize(side);
-		float base = (kind == 12 ? 0.22 : kind == 13 ? 0.20 : 0.12) * (0.8 + 0.4 * h2);
+		float base = (kind == 12 ? 0.22 : kind == 13 ? 0.20 : kind == 20 ? 0.15 : 0.12) * (0.8 + 0.4 * h2);
 		float len = base * sp.w * (1.3 - 0.6 * f) * (elem == 3 ? 1.5 : 1.0);
 		float wid = base * (elem == 2 ? 0.9 : 0.55);
 		world = at + along * c.y * len + side * c.x * wid - cam_fwd * 0.26;
@@ -243,6 +249,19 @@ void vertex() {
 		if (kind == 10 || kind == 14) cell = 2.0;
 		col = mix(mix(COLOR.rgb, elem_tint(elem), 0.5), vec3(1.0), 0.25);
 		alpha = pow(sin(g * 3.14159), 0.8) * (mp.w > 0.001 ? 0.95 : 0.0);
+	} else if (kind == 20) {
+		// Blade contact: a crescent cut mark that snaps open along the blade's travel
+		// direction in the screen plane and fades; the sparks above fly the same way.
+		float f = clamp(age / 0.20, 0.0, 1.0);
+		vec3 along = fwd - cam_fwd * dot(fwd, cam_fwd);
+		along = length(along) < 0.02 ? cam_right : normalize(along);
+		vec3 side = normalize(cross(along, cam_fwd));
+		float len = size * (0.56 + 0.36 * ease_out3(min(f * 3.0, 1.0)));
+		float wid = size * 0.21 * (1.0 - 0.4 * f);
+		world = origin + along * c.y * len + side * c.x * wid - cam_fwd * 0.36;
+		cell = 11.0;
+		alpha = pow(1.0 - f, 1.2);
+		col = mix(elem_hot(elem), COLOR.rgb, 0.3);
 	} else {
 		vec4 qp = ring2_params(kind, size);
 		float f = clamp(age / qp.y, 0.0, 1.0);

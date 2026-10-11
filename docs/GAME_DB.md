@@ -47,6 +47,7 @@ data/game.db ──────────────────────�
 | `check` | `tools/verify.sh` 0-2 단계. 게임 파일이 DB 를 안 거치고 바뀌었으면 실패 |
 | `log` | 내리고 들인 기록 |
 | `init` | 지금 게임 파일에서 DB 를 새로 짓는다(`--force` 면 있던 DB 를 버린다) |
+| `migrate` | 예전 판의 DB 에 새 열을 더한다(값은 바꾸지 않는다). 2026-10-11 판 2: `units.spd`. 뒤이어 `pull` 로 기준을 맞춘다 |
 
 ## 세 가지 상태
 
@@ -65,7 +66,7 @@ data/game.db ──────────────────────�
 
 | 표 | 내용 | 내려가는 곳 | 줄 더하기 · 빼기 |
 |---|---|---|---|
-| `units` | 영웅 50 — 이름 · 역할 · 성향 · 방식 · 무기 · 속성 · 크기 보정 · 설명 · 프롬프트 · 한영 소개문 | `tools/roster.json` → `core/roster.gd`, `core/locales/heroes.json` | 된다 |
+| `units` | 영웅 50 — 이름 · 역할 · 성향 · 방식 · 무기 · 속성 · 크기 보정 · 이동 속도 배수(`spd`, 투기장 기준 속도 `ARENA_HERO_SPEED` 에 곱한다) · 설명 · 프롬프트 · 한영 소개문 | `tools/roster.json` → `core/roster.gd`, `core/locales/heroes.json` | 된다 |
 | `art_tiers` | 원화 격 10 | `tools/roster.json` | 된다 |
 | `monsters` | 몬스터 25 | `tools/roster.json` → `core/roster.gd` | 된다 |
 | `themes` · `theme_weights` | 테마 50 · 몸 분포 250 · 지형 모티프 | `tools/roster.json` → `core/roster.gd`, `core/scenery.gd` 의 `MAP_MOTIFS` | 된다 |

@@ -335,7 +335,7 @@ func sync_heroes(heroes: Array, time: float, battle: bool = false) -> void:
 				track["phase"] = float(track["phase"]) + delta.length() * 0.11
 		var walking := bool(track["walking"])
 		var attacking := float(data.get("fx_t", 9.0)) <= float(data.get("fx_w", 0.0)) + 0.3
-		_hero_motion[i] = {"v": track["v"], "dt": elapsed, "walking": walking,
+		_hero_motion[i] = {"v": track["v"], "dt": elapsed, "walking": walking, "attacking": attacking,
 			"dir": Vector2(track.get("direction", Vector2.DOWN)) if walking and not attacking else Vector2.INF}
 		track["p"] = p
 		track["time"] = time

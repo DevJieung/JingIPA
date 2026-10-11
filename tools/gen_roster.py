@@ -421,6 +421,8 @@ def main() -> int:
 	w("## 음수면 왼쪽을 겨눈 그림이고, 화면이 그런 그림만 좌우로 뒤집어 목표를 보게 한다.")
 	w("## ★ 손으로 적은 값이 아니라 클립의 **놓는 칸**에서 그대로 잰 값이다")
 	w("##   (art/anim/<id>/anim.json 의 muzzle_at). 그래서 총구 불꽃과 탄이 늘 같은 자리다.")
+	w("## spd 는 **이동 속도 배수**다 — 투기장에서 조이스틱으로 걷는 빠르기(Balance.ARENA_HERO_SPEED)에")
+	w("## 곱한다. 1.0 이 기준이고 센 일격·중화기는 느리게, 가벼운 연사·검은 빠르게 걷는다(Balance.hero_speed).")
 	w("## wind 는 팔을 뻗는 데 걸리는 시간(초) — 그 클립이 놓는 칸에 닿는 데 걸리는 시간이다.")
 	w("## 전투는 쏘기로 정한 뒤 이만큼 **기다렸다가** 탄을 내보낸다. 안 그러면 팔을 뻗기도")
 	w("## 전에 탄이 나가서 몸짓과 사건이 따로 논다.")
@@ -432,14 +434,14 @@ def main() -> int:
 			mx, my, wind = muzzle_of(u, gen_art.unit_h(ti))
 			w('\t{"id": "%s", "ko": "%s", "en": "%s", "tier": %d, "role": "%s", '
 			  '"profile": "%s", "bullet": "%s", "weapon": "%s", '
-			  '"elem": "%s", "desc": "%s", "lore": "%s", "color": "%s", "h": %d, "sc": %.2f, '
+			  '"elem": "%s", "desc": "%s", "lore": "%s", "color": "%s", "h": %d, "sc": %.2f, "spd": %.2f, '
 			  '"muz": [%.4f, %.4f], "wind": %.3f, '
 			  '"art": "res://art/units/%s.png", "anim": "%s"},'
 			  % (u["id"], esc(u["ko"]), esc(u.get("en", u["ko"])), ti,
 				 u.get("role", "single"), u["profile"], u["bullet"],
 				 u.get("weapon", ""),
 				 u.get("elem", "none"), esc(u["desc"]), esc(u.get("lore", u["desc"])),
-				 u["color"], gen_art.unit_h(ti), float(u.get("sc", 1.0)),
+				 u["color"], gen_art.unit_h(ti), float(u.get("sc", 1.0)), float(u.get("spd", 1.0)),
 				 mx, my, wind, u["id"], anim))
 	w("]")
 	w("")

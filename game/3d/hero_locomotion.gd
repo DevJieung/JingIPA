@@ -10,6 +10,13 @@ class_name HeroLocomotion
 ## its target with an ease-out profile that completes 180 degrees in under
 ## 0.25 s, and the upper body immediately twists toward the aim direction within
 ## AIM_LIMIT so release sockets agree with the real fire direction.
+##
+## Gait by ground speed: characters travel at 2.0~5.1 world units/s
+## (Balance.hero_speed, spd 0.60~1.50). The authored WalkLoop is one brisk cycle, so
+## above RUN_START the phase advances over a longer stride (the cadence tops out near
+## a sprint's 2.3 cycles/s instead of a 3.8/s blur) and the adapters read run_factor()
+## / slow_factor() to lengthen the leg swing, swap the walking vault for a flight arc,
+## lean and pump the arms (run) or plant heavier, more upright steps (slow walk).
 
 const AIM_LIMIT := 1.2          # radians of torso twist before the root must turn
 const TURN_GAIN := 18.0         # rad/s per radian remaining (ease-out)
@@ -18,6 +25,10 @@ const TURN_MAX := 26.0          # rad/s cap
 const WALK_FULL_SPEED := 0.9    # world units/s at which the walk clip plays fully
 const ACCEL_TAU := 0.06
 const DECEL_TAU := 0.10
+const RUN_START := 2.6          # world units/s where the walk starts turning into a run
+const RUN_FULL := 5.1           # spd 1.50: the full run look
+const RUN_STRIDE_SCALE := 1.6   # stride multiple at RUN_FULL (5.1 / (1.36 * 1.6) = 2.3 cycles/s)
+const SLOW_FULL := 2.0          # spd 0.60: the full heavy-walk look
 
 var stride := 1.5
 var speed := 0.0                # smoothed ground speed (world units/s)
@@ -38,6 +49,25 @@ var _yaw_started := false
 func walk_weight() -> float:
 	return clampf(speed / WALK_FULL_SPEED, 0.0, 1.0)
 
+## 0 at a walk (<= RUN_START), 1 at a full run (>= RUN_FULL).
+func run_factor() -> float:
+	return smoothstep(RUN_START, RUN_FULL, speed)
+
+## 1 at a heavy walk (<= SLOW_FULL), 0 from RUN_START up.
+func slow_factor() -> float:
+	return clampf((RUN_START - speed) / (RUN_START - SLOW_FULL), 0.0, 1.0)
+
+## Stride multiple of the authored cycle at this speed: longer when the feet leave
+## the ground in a run. (The slow walk keeps the authored stride; its weight shows
+## in the vault, lean and roll the adapters add.)
+func stride_scale() -> float:
+	return lerpf(1.0, RUN_STRIDE_SCALE, run_factor())
+
+## Extra torso lean from the gait (radians about the hips, + forward): runners lean
+## in, heavy walkers stand up straighter than the authored brisk walk.
+func gait_lean() -> float:
+	return 0.10 * run_factor() - 0.05 * slow_factor()
+
 func is_moving() -> bool:
 	return speed > 0.05
 
@@ -52,7 +82,7 @@ func set_locomotion(velocity: Vector3, dt: float) -> void:
 	speed += (raw_speed - speed) * (1.0 - exp(-dt / tau))
 	if raw_speed <= 0.001 and speed < 0.02: speed = 0.0
 	_accel = (speed - previous) / dt
-	if speed > 0.0: walk_phase = fposmod(walk_phase + speed * dt / maxf(stride, 0.2), 1.0)
+	if speed > 0.0: walk_phase = fposmod(walk_phase + speed * dt / maxf(stride * stride_scale(), 0.2), 1.0)
 
 ## Logical target direction (+y south). dt is the simulated interval, 0 when unknown.
 func face_toward(direction: Vector2, dt: float) -> void:

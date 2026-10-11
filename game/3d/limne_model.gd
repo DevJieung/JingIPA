@@ -203,14 +203,20 @@ func animate_visual(time: float, age: float = 9.0, wind: float = 0.6, battle: bo
 	var breath := sin(time*TAU/3.0)*0.008
 	var sway := sin(time*TAU/6.0)
 	var look := 0.06*pow(sin(clampf((time-2.4)/2.2,0.0,1.0)*PI),2.0)
-	# Locomotion: distance-driven cycle, authored like the native WalkLoop.
+	# Locomotion: distance-driven cycle, authored like the native WalkLoop, shaped by
+	# ground speed like NativeCharacterModel: a run (HeroLocomotion.run_factor) swings
+	# the legs wider, lifts the knees, swaps the walking vault for a flight arc, leans
+	# in and pumps the arms; a heavy walk deepens the vault and rolls the hips.
 	var weight := _loco.walk_weight()
+	var run := _loco.run_factor()
+	var slow := _loco.slow_factor()
 	var phi := fposmod(_loco.walk_phase,1.0)
-	var theta_l := 0.6*cos(TAU*phi)*weight
-	var bounce := -0.8*HIP*(1.0-cos(theta_l))
-	var lean := 0.10*weight+_loco.lean_pitch
+	var theta_l := 0.6*(1.0+0.35*run)*cos(TAU*phi)*weight
+	var flight := 0.11*(0.5+0.5*cos(TAU*2.0*phi))*run*weight
+	var bounce := -0.8*HIP*(1.0-cos(theta_l))*(1.0-run)*(1.0+0.35*slow)+flight
+	var lean := (0.10+_loco.gait_lean())*weight+_loco.lean_pitch
 	var walk_yaw := 0.08*cos(TAU*phi)*weight
-	var walk_roll := 0.03*cos(TAU*(phi-0.1))*weight+_loco.lean_roll
+	var walk_roll := (0.03+0.045*slow)*cos(TAU*(phi-0.1))*weight+_loco.lean_roll
 	var walk_x := -0.012*1.63*cos(TAU*(phi-0.1))*weight
 	var idle_w := 1.0-weight
 	var body: Node3D = get_node("Body")
@@ -227,11 +233,11 @@ func animate_visual(time: float, age: float = 9.0, wind: float = 0.6, battle: bo
 		var sign_value := -1.0 if side=="L" else 1.0
 		var arm: Node3D = get_node("Arm"+side)
 		var shoulder := body.transform*Vector3(sign_value*0.32,1.035,0)
-		var arm_swing := -0.45*cos(TAU*phi)*(1.0 if side=="L" else -1.0)*weight*(1.0-aim)
+		var arm_swing := -0.45*(1.0+0.55*run)*cos(TAU*phi)*(1.0 if side=="L" else -1.0)*weight*(1.0-aim)
 		var idle_swing := sin(time*TAU/3.0+sign_value*0.3)*0.015*idle_w*(1.0-aim)
 		var raise := aim*0.06+kick*(-0.10)
 		arm.transform = Transform3D(body_basis*Basis.from_euler(Vector3(arm_swing+raise,0,idle_swing-sign_value*aim*0.06)),shoulder+Vector3(0,aim*0.012,0))
-		var bend := 0.86*aim+(0.85+0.25*maxf(0.0,cos(TAU*phi)*(1.0 if side=="R" else -1.0)))*weight*(1.0-aim)
+		var bend := 0.86*aim+(0.85+0.32*run+0.25*maxf(0.0,cos(TAU*phi)*(1.0 if side=="R" else -1.0)))*weight*(1.0-aim)
 		_elbow_angles[n] = bend+0.05*sin(time*TAU/3.0+n)*idle_w*(1.0-aim)+kick*0.12
 		var leg: Node3D = get_node("Leg"+side)
 		if weight <= 0.0005:
@@ -239,8 +245,8 @@ func animate_visual(time: float, age: float = 9.0, wind: float = 0.6, battle: bo
 		else:
 			var theta := theta_l if side=="L" else -theta_l
 			var local := fposmod(phi-0.5 if side=="L" else phi,1.0)
-			var lift := 0.032*1.63*pow(sin(PI*clampf(local/0.5,0.0,1.0)),2.0) if local < 0.5 else 0.0
-			leg.transform = Transform3D(Basis(Vector3.RIGHT,theta),_leg_binds[n].origin+Vector3(0,lift*weight,0))
+			var lift := 0.032*1.63*(1.0+0.7*run)*pow(sin(PI*clampf(local/0.5,0.0,1.0)),2.0) if local < 0.5 else 0.0
+			leg.transform = Transform3D(Basis(Vector3.RIGHT,theta),_leg_binds[n].origin+Vector3(0,lift*weight+flight,0))
 	# A visual release burst follows the already-existing gameplay release time.
 	_spray_strength = sin(clampf(release/0.13,0,1)*PI) if active and age>=wind and release<0.13 else 0.0
 	update_visuals()

@@ -175,8 +175,26 @@ const SHOWY_TIER := 7
 # --------------------------------------------------------------------------- #
 ## 사거리는 영웅 발판에서 몬스터 중심까지의 거리다.
 ## 무기·공격 성향·희귀도에 따라 달라지며 공격력 강화로 늘어나지 않는다.
-const WEAPON_RANGE := {"sword": 170.0, "whip": 205.0, "deck": 235.0, "gun": 285.0, "bow": 320.0}
+const WEAPON_RANGE := {"sword": 60.0, "whip": 205.0, "deck": 235.0, "gun": 285.0, "bow": 320.0}
 const PROFILE_RANGE := {"rapid": 0.93, "balance": 1.0, "heavy": 0.97, "sniper": 1.10}
+## 사거리의 아래·위 한계. 근접 무기(검)는 아래 한계 가까이에서 싸운다.
+const RANGE_MIN := 40.0
+const RANGE_MAX := 400.0
+
+## ★ **근접 무기** — 탄이 없다. 휘두르는 순간 사거리 안의 목표를 칼이 직접 벤다
+##   (BattleSim._strike). 그래서 검의 사거리는 「칼이 닿는 거리」라야 하고(WEAPON_RANGE),
+##   화면은 그 반지름의 부채꼴을 그린다. 관통 검은 같은 부채꼴 안의 다음 적까지 이어서 벤다.
+const MELEE_WEAPONS := ["sword"]
+## 베기가 닿는 부채꼴의 전체 각도(도). 목표 방향을 가운데로 둔다.
+const MELEE_ARC := 110.0
+
+static func is_melee(unit: Dictionary) -> bool:
+	return String(unit.get("weapon", "")) in MELEE_WEAPONS
+
+## 투기장에서 조이스틱으로 걷는 빠르기(logical/s). 캐릭터 표의 spd 배수(Roster.UNITS)를
+## 기준 속도에 곱한다 — 센 일격·중화기는 느리고 가벼운 연사·검은 빠르다.
+static func hero_speed(unit: Dictionary) -> float:
+	return ARENA_HERO_SPEED * clampf(float(unit.get("spd", 1.0)), 0.3, 2.5)
 
 ## ★ `tier` 는 **영웅 한 장의 등급**이다. 캐릭터 표의 tier(원화 격)를 넣으면 안 된다 —
 ##   등급을 안 주면 1성으로 친다(도감처럼 영웅 없이 캐릭터만 보여 주는 자리).
@@ -184,7 +202,7 @@ static func attack_range(unit: Dictionary, tier: int = -1) -> float:
 	var rank := clampi(tier if tier >= 0 else 1, 0, TIER_MAX)
 	var base: float = WEAPON_RANGE.get(String(unit.get("weapon", "deck")), 235.0)
 	var multiplier: float = PROFILE_RANGE.get(String(unit.get("profile", "balance")), 1.0)
-	return clampf(roundf((base + rank * 6.0) * multiplier), 160.0, 400.0)
+	return clampf(roundf((base + rank * 6.0) * multiplier), RANGE_MIN, RANGE_MAX)
 
 ## 같은 등급 안에서 캐릭터의 결을 가르는 배수. **축은 하나다** — 연사에서 일격까지,
 ## 「잘게 여러 번」과 「크게 한 번」 사이 어디에 서는가. 넷 다 초당 피해(atk x rate)는

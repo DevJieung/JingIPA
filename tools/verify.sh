@@ -179,6 +179,10 @@ godot_run 180 "$TMP/arena-pose.log" res://tests/arena_pose_check.tscn
 expect "50명 연속 보행·정지 자세 누적 방지" "판정: 정상" "$TMP/arena-pose.log"
 godot_run 180 "$TMP/arena-motion.log" res://tests/arena_motion_check.tscn
 expect "월드→모델 보행·방향·피격·포위·사망 연동" "판정: 정상" "$TMP/arena-motion.log"
+godot_run 180 "$TMP/arena-facing.log" res://tests/arena_idle_facing_check.tscn
+expect "정지·막힘 뒤 바라보는 방향 유지" "판정: 정상" "$TMP/arena-facing.log"
+godot_run 240 "$TMP/speed-melee.log" res://tests/hero_speed_melee_check.tscn
+expect "영웅별 이동 속도·검 근접 타격" "판정: 정상" "$TMP/speed-melee.log"
 godot_run 180 "$TMP/arena-play.log" res://tests/arena_play_check.tscn
 expect "연속 수호전 실제 UI 흐름" "판정: 정상" "$TMP/arena-play.log"
 godot_run 90 "$TMP/stellar-identity.log" res://tests/stellar_identity_check.tscn

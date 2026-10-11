@@ -135,6 +135,8 @@ func setup(run_state, wave_no: int, seed_value: int = 0) -> void:
 			"role": String(st.get("role", "single")),
 			"rate": float(st["rate"]),
 			"range": float(st["range"]),
+			# 투기장에서 걷는 빠르기(logical/s). 캐릭터마다 다르다(Balance.hero_speed).
+			"speed": float(st.get("speed", Balance.ARENA_HERO_SPEED)),
 			# ★ 겹친 만큼 **한 번에 여러 발**이 나간다(x4 면 넷). 한 발의 세기는 이미
 			#   atk 에 나뉘어 있으므로 단일 대상 피해는 정확히 n배 그대로다.
 			"shots": int(st.get("shots", 1)),
@@ -360,6 +362,7 @@ func refresh_heroes() -> void:
 		sh["wind"] = float(u.get("wind", Balance.WIND_FALLBACK))
 		for key in ["atk", "rate", "range", "shots", "role", "elem", "crit", "critx"]:
 			sh[key] = st[key]
+		sh["speed"] = float(st.get("speed", Balance.ARENA_HERO_SPEED))
 
 
 func _move_monsters(dt: float) -> void:
@@ -573,8 +576,12 @@ func _shoot(hi: int, tgt: int, dmg: float, kind: String, crit: bool,
 	var n: int = maxi(1, shots)
 	# ★ 누가 쐈는지(src)를 같이 흘린다. 화면이 총구 불꽃을 그 자리에 붙이는 데 쓴다 —
 	#   시뮬레이터는 여전히 그리기를 모르고, 그냥 "몇 번 영웅이 이 방향으로 쐈다"만 적는다.
-	events.append({"t": "fire", "p": pos, "d": (_mp[tgt] - pos).normalized(), "c": col,
-		"src": hi, "el": elem, "kind": kind, "n": n})
+	var melee := Balance.is_melee(he["h"]["unit"])
+	# ★ 방향은 탄이면 총구에서, 근접이면 **영웅의 발판에서** 목표로. 근접 판정의 부채꼴은
+	#   발판을 가운데로 두므로(_strike) 화면의 베기 호도 같은 기준이라야 어긋나지 않는다.
+	var fire_from: Vector2 = Vector2(he["pos"]) if melee else pos
+	events.append({"t": "fire", "p": pos, "d": (_mp[tgt] - fire_from).normalized(), "c": col,
+		"src": hi, "el": elem, "kind": kind, "n": n, "melee": melee})
 
 	if kind == "beam":
 		# 앞선 적들에게 나누어 쏘고, 적보다 발 수가 많으면 남은 발도 다시 배분한다.
@@ -615,6 +622,14 @@ func _shoot(hi: int, tgt: int, dmg: float, kind: String, crit: bool,
 			"src": hi, "delay": float(spec["delay"])})
 		return
 
+	# ★ **근접(검)** — 탄이 없다. 휘두르는 순간 사거리 안의 목표를 칼이 직접 벤다.
+	#   사용자가 정한 것: 「칼 쓰는 캐릭은 사정거리를 확 낮추고 따로 투사체 없이 칼에
+	#   의해 공격받게끔」. 광역·연쇄·분열 같은 뒤따르는 효과는 탄과 똑같이 _impact() 가
+	#   굴린다 — 달라지는 것은 「날아가는 시간이 없다」와 「관통이 부채꼴 안의 여럿」뿐이다.
+	if melee:
+		_strike(hi, tgt, dmg, kind, crit, n, spec)
+		return
+
 	var pierce: int = int(spec.get("pierce", 1))
 	if run.has("pierce"):
 		pierce += 1
@@ -637,6 +652,40 @@ func _shoot(hi: int, tgt: int, dmg: float, kind: String, crit: bool,
 			"decay": float(spec.get("decay", 1.0)),
 			"hop": float(spec.get("hop", 0.0)),
 		})
+
+
+## 근접 베기. 겨눈 놈을 바로 때리고, 관통 수만큼 같은 부채꼴(Balance.MELEE_ARC) 안의
+## 가까운 놈을 이어서 벤다. 겹친 수(shots)만큼 되풀이한다 — 탄 n발이 저마다 맞는 것과 같다.
+## ★ 사거리는 _shoot() 이 이미 다시 확인했다. 부채꼴은 겨눈 놈을 가운데로 둔다.
+## ★ 맞는 자리는 몬스터 자신의 자리다 — 화면이 그 자리에 베인 자국과 섬광을 그린다.
+func _strike(hi: int, tgt: int, dmg: float, kind: String, crit: bool, shots: int, spec: Dictionary) -> void:
+	var he: Dictionary = heroes[hi]
+	var origin: Vector2 = he["pos"]
+	var reach: float = float(he["range"])
+	var forward: Vector2 = (_mp[tgt] - origin).normalized()
+	if forward.length_squared() < 0.5:
+		forward = Vector2(float(he["face"]), 0.0)
+	var targets: Array = [tgt]
+	var pierce: int = int(spec.get("pierce", 1)) + (1 if run.has("pierce") else 0)
+	if pierce > 1:
+		var cos_half := cos(deg_to_rad(Balance.MELEE_ARC * 0.5))
+		var extra: Array = []
+		for j in range(_mp.size()):
+			if j == tgt or not _target_in_range(j, origin, reach):
+				continue
+			var to: Vector2 = _mp[j] - origin
+			if to.length_squared() > 0.0001 and to.normalized().dot(forward) < cos_half:
+				continue
+			extra.append(j)
+		extra.sort_custom(func(a, b):
+			return origin.distance_squared_to(_mp[a]) < origin.distance_squared_to(_mp[b]))
+		targets.append_array(extra.slice(0, pierce - 1))
+	for n in range(maxi(1, shots)):
+		for mi in targets:
+			if mi >= monsters.size() or float(monsters[mi]["hp"]) <= 0.0:
+				continue
+			_impact({"p": _mp[mi], "v": forward, "kind": kind, "dmg": dmg, "crit": crit,
+				"src": hi, "el": String(he["elem"]), "c": he["col"], "melee": true}, mi)
 
 
 ## 유도가 목표 쪽으로 도는 빠르기. 클수록 곧게 꽂힌다.
@@ -900,7 +949,8 @@ func _impact(b: Dictionary, mi: int) -> void:
 	#   **깎인 몫이 아니라 때린 세기**를 적는다 — 마지막 한 대만 「5」로 뜨면 제일 센
 	#   한 방이 화면에서 제일 약해 보인다. 「이 탄의 몇 할을 깎았나」는 정보판이 따로 센다.
 	events.append({"t": "hit", "p": b["p"], "c": b["c"], "kind": kind,
-		"crit": bool(b["crit"]), "em": em, "el": elem, "n": dmg * em, "src": src, "sid": _sid(mi)})
+		"crit": bool(b["crit"]), "em": em, "el": elem, "n": dmg * em, "src": src, "sid": _sid(mi),
+		"melee": bool(b.get("melee", false))})
 
 	match kind:
 		"splash":

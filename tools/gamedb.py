@@ -42,8 +42,10 @@ UI_JSON = "core/locales/ui.json"
 HEROES_JSON = "core/locales/heroes.json"
 LOCALES = ("ko", "en")
 
-UNIT_KEYS = ("ko", "en", "role", "profile", "bullet", "weapon", "elem", "sc", "desc", "lore",
+UNIT_KEYS = ("ko", "en", "role", "profile", "bullet", "weapon", "elem", "sc", "spd", "desc", "lore",
 			 "prompt", "color", "holes", "anim")
+## 영웅 표에 나중에 더한 열과 그 기본값 — 아직 그 열이 없는 JSON 도 읽는다(값은 DB 에서 고친다).
+UNIT_DEFAULTS = {"spd": 1.0}
 MONSTER_KEYS = ("ko", "kind", "body", "desc", "prompt", "color", "holes")
 THEME_KEYS = ("ko", "main_body", "boss_body", "rank", "weights", "bg", "floor", "prompt", "floor_prompt")
 ART_KEYS = ("ko", "cut", "fx", "square", "size", "prompt", "color", "art", "holes")
@@ -494,7 +496,8 @@ def read_files() -> dict:
 		tiers["rows"][t["tier"]] = {"ko": t["ko"], "n": t["n"]}
 		for u in t["units"]:
 			units["order"].append(u["id"])
-			units["rows"][u["id"]] = {"art_tier": t["tier"], **_take(u, UNIT_KEYS, where="units." + u["id"])}
+			units["rows"][u["id"]] = {"art_tier": t["tier"], **UNIT_DEFAULTS,
+									  **_take(u, UNIT_KEYS, tuple(UNIT_DEFAULTS), where="units." + u["id"])}
 	for sec, key, keys, optional in (("monsters", "monsters", MONSTER_KEYS, ()), ("themes", "themes", THEME_KEYS, ()),
 									 ("arts", "arts", ART_KEYS, ART_OPTIONAL)):
 		table = _table(doc, sec, True)
@@ -715,7 +718,8 @@ def _color(col: str) -> str:
 	return '"%s" TEXT NOT NULL CHECK ("%s" GLOB \'#%s\')' % (col, col, "[0-9A-Fa-f]" * 6)
 
 
-SCHEMA_VERSION = "1"
+SCHEMA_VERSION = "2"
+## 판 1 → 2: units 에 이동 속도 배수 spd 를 더했다(`migrate`).
 
 # ★ CHECK 를 **열에** 붙인다. 표 제약으로 두면 그 뒤에 다른 열을 못 적는다.
 _TYPED = ('"type" TEXT NOT NULL DEFAULT \'float\' CHECK ("type" IN (\'int\', \'float\', \'str\', \'bool\')), '
@@ -758,7 +762,7 @@ CREATE TABLE art_tiers (key TEXT PRIMARY KEY, sort INTEGER NOT NULL, ko TEXT NOT
 CREATE TABLE units (id TEXT PRIMARY KEY, sort INTEGER NOT NULL, art_tier TEXT NOT NULL REFERENCES art_tiers(key),
 	ko TEXT NOT NULL, en TEXT NOT NULL, role TEXT NOT NULL REFERENCES roles(id), profile TEXT NOT NULL REFERENCES profiles(id),
 	bullet TEXT NOT NULL REFERENCES bullets(id), weapon TEXT NOT NULL REFERENCES weapons(id), elem TEXT NOT NULL REFERENCES elements(id),
-	{_real("sc")}, "desc" TEXT NOT NULL, lore TEXT NOT NULL, prompt TEXT NOT NULL, {_color("color")}, {_flag("holes")}, {_flag("anim")},
+	{_real("sc")}, {_real("spd")}, "desc" TEXT NOT NULL, lore TEXT NOT NULL, prompt TEXT NOT NULL, {_color("color")}, {_flag("holes")}, {_flag("anim")},
 	blurb_ko TEXT, blurb_en TEXT);
 CREATE TABLE monsters (id TEXT PRIMARY KEY, sort INTEGER NOT NULL, ko TEXT NOT NULL, kind TEXT NOT NULL REFERENCES monster_kinds(id),
 	body TEXT NOT NULL REFERENCES bodies(id), "desc" TEXT NOT NULL, prompt TEXT NOT NULL, {_color("color")}, {_flag("holes")});
@@ -793,6 +797,8 @@ def connect(write: bool = False) -> sqlite3.Connection:
 		schema = conn.execute("SELECT value FROM _meta WHERE key = 'schema'").fetchone()
 	except sqlite3.Error:
 		schema = None
+	if schema == ("1",):
+		raise DataError("%s 는 판 1 이다 — `python3 tools/gamedb.py migrate` 로 판 %s 로 올린다 (units.spd 열)" % (DB_REL, SCHEMA_VERSION))
 	if schema != (SCHEMA_VERSION,):
 		raise DataError("%s 는 이 도구가 지은 DB 가 아니거나 판이 다르다 (%r)" % (DB_REL, schema))
 	return conn
@@ -834,7 +840,7 @@ def read_db(conn: sqlite3.Connection) -> dict:
 		return {k: _typed(t, v, "%s.%s.%s" % (where, key, k)) for k, t, v in q(sql, key)}
 
 	table("art_tiers", "SELECT key, ko, n FROM art_tiers ORDER BY sort, key", ("ko", "n"), True)
-	table("units", "SELECT u.id, u.art_tier, u.ko, u.en, u.role, u.profile, u.bullet, u.weapon, u.elem, u.sc, u.\"desc\", u.lore, "
+	table("units", "SELECT u.id, u.art_tier, u.ko, u.en, u.role, u.profile, u.bullet, u.weapon, u.elem, u.sc, u.spd, u.\"desc\", u.lore, "
 		  "u.prompt, u.color, u.holes, u.anim, u.blurb_ko, u.blurb_en FROM units u JOIN art_tiers t ON t.key = u.art_tier "
 		  "ORDER BY t.sort, t.key, u.sort, u.id", ("art_tier",) + UNIT_KEYS + ("blurb_ko", "blurb_en"), True, ("holes", "anim"))
 	table("monsters", 'SELECT id, ko, kind, body, "desc", prompt, color, holes FROM monsters ORDER BY sort, id', MONSTER_KEYS, True, ("holes",))
@@ -1234,6 +1240,26 @@ def cmd_log(args) -> int:
 	return 0
 
 
+def cmd_migrate(args) -> int:
+	"""판 1 → 2: units 에 이동 속도 배수(spd, 기본 1.0) 열을 더한다. 값은 바꾸지 않는다.
+	뒤이어 `pull` 을 돌려 기준(_baseline)에 새 열을 들인다."""
+	if not os.path.exists(DB_PATH):
+		raise DataError("%s 가 없다 — `python3 tools/gamedb.py init` 으로 짓는다" % DB_REL)
+	conn = sqlite3.connect(DB_PATH, isolation_level=None)
+	schema = conn.execute("SELECT value FROM _meta WHERE key = 'schema'").fetchone()
+	if schema == (SCHEMA_VERSION,):
+		print("이미 판 %s 다." % SCHEMA_VERSION)
+		return 0
+	if schema != ("1",):
+		raise DataError("%s 의 판 %r 은 이 도구가 올릴 줄 모른다" % (DB_REL, schema))
+	conn.execute("BEGIN")
+	conn.execute('ALTER TABLE units ADD COLUMN "spd" REAL NOT NULL DEFAULT 1.0 CHECK (typeof("spd") = \'real\')')
+	conn.execute("UPDATE _meta SET value = ? WHERE key = 'schema'", (SCHEMA_VERSION,))
+	conn.execute("COMMIT")
+	print("판 1 → %s: units.spd 열을 더했다(전원 1.0). 이어서 `python3 tools/gamedb.py pull` 로 기준을 맞춘다." % SCHEMA_VERSION)
+	return 0
+
+
 def cmd_init(args) -> int:
 	if os.path.exists(DB_PATH) and not args.force:
 		raise DataError("%s 가 이미 있다. 통째로 다시 지으려면 --force (승인 대기 변경과 기록이 사라진다)" % DB_REL)
@@ -1285,6 +1311,7 @@ def main() -> int:
 	p.add_argument("--limit", type=int, default=10)
 	p.add_argument("--rows", type=int, default=8)
 	p.set_defaults(fn=cmd_log)
+	sub.add_parser("migrate", help="예전 판의 DB 에 새 열을 더한다 (값은 바꾸지 않는다)").set_defaults(fn=cmd_migrate)
 	p = sub.add_parser("init", help="지금 게임 파일에서 DB 를 새로 짓는다")
 	p.add_argument("--force", action="store_true")
 	p.set_defaults(fn=cmd_init)

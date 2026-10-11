@@ -28,6 +28,17 @@ func _ready() -> void:
 	var model := _make(0)
 	stage.add_child(model)
 	await frames(3)
+	if has_arg("--gait-only"):
+		await _gait_sequence(model, float(arg("--speed", "3.4")))
+		model.free()
+		model = null
+		viewport.queue_free()
+		viewport = null
+		stage = null
+		camera = null
+		await frames(3)
+		call_deferred("_cleanup_and_quit")
+		return
 	if "--release-only" in OS.get_cmdline_user_args():
 		model.visual_event({"t":"aim","w":0.6,"d":Vector2(0,1)})
 		model.animate_visual(0.6,0.6,0.6,true)
@@ -173,6 +184,23 @@ func _motion_sequences(model: Node3D) -> void:
 		await _portrait("walk_attack_%02d"%n)
 	model.set_locomotion(Vector3.ZERO,step)
 	model.animate_visual(t+1.0)
+
+## Straight travel at a given ground speed (world units/s) toward the camera side,
+## then a stop: the per-character move-speed look (cadence, stride, bounce, lean)
+## on the isolated stage, e.g. --speed 5.1 (spd 1.50) against --speed 2.1 (spd 0.62).
+func _gait_sequence(model: Node3D, speed: float) -> void:
+	if not model.has_method("set_locomotion"): return
+	var step := 1.0/30.0
+	var t := 20.0
+	var run_dir := Vector2(-0.45,-1).normalized()
+	model.animate_visual(t,9,0,true)
+	for n in range(48):
+		t += step
+		var moving := n < 36
+		model.set_locomotion(Vector3(run_dir.x,0,run_dir.y)*(speed if moving else 0.0),step)
+		model.face_toward(run_dir,step)
+		model.animate_visual(t,9,0,true)
+		await _portrait("gait_%02d"%n)
 
 func _aim(model: Node3D, wind: float, direction: Vector2) -> void:
 	if model.has_method("visual_event"): model.visual_event({"t":"aim","w":wind,"d":direction})

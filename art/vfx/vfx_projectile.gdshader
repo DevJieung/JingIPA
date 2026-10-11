@@ -5,7 +5,7 @@ render_mode unshaded, blend_add, depth_draw_never, cull_disabled, skip_vertex_tr
 // Projectile layer drawn as one MultiMesh. Every instance is one live bullet:
 //   transform: origin at the bullet, -Z along its velocity (unit basis)
 //   COLOR:     hero colour
-//   CUSTOM:    x shape (0 tracer,1 arrow,2 shell,3 bead,4 orb,5 crescent)
+//   CUSTOM:    x shape (0 tracer,1 arrow,2 shell,3 bead,4 orb; swords no longer fly, see vfx_slash)
 //              y trail length (world units)   z size (world units)   w element
 // Mesh parts (UV2.x): 0 trail strip, 1 glow billboard, 2 core sprite, 3 sparks (UV2.y index).
 uniform sampler2D sprites : source_color, filter_linear_mipmap, repeat_disable;
@@ -23,7 +23,6 @@ int shape_cell(int shape) {
 	if (shape == 2) return 0;
 	if (shape == 3) return 0;
 	if (shape == 4) return 2;
-	if (shape == 5) return 11;
 	return 10;
 }
 
@@ -68,8 +67,8 @@ void vertex() {
 		cell = 0.0;
 	} else if (part == 2) {
 		// Hot core sprite aligned with the flight direction (sprite "up" = forward).
-		float len = size * (shape == 1 ? 3.6 : shape == 5 ? 2.6 : shape == 2 ? 1.9 : 2.8);
-		float wid = size * (shape == 5 ? 2.6 : shape == 2 ? 1.9 : shape == 1 ? 1.2 : 1.05);
+		float len = size * (shape == 1 ? 3.6 : shape == 2 ? 1.9 : 2.8);
+		float wid = size * (shape == 2 ? 1.9 : shape == 1 ? 1.2 : 1.05);
 		world = origin + fwd * c.y * len + side * c.x * wid - cam_fwd * 0.22;
 		if (shape == 4) {
 			// Electric orb rotates and crackles.

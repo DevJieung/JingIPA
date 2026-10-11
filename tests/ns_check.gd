@@ -171,6 +171,10 @@ func _check_roster() -> void:
 		var sc: float = float(u.get("sc", 1.0))
 		if sc < 0.6 or sc > 1.5:
 			_bad("%s 의 그림 보정(sc %.2f)이 0.6~1.5 밖이다" % [id, sc])
+		# 이동 속도 배수. 0.5 아래면 조이스틱이 먹통처럼 느껴지고 1.6 위면 길을 벗어나 미끄러진다.
+		var spd: float = float(u.get("spd", 1.0))
+		if spd < 0.5 or spd > 1.6:
+			_bad("%s 의 이동 속도 배수(spd %.2f)가 0.5~1.6 밖이다" % [id, spd])
 		var ko := String(u["ko"])
 		if kos.has(ko):
 			_bad("캐릭터 이름 중복: %s" % ko)

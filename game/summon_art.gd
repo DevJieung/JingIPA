@@ -101,17 +101,35 @@ static func hero_info(ci: CanvasItem, unit: Dictionary, tier: int, box: Rect2,
 		chip_x += width + 9
 	if not stats:
 		return
+	# Stat grid, 3 x 2 in the same height the old 2 x 2 used: attack / attack speed /
+	# reach on the first row, critical / move speed / damage per second on the second.
+	# Move speed is the arena joystick speed (logical units per second, Balance.hero_speed);
+	# the sixth cell shows the single-target DPS the shop already quotes (Run.stats_dps).
 	var st := Run.hero_stats(hero if not hero.is_empty() else {"unit": unit, "tier": tier, "n": 1})
-	var rows := [["공격력", "%.0f" % float(st["atk"])], ["공격속도", "%.2f회/초" % float(st["rate"])], ["사거리", "%d" % int(st["range"])], ["치명타", "%s%%" % String.num(float(st["crit"]) * 100, 1)]]
-	var width := (box.size.x - 12) * 0.5
+	var rows := [["공격력", "%.0f" % float(st["atk"])], ["공격속도", "%.2f회/초" % float(st["rate"])],
+		["사거리", "%d" % int(st["range"])], ["치명타", "%s%%" % String.num(float(st["crit"]) * 100, 1)],
+		["이동속도", "%d" % int(st["speed"])], ["초당 피해", "%.0f" % Run.stats_dps(st)]]
+	var columns := 3
+	var gap := 10.0
+	var width := (box.size.x - gap * (columns - 1)) / columns
 	for i in range(rows.size()):
-		var r := Rect2(x + (i % 2) * (width + 12), y + 253 + (i / 2) * 58, width, 50)
+		var r := Rect2(x + (i % columns) * (width + gap), y + 253 + (i / columns) * 58, width, 50)
 		Look.fill_round(ci, r, 5, Look.BG_DEEP)
 		Look.text_left(ci, r.position + Vector2(12, 15), rows[i][0], 16, Look.INK_DIM)
 		Look.text_box(ci, Rect2(r.position.x + 12, r.position.y + 23, r.size.x - 24, 25), rows[i][1], 22, Look.INK, HORIZONTAL_ALIGNMENT_RIGHT)
 
 
+## The leading trait chip. Swords are melee — the blade itself cuts the bodies in
+## reach (BattleSim._strike) — so 근접 leads; the strike pattern follows as a second
+## chip only when it adds something (관통·광역·연쇄; 단일 is implied by 근접).
 static func attack_type(unit: Dictionary) -> String:
+	if Balance.is_melee(unit):
+		return "근접"
+	return strike_type(unit)
+
+
+## How a hit lands (single / piercing / area / chain), whatever delivers it.
+static func strike_type(unit: Dictionary) -> String:
 	var kind := String(unit.get("bullet", "shot"))
 	if kind == "beam":
 		return "단일"
@@ -127,6 +145,10 @@ static func attack_type(unit: Dictionary) -> String:
 
 static func trait_labels(unit: Dictionary) -> Array[String]:
 	var labels: Array[String] = [attack_type(unit)]
+	if Balance.is_melee(unit):
+		var strike := strike_type(unit)
+		if strike != "단일":
+			labels.append(strike)
 	var element := String(unit.get("elem", "none"))
 	match Balance.elem_rider(element):
 		"burn": labels.append("화상")

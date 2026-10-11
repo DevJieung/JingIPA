@@ -4,6 +4,8 @@ render_mode unshaded, blend_add, depth_draw_never, cull_disabled, skip_vertex_tr
 
 // Muzzle release layer, polled every frame from each hero adapter's
 // weapon_transform() / fire_strength(). One MultiMesh instance per live socket.
+// Swords only get a small blade glint here: the cut itself is the Slashes layer and the
+// blade contacts are slash_hit bursts, so the glint stays below them at close range.
 //   transform: the weapon socket (origin = mouth, -Z = forward)
 //   COLOR:     effect colour (character accent blended with element)
 //   CUSTOM:    x weapon (0 rifle,1 bow,2 cast,3 artillery,4 sword,5 tool)
@@ -49,7 +51,7 @@ void vertex() {
 	bool sword = weapon == 4;
 	bool tool = weapon == 5;
 	if (part == 0) {
-		float size = rifle ? 0.40 : bow ? 0.20 : cast ? 0.34 : artillery ? 0.50 : sword ? 0.24 : 0.22;
+		float size = rifle ? 0.40 : bow ? 0.20 : cast ? 0.34 : artillery ? 0.50 : sword ? 0.16 : 0.22;
 		size *= 0.7 + 0.5 * k;
 		vec2 r = rot2(c, seed * 6.283 + (cast ? vfx_time * 4.0 : 0.0));
 		world = origin + fwd * (rifle || artillery ? 0.08 : 0.0) + (cam_right * r.x + cam_up * r.y) * size - cam_fwd * 0.3;
@@ -57,7 +59,7 @@ void vertex() {
 		col = mix(elem_hot(elem), vec3(1.0), 0.5);
 		alpha = pow(s, 0.8);
 	} else if (part == 1) {
-		float size = rifle ? 0.70 : bow ? 0.42 : cast ? 0.85 : artillery ? 1.0 : sword ? 0.38 : 0.34;
+		float size = rifle ? 0.70 : bow ? 0.42 : cast ? 0.85 : artillery ? 1.0 : sword ? 0.26 : 0.34;
 		size *= 0.8 + 0.4 * k;
 		world = origin + fwd * (rifle || artillery ? 0.12 : 0.0) + (cam_right * c.x + cam_up * c.y) * size - cam_fwd * 0.25;
 		cell = 0.0;
@@ -90,7 +92,7 @@ void vertex() {
 		alpha = pow(s, 0.7) * (size > 0.001 ? 1.0 : 0.0) * 0.95;
 		col = mix(COLOR.rgb, vec3(1.0), 0.25);
 	} else {
-		int count = rifle ? 5 : bow ? 3 : cast ? 6 : artillery ? 6 : sword ? 4 : 6;
+		int count = rifle ? 5 : bow ? 3 : cast ? 6 : artillery ? 6 : sword ? 3 : 6;
 		float h1 = hash11(seed * 13.0 + float(idx));
 		float h2 = hash11(seed * 31.0 + float(idx) * 1.3);
 		vec3 dir;

@@ -10,7 +10,8 @@ class_name StellarVfx
 ##   Bursts   (64)   one-shot impacts / deaths / status / skills: ground shock ring,
 ##                   flash, streak sparks, rising motes, smoke or mist, scorch
 ##   Beams    (16)   beams, chain lightning, ricochet traces
-##   Slashes  (12)   sword arcs swept from the hero's facing
+##   Slashes  (12)   sword arcs: the melee fan at the hero's actual reach, aimed along the
+##                   simulator's fire direction, swept by the blade head in 0.1 s
 ##   Zones    (36)   ground rune discs for sim.zones plus caster wind-up circles
 ## plus two energy domes and six pooled OmniLights for the brightest pulses.
 ## Instances animate in their shaders from `vfx_time`, a clock that only advances in
@@ -27,6 +28,20 @@ const MAX_SLASHES := 12
 const MAX_ZONES := 24
 const MAX_CASTS := 12
 const MAX_LIGHTS := 6
+## Sword presentation. Swords fly no projectile: at the release the simulator cuts the
+## bodies inside Balance.MELEE_ARC within the hero's reach (fire.melee, then hit.melee
+## in the same tick). The arc mesh spans that fan plus a little follow-through on each
+## side, is scaled to sim.heroes[src].range and aimed along fire.d; each blade contact is
+## timed to the moment the sweeping head passes that body, so a pierce reads as three
+## distinct cuts instead of one white blot.
+const SLASH_OVERSHOOT_DEG := 9.0
+const SLASH_SPAN_DEG := Balance.MELEE_ARC + 2.0 * SLASH_OVERSHOOT_DEG
+const SLASH_SWEEP := 0.10         # seconds the head needs to cross the arc (the 3-frame cut)
+const SLASH_LIFE := 0.34
+const SLASH_HEIGHT := 0.88        # chest height of the horizontal arc
+const SLASH_BAND := 0.72          # world units of radius the wake covers (clamped to the mesh)
+const SLASH_TILT := 0.38          # roll: the wind-up side rides high, the follow-through low
+const SLASH_PITCH := -0.22        # the leading edge dips forward
 const BULLET_HEIGHT := 0.64
 const PARKED := Transform3D(Basis.IDENTITY, Vector3(0, -60, 0))
 ## GL Compatibility stores MultiMesh custom data as 16-bit floats, so a birth time
@@ -44,6 +59,7 @@ const SHADER_BEAM: Shader = preload("res://art/vfx/vfx_beam.gdshader")
 const SHADER_ZONE: Shader = preload("res://art/vfx/vfx_zone.gdshader")
 const SHADER_ZONE_BASE: Shader = preload("res://art/vfx/vfx_zone_base.gdshader")
 const SHADER_SLASH: Shader = preload("res://art/vfx/vfx_slash.gdshader")
+const SHADER_SLASH_BASE: Shader = preload("res://art/vfx/vfx_slash_base.gdshader")
 const SHADER_DOME: Shader = preload("res://art/vfx/vfx_dome.gdshader")
 const SHADER_STATUS: Shader = preload("res://art/vfx/vfx_status.gdshader")
 ## Shared looping status materials (burn / frost / stun) handed to body adapters by
@@ -53,10 +69,10 @@ static var _status_mesh: ArrayMesh
 
 ## Burst kinds; the shaders key their timing tables on this order.
 enum Kind { HIT, SPLASH, ZONE_TICK, DIE, LEAK, BLOCK, PUSH, FROST, STUN, CURSE, SPAWN, WILDFIRE,
-	BLAST, FREEZE, WARD, MUZZLE_SMOKE, RIC_SPARK, BEAM_CAP, BOLT_CAP, CAST_RELEASE }
+	BLAST, FREEZE, WARD, MUZZLE_SMOKE, RIC_SPARK, BEAM_CAP, BOLT_CAP, CAST_RELEASE, SLASH_HIT }
 ## Seconds a burst slot stays reserved: at least the longest layer of that kind.
 const KIND_LIFE := [0.50, 0.75, 0.55, 1.05, 0.60, 0.45, 0.35, 0.95, 0.45, 0.65, 0.90, 1.10,
-	1.30, 1.40, 0.90, 0.62, 0.25, 0.30, 0.30, 0.50]
+	1.30, 1.40, 0.90, 0.62, 0.25, 0.30, 0.30, 0.50, 0.44]
 const ELEM_INDEX := {"none": 0, "fire": 1, "ice": 2, "elec": 3, "water": 4}
 const WEAPON_INDEX := {"rifle": 0, "gun": 0, "bow": 1, "cast": 2, "artillery": 3, "sword": 4, "tool": 5}
 ## Projectile head sprites: 0 tracer, 1 arrow, 2 shell, 3 bead, 4 orb, 5 crescent.
@@ -64,7 +80,7 @@ const BULLET_SIZE := {"shot": 0.13, "pierce": 0.15, "splash": 0.19, "chain": 0.1
 const TRAIL_LENGTH := {"shot": 1.05, "pierce": 1.65, "splash": 0.85, "chain": 1.15, "ricochet": 0.95}
 ## Budget priority per burst kind: when the shared 72-slot budget is full, a new
 ## effect evicts the oldest live effect of lower or equal priority (skills never drop).
-const KIND_PRIORITY := [0, 1, 0, 2, 3, 2, 1, 1, 1, 1, 2, 2, 4, 4, 4, 0, 0, 1, 1, 1]
+const KIND_PRIORITY := [0, 1, 0, 2, 3, 2, 1, 1, 1, 1, 2, 2, 4, 4, 4, 0, 0, 1, 1, 1, 0]
 ## Per-frame caps keep bulk events (a freeze slowing 40 bodies) from flooding one frame.
 const FRAME_CAPS := {"hit": 10, "splash": 6, "frost": 4, "stun": 5, "die": 8, "push": 6, "zone_tick": 8}
 const PORTAL_COLOR := Color("#9d86ff")
@@ -94,8 +110,10 @@ var _next := {"dome": 0}
 var _generation := {"burst": [], "beam": [], "slash": []}
 var _free := {"burst": [], "beam": [], "slash": []}
 var _pending_fires: Array[Dictionary] = []
+var _pending_hits: Array[Dictionary] = []   # this tick's melee hits, timed after their fire
+var _delayed: Array[Dictionary] = []        # bursts waiting for the blade head (effect clock)
 var _aims: Dictionary = {}
-var _swing: Dictionary = {}
+var _melee: Dictionary = {}                 # src -> last melee release (origin, dir, reach, sign)
 var _hero_cache: Dictionary = {}
 var _split_gap := 0.0
 var _hit_light_gap := 0.0
@@ -266,25 +284,33 @@ func _beam_mesh() -> ArrayMesh:
 	st.set_material(_material(SHADER_BEAM, 1))
 	return st.commit()
 
+## Unit-radius arc of the melee fan (plus follow-through), -Z at its centre; the
+## instance transform scales it to the hero's reach and aims it (see _slash). Two
+## surfaces over the same strip: an alpha-blended ink underlay (readable on bright
+## snow and ice) and the additive blade wake on top.
 func _slash_mesh() -> ArrayMesh:
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var columns := 24
-	var span := deg_to_rad(150.0)
-	for n in range(columns):
-		var a0 := -span * 0.5 + span * float(n) / columns
-		var a1 := -span * 0.5 + span * float(n + 1) / columns
-		var points := [
-			Vector3(sin(a0), 0, -cos(a0)), Vector3(sin(a1), 0, -cos(a1)),
-			Vector3(sin(a1) * 0.52, 0, -cos(a1) * 0.52), Vector3(sin(a0) * 0.52, 0, -cos(a0) * 0.52)]
-		var uvs := [Vector2(float(n) / columns, 0), Vector2(float(n + 1) / columns, 0),
-			Vector2(float(n + 1) / columns, 1), Vector2(float(n) / columns, 1)]
-		for i in [0, 1, 2, 0, 2, 3]:
-			st.set_uv(uvs[i])
-			st.set_uv2(Vector2(0, n))
-			st.add_vertex(points[i])
-	st.set_material(_material(SHADER_SLASH, 1))
-	return st.commit()
+	var mesh: ArrayMesh = null
+	for layer in range(2):
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var columns := 28
+		var span := deg_to_rad(SLASH_SPAN_DEG)
+		var inner := 0.42
+		for n in range(columns):
+			var a0 := -span * 0.5 + span * float(n) / columns
+			var a1 := -span * 0.5 + span * float(n + 1) / columns
+			var points := [
+				Vector3(sin(a0), 0, -cos(a0)), Vector3(sin(a1), 0, -cos(a1)),
+				Vector3(sin(a1) * inner, 0, -cos(a1) * inner), Vector3(sin(a0) * inner, 0, -cos(a0) * inner)]
+			var uvs := [Vector2(float(n) / columns, 0), Vector2(float(n + 1) / columns, 0),
+				Vector2(float(n + 1) / columns, 1), Vector2(float(n) / columns, 1)]
+			for i in [0, 1, 2, 0, 2, 3]:
+				st.set_uv(uvs[i])
+				st.set_uv2(Vector2(0, n))
+				st.add_vertex(points[i])
+		st.set_material(_material(SHADER_SLASH_BASE, 0) if layer == 0 else _material(SHADER_SLASH, 1))
+		mesh = st.commit(mesh)
+	return mesh
 
 func _zone_mesh() -> ArrayMesh:
 	var base := SurfaceTool.new()
@@ -342,10 +368,10 @@ func _sync_bullets(sim) -> void:
 			float(TRAIL_LENGTH.get(kind, 0.95)) * boost, float(BULLET_SIZE.get(kind, 0.10)) * boost,
 			float(ELEM_INDEX.get(elem, 0))))
 
+## Projectile head shape. Swords never appear here: the simulator cuts directly (_slash).
 static func _shape(weapon: String, kind: String) -> float:
 	match weapon:
 		"bow": return 1.0
-		"sword": return 5.0
 		"deck": return 4.0
 		"whip": return 4.0 if kind == "chain" else 2.0 if kind == "splash" else 3.0
 	return 2.0 if kind == "splash" else 4.0 if kind == "chain" else 0.0
@@ -410,8 +436,10 @@ func _sync_zones(sim) -> void:
 
 ## Release effects that need the posed socket: spawned after the heroes have been
 ## synced for this frame, so the smoke, light and slash start at the real mouth.
+## Melee releases (fire.melee) instead spawn the reach-sized arc from the simulator's
+## hero position and fire direction, then time this tick's blade contacts to it.
 func _flush_fires(sim) -> void:
-	if _pending_fires.is_empty(): return
+	if _pending_fires.is_empty() and _pending_hits.is_empty(): return
 	for e in _pending_fires:
 		var src := int(e.get("src", -1))
 		var info := _hero_info(src, sim)
@@ -421,6 +449,10 @@ func _flush_fires(sim) -> void:
 		var color := _effect_color(info, elem)
 		var shots := maxi(1, int(e.get("n", 1)))
 		var node: Node3D = _world.hero_node(src) if _world != null else null
+		if bool(e.get("melee", false)) or attack == "sword":
+			_melee_release(src, e, sim, info, color, elem_index)
+			_aims.erase(src)
+			continue
 		if node != null and node.has_method("weapon_transform"):
 			var sockets := int(info.get("sockets", 1))
 			for s in range(sockets):
@@ -431,8 +463,6 @@ func _flush_fires(sim) -> void:
 						_burst(Kind.MUZZLE_SMOKE, mouth.origin, basis, color, 1.0, elem_index)
 					"artillery":
 						_burst(Kind.MUZZLE_SMOKE, mouth.origin, basis, color, 1.7, elem_index)
-					"sword":
-						_slash(src, node, color, elem_index)
 					"cast":
 						var foot := node.global_position
 						_burst(Kind.CAST_RELEASE, Vector3(foot.x, 0.0, foot.z), basis, color, 1.0, elem_index)
@@ -444,6 +474,78 @@ func _flush_fires(sim) -> void:
 		elif e.has("p"):
 			_pulse(world(Vector2(e["p"]), 0.9), color, 1.5, 2.2, 0.12)
 	_pending_fires.clear()
+	for e in _pending_hits: _melee_hit(e)
+	_pending_hits.clear()
+
+## A sword (or Pip's wrench) release: the arc at the hero's actual reach, centred on the
+## body the simulator struck first this tick (BattleSim._strike centres its fan on the hero's
+## own position; fire.d is measured from the muzzle point, which sits to the weapon side,
+## so it can lean up to ~60 degrees off the struck bodies at sword reach), remembered so
+## this tick's contacts can follow the blade.
+func _melee_release(src: int, e: Dictionary, sim, info: Dictionary, color: Color, elem: float) -> void:
+	var d: Vector2 = e.get("d", Vector2.ZERO)
+	d = d.normalized() if d.length_squared() > 0.0001 else Vector2(0, 1)
+	var at: Vector2 = e.get("p", Vector2.ZERO)
+	var reach := float(Balance.WEAPON_RANGE.get("sword", 60.0)) / UNIT
+	if sim != null and src >= 0 and src < sim.heroes.size():
+		at = sim.heroes[src]["pos"]
+		reach = float(sim.heroes[src].get("range", reach * UNIT)) / UNIT
+	for hit in _pending_hits:
+		if int(hit.get("src", -1)) != src: continue
+		var to: Vector2 = Vector2(hit.get("p", at)) - at
+		if to.length_squared() > 1.0: d = to.normalized()
+		break
+	var tool := String(info.get("attack", "")) == "tool"
+	# The authored cut travels from the weapon hand across to the other side; the wrench falls.
+	var sign_value := -1.0 if tool or String(info.get("lead", "L")) == "R" else 1.0
+	_melee[src] = {"at": at, "d": d, "reach": reach, "sign": sign_value, "tool": tool, "birth": _clock}
+	_slash(at, d, reach, sign_value, tool, color, elem)
+	var forward := Vector3(d.x, 0.0, d.y)
+	_pulse(world(at, 0.45) + forward * reach * 0.55, color, 1.9, 2.0 + reach * 0.6, 0.14)
+
+## A melee hit: a blade-contact burst on the body, facing the blade's travel there, spawned
+## when the sweeping head reaches that body (0..SLASH_SWEEP after the release). Pierce
+## contacts therefore land one after another along the arc.
+func _melee_hit(e: Dictionary) -> void:
+	var scale := _impact_scale(e)
+	if scale <= 0.0: return
+	var src := int(e.get("src", -1))
+	var p: Vector2 = e.get("p", Vector2.ZERO)
+	var color := Color(e.get("c", Color("#eacb81")))
+	var elem := float(ELEM_INDEX.get(String(e.get("el", "none")), 0))
+	var origin := world(p, clampf(_monster_height(int(e.get("sid", 0))) * 0.55, 0.3, 1.1))
+	var basis := _yaw()
+	var delay := 0.0
+	var record: Dictionary = _melee.get(src, {})
+	if not record.is_empty() and _clock - float(record["birth"]) < 0.5:
+		var d: Vector2 = record["d"]
+		var facing := Basis.looking_at(Vector3(d.x, 0.0, d.y), Vector3.UP)
+		var sign_value := float(record["sign"])
+		var fraction := 0.72
+		var tangent := Vector3.DOWN
+		if not bool(record["tool"]):
+			var to: Vector2 = p - Vector2(record["at"])
+			var theta := atan2(to.dot(Vector2(-d.y, d.x)), to.dot(d))
+			var half := deg_to_rad(SLASH_SPAN_DEG) * 0.5
+			fraction = clampf((theta * sign_value + half) / (2.0 * half), 0.0, 1.0)
+			tangent = facing * Vector3(cos(theta), 0.0, sin(theta)) * sign_value
+		basis = _travel_basis(tangent, facing)
+		# The head eases out across the arc (vfx_slash); invert that for the arrival time.
+		delay = maxf(0.0, float(record["birth"]) + SLASH_SWEEP * (1.0 - sqrt(1.0 - fraction)) - _clock)
+	var fx := {"at": _clock + delay, "kind": Kind.SLASH_HIT, "origin": origin, "basis": basis,
+		"color": color, "size": scale, "elem": elem}
+	if (bool(e.get("crit", false)) or float(e.get("em", 1.0)) >= 2.0) and _hit_light_gap <= 0.0:
+		_hit_light_gap = 0.08
+		fx["pulse"] = 1.4 * scale
+	_delayed.append(fx)
+
+## A burst basis whose -Z is the blade's travel direction at the contact point.
+static func _travel_basis(tangent: Vector3, facing: Basis) -> Basis:
+	if absf(tangent.y) < 0.9:
+		return Basis.looking_at(tangent.normalized(), Vector3.UP)
+	var x := facing.x.normalized()
+	var z := -tangent.normalized()
+	return Basis(x, z.cross(x).normalized(), z)
 
 # --------------------------------------------------------------------------- #
 # One-shot combat events
@@ -470,6 +572,10 @@ func event(e: Dictionary) -> void:
 	var elem := float(ELEM_INDEX.get(String(e.get("el", "none")), 0))
 	match type:
 		"hit":
+			if bool(e.get("melee", false)):
+				# Blade contacts wait for this tick's release so they can follow the arc.
+				_pending_hits.append(e)
+				return
 			var p: Vector2 = e.get("p", Vector2.ZERO)
 			var scale := _impact_scale(e)
 			if scale <= 0.0: return
@@ -576,6 +682,13 @@ func update(dt: float) -> void:
 		for material in _status_materials.values(): material.set_shader_parameter("vfx_time", _clock)
 	_split_gap = maxf(0.0, _split_gap - dt)
 	_hit_light_gap = maxf(0.0, _hit_light_gap - dt)
+	# Blade contacts spawn when the sweeping head reaches them; a paused clock holds them.
+	for i in range(_delayed.size() - 1, -1, -1):
+		var fx: Dictionary = _delayed[i]
+		if float(fx["at"]) > _clock: continue
+		_burst(int(fx["kind"]), fx["origin"], fx["basis"], fx["color"], float(fx["size"]), float(fx["elem"]))
+		if fx.has("pulse"): _pulse(fx["origin"], fx["color"], float(fx["pulse"]), 2.0, 0.12)
+		_delayed.remove_at(i)
 	for i in range(effects.size() - 1, -1, -1):
 		var fx = effects[i]
 		if typeof(fx) != TYPE_DICTIONARY or not fx.has("vfx"): continue
@@ -694,21 +807,29 @@ func _beam(kind: int, a: Vector3, b: Vector3, color: Color, big: float) -> void:
 	multimesh.set_instance_custom_data(slot, custom)
 	_record("beam", slot, 0.28, 1, custom)
 
-func _slash(src: int, node: Node3D, color: Color, elem: float) -> void:
+## The slash arc: unit mesh scaled to `reach` (world units) at the hero's simulated
+## position `at`, centred on the fire direction `d`. Swords roll so the wind-up side
+## rides high and the follow-through low; the wrench stands the arc upright and falls.
+func _slash(at: Vector2, d: Vector2, reach: float, sign_value: float, tool: bool, color: Color, elem: float) -> void:
 	if not _make_room(1): return
-	var sign_value := -float(_swing.get(src, -1.0))
-	_swing[src] = sign_value
 	var slot := _take("slash", 1)
 	if slot < 0: return
-	var yaw := node.global_basis.orthonormalized()
-	var basis := yaw * Basis(Vector3.RIGHT, deg_to_rad(-24.0)) * Basis.from_scale(Vector3(0.98, 0.98, 0.98))
+	reach = maxf(reach, 0.3)
+	var facing := Basis.looking_at(Vector3(d.x, 0.0, d.y), Vector3.UP)
+	var basis: Basis
+	if tool:
+		basis = facing * Basis(Vector3.BACK, PI * 0.5)
+	else:
+		basis = facing * Basis(Vector3.BACK, -sign_value * SLASH_TILT) * Basis(Vector3.RIGHT, SLASH_PITCH)
+	basis = basis * Basis.from_scale(Vector3.ONE * reach)
+	var band := clampf(SLASH_BAND / reach, 0.3, 0.58)
 	var multimesh := _slashes.multimesh
-	multimesh.set_instance_transform(slot, Transform3D(basis, node.global_position + Vector3(0, 0.92, 0)))
+	multimesh.set_instance_transform(slot, Transform3D(basis, world(at, SLASH_HEIGHT + (0.1 if tool else 0.0))))
 	multimesh.set_instance_color(slot, color)
 	_counter += 1
-	var custom := Color(_clock - _epoch, sign_value, fposmod(float(_counter) * 0.61, 1.0), elem)
+	var custom := Color(_clock - _epoch, sign_value * band, fposmod(float(_counter) * 0.61, 1.0), elem)
 	multimesh.set_instance_custom_data(slot, custom)
-	_record("slash", slot, 0.26, 1, custom)
+	_record("slash", slot, SLASH_LIFE, 1, custom)
 
 func _dome(at: Vector3, radius: float, color: Color, life: float) -> void:
 	var index: int = _next["dome"]
@@ -796,8 +917,10 @@ func _hero_info(index: int, sim = null) -> Dictionary:
 	var weapon := String(unit.get("weapon", "gun"))
 	var attack := String(row.get("attack", ""))
 	if attack == "": attack = "cast" if weapon in ["deck", "whip"] else "bow" if weapon == "bow" else "sword" if weapon == "sword" else "rifle"
+	var sockets: Array = row.get("sockets", [])
+	var lead := "R" if not sockets.is_empty() and String(sockets[0].get("bone", "")).ends_with("R") else "L"
 	var info := {"id": id, "elem": String(unit.get("elem", "none")), "weapon": weapon, "attack": attack,
-		"sockets": maxi(1, row.get("sockets", []).size()), "color": Color(String(unit.get("color", "#ffffff"))),
+		"sockets": maxi(1, sockets.size()), "lead": lead, "color": Color(String(unit.get("color", "#ffffff"))),
 		"effect": Color(String(row.get("effect_color", unit.get("color", "#ffffff"))))}
 	_hero_cache[index] = info
 	return info

@@ -78,6 +78,7 @@ static func hero(h: Dictionary, levels: Dictionary, passives: Array, heroes: Arr
 	return {
 		"atk": atk, "rate": rate,
 		"range": Balance.attack_range(u, t),
+		"speed": Balance.hero_speed(u),
 		"shots": 1,
 		"bullet": String(u.get("bullet", "shot")),
 		"role": role,

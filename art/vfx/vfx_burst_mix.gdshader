@@ -4,6 +4,7 @@ render_mode unshaded, blend_mix, depth_draw_never, cull_disabled, skip_vertex_tr
 
 // Alpha-blended layer of the burst MultiMesh: smoke/mist puffs and ground scorch.
 // Same instance contract as vfx_burst.gdshader. Parts (UV2.x): 4 puff billboard, 6 ground scorch.
+// Kinds without a row (16..20, blade contacts among them) draw nothing in this layer.
 uniform sampler2D sprites : source_color, filter_linear_mipmap, repeat_disable;
 uniform float vfx_time = 0.0;
 uniform float vfx_epoch = 0.0;

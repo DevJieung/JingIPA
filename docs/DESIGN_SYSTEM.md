@@ -5,6 +5,51 @@
 역할 정의: [graphic_design_manager](../.codex/agents/graphic_design_manager.toml).
 분담 규칙: [AGENTS.md](../AGENTS.md).
 
+## 2026-10-11 검 근접 연출 · 캐릭터별 이동 속도 룩 · 영웅 정보 이동속도
+
+- 사용자 요청 세 가지(캐릭터별 이동 속도 `spd`, 검 영웅 10명의 투사체 없는 근접 베기, 정지 후
+  방향 유지)에서 시각 담당분을 맡았다. 게임 수치(사거리·spd 표, DB)와 피해 시점·난수는 메인
+  소유이며 건드리지 않았다. 화면 코드는 값을 `sim.heroes[src].range`·`Balance.hero_speed`에서
+  읽는다. 작업 시작 때 승인 대기였던 검 사거리 60 기준값·spd 표·영문 문구('Melee'·'Move speed')는
+  이 세션 중에 메인이 적용한 상태로 작업 트리에 들어와(`core/balance.gd`, `tools/roster.json`,
+  `core/locales/ui.json`) 최종 촬영은 그 값으로 찍혔다.
+- **검 근접**(`game/3d/stellar_vfx.gd`, `art/vfx/vfx_slash*.gdshader`, `vfx_burst.gdshader` kind 20):
+  해방마다 `Balance.MELEE_ARC`(110°)+팔로스루 9°의 부채꼴 호를 **실제 사거리** 반지름으로
+  시뮬 영웅 위치에 세우고 같은 틱의 첫 melee hit(겨눈 몬스터) 방향을 가운데에 둔다(`fire.d`는
+  총구점 기준이라 검 사거리에서 판정 부채꼴과 어긋남 — 핀 오버레이 `build/melee-speed/geom/`). 무기 손 쪽이 높고 팔로스루 쪽이 낮은 롤,
+  칼날 머리가 0.10초에 호를 가로지르고 쓸고 간 부채꼴이 0.34초에 함께 사라진다. 밝은 눈·얼음
+  바닥에서 가산 잔광이 묻히는 것을 검수에서 확인해 혼합 잉크 밑판 표면을 추가했다(속성색의
+  진한 중간톤 + 가산 테두리/머리). 칼날 접촉은 몬스터 몸 중심에 진행 방향으로 벌어지는 초승달
+  자국·짧은 섬광·진행 방향 스파크이며, 관통 3명은 머리가 닿는 순서대로 ≤0.1초 간격으로 맞는다
+  (한 덩어리로 뭉개지지 않음). 핍의 렌치는 같은 호를 세워 내려친다. 검의 초승달 투사체 코어는
+  제거했고 검 글린트는 작게 줄였다. 규칙은 [VFX_LIGHTING.md](VFX_LIGHTING.md) 「검 근접」.
+- **검 런지**(`native_character_model.gd`): 해방부터 0.09초에 0.17u(키 비율) 전진·0.045u 뜀,
+  0.46초에 복귀, 서 있을 때 무기 손 쪽 다리를 앞으로 디딘다. 시뮬 위치는 그대로이고 월드가 매
+  프레임 쓰는 `position` 위에 누적 없이 더한다. 월드 훅 추가 없음.
+- **속도별 보행**(`hero_locomotion.gd`, `native_character_model.gd`, `limne_model.gd`): 2.6→5.1u/s
+  사이에서 보폭 ×1.6까지(최고 2.3~2.45주기/s), 다리 스윙 +35%·무릎 +70%, 보행 vault를 비행 호
+  (다리가 벌어질 때 몸·다리 0.11u 상승)로, 상체 +0.10rad, 팔 펌프 +55%/팔꿈치 +0.32rad. 2.0u/s
+  묵직한 걸음은 vault 1.35배·상체 세움·엉덩이 롤. 발 미끄러짐 원칙(위상=거리/보폭) 유지.
+  상세는 [HERO_MOTION.md](HERO_MOTION.md) 「2026-10-11 추가」.
+- **영웅 정보 팝업**(`game/summon_art.gd`): 능력치 칸을 같은 높이의 3×2로 바꿔 공격력·공격속도·
+  사거리 / 치명타·**이동속도**(`int(st.speed)`, 원문 정확히 「이동속도」)·초당 피해(상점과 같은
+  `Run.stats_dps`)를 둔다. 특성 칩은 `Balance.is_melee`면 첫 칩 **「근접」**, 관통·광역·연쇄는 둘째 칩,
+  「단일」은 근접에 함축되어 생략. 영문 'Melee'·'Move speed'는 메인이 등록한 DB 문구를 그대로 쓴다
+  (최종 캡처 `hero_info_*_en.png`에서 영문 확인).
+- 검수 자료 `build/melee-speed/`: `before/1280x800/`(개편 전 같은 장면), `<해상도>/strike_*`(요쿨·
+  핍·헬가·케이든·이그니 베기 연속 프레임·영웅별 2배 GIF·컨택트), `gait_*`(핍 spd 1.50 vs 브라사
+  0.62 같은 레인, 나란히 GIF), `hero_info_*_{ko,en}.png`, `stage/`(무대 보행 GIF: 핍 5.1·브라사 2.1·
+  요쿨 3.4), `probe/`(호 셰이더 단독), `geom/`(핀 오버레이). 재현: `python3 tools/3d/melee_review.py`
+  (`--planned-range` 기본 = 검 60 기준 사거리를 프리뷰의 시뮬 영웅에만 덮어씀; 파일 값이 60이 된
+  지금은 같은 값이며 `--current-range`로 끌 수 있다).
+- 검사(최종 코드, 로그 `build/melee-speed/logs/`): `tests/native_hero_check` 3,791건·
+  `tests/limne_model_check` 182건·`tests/arena_pose_check` 300건·`tests/arena_motion_check` 30건·
+  `tests/3d/stellar_render_check` 2,628건·`tests/localization_check` 1,144건 모두 실패 0.
+  실제 GL 촬영: `tests/3d/melee_visual_preview` 두 창 각 9건·`tests/3d/hero_info_visual_preview`
+  두 창 각 1,337건·`tools/3d/vfx_review.py --quick` 두 창 각 20건 모두 실패 0·`render.log` 오류 0.
+  1280×800과 1000×625 모두에서 베기 호·접촉 자국·보행·팝업을 직접 확인했다(작은 창에서도 호와
+  자국이 하얗게 뭉개지지 않음). Android/iOS 실기기·FPS 검수는 수행하지 않았다.
+
 ## 2026-10-10 모션·VFX 개편 — 프로덕션 수준 캐릭터 움직임과 전투 이펙트
 
 - 사용자가 전투 화면의 캐릭터 움직임·샷·이펙트를 "초보 같다"고 평가하고 상용 3D 게임

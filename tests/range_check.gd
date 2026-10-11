@@ -38,7 +38,7 @@ func _ready() -> void:
 		var hero: Dictionary = sim.heroes[0]
 		var radius := float(hero["range"])
 		ranges[radius] = true
-		check(radius >= 160 and radius <= 400, "%s has a bounded range" % unit["id"])
+		check(radius >= Balance.RANGE_MIN and radius <= Balance.RANGE_MAX, "%s has a bounded range" % unit["id"])
 		check(is_equal_approx(radius, float(Run.hero_stats(Run.heroes[0])["range"])), "simulation and UI share range")
 		check(int(Run.heroes[0]["tier"]) == hero_tier(unit) and is_equal_approx(radius, Balance.attack_range(unit, hero_tier(unit))),
 				"%s fights with the range of the hero's own tier, not the character's art grade" % unit["id"])

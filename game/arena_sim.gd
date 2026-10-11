@@ -271,7 +271,11 @@ func move_selected(direction: Vector2, dt: float) -> bool:
 		return false
 	var hero: Dictionary = heroes[run.selected]
 	var current: Vector2 = hero["pos"]
-	var requested := current + direction.limit_length() * Balance.ARENA_HERO_SPEED * minf(maxf(dt, 0.0), 0.25)
+	# Presentation-only facing intent: a hero pushed against a wall or another
+	# hero still turns toward where the player pushes.
+	hero["fx_d"] = direction.normalized()
+	var speed := float(hero.get("speed", Balance.ARENA_HERO_SPEED))
+	var requested := current + direction.limit_length() * speed * minf(maxf(dt, 0.0), 0.25)
 	requested = ArenaGeometry.clamp_point(requested, Balance.ARENA_HERO_RADIUS)
 	var accepted := current
 	for point in [requested, Vector2(requested.x, current.y), Vector2(current.x, requested.y)]:
@@ -288,8 +292,6 @@ func move_selected(direction: Vector2, dt: float) -> bool:
 	hero["pos"] = accepted
 	hero["h"]["position"] = accepted
 	hero["move_d"] = (accepted - current).normalized()
-	if accepted != current:
-		hero["fx_d"] = hero["move_d"]
 	return accepted != current
 
 func _move_monsters(dt: float) -> void:

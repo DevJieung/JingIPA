@@ -22,7 +22,9 @@ func _check_expanded_battle() -> void:
 		sim.move_selected((corner - Balance.ARENA_CENTER).normalized(), 0.25)
 		check(Vector2(sim.heroes[0]["pos"]).is_equal_approx(corner), "새 맵 끝을 넘어 이동하지 않음")
 		check(ArenaValidation.valid(Arena.snapshot()), "새 맵 모서리 저장 유효")
-		check(Arena.restore(Arena.snapshot()) and Arena.heroes[0]["position"] == corner, "모서리 위치 이어하기 보존")
+		# Pushing outward re-clamps the point onto the rim; the result differs from the
+		# corner only by float noise (< 1e-4) that depends on the hero's own speed.
+		check(Arena.restore(Arena.snapshot()) and Vector2(Arena.heroes[0]["position"]).is_equal_approx(corner), "모서리 위치 이어하기 보존")
 		sim = Arena.sim
 	for i in range(80): sim._spawn(Arena.spawns_for(1)[0])
 	var spawn_radius := ArenaGeometry.RADIUS - Balance.ARENA_MONSTER_RADIUS

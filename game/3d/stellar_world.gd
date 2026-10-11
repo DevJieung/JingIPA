@@ -361,10 +361,7 @@ func sync_heroes(heroes: Array, time: float, battle: bool = false) -> void:
 			var motion: Dictionary = _hero_motion.get(i,{}) if battle else {}
 			if node.has_method("set_locomotion"):
 				node.call("set_locomotion",motion.get("v",Vector3.ZERO),float(motion.get("dt",0.0)))
-			var heading: Vector2 = motion.get("dir",Vector2.INF)
-			if not heading.is_finite():
-				heading = _native_direction.get(i,data.get("fx_d",Vector2(0,1))) if battle else Vector2(0,1)
-			_face(node,heading,battle,float(motion.get("dt",0.0)))
+			_face(node,_hero_heading(i,data,motion,battle),battle,float(motion.get("dt",0.0)))
 			node.animate_visual(time+float(i)*0.31,ft,raw_wind,battle)
 			continue
 		_native_pending.erase(i)
@@ -372,9 +369,7 @@ func sync_heroes(heroes: Array, time: float, battle: bool = false) -> void:
 		var motion: Dictionary = _hero_motion.get(i,{}) if battle else {}
 		if node.has_method("set_locomotion"):
 			node.call("set_locomotion",motion.get("v",Vector3.ZERO),float(motion.get("dt",0.0)))
-		var direction: Vector2 = motion.get("dir",Vector2.INF)
-		if not direction.is_finite(): direction = data.get("fx_d",Vector2(0,1)) if battle else Vector2(0,1)
-		_face(node,direction,battle,float(motion.get("dt",0.0)))
+		_face(node,_hero_heading(i,data,motion,battle),battle,float(motion.get("dt",0.0)))
 		var wind := maxf(0.04,raw_wind)
 		if node is LimneModel:
 			node.animate_visual(time+float(i)*0.31,ft,wind,battle)
@@ -401,6 +396,23 @@ func sync_heroes(heroes: Array, time: float, battle: bool = false) -> void:
 		if int(source)>=heroes.size(): _native_pending.erase(source)
 	for source in _native_direction.keys():
 		if int(source)>=heroes.size(): _native_direction.erase(source)
+
+## Which way a hero faces this frame. Travel wins while the hero walks without
+## attacking; the aim direction of the current attack wins while it attacks
+## (also while walking, so the upper body twists toward the target); otherwise
+## the simulator's latest facing intent (`fx_d`: last travel, joystick push or
+## aim) holds. An old aim direction is never reused once the attack is over —
+## that made stopped or blocked heroes turn toward wherever they last shot.
+## Outside battle (formation previews) everyone faces the camera.
+func _hero_heading(i: int, data: Dictionary, motion: Dictionary, battle: bool) -> Vector2:
+	if not battle: return Vector2(0,1)
+	var heading: Vector2 = motion.get("dir",Vector2.INF)
+	if heading.is_finite(): return heading
+	var intent: Vector2 = data.get("fx_d",Vector2.INF)
+	if bool(motion.get("attacking",true)):
+		return _native_direction.get(i,intent if intent.is_finite() else Vector2(0,1))
+	if intent.is_finite(): return intent
+	return _native_direction.get(i,Vector2(0,1))
 
 ## Facing is a presentation decision: adapters that own smooth turning receive a
 ## target direction; everything else snaps as before. Logical direction, +y = south.
