@@ -2,11 +2,29 @@ extends StellarView
 class_name ArenaView
 
 ## HUD overlays the full world texture; follow and picking use the open field.
+## Since the 2026-10-12 spiral field the camera frames the whole arena: it only nudges
+## when the selected hero reaches the rim so a hero never sits under the HUD edges, and
+## it keeps the complete crystal in view at all times.
 var battle_box := Rect2(0, 70, 992, 730)
 var minimap_box := Rect2(1006, 84, 130, 132)
 var _follow_offset := Vector3.ZERO
 var _camera_initialized := false
 var _camera_sim = null
+## Pixels the selected hero may approach the open box edges before the view nudges.
+const EDGE_GUARD := Vector2(64, 48)
+## Boss entrance emphasis. Anticipation: during the warning the view leans slowly toward
+## the gate. Snap: the moment the boss steps in the view punches 8% closer around the gate
+## with a short decaying shake. Settle: it eases back to the full-field framing.
+## Ages advance with simulated time only, so pauses and modals freeze the move.
+const BOSS_WARN_LEAN := 0.35
+const BOSS_SPAWN_LEAN := 0.95
+const BOSS_PUNCH := 1.08
+const BOSS_SNAP := 0.12
+const BOSS_HOLD := 0.55
+const BOSS_SPAWN_LENGTH := 1.7
+var _boss_phase := ""
+var _boss_age := 0.0
+var _boss_gate := Vector2.INF
 
 func attach(parent: CanvasItem, rect: Rect2) -> void:
 	box = rect
@@ -29,7 +47,9 @@ func _active_box() -> Rect2:
 	return battle_box.intersection(box)
 
 func _apply_camera(offset: Vector3) -> void:
-	world.camera_target = offset
+	var emphasis := boss_camera()
+	world.camera_punch = float(emphasis["punch"])
+	world.camera_target = offset + Vector3(emphasis["shift"])
 	world.camera_update()
 	# Center the fixed orthographic view in the open area left of the command rail.
 	var center := box.get_center()
@@ -67,16 +87,57 @@ func follow_selected(at: Vector2, dt: float) -> void:
 	if world == null or not at.is_finite(): return
 	_apply_camera(_follow_offset)
 	if _camera_initialized and dt <= 0.0: return
+	# The whole field is framed, so the hero only pulls the view when it reaches the
+	# rim next to a HUD edge; the nudge is measured from the centred framing, so the
+	# view eases back to it as soon as the hero leaves the rim.
 	var active := _active_box()
-	var deadzone := Rect2(active.position + active.size * Vector2(0.34, 0.32),
-		active.size * Vector2(0.32, 0.36))
+	var guard := Rect2(active.position + EDGE_GUARD, active.size - EDGE_GUARD * 2)
+	_apply_camera(Vector3.ZERO)
 	var pixel := project(at, 0.5)
-	var desired := _follow_offset + _ground_shift(pixel, pixel.clamp(deadzone.position, deadzone.end))
+	var desired := _ground_shift(pixel, pixel.clamp(guard.position, guard.end))
 	desired = _keep_crystal_visible(desired)
 	var weight := 1.0 if not _camera_initialized else 1.0 - exp(-8.0 * minf(dt, 0.25))
 	_follow_offset = _keep_crystal_visible(_follow_offset.lerp(desired, weight))
 	_camera_initialized = true
 	_apply_camera(_follow_offset)
+
+## Start the boss entrance camera: "warn" at the four-second warning, "spawn" when the
+## boss steps onto the field. `gate` is the logical point where it appears.
+func boss_event(phase: String, gate: Vector2) -> void:
+	if phase not in ["warn", "spawn"]: return
+	_boss_phase = phase
+	_boss_age = 0.0
+	if gate.is_finite(): _boss_gate = gate
+
+func boss_advance(dt: float) -> void:
+	if _boss_phase.is_empty() or dt <= 0.0: return
+	_boss_age += dt
+	if _boss_phase == "spawn" and _boss_age >= BOSS_SPAWN_LENGTH:
+		_boss_phase = ""
+		_boss_age = 0.0
+
+func boss_emphasis() -> Dictionary:
+	return {"phase": _boss_phase, "age": _boss_age, "gate": _boss_gate}
+
+## Camera lean (world units) and zoom punch for the current boss entrance moment.
+func boss_camera() -> Dictionary:
+	if _boss_phase.is_empty() or not _boss_gate.is_finite():
+		return {"shift": Vector3.ZERO, "punch": 1.0}
+	var toward := StellarWorld.world(_boss_gate) - StellarWorld.world(Balance.ARENA_CENTER)
+	toward.y = 0.0
+	if toward.length_squared() < 0.0001: return {"shift": Vector3.ZERO, "punch": 1.0}
+	toward = toward.normalized()
+	if _boss_phase == "warn":
+		var lean := BOSS_WARN_LEAN * smoothstep(0.0, Balance.ARENA_BOSS_WARNING, _boss_age)
+		return {"shift": toward * lean, "punch": 1.0}
+	var age := _boss_age
+	var hit := 1.0 - pow(1.0 - clampf(age / BOSS_SNAP, 0.0, 1.0), 3.0)
+	var settle := smoothstep(BOSS_HOLD, BOSS_SPAWN_LENGTH, age)
+	var lean := lerpf(BOSS_WARN_LEAN, BOSS_SPAWN_LEAN, hit) * (1.0 - settle)
+	var side := Vector3(-toward.z, 0, toward.x)
+	var decay := exp(-age * 5.5)
+	var shake := (side * sin(age * 47.0) * 0.6 + toward * sin(age * 31.0 + 0.9) * 0.4) * 0.13 * decay
+	return {"shift": toward * lean + shake, "punch": 1.0 + (BOSS_PUNCH - 1.0) * hit * (1.0 - settle)}
 
 func minimap_bounds() -> Rect2:
 	return ArenaGeometry.MAP_RECT
@@ -112,6 +173,8 @@ func draw_arena(ci: CanvasItem, rect: Rect2, theme: Dictionary, sim, selected: i
 		_camera_sim = sim
 		_camera_initialized = false
 		_follow_offset = Vector3.ZERO
+		_boss_phase = ""
+		_boss_age = 0.0
 	if sim != null:
 		for hero in sim.heroes:
 			hero["fx_t"] = float(hero.get("fx_t", 9.0)) + dt
@@ -125,10 +188,14 @@ func draw_arena(ci: CanvasItem, rect: Rect2, theme: Dictionary, sim, selected: i
 					hero["fx_d"] = e.get("d", Vector2.DOWN)
 			if String(e.get("t", "")) == "fire":
 				Sfx.play(Sfx.shot_id(String(e.get("el", "none")), String(e.get("kind", "shot"))), -6.0, 1.0, 0.07)
+			if String(e.get("t", "")) == "arena_boss_warning":
+				boss_event("warn", Vector2(e.get("p", sim.boss_gate())))
 			if String(e.get("t", "")) == "arena_boss":
 				Sfx.play("boss")
+				boss_event("spawn", Vector2(e.get("p", sim.boss_gate())))
 			world.event(e)
 		sim.events.clear()
+		boss_advance(dt)
 		world.sync_battle(sim, sim.elapsed, 1, dt)
 		var at := Vector2.INF
 		var radius := 0.0
@@ -139,7 +206,8 @@ func draw_arena(ci: CanvasItem, rect: Rect2, theme: Dictionary, sim, selected: i
 				at = data["pos"]
 				radius = float(data.get("range", 0.0))
 		world.set_selection(at, false, radius)
-		follow_selected(at, dt)
+		if at.is_finite(): follow_selected(at, dt)
+		else: _apply_camera(_follow_offset)
 	else:
 		world.set_selection(Vector2.INF, false)
 		_apply_camera(Vector3.ZERO)
@@ -150,7 +218,8 @@ func draw_arena(ci: CanvasItem, rect: Rect2, theme: Dictionary, sim, selected: i
 		if not rect.grow(-12).has_point(at): continue
 		var color: Color = item["color"]
 		color.a = clampf(1.5 - float(item["age"]) * 2, 0, 1)
-		Look.text_center_out(ci, at, Fx._short_num(float(item["n"])), 19 if item["big"] else 14, color, Look.BG_DEEP, 1.5)
+		# Sized for the zoomed-out field: still legible over a 23px monster at 1000x625.
+		Look.text_center_out(ci, at, Fx._short_num(float(item["n"])), 22 if item["big"] else 16, color, Look.BG_DEEP, 2.0)
 
 func camera_input(_e: InputEvent) -> bool:
 	return false

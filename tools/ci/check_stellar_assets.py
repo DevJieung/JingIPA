@@ -36,10 +36,11 @@ def main():
         check_imported_resource(archive, names, "assets/art/models/contact_shadow.gdshader")
         # Battle VFX, lighting and shading of the 2026-10 motion overhaul.
         for shader in ["vfx_projectile", "vfx_muzzle", "vfx_burst", "vfx_burst_mix", "vfx_beam", "vfx_zone",
-                       "vfx_zone_base", "vfx_slash", "vfx_dome", "vfx_status", "weather"]:
+                       "vfx_zone_base", "vfx_slash", "vfx_dome", "vfx_status", "vfx_skill", "vfx_skill_mix",
+                       "weather"]:
             check_imported_resource(archive, names, f"assets/art/vfx/{shader}.gdshader")
         check_imported_resource(archive, names, "assets/art/vfx/vfx_common.gdshaderinc")
-        for texture in ["sprites", "noise"]:
+        for texture in ["sprites", "noise", "skill_sprites"]:
             check_texture(archive, names, f"assets/art/vfx/{texture}.png")
         for module in ["hero_locomotion"]:
             source = f"assets/game/3d/{module}.gd"

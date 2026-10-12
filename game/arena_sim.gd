@@ -11,9 +11,17 @@ var crystal_max := 0.0
 var shield := 0.0
 var shield_t := 0.0
 var skill_cooldowns := {"blast": 0.0, "freeze": 0.0, "ward": 0.0}
+## Casts spent this run; each skill has Balance.ARENA_*_USES per run on top of its cooldown.
+var skill_uses := {"blast": 0, "freeze": 0, "ward": 0}
+## The boss gate is drawn ARENA_BOSS_WARNING seconds early so the arena can announce it.
+var boss_warned := false
+var boss_lane := -1
+var _forced_lane := -1
 var _nav := AStarGrid2D.new()
 var _road_nav := AStarGrid2D.new()
 var _road_cells: Array[Vector2i] = []
+## Road cells currently closed by a guardian; only these are reopened on a rebuild.
+var _guarded_cells: Array[Vector2i] = []
 var _nav_key := ""
 var _nav_version := 0
 var _serial := 0
@@ -28,6 +36,9 @@ func setup(run_state, wave_no: int = 1, seed_value: int = 0) -> void:
 	crystal_hp = crystal_max
 	boss_spawned = false
 	boss_alive = false
+	boss_warned = false
+	boss_lane = -1
+	_forced_lane = -1
 	won = false
 	shield = 0.0
 	shield_t = 0.0
@@ -39,6 +50,7 @@ func setup(run_state, wave_no: int = 1, seed_value: int = 0) -> void:
 	_spawn_t = Balance.ARENA_SPAWN_INITIAL
 	for id in skill_cooldowns:
 		skill_cooldowns[id] = 0.0
+		skill_uses[id] = 0
 	_nav.region = Rect2i(Vector2i.ZERO, Vector2i(ceili(ArenaGeometry.MAP_RECT.size.x / Balance.ARENA_NAV_CELL), ceili(ArenaGeometry.MAP_RECT.size.y / Balance.ARENA_NAV_CELL)))
 	_nav.cell_size = ArenaGeometry.MAP_RECT.size / Vector2(_nav.region.size)
 	_nav.offset = ArenaGeometry.MAP_RECT.position + _nav.cell_size * 0.5
@@ -54,11 +66,15 @@ func setup(run_state, wave_no: int = 1, seed_value: int = 0) -> void:
 		for x in range(_nav.region.size.x):
 			var cell := Vector2i(x, y)
 			# Reserve a little clearance so grid edges cannot cut across the inside
-			# of a curved road. The static mask is computed once, not every frame.
-			var road := ArenaGeometry.on_road(_nav.get_point_position(cell), Balance.ARENA_MONSTER_RADIUS + 3)
+			# of a curved road (a 14 unit diagonal on the tightest 75 unit bend dips
+			# 0.33). The static mask is computed once, not every frame. Together with
+			# the guardian radius below this leaves a 15 unit lane beside a hero standing
+			# on the centreline; one cell wide lanes pinch shut on diagonal roads.
+			var road := ArenaGeometry.on_road(_nav.get_point_position(cell), Balance.ARENA_MONSTER_RADIUS + 1)
 			_nav.set_point_solid(cell, not road)
 			_road_nav.set_point_solid(cell, not road)
 			if road: _road_cells.append(cell)
+	_guarded_cells.clear()
 	_nav_key = ""
 	_rebuild_navigation()
 
@@ -113,7 +129,7 @@ func spawn_interval() -> float:
 func _spawn(monster: Dictionary) -> void:
 	super._spawn(monster)
 	var mo: Dictionary = monsters[-1]
-	var lane := _rng.randi_range(0, ArenaGeometry.ROUTE_COUNT - 1)
+	var lane := _forced_lane if _forced_lane >= 0 else _rng.randi_range(0, ArenaGeometry.ROUTE_COUNT - 1)
 	var path := ArenaGeometry.route_points(lane)
 	var radial := (path[0] - Balance.ARENA_CENTER).normalized()
 	var entrance := Balance.ARENA_CENTER + radial * (ArenaGeometry.RADIUS - Balance.ARENA_MONSTER_RADIUS)
@@ -151,10 +167,19 @@ func _tick(dt: float) -> void:
 	shield_t = maxf(0.0, shield_t - dt)
 	if shield_t == 0.0:
 		shield = 0.0
+	if not boss_spawned and not boss_warned and elapsed >= Balance.ARENA_BOSS_AT - Balance.ARENA_BOSS_WARNING:
+		# The gate is decided now so the warning can point at it; the boss then uses it.
+		boss_warned = true
+		boss_lane = _rng.randi_range(0, ArenaGeometry.ROUTE_COUNT - 1)
+		events.append({"t": "arena_boss_warning", "p": boss_gate(), "sec": Balance.ARENA_BOSS_WARNING, "lane": boss_lane})
 	if not boss_spawned and elapsed >= Balance.ARENA_BOSS_AT:
 		boss_spawned = true
+		boss_warned = true
+		if boss_lane < 0: boss_lane = _rng.randi_range(0, ArenaGeometry.ROUTE_COUNT - 1)
+		_forced_lane = boss_lane
 		_spawn(run.boss_for(1))
-		events.append({"t": "arena_boss", "p": mpos(monsters[-1])})
+		_forced_lane = -1
+		events.append({"t": "arena_boss", "p": mpos(monsters[-1]), "sid": int(monsters[-1]["spawn_id"]), "lane": boss_lane})
 	elif not boss_spawned:
 		_spawn_t -= dt
 		if _spawn_t <= 0.0:
@@ -190,17 +215,29 @@ func _rebuild_navigation() -> void:
 		return
 	_nav_key = key
 	_nav_version += 1
-	var radius := Balance.ARENA_HERO_RADIUS + Balance.ARENA_MONSTER_RADIUS + Balance.ARENA_NAV_CELL * 0.5
-	for cell in _road_cells:
-		var p := _nav.get_point_position(cell)
-		var solid := false
-		for hero in heroes:
-			var at: Vector2 = hero["pos"]
-			at = (at / 4.0).round() * 4.0
-			if p.distance_squared_to(at) < radius * radius:
-				solid = true
-				break
-		_nav.set_point_solid(cell, solid)
+	# Cells are solid when their centre is closer than the touching distance plus the
+	# 4 unit position rounding (2.83) and the dip of a diagonal chord between two
+	# centres at that distance (0.9): every grid path then clears the real radius.
+	var radius := Balance.ARENA_HERO_RADIUS + Balance.ARENA_MONSTER_RADIUS + 4.0
+	# Only the cells around a guardian can change: reopen the ones closed last time,
+	# then close the road cells inside each guardian's footprint. (Scanning every road
+	# cell for every hero cost 3 ms per rebuild, and a walking hero rebuilds on most ticks.)
+	for cell in _guarded_cells: _nav.set_point_solid(cell, false)
+	_guarded_cells.clear()
+	var reach := ceili(radius / minf(_nav.cell_size.x, _nav.cell_size.y)) + 1
+	for hero in heroes:
+		var at: Vector2 = hero["pos"]
+		at = (at / 4.0).round() * 4.0
+		var centre := _cell(at)
+		for y in range(maxi(0, centre.y - reach), mini(_nav.region.size.y, centre.y + reach + 1)):
+			for x in range(maxi(0, centre.x - reach), mini(_nav.region.size.x, centre.x + reach + 1)):
+				var cell := Vector2i(x, y)
+				# The road-only grid is the static mask; anything already closed is either
+				# off the road or inside another guardian's footprint.
+				if _nav.is_point_solid(cell) or _road_nav.is_point_solid(cell): continue
+				if _nav.get_point_position(cell).distance_squared_to(at) < radius * radius:
+					_nav.set_point_solid(cell, true)
+					_guarded_cells.append(cell)
 
 func _road_segment_clear(from: Vector2, to: Vector2, margin: float = Balance.ARENA_MONSTER_RADIUS) -> bool:
 	var samples := maxi(1, ceili(from.distance_to(to) / 6.0))
@@ -409,6 +446,22 @@ func _reap() -> void:
 		done = true
 		run.end_run(true)
 
+## Logical point where the boss will step onto the field (the chosen gate), or INF before it is known.
+func boss_gate() -> Vector2:
+	if boss_lane < 0: return Vector2.INF
+	var radial := (ArenaGeometry.route_points(boss_lane)[0] - Balance.ARENA_CENTER).normalized()
+	return Balance.ARENA_CENTER + radial * (ArenaGeometry.RADIUS - Balance.ARENA_MONSTER_RADIUS)
+
+func skill_max_uses(id: String) -> int:
+	match id:
+		"blast": return Balance.ARENA_BLAST_USES
+		"freeze": return Balance.ARENA_FREEZE_USES
+		"ward": return Balance.ARENA_WARD_USES
+	return 0
+
+func skill_uses_left(id: String) -> int:
+	return maxi(0, skill_max_uses(id) - int(skill_uses.get(id, 0)))
+
 func skill_max_cooldown(id: String) -> float:
 	match id:
 		"blast": return Balance.ARENA_BLAST_COOLDOWN
@@ -418,6 +471,8 @@ func skill_max_cooldown(id: String) -> float:
 
 func cast_skill(id: String) -> bool:
 	if done or not run.running or not String(run.modal).is_empty() or not skill_cooldowns.has(id) or float(skill_cooldowns[id]) > 0.0:
+		return false
+	if skill_uses_left(id) <= 0:
 		return false
 	_cache_positions()
 	if id != "ward" and _mp.is_empty():
@@ -439,6 +494,7 @@ func cast_skill(id: String) -> bool:
 		shield_t = Balance.ARENA_WARD_DURATION
 		events.append({"t": "arena_ward", "p": at, "r": Balance.ALTAR_R})
 	skill_cooldowns[id] = skill_max_cooldown(id)
+	skill_uses[id] = int(skill_uses.get(id, 0)) + 1
 	_reap()
 	run.autosave()
 	return true
@@ -452,7 +508,8 @@ func snapshot_arena() -> Dictionary:
 		runtime.append(state)
 	return {"road_revision": ArenaGeometry.ROAD_REVISION,
 		"elapsed": elapsed, "boss_spawned": boss_spawned, "boss_alive": boss_alive, "crystal_hp": crystal_hp,
-		"shield": shield, "shield_t": shield_t, "cooldowns": skill_cooldowns.duplicate(), "spawn_t": _spawn_t,
+		"shield": shield, "shield_t": shield_t, "cooldowns": skill_cooldowns.duplicate(), "uses": skill_uses.duplicate(),
+		"boss_warned": boss_warned, "boss_lane": boss_lane, "spawn_t": _spawn_t,
 		"serial": _serial, "rng": _rng.state, "curse_t": curse_t, "surge": surge, "surge_t": surge_t,
 		"accumulator": _accumulator, "kills": kills, "gold": gold,
 		"nav_version": _nav_version,
@@ -467,6 +524,12 @@ func restore_arena(data: Dictionary, migrate_roads: bool = false) -> void:
 	shield = float(data["shield"])
 	shield_t = float(data["shield_t"])
 	skill_cooldowns = data["cooldowns"].duplicate()
+	# Runs saved before the per-run limit (2026-10-12) start it fresh.
+	for id in skill_uses:
+		skill_uses[id] = int(data.get("uses", {}).get(id, 0))
+	boss_warned = bool(data.get("boss_warned", boss_spawned))
+	boss_lane = int(data.get("boss_lane", -1))
+	_forced_lane = -1
 	_spawn_t = float(data["spawn_t"])
 	_serial = int(data["serial"])
 	_rng.state = int(data["rng"])

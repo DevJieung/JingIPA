@@ -7,9 +7,10 @@ class_name NativeCharacterModel
 ##   base   = IdleLoop(time) blended toward WalkLoop(distance phase) by speed
 ##   upper  = Attack(anticipation q = age / wind, release at 1.0 s, recovery) riding
 ##            on the base body delta while aiming, firing or recovering
-##   gait   = speed shaping of the walk (HeroLocomotion.run_factor / slow_factor):
-##            longer leg swing, flight arc, lean and arm pump at a run; deeper vault
-##            and hip roll at a heavy walk
+##   gait   = planted legs and hip height re-solved by HeroLocomotion every sample
+##            (heel -> toe rolling stance that never slides, swing clearance, flight
+##            arc and strike settle by ground speed) on top of the clip's arms, torso
+##            rhythm and timing; arm pump and lean at a run, hip roll at a heavy walk
 ##   lunge  = melee only: a visual step toward the cut on the release (root offset
 ##            re-added over the world's simulated position, never accumulated)
 ##   lean   = turn / acceleration / gait lean about the hips
@@ -22,16 +23,19 @@ const RECOVERY := 0.5            # seconds of release action after fire
 const CANCEL_FADE := 0.25
 const FIRE_FLASH := 0.13
 const UPPER_FADE_OUT := 0.22
-## Run shaping at HeroLocomotion.run_factor() == 1 (5.1 world units/s, spd 1.50):
-## leg swing +35 %, knee lift +70 %, the walking vault replaced by a 0.11 u flight arc
-## (both feet off the ground while the legs are spread), arms pumping 55 % more with
-## 0.32 rad extra elbow flexion. A heavy walk (2.0 u/s, spd 0.60) deepens the vault.
-const RUN_LEG_SWING := 0.35
-const RUN_LIFT := 0.7
-const RUN_FLIGHT := 0.11
+## Planted gait (2026-10-12): the authored WalkLoop keeps its arms, torso rhythm and
+## timing, but the legs and the hip height come from HeroLocomotion so the planted
+## sole rolls heel -> toe without sliding (hero_locomotion.gd). The sole reach ahead
+## and behind the hip pivot follows the finisher's rig convention in height units;
+## `motion.sole {toe, heel}` and `motion.leg_swing` in the manifest override it.
+## At a run (5.1 u/s, spd 1.50) the arms pump 55 % more with 0.32 rad extra elbow
+## flexion; a heavy walk (2.0 u/s, spd 0.60) adds hip roll.
+const SOLE_TOE := 0.17
+const SOLE_HEEL := 0.05
+const SOLE_BAND := 0.012          # sole = skin within this fraction of the height above the floor
 const RUN_ARM := 0.55
 const RUN_ELBOW := 0.32
-const SLOW_STOMP := 0.35
+static var _sole_cache: Dictionary = {}   # native id -> {"toe": u, "heel": u}, measured once
 ## Melee lunge (presentation only; the simulator's position and the damage moment do
 ## not move): the sword hero steps LUNGE_REACH toward the cut over the 3-frame strike
 ## (LUNGE_IN), holds through the follow-through and is back on its post by LUNGE_OUT,
@@ -182,6 +186,7 @@ func _ready() -> void:
 		# rotation_xyz is authored as Blender XYZ Euler, not Godot's YXZ default.
 		var basis := Basis.from_euler(Vector3(float(rotation[0]),float(rotation[1]),float(rotation[2])),EULER_ORDER_XYZ)
 		_socket_rest.append(Transform3D(basis,Vector3(float(xyz[0]),float(xyz[1]),float(xyz[2]))))
+	_bind_gait()
 	_setup_flash()
 	_collect_reactors(self)
 	_composed = _rest.duplicate()
@@ -189,6 +194,88 @@ func _ready() -> void:
 	# Stand-alone previews (portraits, review scenes) get the same per-instance
 	# hit-flash/rim materials as world actors; already prepared instances are skipped.
 	StellarShading.prepare_instance(self)
+
+## Rig geometry for the planted gait: hip pivot height, sole reach and the authored
+## leg swing amplitude (measured once from the WalkLoop unless the manifest states it).
+func _bind_gait() -> void:
+	var motion: Dictionary = _spec.get("motion", {})
+	var h := float(_spec.get("height", 1.65))
+	var sole: Dictionary = motion.get("sole", _measure_sole(h))
+	# The heel reach is honoured as measured (HeroLocomotion shortens the front swing so a
+	# rear-heavy sole lands under the body instead of rocking the hip up); the toe reach is
+	# bounded because robe hems and flippers register as the front of the sole.
+	var toe := clampf(float(sole.get("toe", SOLE_TOE * h)), 0.10 * h, 0.22 * h)
+	var heel := clampf(float(sole.get("heel", SOLE_HEEL * h)), 0.0, 0.30 * h)
+	var amplitude := float(motion.get("leg_swing", 0.0))
+	if amplitude <= 0.0 and _clips[1] != null and _legs.has("L"):
+		var i: int = _legs["L"]
+		for n in range(16):
+			var sampled := _sample(1, _length(1) * float(n) / 16.0)
+			var q := (sampled[i].basis * _rest[i].basis.inverse()).get_rotation_quaternion()
+			if q.w < 0.0: q = -q
+			amplitude = maxf(amplitude, q.get_angle())
+	if amplitude <= 0.0: amplitude = 0.62
+	_loco.set_gait_geometry(_hip, toe, heel, amplitude)
+
+## Sole reach ahead (toe) and behind (heel) the hip pivot, in model units, from the
+## lowest leg-weighted skin vertices. Gear shifts the finisher's bounding-box centre,
+## so the feet sit anywhere from 0.14 h to 0.26 h ahead of the pivot. Measured once per
+## hero id: every vertex fails the cheap height test first, only the sole band looks
+## up its bones, and the result is cached for every later instance.
+func _measure_sole(h: float) -> Dictionary:
+	var id := String(get_meta("native_id", ""))
+	if _sole_cache.has(id): return _sole_cache[id]
+	var result := {"toe": SOLE_TOE * h, "heel": SOLE_HEEL * h}
+	var legs: Array = _legs.values()
+	if legs.is_empty() or _skeleton == null:
+		_sole_cache[id] = result
+		return result
+	var pivot_z := _rest[legs[0]].origin.z
+	var band := SOLE_BAND * h
+	var toe := 0.0
+	var heel := 0.0
+	var found := false
+	for child in _skeleton.get_children():
+		var mi := child as MeshInstance3D
+		if mi == null or mi.mesh == null: continue
+		var skin: Skin = mi.skin
+		if skin == null: continue
+		var leg_bind := PackedByteArray()
+		leg_bind.resize(skin.get_bind_count())
+		for b in skin.get_bind_count():
+			var bone := skin.get_bind_bone(b)
+			if bone < 0: bone = _skeleton.find_bone(skin.get_bind_name(b))
+			leg_bind[b] = 1 if bone in legs else 0
+		var local: Transform3D = mi.transform
+		var identity: bool = local.is_equal_approx(Transform3D.IDENTITY)
+		var mesh: Mesh = mi.mesh
+		for surface in mesh.get_surface_count():
+			var arrays: Array = mesh.surface_get_arrays(surface)
+			var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var bones = arrays[Mesh.ARRAY_BONES]
+			var weights = arrays[Mesh.ARRAY_WEIGHTS]
+			if bones == null or weights == null: continue
+			var per := 8 if (mesh.surface_get_format(surface) & Mesh.ARRAY_FLAG_USE_8_BONE_WEIGHTS) else 4
+			for k in verts.size():
+				var v := verts[k]
+				if v.y > band: continue
+				if not identity:
+					v = local * v
+					if v.y > band: continue
+				var best := 0.0
+				var best_bind := -1
+				for j in per:
+					var w := float(weights[k * per + j])
+					if w > best:
+						best = w
+						best_bind = int(bones[k * per + j])
+				if best_bind < 0 or best_bind >= leg_bind.size() or leg_bind[best_bind] == 0: continue
+				found = true
+				toe = maxf(toe, pivot_z - v.z)
+				heel = maxf(heel, v.z - pivot_z)
+	if found: result = {"toe": toe, "heel": heel}
+	_sole_cache[id] = result
+	return result
 
 func _collect_reactors(node: Node) -> void:
 	if node is MeshInstance3D:
@@ -273,10 +360,13 @@ func animate_visual(time: float, age: float = 9.0, raw_wind: float = 0.0, battle
 	var slow := 0.0
 	if weight > 0.001 and _clips[1] != null:
 		var walk := _sample(1, phi*_length(1))
+		var idle_legs: Dictionary = {}
+		for side in _legs: idle_legs[side] = pose[_legs[side]]
 		for i in count: pose[i] = pose[i].interpolate_with(walk[i], weight)
 		run = _loco.run_factor()*weight
 		slow = _loco.slow_factor()*weight
-		if run > 0.001 or slow > 0.001: _shape_gait(pose, walk, phi, run, slow)
+		_plant_gait(pose, walk, idle_legs, weight)
+		if run > 0.001: _pump_arms(pose, phi, run)
 	if lunge > 0.0 and weight < 0.5:
 		# A standing cut steps into the target: weapon-side leg forward, the other braced.
 		var stance := lunge*(1.0-weight*2.0)
@@ -297,7 +387,7 @@ func animate_visual(time: float, age: float = 9.0, raw_wind: float = 0.0, battle
 		for i in count:
 			if _upper[i]: pose[i] = body_delta*attack[i]
 	var lean_roll := _loco.lean_roll+0.045*slow*cos(TAU*(phi-0.1))
-	var lean_pitch := _loco.lean_pitch+_loco.gait_lean()*weight
+	var lean_pitch := _loco.lean_pitch+(_loco.gait_lean()+_loco.strike_nod())*weight
 	if absf(lean_roll) > 0.0005 or absf(lean_pitch) > 0.0005:
 		var hip := Vector3(0,_hip,0)
 		var lean := Transform3D(Basis.from_euler(Vector3(lean_pitch,0,lean_roll)), Vector3.ZERO)
@@ -365,33 +455,28 @@ func _pump_multipliers() -> Dictionary:
 		"tool": mult = {"L":0.8,"R":0.8}
 	return mult
 
-## Speed shaping of the sampled walk (presentation only, recomputed every sample): a
-## run lengthens the leg swing and knee lift, replaces the walking vault (body lowest
-## with the legs spread) by a flight arc (body and legs highest with the legs spread,
-## both feet off the ground) and pumps the arms; a heavy walk deepens the vault.
-func _shape_gait(pose: Array[Transform3D], walk: Array[Transform3D], phi: float, run: float, slow: float) -> void:
+## Planted legs (presentation only, recomputed every sample): the sampled walk keeps
+## its arms, torso rhythm and timing; each leg takes the hip angle and swing lift that
+## HeroLocomotion solved for this phase (heel strike ahead, heel -> toe roll with the
+## sole fixed on the ground, push-off behind, clearance in the swing), blended from
+## the idle leg by the walk weight, and the whole upper body moves to the hip height
+## that keeps the planted sole on the ground in place of the clip's vault.
+func _plant_gait(pose: Array[Transform3D], walk: Array[Transform3D], idle_legs: Dictionary, weight: float) -> void:
 	var vault := 0.0
 	if _body_bone >= 0: vault = walk[_body_bone].origin.y-_rest[_body_bone].origin.y
-	var flight := RUN_FLIGHT*_height_scale*(0.5+0.5*cos(TAU*2.0*phi))
-	var lift_all := run*flight
-	var upper_shift := -run*vault+slow*SLOW_STOMP*vault
+	var hip := _loco.body_height()
+	var shift := weight*(hip-vault)
 	var legs: Array = _legs.values()
 	for i in pose.size():
-		if i in legs:
-			var origin := pose[i].origin
-			var lift := origin.y-_rest[i].origin.y
-			origin.y = _rest[i].origin.y+lift*(1.0+RUN_LIFT*run)+lift_all
-			var q := (pose[i].basis*_rest[i].basis.inverse()).get_rotation_quaternion()
-			if q.w < 0.0: q = -q
-			var angle := q.get_angle()
-			if angle > 0.0001 and run > 0.001:
-				var scaled := Quaternion(q.get_axis().normalized(), angle*(1.0+RUN_LEG_SWING*run))
-				pose[i] = Transform3D(Basis(scaled)*_rest[i].basis, origin)
-			else:
-				pose[i] = Transform3D(pose[i].basis, origin)
-		else:
-			pose[i].origin.y += upper_shift+lift_all
-	if run > 0.001: _pump_arms(pose, phi, run)
+		if not (i in legs): pose[i].origin.y += shift
+	# The bones are absolute controls (no parent chain): the hip pivots must ride the
+	# same height as the body, so the leg origins carry the hip offset plus the swing lift.
+	for side in _legs:
+		var i: int = _legs[side]
+		var st := _loco.leg_state(side)
+		var rest := _rest[i]
+		var planted := Transform3D(Basis(Vector3.RIGHT, float(st["angle"]))*rest.basis, rest.origin+Vector3(0, hip+float(st["lift"]), 0))
+		pose[i] = (idle_legs[side] as Transform3D).interpolate_with(planted, weight)
 
 func _pump_arms(pose: Array[Transform3D], phi: float, run: float) -> void:
 	var axis := Vector3.RIGHT

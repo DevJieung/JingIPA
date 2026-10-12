@@ -13,10 +13,20 @@ const HERO_W := 124.0
 const HERO_H := 119.0
 const HERO_GAP := 12.0
 const MODAL := Rect2(72, 86, 1136, 676)
+## Transient HUD under the top strip: the ward countdown at the left, the boss warning
+## banner / boss health centred over the open battle box (x 496). Touches here never
+## start the joystick (see _pointer). Battle speed chips sit in the strip left of the menu.
+const SHIELD_BOX := Rect2(76, 78, 214, 46)
+const BOSS_BOX := Rect2(286, 78, 420, 46)
+const SPEED_BOX := Rect2(784, 16, 162, 38)
 
 var main = null
 var ui := Ui.new()
 var view_3d := ArenaView.new()
+## Battle speed 1/2/3. Persists in settings like the legacy battle screen (Save.speed);
+## the simulator, the 3D world and its effects all run on the scaled dt, so nothing
+## presentation-side keeps real time while the battle runs faster.
+var speed := 1.0
 var t := 0.0
 var joystick := Vector2.ZERO
 var joy_origin := Vector2.ZERO
@@ -35,12 +45,14 @@ var _field_choice := -1
 var _rite_age := 9.0
 var _spin_rings: Array = []
 var _card_crops: Dictionary = {}
+var _boss_tops: Dictionary = {}
 func _ready() -> void:
 	get_tree().process_frame.connect(_guard_joystick)
 	view_3d.battle_box = BATTLEFIELD
 	view_3d.minimap_box = MINIMAP
 	_theme_choice = clampi(Arena.theme_index, 0, maxi(0, Roster.THEMES.size() - 1))
 	_theme_page = _theme_choice / 12
+	speed = float(clampi(roundi(Save.speed), 1, 3))
 	_track_modal()
 
 func _process(dt: float) -> void:
@@ -49,9 +61,10 @@ func _process(dt: float) -> void:
 	_track_modal()
 	_draw_dt = 0.0
 	if Arena.sim != null and Arena.modal.is_empty() and not _menu_open():
-		Arena.sim.move_selected(_ground_direction(joystick), dt)
-		Arena.sim.step(dt)
-		_draw_dt = dt
+		var sdt := dt * speed
+		Arena.sim.move_selected(_ground_direction(joystick), sdt)
+		Arena.sim.step(sdt)
+		_draw_dt = sdt
 	queue_redraw()
 
 func _menu_open() -> bool:
@@ -140,8 +153,8 @@ func _pointer(pointer: int, at: Vector2, pressed: bool) -> void:
 		get_viewport().set_input_as_handled()
 		return
 	if Rect2(0, 0, 1280, 70).has_point(at) or SIDEBAR.has_point(at): return
-	if Arena.sim != null and Arena.sim.boss_spawned and Rect2(368, 83, 544, 39).has_point(at): return
-	if Arena.sim != null and Arena.sim.shield > 0 and Rect2(76, 80, 184, 30).has_point(at): return
+	if Arena.sim != null and (Arena.sim.boss_spawned or Arena.sim.boss_warned) and BOSS_BOX.has_point(at): return
+	if Arena.sim != null and Arena.sim.shield > 0 and SHIELD_BOX.has_point(at): return
 	if not FIELD.has_point(at) or not Arena.modal.is_empty() or Arena.sim == null or Arena.sim.done or _menu_open(): return
 	if _joy_pointer != -99:
 		get_viewport().set_input_as_handled()
@@ -177,6 +190,8 @@ func _action(id: String) -> void:
 	elif id == "close": Arena.close_modal()
 	elif id.begins_with("skill:"):
 		Arena.sim.cast_skill(id.get_slice(":", 1))
+	elif id.begins_with("speed:") and id.get_slice(":", 1).is_valid_int():
+		set_speed(float(int(id.get_slice(":", 1))))
 	elif id.begins_with("theme:") and id.get_slice(":", 1).is_valid_int():
 		_theme_choice = int(id.get_slice(":", 1))
 	elif id == "theme:prev": _theme_page = maxi(0, _theme_page - 1)
@@ -216,6 +231,10 @@ func _action(id: String) -> void:
 	_track_modal()
 	queue_redraw()
 
+func set_speed(value: float) -> void:
+	speed = float(clampi(roundi(value), 1, 3))
+	Save.set_speed(speed)
+
 func _tr(key: String) -> String:
 	return Arena.label("arena." + key)
 
@@ -243,33 +262,113 @@ func _draw_topbar(theme: Dictionary) -> void:
 	draw_line(Vector2(0, 69), Vector2(1280, 69), Color("#84b5c5"), 1, true)
 	draw_line(Vector2(0, 71), Vector2(1280, 71), Color(0.02, 0.04, 0.07, 0.55), 2)
 	_draw_hud_crystal(Vector2(43, 34))
-	Look.text_box(self, Rect2(76, 8, 315, 30), _tr("title"), 25, Look.GOLD, HORIZONTAL_ALIGNMENT_LEFT)
-	for x in [442, 648, 800]:
+	# Left to right: crystal block, battlefield name, boss clock, gold, battle speed, then
+	# the shared menu / language buttons that MenuOverlay draws from x 958.
+	Look.text_box(self, Rect2(76, 8, 200, 30), _tr("title"), 25, Look.GOLD, HORIZONTAL_ALIGNMENT_LEFT)
+	for x in [337, 515, 641, 775]:
 		draw_line(Vector2(x, 16), Vector2(x, 54), Color("#406072"), 1, true)
 		_draw_diamond(Vector2(x, 35), 3.5, Color("#688e9f"))
-	Look.text_box(self, Rect2(458, 17, 176, 32), String(theme.get("ko", "")), 23, Look.INK)
+	Look.text_box(self, Rect2(346, 17, 160, 32), String(theme.get("ko", "")), 22, Look.INK)
+	_draw_speed()
 	if Arena.sim == null: return
 	var sim = Arena.sim
 	var fraction := clampf(sim.crystal_hp / maxf(1.0, sim.crystal_max), 0, 1)
-	_bar(Rect2(79, 49, 207, 9), fraction, Color("#6af4ef"))
-	Look.text_box(self, Rect2(300, 40, 131, 23), "%d / %d" % [ceili(sim.crystal_hp), int(sim.crystal_max)], 17, Look.INK)
-	if sim.shield > 0:
-		Look.glass_panel(self, Rect2(76, 80, 184, 30), Look.CRYSTAL, Color(0.015, 0.08, 0.14, 0.78))
-		_draw_skill_icon(Vector2(92, 95), "ward", 8, Look.CRYSTAL)
-		Look.text_box(self, Rect2(106, 82, 146, 26), _tr("shield") + " " + str(ceili(sim.shield)), 16, Look.CRYSTAL)
-	Look.text_box(self, Rect2(662, 7, 125, 22), _tr("boss_final") if sim.boss_spawned else _tr("boss_in"), 16, Look.INK_DIM)
-	var clock := maxf(0, Balance.ARENA_BOSS_AT - sim.elapsed)
-	Look.text_box(self, Rect2(662, 27, 125, 34), _clock(sim.elapsed) if sim.boss_spawned else _clock(clock), 28, Look.GOLD if sim.boss_spawned else Look.INK)
-	_draw_coin(Vector2(832, 35), 12)
-	Look.text_box(self, Rect2(851, 16, 100, 37), "%d G" % Arena.gold, 25, Look.GOLD)
+	_bar(Rect2(79, 49, 152, 9), fraction, Color("#6af4ef"))
+	Look.text_box(self, Rect2(236, 40, 94, 23), "%d / %d" % [ceili(sim.crystal_hp), int(sim.crystal_max)], 16, Look.INK)
+	var warning: bool = sim.boss_warned and not sim.boss_spawned
+	Look.text_box(self, Rect2(524, 7, 108, 22), _tr("boss_final") if sim.boss_spawned else _tr("boss_in"), 15, Color("#ff9a8c") if warning else Look.INK_DIM)
+	# The countdown rounds up (4, 3, 2, 1, boss) so it always agrees with the warning
+	# banner; the elapsed clock after the boss counts up normally.
+	var clock := ceilf(maxf(0, Balance.ARENA_BOSS_AT - sim.elapsed) - 0.0001)
+	Look.text_box(self, Rect2(524, 27, 108, 34), _clock(sim.elapsed) if sim.boss_spawned else _clock(clock), 27, Look.GOLD if sim.boss_spawned else Color("#ff6b5c") if warning else Look.INK)
+	_draw_coin(Vector2(663, 35), 11)
+	Look.text_box(self, Rect2(678, 16, 90, 37), "%d G" % Arena.gold, 23, Look.GOLD)
+	_draw_shield_panel(sim)
+	_draw_boss_panel(sim)
+
+## Battle speed x1 / x2 / x3 as one segmented chip in the top strip, left of the menu
+## (user: "배속설정은 상단으로"). The chosen chip is solid gold; the others stay glass.
+func _draw_speed() -> void:
+	var active := Arena.sim != null and not Arena.sim.done
+	Look.glass_panel(self, SPEED_BOX, Color("#7598aa"), Color(0.02, 0.06, 0.09, 0.80))
+	var inner := SPEED_BOX.grow(-3)
+	var width := inner.size.x / 3.0
+	var chosen := clampi(roundi(speed), 1, 3)
+	for i in range(3):
+		var value := i + 1
+		var id := "speed:%d" % value
+		var rect := Rect2(inner.position + Vector2(i * width, 0), Vector2(width, inner.size.y))
+		# The touch zone spans the whole strip height; the drawn chip stays compact.
+		ui.zone(Rect2(rect.position.x, 4, rect.size.x, 62), id, active)
+		var down := active and ui.pressed == id
+		if i > 0:
+			draw_line(Vector2(rect.position.x, rect.position.y + 6), Vector2(rect.position.x, rect.end.y - 6), Color("#406072"), 1, true)
+		if value == chosen:
+			Look.fill_round(self, rect, 4, Look.GOLD.darkened(0.10) if down else Look.GOLD)
+			draw_line(rect.position + Vector2(5, 2), Vector2(rect.end.x - 5, rect.position.y + 2), Look.GOLD.lightened(0.35), 1)
+		elif down:
+			Look.fill_round(self, rect.grow(-1), 4, Color(0.42, 0.60, 0.70, 0.28))
+		var ink := Look.BG_DEEP if value == chosen else (Look.INK_DIM if active else Color("#6e8390"))
+		Look.text_box(self, rect, "x%d" % value, 19, ink)
+
+## Crystal ward: the remaining seconds dominate (large tenths, a draining ring and a
+## bar); absorb left is the secondary line. Pulses gold in the final two seconds.
+func _draw_shield_panel(sim) -> void:
+	if sim.shield <= 0: return
+	var box := SHIELD_BOX
+	var left := clampf(sim.shield_t / maxf(0.001, Balance.ARENA_WARD_DURATION), 0, 1)
+	var urgent: bool = sim.shield_t <= 2.0
+	var tint: Color = Look.CRYSTAL.lerp(Color("#ffd27a"), 0.5 + 0.5 * sin(t * 18)) if urgent else Look.CRYSTAL
+	Look.glass_panel(self, box, tint, Color(0.015, 0.08, 0.14, 0.84))
+	var ring := box.position + Vector2(25, 23)
+	draw_arc(ring, 15, 0, TAU, 40, Color(Look.CRYSTAL, 0.18), 3, true)
+	if left > 0: draw_arc(ring, 15, -PI / 2, -PI / 2 + TAU * left, 40, tint, 3, true)
+	_draw_skill_icon(ring, "ward", 7, tint)
+	Look.text_box(self, Rect2(box.position + Vector2(48, 1), Vector2(72, 44)), "%.1f" % sim.shield_t, 30, Look.INK)
+	Look.text_box(self, Rect2(box.position + Vector2(124, 2), Vector2(82, 20)), _tr("shield"), 13, Look.INK_DIM)
+	Look.text_box(self, Rect2(box.position + Vector2(124, 20), Vector2(82, 24)), str(ceili(sim.shield)), 16, tint)
+	_bar(Rect2(box.position.x + 10, box.end.y - 7, box.size.x - 20, 3), left, tint)
+
+## Boss strip over the open battle box: the four-second warning banner (whole-second
+## countdown, boss name, chevron toward its gate on screen), then its health bar.
+func _draw_boss_panel(sim) -> void:
+	var box := BOSS_BOX
 	if sim.boss_spawned:
 		for mo in sim.monsters:
 			if String(mo.get("kind", "")) != "boss": continue
-			var box := Rect2(368, 83, 544, 39)
-			Look.glass_panel(self, box, Color("#be797e"), Color(0.09, 0.02, 0.06, 0.85))
-			_bar(Rect2(380, 112, 520, 4), float(mo["hp"]) / maxf(1, float(mo["max"])), Look.RED)
-			Look.text_box(self, Rect2(385, 86, 510, 23), I18n.t(String(mo["m"].get("ko", _tr("boss_final")))), 19, Look.INK)
+			Look.glass_panel(self, box, Color("#be797e"), Color(0.09, 0.02, 0.06, 0.86))
+			var fraction := clampf(float(mo["hp"]) / maxf(1, float(mo["max"])), 0, 1)
+			Look.text_box(self, Rect2(box.position + Vector2(16, 2), Vector2(box.size.x - 32, 28)), I18n.t(String(mo["m"].get("ko", _tr("boss_final")))), 19, Look.INK)
+			_bar(Rect2(box.position.x + 16, box.end.y - 13, box.size.x - 32, 5), fraction, Look.RED)
 			break
+		return
+	if not sim.boss_warned: return
+	var left := maxf(0.0, Balance.ARENA_BOSS_AT - sim.elapsed)
+	var pulse := 0.5 + 0.5 * sin(t * 9.0)
+	var edge := Color("#ff6b5c").lerp(Color("#ffd27a"), pulse * 0.45)
+	Look.glass_panel(self, box, edge, Color(0.17, 0.03, 0.05, 0.88), true)
+	var sign_at := box.position + Vector2(25, 24)
+	draw_colored_polygon(PackedVector2Array([sign_at + Vector2(0, -14), sign_at + Vector2(14, 10), sign_at + Vector2(-14, 10)]), Color(edge, 0.92))
+	draw_line(sign_at + Vector2(0, -5), sign_at + Vector2(0, 3), Look.BG_DEEP, 2.5)
+	draw_circle(sign_at + Vector2(0, 7), 1.6, Look.BG_DEEP)
+	var boss: Dictionary = Arena.boss_for(1)
+	Look.text_box(self, Rect2(box.position + Vector2(50, 1), Vector2(226, 19)), _tr("boss_final"), 12, edge, HORIZONTAL_ALIGNMENT_LEFT)
+	Look.text_box(self, Rect2(box.position + Vector2(50, 18), Vector2(226, 28)), I18n.t(String(boss.get("ko", ""))), 19, Look.INK, HORIZONTAL_ALIGNMENT_LEFT)
+	# Whole seconds, rounded up like the top clock during the warning: 4, 3, 2, 1, boss.
+	var count := maxi(1, ceili(left - 0.0001))
+	Look.text_box(self, Rect2(box.end.x - 112, box.position.y, 54, 46), str(count), 30, Look.INK)
+	var gate: Vector2 = sim.boss_gate()
+	if gate.is_finite():
+		var origin := Vector2(box.end.x - 34, box.get_center().y)
+		var direction := (view_3d.project(gate, 0.3) - origin).normalized()
+		_draw_chevron(origin, direction, 11 + pulse * 2, edge)
+
+func _draw_chevron(at: Vector2, direction: Vector2, size: float, color: Color) -> void:
+	var normal := Vector2(-direction.y, direction.x)
+	for n in range(2):
+		var tip := at + direction * (size * 0.55 - n * size * 0.5)
+		var back := tip - direction * size * 0.5
+		draw_polyline(PackedVector2Array([back + normal * size * 0.5, tip, back - normal * size * 0.5]), Color(color, 1.0 - n * 0.4), 3, true)
 
 func _draw_controls() -> void:
 	# All commands live in one right rail; the lower field stays open for movement.
@@ -293,20 +392,55 @@ func _draw_controls() -> void:
 			_draw_skill_icon(Vector2(rect.get_center().x, rect.position.y + 31), "freeze", 13, Color(0.28, 0.46, 0.56, 0.25))
 			Look.text_box(self, Rect2(rect.position + Vector2(8, 44), Vector2(rect.size.x - 16, 36)), str(i + 1), 27, Color("#698390"))
 			Look.text_box(self, Rect2(rect.position.x + 8, rect.end.y - 33, rect.size.x - 16, 24), "빈 자리", 17, Color("#829ba7"))
+	var sim = Arena.sim
 	for i in range(3):
 		var id: String = ["blast", "freeze", "ward"][i]
 		var rect := Rect2(1006, 615 + i * 61, 260, 54)
-		var remaining := float(Arena.sim.skill_cooldowns.get(id, 0.0)) if Arena.sim != null else 0.0
-		var enabled := active and remaining <= 0
+		var remaining := float(sim.skill_cooldowns.get(id, 0.0)) if sim != null else 0.0
+		var uses := int(sim.skill_uses_left(id)) if sim != null else 0
+		var limit := int(sim.skill_max_uses(id)) if sim != null else 0
+		# Out of casts for this run: disabled for good, shown apart from a mere cooldown.
+		var spent: bool = sim != null and uses <= 0
+		var enabled := active and remaining <= 0 and not spent
 		var color: Color = [Look.GOLD, Color("#aeeaff"), Color("#6ce8fa")][i]
+		var ink := color if enabled else Look.INK_DIM
+		var warding: bool = id == "ward" and sim != null and sim.shield > 0
 		ui.glass_button(self, rect, "", "skill:" + id, enabled, color, 18)
-		for layer in range(3): draw_circle(Vector2(rect.position.x + 30, rect.get_center().y), 21 - layer * 4, Color(color, 0.035 if enabled else 0.009))
-		_draw_skill_icon(Vector2(rect.position.x + 30, rect.get_center().y), id, 17, color if enabled else Look.INK_DIM)
-		Look.text_box(self, Rect2(rect.position + Vector2(59, 3), Vector2(190, 26)), _tr("skill." + id), 20, color if enabled else Look.INK_DIM)
-		Look.text_box(self, Rect2(rect.position + Vector2(59, 28), Vector2(190, 20)), _tr("ready") if remaining <= 0 else "%.1f" % remaining, 15, color if enabled else Look.INK_DIM)
-		if remaining > 0 and Arena.sim != null:
-			var maximum := Arena.sim.skill_max_cooldown(id)
+		var icon_at := Vector2(rect.position.x + 30, rect.get_center().y)
+		for layer in range(3): draw_circle(icon_at, 21 - layer * 4, Color(color, 0.035 if enabled else 0.009))
+		if warding:
+			# The ward's active seconds drain as a ring around its glyph; the bar along the
+			# bottom stays the cooldown, so the two timers never share one display.
+			var left := clampf(sim.shield_t / maxf(0.001, Balance.ARENA_WARD_DURATION), 0, 1)
+			draw_arc(icon_at, 22.5, 0, TAU, 48, Color(color, 0.22), 3, true)
+			draw_arc(icon_at, 22.5, -PI / 2, -PI / 2 + TAU * left, 48, Look.CRYSTAL, 3, true)
+		_draw_skill_icon(icon_at, id, 17, Color("#587080") if spent else ink)
+		Look.text_box(self, Rect2(rect.position + Vector2(59, 3), Vector2(136, 26)), _tr("skill." + id), 20, ink)
+		var status := "%.1f" % remaining if remaining > 0 else _tr("ready")
+		var status_color := ink
+		if warding:
+			status = "%.1f" % sim.shield_t
+			status_color = Look.CRYSTAL
+		elif spent:
+			status = ""
+		if not status.is_empty():
+			Look.text_box(self, Rect2(rect.position + Vector2(59, 28), Vector2(136, 20)), status, 15, status_color)
+		_draw_uses(Rect2(rect.end.x - 68, rect.position.y + 5, 60, 44), uses, limit, color, spent)
+		if remaining > 0 and sim != null:
+			var maximum := sim.skill_max_cooldown(id)
 			_bar(Rect2(rect.position.x + 8, rect.end.y - 6, rect.size.x - 16, 2), 1 - remaining / maxf(0.001, maximum), color)
+
+## Casts left this run as a fraction plus one pip per cast, so "2/6" reads at a glance.
+func _draw_uses(rect: Rect2, uses: int, limit: int, color: Color, spent: bool) -> void:
+	if limit <= 0: return
+	var ink: Color = Color("#e2415a").lerp(Look.INK_DIM, 0.35) if spent else color
+	Look.text_box(self, Rect2(rect.position, Vector2(rect.size.x, 27)), "%d/%d" % [uses, limit], 18, ink)
+	var pitch := minf(10.0, rect.size.x / limit)
+	var start := rect.get_center().x - pitch * (limit - 1) * 0.5
+	for n in range(limit):
+		var at := Vector2(start + n * pitch, rect.end.y - 8)
+		if n < uses: _draw_diamond(at, 4, color)
+		else: draw_polyline(PackedVector2Array([at + Vector2(0, -4), at + Vector2(2.7, 0), at + Vector2(0, 4), at + Vector2(-2.7, 0), at + Vector2(0, -4)]), Color(ink, 0.6), 1, true)
 
 func _draw_command_button(rect: Rect2, title: String, value: String, id: String, active: bool) -> void:
 	ui.glass_button(self, rect, "", id, active)
@@ -377,13 +511,16 @@ func _draw_minimap() -> void:
 	for point in ArenaGeometry.outline(): perimeter.append(view_3d.minimap_point(point, map))
 	draw_colored_polygon(perimeter, Color(0.08, 0.20, 0.25, 0.30))
 	draw_polyline(perimeter + PackedVector2Array([perimeter[0]]), Color(0.55, 0.77, 0.84, 0.59), 1.1, true)
-	for lane in range(ArenaGeometry.ROUTE_COUNT):
+	# The two spiral arms and two feeder roads, each drawn once at its true width.
+	var width := ArenaGeometry.ROAD_WIDTH / (ArenaGeometry.RADIUS * 2) * map.size.x
+	for polyline in ArenaGeometry.road_polylines():
 		var road := PackedVector2Array()
-		for point in ArenaGeometry.route_points(lane): road.append(view_3d.minimap_point(point, map))
-		draw_polyline(road, Color(0.56, 0.68, 0.68, 0.27), ArenaGeometry.ROAD_WIDTH / (ArenaGeometry.RADIUS * 2) * map.size.x, true)
+		for point in polyline: road.append(view_3d.minimap_point(point, map))
+		draw_polyline(road, Color(0.56, 0.68, 0.68, 0.27), width, true)
 		draw_polyline(road, Color(0.78, 0.86, 0.82, 0.19), 1, true)
+	# The camera footprint only matters while it is smaller than the whole field.
 	var footprint := view_3d.minimap_footprint(map)
-	if footprint.size() >= 3:
+	if footprint.size() >= 3 and _polygon_area(footprint) < _polygon_area(perimeter) * 0.985:
 		draw_colored_polygon(footprint, Color(0.27, 0.69, 0.82, 0.07))
 		draw_polyline(footprint + PackedVector2Array([footprint[0]]), Color(0.60, 0.84, 0.90, 0.57), 1, true)
 	for mo in Arena.sim.monsters:
@@ -403,8 +540,25 @@ func _draw_minimap() -> void:
 	var crystal := view_3d.minimap_point(Balance.ARENA_CENTER, map)
 	_draw_diamond(crystal, 4, Color("#77edff"))
 	draw_circle(crystal, 1, Color.WHITE)
+	# Warned boss gate: a pulsing ring marks the entrance until the boss diamond takes over.
+	if Arena.sim.boss_warned and not Arena.sim.boss_spawned:
+		var gate: Vector2 = Arena.sim.boss_gate()
+		if gate.is_finite():
+			var at := view_3d.minimap_point(gate, map)
+			var pulse := 0.5 + 0.5 * sin(t * 9.0)
+			draw_circle(at, 7, Color(1.0, 0.42, 0.36, 0.10 + pulse * 0.12))
+			draw_arc(at, 5 + pulse * 3, 0, TAU, 20, Color("#ff8c7a"), 1.5, true)
+			_draw_diamond(at, 3.5, Color("#ffd27a"))
 	# Compass tick uses a shape, avoiding another language-dependent HUD label.
 	draw_colored_polygon(PackedVector2Array([Vector2(MINIMAP.get_center().x, MINIMAP.position.y + 2), Vector2(MINIMAP.get_center().x - 3, MINIMAP.position.y + 7), Vector2(MINIMAP.get_center().x + 3, MINIMAP.position.y + 7)]), Color("#9dbdcc"))
+
+func _polygon_area(points: PackedVector2Array) -> float:
+	var area := 0.0
+	for i in range(points.size()):
+		var a := points[i]
+		var b := points[(i + 1) % points.size()]
+		area += a.x * b.y - b.x * a.y
+	return absf(area) * 0.5
 
 func _draw_diamond(at: Vector2, radius: float, color: Color) -> void:
 	draw_colored_polygon(PackedVector2Array([at + Vector2(0, -radius), at + Vector2(radius * 0.67, 0), at + Vector2(0, radius), at + Vector2(-radius * 0.67, 0)]), color)
@@ -457,18 +611,47 @@ func _draw_monster_bars() -> void:
 	if Arena.sim == null: return
 	var occupied: Dictionary = {}
 	for mo in Arena.sim.monsters:
-		if mo["hp"] >= mo["max"] and not bool(mo.get("blocked", false)): continue
-		var boss := String(mo.get("kind", "")) == "boss"
-		var at := view_3d.project(mo["pos"], 1.75 if boss else 1.2 if String(mo.get("kind", "")) == "tank" else 0.84)
-		if not BATTLEFIELD.grow(-14).has_point(at) or MINIMAP.has_point(at): continue
-		var cell := Vector2i(int(at.x / 34), int(at.y / 13))
+		var kind := String(mo.get("kind", ""))
+		var boss := kind == "boss"
+		if mo["hp"] >= mo["max"] and not bool(mo.get("blocked", false)) and not boss: continue
+		var at := view_3d.project(mo["pos"], _monster_top(mo))
+		var field := BATTLEFIELD.grow(-14)
+		if boss: at = at.clamp(field.position + Vector2(44, 16), field.end - Vector2(44, 0))
+		if not field.has_point(at) or MINIMAP.has_point(at): continue
+		var cell := Vector2i(int(at.x / 30), int(at.y / 12))
 		if occupied.has(cell) and not boss: continue
 		occupied[cell] = true
 		var fraction := clampf(float(mo["hp"]) / maxf(1, float(mo["max"])), 0, 1)
-		_bar(Rect2(at.x - 22, at.y - 8, 44, 5), fraction, Look.hp_color(fraction))
+		if boss:
+			# The 2.8x boss carries a wide framed bar that reads over its own bulk.
+			Look.fill_round(self, Rect2(at.x - 44, at.y - 13, 88, 13), 4, Color(0.02, 0.04, 0.06, 0.72))
+			_bar(Rect2(at.x - 40, at.y - 10, 80, 7), fraction, Look.hp_color(fraction))
+		else:
+			var width := 40.0 if kind == "tank" else 32.0
+			_bar(Rect2(at.x - width * 0.5, at.y - 7, width, 4), fraction, Look.hp_color(fraction))
 		if bool(mo.get("blocked", false)) and not boss:
-			draw_line(at + Vector2(-4, -15), at + Vector2(-4, -10), Look.GOLD, 2)
-			draw_line(at + Vector2(4, -15), at + Vector2(4, -10), Look.GOLD, 2)
+			draw_line(at + Vector2(-4, -14), at + Vector2(-4, -9), Look.GOLD, 2)
+			draw_line(at + Vector2(4, -14), at + Vector2(4, -9), Look.GOLD, 2)
+
+## World height of a monster's visual top so its bar floats just over a 2.8x boss body
+## or a small swarm body alike. Boss tops come from the actual mesh bounds (cached 0.5s).
+func _monster_top(mo: Dictionary) -> float:
+	var kind := String(mo.get("kind", ""))
+	if kind != "boss": return 1.2 if kind == "tank" else 0.84
+	var sid := int(mo.get("spawn_id", 0))
+	var cached: Dictionary = _boss_tops.get(sid, {})
+	if not cached.is_empty() and t - float(cached["t"]) < 0.5: return float(cached["h"])
+	var height := 3.6
+	var node: Node3D = view_3d.world.monster_node(sid) if view_3d.world != null else null
+	if node != null and node.is_inside_tree():
+		var top := -INF
+		for mesh in node.find_children("*", "MeshInstance3D", true, false):
+			var aabb: AABB = mesh.get_aabb()
+			for corner in range(8):
+				top = maxf(top, (mesh.global_transform * aabb.get_endpoint(corner)).y)
+		if top > 0.5: height = top + 0.22
+	_boss_tops[sid] = {"h": height, "t": t}
+	return height
 
 func _shade() -> void:
 	draw_rect(Look.SCREEN, Color(0.025, 0.05, 0.075, 0.80))

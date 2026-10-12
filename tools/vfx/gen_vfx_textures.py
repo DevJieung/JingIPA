@@ -10,6 +10,12 @@ Outputs (deterministic, no external art):
     8 water droplet    9 arrow            10 tracer bolt        11 crescent slash
    12 rune disc       13 hex shield       14 ember mote         15 shock arc
   art/vfx/noise.png    256x256 RGB tileable noise (R low, G mid, B high frequency).
+  art/vfx/skill_sprites.png  1024x1024 RGBA, 4x4 cells of 256px, for the big one-shot
+    sequences (vfx_skill*.gdshader: Starlight Burst, boss gate warning / arrival):
+    0 star sigil (lock-on)  1 light pillar      2 ground cracks      3 crack glow (blurred)
+    4 comet tail            5 eight-ray flare   6 debris chunk       7 fog wisp
+    8 boss rune circle      9 thorn portal ring 10 ground glow disc  11 star streak
+   12..15 reserved (transparent)
 
 Sprites are white with alpha; shaders tint them. The cell layout is read by
 art/vfx/*.gdshader (`cell()`); keep indices stable when adding sprites.
@@ -291,15 +297,247 @@ def shock_arc():
     return np.clip(band + wake, 0, 1)
 
 
+# --------------------------------------------------------------------------- #
+# Skill / boss gate atlas (art/vfx/skill_sprites.png)
+# --------------------------------------------------------------------------- #
+def _seg(a, u, v, p, q, w, amp):
+    """Max-blend a soft line segment p->q of half-width w into alpha plane `a`."""
+    px, py = p
+    qx, qy = q
+    dx, dy = qx - px, qy - py
+    ll = dx * dx + dy * dy + 1e-9
+    t = np.clip(((u - px) * dx + (v - py) * dy) / ll, 0, 1)
+    d = np.sqrt((u - (px + t * dx)) ** 2 + (v - (py + t * dy)) ** 2)
+    np.maximum(a, (1.0 - smooth(w * 0.45, w, d)) * amp, out=a)
+
+
+def star_sigil():
+    """Lock-on marker of the Starlight Burst: rings, eight ticks and an eight-point star outline.
+    The outer ring sits at r 0.95 of the cell so the shader can scale it to the damage radius."""
+    u, v = grid()
+    r = np.sqrt(u * u + v * v)
+    ang = np.arctan2(v, u)
+    a = np.zeros((CELL, CELL), np.float32)
+    a = np.maximum(a, np.exp(-((r - 0.95) / 0.016) ** 2))
+    a = np.maximum(a, np.exp(-((r - 0.76) / 0.012) ** 2) * 0.8)
+    for k in range(8):
+        th = k * math.pi / 4.0
+        p = (math.cos(th) * 0.78, math.sin(th) * 0.78)
+        q = (math.cos(th) * 0.93, math.sin(th) * 0.93)
+        _seg(a, u, v, p, q, 0.022, 1.0)
+    pts = []
+    for k in range(16):
+        th = k * math.pi / 8.0 + math.pi / 2.0
+        rad = 0.64 if k % 2 == 0 else 0.27
+        pts.append((math.cos(th) * rad, math.sin(th) * rad))
+    for k in range(16):
+        _seg(a, u, v, pts[k], pts[(k + 1) % 16], 0.014, 0.95)
+    a = np.maximum(a, np.exp(-(r / 0.05) ** 2) * 0.9)
+    # Four short chevrons just inside the outer ring, pointing at the centre.
+    for k in range(4):
+        th = k * math.pi / 2.0
+        tip = (math.cos(th) * 0.84, math.sin(th) * 0.84)
+        for side in (-1, 1):
+            base = (math.cos(th) * 0.92 + math.cos(th + math.pi / 2) * side * 0.05,
+                    math.sin(th) * 0.92 + math.sin(th + math.pi / 2) * side * 0.05)
+            _seg(a, u, v, tip, base, 0.014, 0.9)
+    return np.clip(a, 0, 1) * (r < 0.995)
+
+
+def light_pillar():
+    """Vertical column of light: hot core, soft halo, bright foot, feathered top."""
+    u, v = grid()
+    core = np.exp(-(u / 0.15) ** 2)
+    halo = np.exp(-(u / 0.46) ** 2) * 0.5
+    vert = smooth(-1.0, -0.84, v) * (1.0 - smooth(0.30, 0.98, v))
+    foot = np.exp(-((v + 0.88) / 0.11) ** 2) * np.exp(-(u / 0.38) ** 2) * 0.55
+    return np.clip((core + halo) * vert + foot, 0, 1)
+
+
+def _cracks_plane(seed=505):
+    u, v = grid()
+    rng = np.random.default_rng(seed)
+    a = np.zeros((CELL, CELL), np.float32)
+    rays = 7
+    for k in range(rays):
+        th = k * 2 * math.pi / rays + rng.uniform(-0.25, 0.25)
+        p = (0.0, 0.0)
+        length = rng.uniform(0.80, 0.97)
+        steps = 5
+        for i in range(steps):
+            f0 = i / steps
+            f1 = (i + 1) / steps
+            th1 = th + rng.uniform(-0.28, 0.28)
+            q = (p[0] + math.cos(th1) * length * (f1 - f0), p[1] + math.sin(th1) * length * (f1 - f0))
+            w = 0.052 * (1.0 - f0) + 0.014
+            _seg(a, u, v, p, q, w, 1.0 - 0.25 * f0)
+            if i in (1, 3):
+                bth = th1 + rng.choice([-1, 1]) * rng.uniform(0.55, 1.0)
+                blen = rng.uniform(0.14, 0.30)
+                b = (p[0] + math.cos(bth) * blen, p[1] + math.sin(bth) * blen)
+                _seg(a, u, v, p, b, 0.022, 0.75)
+            p = q
+    return np.clip(a, 0, 1)
+
+
+def ground_cracks():
+    """Radial fracture pattern that the mix layer paints dark on the ground."""
+    a = _cracks_plane()
+    img = Image.fromarray((a * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.8))
+    return np.asarray(img).astype(np.float32) / 255.0
+
+
+def crack_glow():
+    """The same fractures blurred, for the additive light that seeps out of them."""
+    u, v = grid()
+    r = np.sqrt(u * u + v * v)
+    a = _cracks_plane()
+    img = Image.fromarray((a * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(6))
+    g = np.asarray(img).astype(np.float32) / 255.0
+    return np.clip(a * 0.9 + g * 1.1 + np.exp(-(r / 0.22) ** 2) * 0.6, 0, 1) * (1.0 - smooth(0.9, 1.0, r))
+
+
+def comet_tail():
+    """Falling-star streak, head at the top of the cell, tapering to nothing at the bottom."""
+    u, v = grid()
+    y = np.clip((0.86 - v) / 1.80, 0, 1)   # 0 head .. 1 tail end
+    width = 0.30 * (1.0 - y) ** 0.75 + 0.02
+    env = np.exp(-(u / width) ** 2) * (1.0 - y) ** 1.5
+    core = np.exp(-(u / (0.05 + 0.05 * (1.0 - y))) ** 2) * (1.0 - y) ** 1.1
+    head = np.exp(-((u / 0.16) ** 2 + ((v - 0.84) / 0.13) ** 2)) * 0.9
+    a = env * 0.85 + core + head
+    return np.clip(a, 0, 1) * (v < 0.985) * (v > -0.98)
+
+
+def flare8():
+    """Eight-ray impact flare: four long spikes, four short, hot core."""
+    u, v = grid()
+    r = np.sqrt(u * u + v * v) + 1e-6
+    ang = np.arctan2(v, u)
+    long_rays = np.exp(-r / 0.40) * np.abs(np.cos(ang * 2.0)) ** 22
+    short_rays = np.exp(-r / 0.24) * np.abs(np.sin(ang * 2.0)) ** 22 * 0.85
+    core = np.exp(-(r / 0.13) ** 2)
+    disc = np.exp(-(r / 0.42) ** 2) * 0.28
+    return np.clip(long_rays + short_rays + core + disc, 0, 1) * (1.0 - smooth(0.92, 1.0, r))
+
+
+def debris_chunk():
+    """Irregular rock chunk silhouette (mix layer paints it dark)."""
+    u, v = grid()
+    rng = np.random.default_rng(606)
+    ang = np.arctan2(v, u)
+    r = np.sqrt(u * u + v * v)
+    n = 9
+    radii = rng.uniform(0.45, 0.82, n)
+    edge = np.zeros_like(r)
+    for k in range(n):
+        a0 = k * 2 * math.pi / n
+        a1 = (k + 1) * 2 * math.pi / n
+        d = ((ang - a0) % (2 * math.pi))
+        t = np.clip(d / (a1 - a0), 0, 1)
+        seg_r = radii[k] * (1 - t) + radii[(k + 1) % n] * t
+        edge = np.where((d >= 0) & (d < (a1 - a0) + 1e-6), seg_r, edge)
+    body = 1.0 - smooth(edge - 0.03, edge + 0.01, r)
+    return np.clip(body, 0, 1)
+
+
+def fog_wisp():
+    """Ragged elongated fog wisp, lighter than the smoke puff."""
+    u, v = grid()
+    rr = np.sqrt((u / 1.0) ** 2 + (v / 0.55) ** 2)
+    n = fbm(CELL, 3, 4, 707)
+    n2 = fbm(CELL, 7, 3, 808)
+    shape = 1.0 - smooth(0.25, 1.0, rr + (n - 0.5) * 0.9)
+    body = shape * (0.45 + 0.55 * n2)
+    body = np.clip(body, 0, 1) * (1.0 - smooth(0.85, 1.0, np.sqrt(u * u + v * v)))
+    img = Image.fromarray((body * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(5))
+    return np.asarray(img).astype(np.float32) / 255.0 * 0.85
+
+
+def boss_rune():
+    """Summoning circle of the boss gate: heavy outer ring, thorns, runic strokes, an eye."""
+    u, v = grid()
+    r = np.sqrt(u * u + v * v)
+    ang = np.arctan2(v, u)
+    rng = np.random.default_rng(909)
+    a = np.zeros((CELL, CELL), np.float32)
+    a = np.maximum(a, np.exp(-((r - 0.90) / 0.030) ** 2))
+    a = np.maximum(a, np.exp(-((r - 0.77) / 0.014) ** 2) * 0.85)
+    a = np.maximum(a, np.exp(-((r - 0.46) / 0.014) ** 2) * 0.8)
+    for k in range(6):
+        th = k * math.pi / 3.0 + math.pi / 6.0
+        d = np.abs(((ang - th) + math.pi) % (2 * math.pi) - math.pi)
+        spike = (r > 0.80) & (r < 0.995) & (d < 0.11 * np.clip(1.0 - (r - 0.80) / 0.195, 0, 1))
+        a = np.maximum(a, spike.astype(np.float32))
+    for k in range(14):
+        th = rng.uniform(0, 2 * math.pi)
+        r0 = rng.uniform(0.52, 0.70)
+        r1 = np.clip(r0 + rng.uniform(-0.12, 0.12), 0.50, 0.74)
+        dth = rng.uniform(-0.25, 0.25)
+        _seg(a, u, v, (math.cos(th) * r0, math.sin(th) * r0), (math.cos(th + dth) * r1, math.sin(th + dth) * r1), 0.013, 0.9)
+    # Twelve ticks between the two inner rings.
+    for k in range(12):
+        th = k * math.pi / 6.0
+        _seg(a, u, v, (math.cos(th) * 0.47, math.sin(th) * 0.47), (math.cos(th) * 0.55, math.sin(th) * 0.55), 0.012, 0.7)
+    lid = 0.17 * np.sqrt(np.clip(1.0 - (u / 0.30) ** 2, 0, 1))
+    eye = np.exp(-((np.abs(v) - lid) / 0.014) ** 2) * (np.abs(u) < 0.30)
+    a = np.maximum(a, eye)
+    a = np.maximum(a, np.exp(-(r / 0.06) ** 2) * 0.95)
+    return np.clip(a, 0, 1) * (r < 0.998)
+
+
+def thorn_ring():
+    """Jagged portal mouth: a wobbling ring with twelve outward thorns and an inner glow."""
+    u, v = grid()
+    r = np.sqrt(u * u + v * v)
+    ang = np.arctan2(v, u)
+    r0 = 0.78 + 0.04 * np.sin(ang * 12.0) + 0.025 * np.sin(ang * 5.0 + 1.0)
+    band = np.exp(-((r - r0) / 0.045) ** 2)
+    thorns = np.zeros_like(r)
+    for k in range(12):
+        th = k * math.pi / 6.0 + 0.15
+        d = np.abs(((ang - th) + math.pi) % (2 * math.pi) - math.pi)
+        spike = (r > 0.72) & (r < 0.985) & (d < 0.085 * np.clip(1.0 - (r - 0.72) / 0.265, 0, 1))
+        thorns = np.maximum(thorns, spike.astype(np.float32))
+    inner = (1.0 - smooth(0.25, 0.78, r)) * 0.28
+    return np.clip(band + thorns * 0.95 + inner, 0, 1) * (r < 0.995)
+
+
+def glow_disc():
+    """Soft plateau disc for ground afterglow."""
+    u, v = grid()
+    r = np.sqrt(u * u + v * v)
+    return np.clip(1.0 - smooth(0.42, 1.0, r), 0, 1)
+
+
+def star_streak():
+    """Short bright streak with a hot head: flying star fragments."""
+    u, v = grid()
+    core = np.exp(-(u / 0.05) ** 2) * (1.0 - smooth(0.55, 0.98, np.abs(v)))
+    glow = np.exp(-(u / 0.20) ** 2) * 0.35 * (1.0 - smooth(0.3, 0.9, np.abs(v)))
+    head = np.exp(-((u / 0.10) ** 2 + ((v - 0.52) / 0.16) ** 2)) * 0.95
+    return np.clip(core + glow + head, 0, 1)
+
+
+def empty_cell():
+    return np.zeros((CELL, CELL), np.float32)
+
+
+SKILL_SPRITES = [star_sigil, light_pillar, ground_cracks, crack_glow,
+                 comet_tail, flare8, debris_chunk, fog_wisp,
+                 boss_rune, thorn_ring, glow_disc, star_streak,
+                 empty_cell, empty_cell, empty_cell, empty_cell]
+
+
 SPRITES = [soft_glow, lambda: star(4, 14.0, 0.16), lambda: star(6, 30.0, 0.10), soft_ring,
            smoke_puff, flame, ice_shard, lightning,
            droplet, arrow, tracer, crescent,
            rune_disc, hex_shield, ember_mote, shock_arc]
 
 
-def build_atlas() -> Image.Image:
+def build_atlas(sprites=SPRITES) -> Image.Image:
     atlas = np.zeros((CELL * GRID, CELL * GRID, 4), np.float32)
-    for index, fn in enumerate(SPRITES):
+    for index, fn in enumerate(sprites):
         alpha = np.clip(fn(), 0, 1).astype(np.float32)
         row, col = divmod(index, GRID)
         y0, x0 = row * CELL, col * CELL
@@ -325,8 +563,9 @@ def build_noise() -> Image.Image:
 def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     build_atlas().save(OUT / "sprites.png", optimize=True)
+    build_atlas(SKILL_SPRITES).save(OUT / "skill_sprites.png", optimize=True)
     build_noise().save(OUT / "noise.png", optimize=True)
-    print("wrote", OUT / "sprites.png", OUT / "noise.png")
+    print("wrote", OUT / "sprites.png", OUT / "skill_sprites.png", OUT / "noise.png")
     return 0
 
 

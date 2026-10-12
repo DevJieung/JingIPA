@@ -4,7 +4,12 @@ render_mode unshaded, blend_add, depth_draw_never, cull_disabled, skip_vertex_tr
 
 // Additive layer of one-shot bursts (impacts, deaths, status, skills) in one MultiMesh.
 //   transform: origin on the ground (or the 3D point for kinds >= 15), -Z = facing/incoming direction
-//   COLOR:     effect colour        CUSTOM: x birth (vfx seconds)  y size  z element  w kind
+//   COLOR:     rgb effect colour, a = root scale of the body the burst sits in (1 for ordinary
+//              bodies; bosses stand at 2x). Air parts lift with it and are pulled toward the
+//              camera by BODY_CLEAR per extra unit of scale so they are drawn in front of the
+//              larger body instead of inside it; the view is orthographic, so the pull does
+//              not move them on screen. Ground parts stay where they are.
+//   CUSTOM:    x birth (vfx seconds)  y size  z element  w kind
 // Kinds: 0 hit 1 splash 2 zone_tick 3 die 4 leak 5 block 6 push 7 frost 8 stun 9 curse
 //        10 spawn 11 wildfire 12 blast 13 freeze 14 ward 15 muzzle_smoke 16 ric_spark
 //        17 beam_cap 18 bolt_cap 19 cast_release 20 slash_hit (blade contact: origin is the
@@ -17,6 +22,8 @@ uniform float vfx_time = 0.0;
 // dimmed and pushed toward their saturated hue.
 uniform float vfx_wash = 0.0;
 uniform float vfx_epoch = 0.0;
+
+const float BODY_CLEAR = 1.9;
 
 varying vec4 v_tint;
 varying float v_cell;
@@ -167,7 +174,9 @@ void vertex() {
 	int kind = int(INSTANCE_CUSTOM.w + 0.5);
 	float age = max(vfx_time - vfx_epoch - birth, 0.0);
 	float seed = hash11(birth * 7.31 + float(INSTANCE_ID) * 0.173);
-	float lift = kind_lift(kind, size);
+	float body = max(COLOR.a, 1.0);
+	// The stun pop already receives the scaled head height as its size.
+	float lift = kind_lift(kind, size) * (kind == 8 ? 1.0 : body);
 	vec2 c = VERTEX.xy;
 	vec3 world = origin;
 	vec3 col = COLOR.rgb;
@@ -279,6 +288,7 @@ void vertex() {
 		alpha = pow(1.0 - f, 1.4) * (qp.x > 0.001 ? 0.9 : 0.0);
 		col = mix(COLOR.rgb, vec3(1.0), 0.3);
 	}
+	if (part != 0) world -= cam_fwd * (body - 1.0) * BODY_CLEAR;
 	v_tint = vec4(col, alpha);
 	v_cell = cell;
 	VERTEX = (VIEW_MATRIX * vec4(world, 1.0)).xyz;

@@ -29,6 +29,12 @@ const ARENA_FREEZE_DURATION := 5.0
 const ARENA_WARD_COOLDOWN := 30.0
 const ARENA_WARD_SHIELD := 160.0
 const ARENA_WARD_DURATION := 8.0
+## 공용 기술은 한 판(전장 선택부터 보스까지)에 이 횟수만 쓸 수 있다. 쿨타임과 별개다.
+const ARENA_BLAST_USES := 6
+const ARENA_FREEZE_USES := 4
+const ARENA_WARD_USES := 3
+## 보스 출현 몇 초 전에 입구를 예고하는가.
+const ARENA_BOSS_WARNING := 4.0
 
 ## 게임의 숫자가 **전부** 여기 있다. 순수 함수만 두고 화면·저장을 모른다.
 ##

@@ -126,6 +126,13 @@ static func valid(data: Dictionary) -> bool:
 	for id in ["blast", "freeze", "ward"]:
 		if not number(sim["cooldowns"].get(id)):
 			return false
+	# Per-run skill uses and the boss gate warning arrived on 2026-10-12; older runs omit them.
+	if sim.has("uses"):
+		if not sim["uses"] is Dictionary: return false
+		for id in ["blast", "freeze", "ward"]:
+			if not sim["uses"].get(id) is int or sim["uses"][id] < 0: return false
+	if sim.has("boss_warned") and not sim["boss_warned"] is bool: return false
+	if sim.has("boss_lane") and (not sim["boss_lane"] is int or sim["boss_lane"] < -1 or sim["boss_lane"] >= ArenaGeometry.ROUTE_COUNT): return false
 	for key in ["monsters", "bullets", "zones", "pending", "heroes"]:
 		if not sim.get(key) is Array or sim[key].size() > 10000:
 			return false

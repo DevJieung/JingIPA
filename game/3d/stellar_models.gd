@@ -464,12 +464,18 @@ static func _rank_details(body: Node3D, base: Color, gold: Color, grade: int, in
 		part(body, "ring", Vector3(0, 0.10, 0), Vector3(1.26, 0.045, 1.26), gold, 0.75, 0.65)
 		for side in [-1,1]: part(body,"cone",Vector3(side*0.57,1.3,0.3),Vector3(0.22,0.72,0.14),base,0.5,0.4,Vector3(0,0,-side*0.5))
 
+## Bosses stand twice as tall as their authored GLB (2026-10-12 user direction); the
+## world writes position/rotation on the root, so the root scale is never overwritten
+## and every pivot reaction, status mark and death stays in proportion.
+const BOSS_SCALE := 2.0
+
 static func monster(data: Dictionary) -> Node3D:
 	var id := String(data.get("id", "monster"))
 	if NativeMonsterModel.has_model(id):
 		var native := NativeMonsterModel.create(id)
 		native.name = "StellarMonster_" + id
 		native.set_meta("identity", id)
+		if String(data.get("kind", "")) == "boss": native.scale = Vector3.ONE * BOSS_SCALE
 		return native
 	var root := Node3D.new()
 	root.name = "StellarMonster_" + String(data.get("id", "monster"))
@@ -559,5 +565,5 @@ static func monster(data: Dictionary) -> Node3D:
 				var a := n*TAU/4
 				part(group,"cone",Vector3(cos(a)*0.25,0.10,sin(a)*0.25),Vector3(0.10,0.44 if status=="Burn" else 0.26,0.09),Color("#ff994d") if status=="Burn" else Color("#a5e6f0"),0,0.6)
 	compact(root)
-	root.scale *= 1.40 if kind == "boss" else 1.13 if kind == "tank" else 0.86
+	root.scale *= 1.40 * BOSS_SCALE if kind == "boss" else 1.13 if kind == "tank" else 0.86
 	return root

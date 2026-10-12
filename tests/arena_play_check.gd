@@ -45,6 +45,11 @@ func _ready() -> void:
 	check(tap(screen, "close"), "상점 닫기 버튼")
 	await paint(screen)
 	check(tap(screen, "skill:ward") and Arena.sim.shield > 0, "공통 스킬 버튼")
+	check(tap(screen, "speed:2") and is_equal_approx(screen.speed, 2.0), "상단 배속 버튼 2배속")
+	var before_speed: float = Arena.sim.elapsed
+	screen._process(0.1)
+	check(Arena.sim.elapsed > before_speed + 0.15, "2배속이 실제 시뮬 시간을 두 배로 돌림")
+	check(tap(screen, "speed:1") and is_equal_approx(screen.speed, 1.0), "상단 배속 버튼 1배속 복귀")
 	check(tap(screen, "bench"), "대기 편성 버튼")
 	await paint(screen)
 	check(tap(screen, "close"), "대기 편성 닫기 버튼")

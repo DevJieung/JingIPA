@@ -140,7 +140,8 @@ func _locomotion_contract(model: LimneModel, skeleton: Skeleton3D, idle: Array[T
 	var legs_move := false
 	for index in legs:
 		if not walking[index].is_equal_approx(idle[index]): legs_move = true
-		check(walking[index].origin.distance_to(idle[index].origin) < 0.10, "walking keeps the leg pivot near its rest: " + str(index))
+		# Planted gait (2026-10-12): hip height plus swing lift, 0.115 measured at 3.4 u/s.
+		check(walking[index].origin.distance_to(idle[index].origin) < 0.20, "walking keeps the leg pivot inside the gait envelope: " + str(index))
 	check(legs_move, "velocity drives an actual leg cycle")
 	check((model.basis * Vector3.FORWARD).dot(Vector3(0, 0, 1)) > 0.999, "the body faces its travel direction")
 	for frame in range(60): model.animate_visual(clock, 9.0, 0.3, true)

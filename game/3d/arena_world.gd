@@ -7,10 +7,17 @@ var _ward: Node3D
 var _ward_material: StandardMaterial3D
 var _crystal_light: OmniLight3D
 var _weather_body := "wood"
+## Full-field framing (2026-10-12): 34 world units across the 1280px viewport puts the
+## whole 24-unit spiral field inside the 992px open battle box with 44px to spare on
+## each side, so the roads read at a glance. Actors are smaller by the user's choice
+## (a 2u hero is 58px tall at 1280x800, 45px at 1000x625). The magnification is
+## otherwise constant: following never rescales anything.
+const CAMERA_SIZE := 34.0
+## Brief orthographic zoom-in (>1) that ArenaView drives for the boss entrance only.
+var camera_punch := 1.0
 
 func camera_update() -> void:
-	# Constant magnification: enlarging the arena never shrinks its actors.
-	camera.size = 26.0
+	camera.size = CAMERA_SIZE / maxf(0.5, camera_punch)
 	camera.position = camera_target + Vector3(-3.0, 19.0, 23.0)
 	camera.look_at(camera_target + Vector3(0, 0.4, 0), Vector3.UP)
 
@@ -72,7 +79,10 @@ func build_map(theme: Dictionary) -> void:
 		var width := TAU * radius / 96.0 - 0.015
 		StellarModels.part(terrain, "stone", at, Vector3(width, 0.48, 0.40), Color("#425b71").lightened((n % 3) * 0.035), 0, 0, turn)
 		if snowy: StellarModels.part(terrain, "stone", at + Vector3(0, 0.25, 0), Vector3(width + 0.01, 0.07, 0.44), moss, 0, 0, turn)
-	for lane in range(ArenaGeometry.ROUTE_COUNT): _arena_road(ArenaGeometry.route_points(lane), snowy)
+	# Two spiral arms in full, then the two feeder roads a hair higher so their mouths
+	# cover the arm's kerb instead of fighting it for the same depth.
+	var roads := ArenaGeometry.road_polylines()
+	for i in range(roads.size()): _arena_road(roads[i], snowy, 0.029 if i < ArenaGeometry.ARM_COUNT else 0.0305)
 	var plaza := MeshInstance3D.new()
 	var plaza_disc := CylinderMesh.new()
 	plaza_disc.top_radius = ArenaGeometry.PLAZA_RADIUS / UNIT
@@ -206,7 +216,7 @@ func _gate_near(angle: float, half_angle: float) -> bool:
 		if absf(wrapf(angle - at.angle(), -PI, PI)) < half_angle: return true
 	return false
 
-func _arena_road(route: PackedVector2Array, snowy: bool) -> void:
+func _arena_road(route: PackedVector2Array, snowy: bool, height: float = 0.029) -> void:
 	if route.size() < 2: return
 	var points := route.duplicate()
 	# The visual entrance fills the route's round end cap up to the circular rim.
@@ -216,8 +226,8 @@ func _arena_road(route: PackedVector2Array, snowy: bool) -> void:
 	var along := 0.0
 	var half_width := ArenaGeometry.ROAD_WIDTH / (UNIT * 2)
 	for i in range(points.size() - 1):
-		var a := world(points[i], 0.029)
-		var b := world(points[i + 1], 0.029)
+		var a := world(points[i], height)
+		var b := world(points[i + 1], height)
 		var tangent_a := (world(points[mini(i + 1, points.size() - 1)]) - world(points[maxi(0, i - 1)])).normalized()
 		var tangent_b := (world(points[mini(i + 2, points.size() - 1)]) - world(points[i])).normalized()
 		var normal_a := Vector3(-tangent_a.z, 0, tangent_a.x) * half_width
@@ -419,7 +429,7 @@ func event(e: Dictionary) -> void:
 		if float(e.get("n", 0.0)) > 0:
 			super.event({"t": "leak", "p": Balance.ARENA_CENTER, "c": Look.RED, "r": 42.0})
 		return
-	if type in ["arena_blast", "arena_freeze", "arena_ward"]:
+	if type in ["arena_blast", "arena_freeze", "arena_ward", "arena_boss_warning", "arena_boss"]:
 		vfx.arena_event(e)
 		return
 	super.event(e)

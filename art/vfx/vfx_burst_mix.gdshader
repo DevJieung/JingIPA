@@ -3,11 +3,14 @@ render_mode unshaded, blend_mix, depth_draw_never, cull_disabled, skip_vertex_tr
 #include "res://art/vfx/vfx_common.gdshaderinc"
 
 // Alpha-blended layer of the burst MultiMesh: smoke/mist puffs and ground scorch.
-// Same instance contract as vfx_burst.gdshader. Parts (UV2.x): 4 puff billboard, 6 ground scorch.
+// Same instance contract as vfx_burst.gdshader (COLOR.a = body scale: puffs lift and clear a
+// larger body, the scorch stays on the ground). Parts (UV2.x): 4 puff billboard, 6 ground scorch.
 // Kinds without a row (16..20, blade contacts among them) draw nothing in this layer.
 uniform sampler2D sprites : source_color, filter_linear_mipmap, repeat_disable;
 uniform float vfx_time = 0.0;
 uniform float vfx_epoch = 0.0;
+
+const float BODY_CLEAR = 1.9;
 
 varying vec4 v_tint;
 varying float v_cell;
@@ -68,7 +71,8 @@ void vertex() {
 	int kind = int(INSTANCE_CUSTOM.w + 0.5);
 	float age = max(vfx_time - vfx_epoch - birth, 0.0);
 	float seed = hash11(birth * 7.31 + float(INSTANCE_ID) * 0.173);
-	float lift = kind_lift(kind, size);
+	float body = max(COLOR.a, 1.0);
+	float lift = kind_lift(kind, size) * (kind == 8 ? 1.0 : body);
 	vec2 c = VERTEX.xy;
 	vec3 world = origin;
 	vec3 col = vec3(0.0);
@@ -83,7 +87,7 @@ void vertex() {
 		vec3 drift = (kind == 15 ? fwd * 0.42 : fwd * 0.08) * f + up * (0.25 + 0.2 * h) * f;
 		if (kind == 13 || kind == 7) drift = up * 0.12 * f;
 		vec2 r = rot2(c, h * 6.283 + f * (h - 0.5) * 2.0);
-		world = origin + up * lift + drift + (cam_right * r.x + cam_up * r.y) * s - cam_fwd * 0.12;
+		world = origin + up * lift + drift + (cam_right * r.x + cam_up * r.y) * s - cam_fwd * (0.12 + (body - 1.0) * BODY_CLEAR);
 		// Smoke colour (linear values; ACES + sRGB output lifts midtones, so these read as
 		// mid-greys on screen): warm soot for fire, cool haze for ice/water, dust otherwise.
 		vec3 soot = vec3(0.20, 0.16, 0.15);

@@ -7,6 +7,7 @@ func _ready() -> void:
 	_check_movement()
 	_check_navigation()
 	_check_crystal_and_skills()
+	_check_skill_limits()
 	_check_pause_and_save()
 	_check_boss()
 	_check_duration()
@@ -146,7 +147,7 @@ func _check_navigation() -> void:
 	mo["spd"] = 1.0
 	var passed_guardian := false
 	var safe := true
-	for i in range(1200):
+	for i in range(2400):
 		sim._move_monsters(1.0 / 60.0)
 		var distance: float = Vector2(mo["pos"]).distance_to(sim.heroes[0]["pos"])
 		passed_guardian = passed_guardian or distance < 90
@@ -208,6 +209,29 @@ func _check_crystal_and_skills() -> void:
 	check(mo["push_left"] > 0, "기존 물 특효 실제 좌표 밀림")
 	sim._damage_crystal(100000.0, Balance.ARENA_CENTER)
 	check(sim.done and not sim.won and Arena.modal == "result", "크리스탈 파괴 패배")
+
+func _check_skill_limits() -> void:
+	var sim := _battle(709)
+	_monster(sim, Balance.ARENA_CENTER + Vector2(74, 0))
+	for id in ["blast", "freeze", "ward"]:
+		var limit: int = sim.skill_max_uses(id)
+		check(limit > 0 and sim.skill_uses_left(id) == limit, id + " 한 판 사용 횟수 제한 존재")
+		for n in range(limit):
+			sim.skill_cooldowns[id] = 0.0
+			check(sim.cast_skill(id) and sim.skill_uses_left(id) == limit - n - 1, "%s %d번째 사용·남은 횟수 감소" % [id, n + 1])
+		sim.skill_cooldowns[id] = 0.0
+		check(sim.skill_uses_left(id) == 0 and not sim.cast_skill(id), id + " 횟수 소진 뒤에는 쿨타임이 끝나도 사용 불가")
+	var saved := Arena.snapshot()
+	check(ArenaValidation.valid(saved) and Arena.restore(saved) and Arena.sim.skill_uses_left("blast") == 0 and Arena.sim.skill_uses_left("ward") == 0, "횟수 소진 상태 저장·복구")
+	saved["sim"].erase("uses")
+	check(Arena.restore(saved) and Arena.sim.skill_uses_left("blast") == Balance.ARENA_BLAST_USES, "횟수 정보가 없는 이전 저장은 전부 남은 것으로 복구")
+	saved["sim"]["uses"] = {"blast": -1, "freeze": 0, "ward": 0}
+	check(not ArenaValidation.valid(saved), "음수 사용 횟수 저장 거부")
+	Arena.start_run(710)
+	Arena.choose_theme(0)
+	Arena.confirm_summon()
+	Arena.close_modal()
+	check(Arena.sim.skill_uses_left("ward") == Balance.ARENA_WARD_USES, "새 판은 횟수가 다시 채워짐")
 
 func _check_pause_and_save() -> void:
 	var sim := _battle(706)
@@ -293,10 +317,36 @@ func _check_boss() -> void:
 	var initial_limit := sim.population_limit()
 	var initial_gap := sim.spawn_interval()
 	_monster(sim, ArenaGeometry.MAP_RECT.position + Vector2(30, 30))
-	sim.elapsed = Balance.ARENA_BOSS_AT - 0.02
+	sim.elapsed = Balance.ARENA_BOSS_AT - Balance.ARENA_BOSS_WARNING - 0.02
 	check(sim.population_limit() > initial_limit and sim.spawn_interval() < initial_gap, "시간에 따라 개체 수·스폰 빈도 증가")
+	sim.events.clear()
+	_advance(sim, 0.1)
+	var warnings := 0
+	var warned_at := Vector2.INF
+	for e in sim.events:
+		if String(e.get("t", "")) == "arena_boss_warning":
+			warnings += 1
+			warned_at = e.get("p", Vector2.INF)
+	check(sim.boss_warned and not sim.boss_spawned and sim.boss_lane >= 0 and sim.boss_lane < ArenaGeometry.ROUTE_COUNT, "보스 출현 %.0f초 전 예고·입구 확정" % Balance.ARENA_BOSS_WARNING)
+	check(warnings == 1 and warned_at.is_finite() and warned_at == sim.boss_gate() and ArenaGeometry.on_road(warned_at, Balance.ARENA_MONSTER_RADIUS), "예고 이벤트 1회·예고 지점은 입구 도로 위")
+	var gate := sim.boss_gate()
+	var lane: int = sim.boss_lane
+	var mid := Arena.snapshot()
+	check(ArenaValidation.valid(mid) and Arena.restore(mid) and Arena.sim.boss_warned and Arena.sim.boss_lane == lane, "예고 중 저장·복구에도 입구 유지")
+	sim = Arena.sim
+	sim.events.clear()
+	# Jump to the last tick before the boss so no regular enemy spawns in between.
+	sim.elapsed = Balance.ARENA_BOSS_AT - 0.02
 	_advance(sim, 0.1)
 	check(sim.boss_spawned and sim.boss_alive and sim.monsters.size() == 2, "18분 최종 보스 1회 등장·기존 적 유지")
+	var boss_at := Vector2.INF
+	for e in sim.events:
+		if String(e.get("t", "")) == "arena_boss": boss_at = e.get("p", Vector2.INF)
+	check(boss_at.is_finite() and (boss_at - Balance.ARENA_CENTER).normalized().dot((gate - Balance.ARENA_CENTER).normalized()) > 0.99, "보스가 예고한 입구에서 등장")
+	warnings = 0
+	for e in sim.events:
+		if String(e.get("t", "")) == "arena_boss_warning": warnings += 1
+	check(warnings == 0, "예고는 한 번만")
 	var serial: int = sim._serial
 	_advance(sim, 3.0)
 	check(sim._serial == serial, "보스 이후 신규 스폰 중단")

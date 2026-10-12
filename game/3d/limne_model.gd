@@ -110,6 +110,8 @@ func _ready() -> void:
 					_joint_bindings.append({"index":index,"side":side,"part":part,
 						"root_rest":skeleton_to_root*_skeleton.get_bone_global_rest(index)})
 		_loco.stride = STRIDE
+		# Planted gait geometry: hip pivot height, sole reach ahead/behind it, swing amplitude.
+		_loco.set_gait_geometry(HIP, 0.30, 0.03, 0.6)
 		for side in ["L","R"]: _leg_binds.append((get_node("Leg"+side) as Node3D).transform)
 		_setup_spray()
 		update_visuals()
@@ -203,18 +205,16 @@ func animate_visual(time: float, age: float = 9.0, wind: float = 0.6, battle: bo
 	var breath := sin(time*TAU/3.0)*0.008
 	var sway := sin(time*TAU/6.0)
 	var look := 0.06*pow(sin(clampf((time-2.4)/2.2,0.0,1.0)*PI),2.0)
-	# Locomotion: distance-driven cycle, authored like the native WalkLoop, shaped by
-	# ground speed like NativeCharacterModel: a run (HeroLocomotion.run_factor) swings
-	# the legs wider, lifts the knees, swaps the walking vault for a flight arc, leans
-	# in and pumps the arms; a heavy walk deepens the vault and rolls the hips.
+	# Locomotion: distance-driven cycle like the native heroes. The legs and the hip
+	# height come from HeroLocomotion's planted gait (heel -> toe rolling stance that
+	# never slides, swing clearance, flight arc at a run, strike settle); a run leans
+	# in and pumps the arms, a heavy walk rolls the hips.
 	var weight := _loco.walk_weight()
 	var run := _loco.run_factor()
 	var slow := _loco.slow_factor()
 	var phi := fposmod(_loco.walk_phase,1.0)
-	var theta_l := 0.6*(1.0+0.35*run)*cos(TAU*phi)*weight
-	var flight := 0.11*(0.5+0.5*cos(TAU*2.0*phi))*run*weight
-	var bounce := -0.8*HIP*(1.0-cos(theta_l))*(1.0-run)*(1.0+0.35*slow)+flight
-	var lean := (0.10+_loco.gait_lean())*weight+_loco.lean_pitch
+	var bounce := _loco.body_height()*weight
+	var lean := (0.10+_loco.gait_lean()+_loco.strike_nod())*weight+_loco.lean_pitch
 	var walk_yaw := 0.08*cos(TAU*phi)*weight
 	var walk_roll := (0.03+0.045*slow)*cos(TAU*(phi-0.1))*weight+_loco.lean_roll
 	var walk_x := -0.012*1.63*cos(TAU*(phi-0.1))*weight
@@ -243,10 +243,9 @@ func animate_visual(time: float, age: float = 9.0, wind: float = 0.6, battle: bo
 		if weight <= 0.0005:
 			leg.transform = _leg_binds[n]
 		else:
-			var theta := theta_l if side=="L" else -theta_l
-			var local := fposmod(phi-0.5 if side=="L" else phi,1.0)
-			var lift := 0.032*1.63*(1.0+0.7*run)*pow(sin(PI*clampf(local/0.5,0.0,1.0)),2.0) if local < 0.5 else 0.0
-			leg.transform = Transform3D(Basis(Vector3.RIGHT,theta),_leg_binds[n].origin+Vector3(0,lift*weight+flight,0))
+			# The leg pivots ride the solved hip height with the body (planted sole stays down).
+			var st := _loco.leg_state(side)
+			leg.transform = Transform3D(Basis(Vector3.RIGHT,float(st["angle"])*weight),_leg_binds[n].origin+Vector3(0,bounce+float(st["lift"])*weight,0))
 	# A visual release burst follows the already-existing gameplay release time.
 	_spray_strength = sin(clampf(release/0.13,0,1)*PI) if active and age>=wind and release<0.13 else 0.0
 	update_visuals()

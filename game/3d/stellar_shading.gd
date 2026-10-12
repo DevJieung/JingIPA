@@ -9,8 +9,8 @@ class_name StellarShading
 ##
 ## GL Compatibility has no per-instance shader uniforms, so per-instance state needs
 ## a material per live instance. prepare_instance(root) creates one StandardMaterial3D
-## override per skinned surface (a duplicate of the shared material with emission and
-## hashed transparency enabled at energy 0 / alpha 1) once, when the live instance
+## override per skinned surface (a duplicate of the shared material with emission at
+## energy 0 and the dissolve dither at "whole") once, when the live instance
 ## enters the world's actor tree (StellarVfx connects actors.child_entered_tree) or on
 ## its first non-zero flash/dissolve. Later frames only change values, never create
 ## resources. Overrides are deliberately not created before packing: the headless
@@ -19,7 +19,21 @@ class_name StellarShading
 ##
 ## Why StandardMaterial3D and not a ShaderMaterial: the skin contract reads
 ## get_active_material(i) as a BaseMaterial3D carrying the albedo texture, and the
-## standard material already provides rim light, emission and alpha hash.
+## standard material already provides rim light, emission and a pixel dither.
+##
+## The dissolve never uses alpha (2026-10-12). GL Compatibility's scene shader has no
+## alpha-hash path: an ALPHA_HASH material is drawn fully opaque in the opaque pass and
+## its ALPHA is written to the frame buffer's alpha channel. The arena draws the 3D
+## viewport texture on the 2D canvas with alpha blending, so a dying body used to stay
+## solid and then turn into a hard, mesh-shaped hole onto the screen's dark backdrop
+## (Look.BG_DEEP) for the last 0.2 s of its death. Measured with tests/3d/
+## vfx_visual_preview --dissolve-probe: the viewport's alpha under the body reads 1 down
+## to a material alpha of 0.17 and 0 from 0.16, while the body's colour is still in the
+## colour buffer; an environment clear colour set to magenta never shows, so it is not a
+## depth-only silhouette. The fade is the standard material's
+## distance-fade pixel dither instead: interleaved gradient noise + discard, identical
+## in the depth pre-pass, the colour pass and the shadow pass, with the frame buffer
+## alpha left at 1, so the holes show the ground behind the body.
 
 const META_MATERIALS := "_stellar_materials"
 const META_INSTANCE := "stellar_instance_material"
@@ -34,15 +48,23 @@ const SKIN_ROUGHNESS := 0.70
 const SKIN_SPECULAR := 0.33
 ## Hit flash: a short warm brightening of the skin texture (emission multiplied by the
 ## albedo texture, so the silhouette and markings stay readable instead of a white
-## cut-out); dissolve: hashed fade whose body glows cold in its own detail.
+## cut-out); dissolve: dithered fade whose body glows cold in its own detail.
 const FLASH_COLOR := Color(1.0, 0.92, 0.78)
 const FLASH_ENERGY := 1.5
 const DISSOLVE_COLOR := Color(0.55, 0.90, 1.0)
 const DISSOLVE_ENERGY := 1.9
 ## Dissolve shaping over the adapter's death progress q (0..1): the body stays whole
-## while the death pose plays, then crumbles quickly so the hashed half-state is brief.
+## while the death pose plays, then crumbles quickly so the dithered half-state is brief.
 const DISSOLVE_HOLD := 0.30
 const DISSOLVE_END := 0.92
+## The dither's amount is `smoothstep(fade_min, fade_max, distance to the camera)`. A
+## window this wide around a typical view distance makes that practically one value for
+## every pixel of the body (it drifts by about 1% over the whole 80-unit view depth), so
+## shifting the window sets the visible fraction of the instance: no camera maths, two
+## uniforms. Every value stays inside +-16384, the range a mediump float must hold, in
+## case a mobile driver evaluates the comparison below full precision.
+const DITHER_WINDOW := 8000.0
+const DITHER_CENTRE := 30.0
 
 static func style(node: Node, metal: float) -> void:
 	if node is MeshInstance3D and node.mesh != null:
@@ -107,13 +129,28 @@ static func _instance_features(mat: StandardMaterial3D) -> void:
 	# flash and the dissolve glow shaped by the body's own markings.
 	mat.emission_operator = BaseMaterial3D.EMISSION_OP_MULTIPLY
 	if mat.albedo_texture != null: mat.emission_texture = mat.albedo_texture
-	# Hashed transparency stays in the opaque pass (depth, shadows, sorting intact)
-	# and reads as disintegration while the body dissolves.
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_HASH
-	mat.alpha_hash_scale = 1.0
+	# The dissolve dither stays in the opaque pass (depth, shadows, sorting intact) and
+	# reads as disintegration while the body thins. Alpha is never used: see the header.
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
 	var albedo := mat.albedo_color
 	albedo.a = 1.0
 	mat.albedo_color = albedo
+	mat.distance_fade_mode = BaseMaterial3D.DISTANCE_FADE_PIXEL_DITHER
+	_set_visible(mat, 1.0)
+
+## Fraction 0..1 of a prepared material's pixels that survive the dither (1 whole, 0 gone).
+static func _set_visible(mat: StandardMaterial3D, fraction: float) -> void:
+	# Whole and gone sit entirely on one side of the window, so they are exact: a live
+	# body never loses a stray pixel and a finished one never keeps one.
+	var t := 1.5 if fraction >= 1.0 else -0.5 if fraction <= 0.0 else _inverse_smoothstep(fraction)
+	var low := DITHER_CENTRE - t * DITHER_WINDOW
+	if is_equal_approx(mat.distance_fade_min_distance, low): return
+	mat.distance_fade_min_distance = low
+	mat.distance_fade_max_distance = low + DITHER_WINDOW
+
+## x with smoothstep(0, 1, x) = y, so the dither's own smoothstep cancels out.
+static func _inverse_smoothstep(y: float) -> float:
+	return 0.5 - sin(asin(1.0 - 2.0 * clampf(y, 0.0, 1.0)) / 3.0)
 
 static func _materials(root: Node3D) -> Array:
 	if not root.has_meta(META_MATERIALS): prepare_instance(root)
@@ -156,6 +193,4 @@ static func _apply(root: Node3D) -> void:
 	for mat in _materials(root):
 		mat.emission_energy_multiplier = energy
 		mat.emission = color
-		var albedo: Color = mat.albedo_color
-		albedo.a = 1.0 - fade
-		mat.albedo_color = albedo
+		_set_visible(mat, 1.0 - fade)

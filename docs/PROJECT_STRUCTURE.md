@@ -9,6 +9,7 @@
 |---|---|
 | `game/main.gd` | 화면 전환, 단일 활성 화면의 수명, 메뉴와 화면별 음악 연결 |
 | `core/arena_run.gd` | 연속 수호전 진행, 영웅 성장/교체, 상점, 저장/복구 |
+| `core/arena_geometry.gd` | 원형 전장·나선 도로의 기하(이동·길찾기·그리기·미니맵이 함께 읽는다). 2026-10-12 나선 도로·배속·기술 횟수·보스 예고는 [ARENA_UPDATE_2026-10-12.md](ARENA_UPDATE_2026-10-12.md) |
 | `game/arena_sim.gd` | 전투 시간, 이동/길찾기, 피해, 보스, 공용 스킬 |
 | `game/arena_screen.gd` | 사용자 입력과 전투/모달 표시 |
 | `game/3d/arena_view.gd`, `arena_world.gd` | 시뮬레이터 상태를 실제 3D 전장으로 표현, 모델 어댑터에 보행·방향·피격·포위·사망 입력 전달 |

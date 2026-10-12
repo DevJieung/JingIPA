@@ -4,6 +4,38 @@
 재제작한 기준이다. 기하·UV·가중치·뼈 배치는 바꾸지 않았고, 클립 세트와 런타임 어댑터만 새로 만들었다.
 데이터·판정·난수·저장은 건드리지 않는다. 월드 쪽 계약은 `game/3d/stellar_world.gd`(부모 소유)가 정한다.
 
+## 2026-10-12 추가 — 지면 높이와 보스 2배 몸집
+
+- **지면 높이**: 월드가 몬스터 루트를 `world(p, 0.14)`에 두어 투기장 길(윗면 0.029)·흙(0.015) 위에
+  0.11~0.125u 떠 있었고 키 라이트 그림자가 발에서 떨어져 보였다(모델의 발바닥은 자기 y=0,
+  `finish_native_monster.py`가 최저점을 원점에 둔다). `StellarWorld.MONSTER_GROUND = 0.04`
+  (제단 광장 0.046에 서서 수정을 치는 순간 0.006 잠기고 길에서는 0.011 뜬다; 레거시 지도는
+  `build_map`이 0.14로 되돌린다). 투기장 시뮬은 `motion_t`를 이동 거리/`PATH_SPEED`로 올리므로
+  `MoveLoop`의 발은 원래 미끄러지지 않는다 — 몬스터 쪽 수정은 높이뿐이다.
+- **보스 2배**(사용자 지시 "보스 캐릭은 두배 더 키워주고"): `StellarModels.monster()`가 `kind ==
+  "boss"`인 native 모델의 루트 `scale`을 `BOSS_SCALE = 2.0`으로 둔다(레거시 원시체 보스는 1.40×2).
+  월드는 루트의 position/rotation만 쓰고 scale은 건드리지 않으며, 어댑터의 등장·피격·사망·포위
+  오프셋과 상태 표식은 모두 피벗/루트의 자식 로컬 값이라 자동으로 2배를 따른다(`native_monster_
+  model.gd` 변경 없음). 검수: `tests/3d/boss_scale_preview.tscn`(실제 투기장에서 보스 5종 등장·
+  보행·포위 타격·피격·사망), 자료 `build/walk-grounding/boss/<해상도>/`.
+- 2026-10-12 검수(실제 투기장 GL, `tests/3d/boss_scale_review.py`, 1280×800 5종 + 1000×625 flame_dragon·
+  titan_bloom, 렌더 오류 0, 판정 정상): 문 등장(rise/drop) → 차선 보행 → 제단 68 logical에서 포위 예비·
+  타격 → 피격(세 사수) → 사망(leviathan·dragon·titan sink 1.17s, golem_king topple 1.47s) 모두 2배
+  몸집으로 지면에 붙어 재생된다(`build/walk-grounding/boss/<해상도>/<id>.gif`, `<id>_siege.gif`·
+  `<id>_siege_contact.jpg`(제단 2배 확대), `boss_all5_sheet.jpg`). 포위 자세에서 몸이 제단 광장 위에
+  서고 수정은 몸 옆에 보이며 타격·넘어짐 순간에만 가려지므로 **포위 시각 오프셋은 넣지 않았다**.
+  보스 HP 막대 높이는 UI 담당 몫이다. 하네스는 긴 나선 차선을 24장 촬영 뒤 제단 앞 36 logical로
+  옮겨 걷게 하고, 사망 촬영 때 시뮬 항목의 `kind`를 `tank`로 바꿔 승리 화면이 몸을 가리지 않게 한다.
+- **사망 자리의 검은 납작 덩어리**(VFX 담당 보고, `build/blast-vfx/final/calm_lake/1000x625/a_skill_
+  blast_13~14.png`): 접지 그림자 판(영웅 전용, 몬스터에는 없음)과 지면 높이 변경과는 무관하다.
+  어댑터+재질만 있는 무대에서 drop_slime(splat)·ember_imp(sink)를 0.04와 0.14 두 높이로 33ms 연속
+  촬영(`tests/3d/grounding_probe.tscn --monster <id> --death`, `build/walk-grounding/death/`)해도 검은
+  형체는 한 프레임도 없고, 실제 투기장 보스 사망 5종에서도 없다. 해당 캡처(66ms/프레임)에서는 살아
+  있던 몸이 다음 프레임에 **통째로 검게, 납작하게** 바뀌어 2프레임 만에 줄어 사라지므로 사망 1.1~
+  1.5초 연출이 아니라 사망 이벤트 위치에 뜨는 `Kind.DIE` 버스트의 혼합 표면(그을음/서리 자국,
+  `vfx_burst_mix`)이 첫 프레임에 잘못된 나이/색으로 그려지는 쪽으로 보인다. 빈 땅 프로브에는
+  사망이 없어 die 버스트 자체가 생성되지 않으므로 그 프로브로는 배제할 수 없다 — VFX 담당 확인 필요.
+
 ## 파일
 
 | 역할 | 경로 |

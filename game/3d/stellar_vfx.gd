@@ -13,6 +13,9 @@ class_name StellarVfx
 ##   Slashes  (12)   sword arcs: the melee fan at the hero's actual reach, aimed along the
 ##                   simulator's fire direction, swept by the blade head in 0.1 s
 ##   Zones    (36)   ground rune discs for sim.zones plus caster wind-up circles
+##   Skills   (6)    whole sequences in one instance each: the Starlight Burst (falling
+##                   star, impact, shockwave to the damage radius, fragments, afterglow)
+##                   and the boss gate (four-second warning gather, arrival burst)
 ## plus two energy domes and six pooled OmniLights for the brightest pulses.
 ## Instances animate in their shaders from `vfx_time`, a clock that only advances in
 ## update(dt): a paused battle freezes every effect, and no node, mesh or material is
@@ -27,6 +30,7 @@ const MAX_MUZZLES := 24
 const MAX_SLASHES := 12
 const MAX_ZONES := 24
 const MAX_CASTS := 12
+const MAX_SKILLS := 6
 const MAX_LIGHTS := 6
 ## Sword presentation. Swords fly no projectile: at the release the simulator cuts the
 ## bodies inside Balance.MELEE_ARC within the hero's reach (fire.melee, then hit.melee
@@ -50,6 +54,7 @@ const PARKED := Transform3D(Basis.IDENTITY, Vector3(0, -60, 0))
 const EPOCH_STEP := 8.0
 
 const SPRITES: Texture2D = preload("res://art/vfx/sprites.png")
+const SKILL_SPRITES: Texture2D = preload("res://art/vfx/skill_sprites.png")
 const NOISE: Texture2D = preload("res://art/vfx/noise.png")
 const SHADER_PROJECTILE: Shader = preload("res://art/vfx/vfx_projectile.gdshader")
 const SHADER_BURST: Shader = preload("res://art/vfx/vfx_burst.gdshader")
@@ -62,6 +67,8 @@ const SHADER_SLASH: Shader = preload("res://art/vfx/vfx_slash.gdshader")
 const SHADER_SLASH_BASE: Shader = preload("res://art/vfx/vfx_slash_base.gdshader")
 const SHADER_DOME: Shader = preload("res://art/vfx/vfx_dome.gdshader")
 const SHADER_STATUS: Shader = preload("res://art/vfx/vfx_status.gdshader")
+const SHADER_SKILL: Shader = preload("res://art/vfx/vfx_skill.gdshader")
+const SHADER_SKILL_MIX: Shader = preload("res://art/vfx/vfx_skill_mix.gdshader")
 ## Shared looping status materials (burn / frost / stun) handed to body adapters by
 ## status_group(); the live world's VFX node keeps their clock in step with the battle.
 static var _status_materials: Dictionary = {}
@@ -83,8 +90,23 @@ const TRAIL_LENGTH := {"shot": 1.05, "pierce": 1.65, "splash": 0.85, "chain": 1.
 const KIND_PRIORITY := [0, 1, 0, 2, 3, 2, 1, 1, 1, 1, 2, 2, 4, 4, 4, 0, 0, 1, 1, 1, 0]
 ## Per-frame caps keep bulk events (a freeze slowing 40 bodies) from flooding one frame.
 const FRAME_CAPS := {"hit": 10, "splash": 6, "frost": 4, "stun": 5, "die": 8, "push": 6, "zone_tick": 8}
+## Girth of a scaled body in world units, measured once by fit_body().
+const META_BODY_RADIUS := "_stellar_body_radius"
 const PORTAL_COLOR := Color("#9d86ff")
 const PUSH_COLOR := Color("#e8f1ff")
+## Sequence kinds of the Skills pool (vfx_skill*.gdshader key their timelines on this order).
+enum SkillKind { BLAST, BOSS_WARNING, BOSS_BURST }
+## Starlight Burst: the star falls for BLAST_FALL seconds after the cast (the simulator's
+## damage is immediate; the lock-on sigil marks the struck radius from the cast moment),
+## then the impact layers run out over the rest of BLAST_LIFE.
+const BLAST_FALL := 0.18
+const BLAST_LIFE := 2.0
+const BLAST_HOT := Color("#fff4d6")
+## Boss gate: crimson gather, violet light; R is the arrival footprint (the 2.8x boss).
+const BOSS_RED := Color("#ff3d5c")
+const BOSS_VIOLET := Color("#9a4dff")
+const BOSS_SIZE := 1.5
+const BOSS_BURST_LIFE := 2.4
 const STUN_COLOR := Color("#ffe38b")
 const CURSE_COLOR := Color("#7a4fc9")
 
@@ -102,18 +124,20 @@ var _bursts: MultiMeshInstance3D
 var _beams: MultiMeshInstance3D
 var _slashes: MultiMeshInstance3D
 var _zones: MultiMeshInstance3D
+var _skills: MultiMeshInstance3D
 var _domes: Array[MeshInstance3D] = []
 var _dome_fx: Array[Dictionary] = []
 var _lights: Array[OmniLight3D] = []
 var _light_fx: Array[Dictionary] = []
 var _next := {"dome": 0}
-var _generation := {"burst": [], "beam": [], "slash": []}
-var _free := {"burst": [], "beam": [], "slash": []}
+var _generation := {"burst": [], "beam": [], "slash": [], "skill": []}
+var _free := {"burst": [], "beam": [], "slash": [], "skill": []}
 var _pending_fires: Array[Dictionary] = []
 var _pending_hits: Array[Dictionary] = []   # this tick's melee hits, timed after their fire
-var _delayed: Array[Dictionary] = []        # bursts waiting for the blade head (effect clock)
+var _delayed: Array[Dictionary] = []        # bursts / pulses waiting on the effect clock
 var _aims: Dictionary = {}
 var _melee: Dictionary = {}                 # src -> last melee release (origin, dir, reach, sign)
+var _big_bodies: Array[Node3D] = []         # live bodies whose root is scaled (bosses)
 var _hero_cache: Dictionary = {}
 var _split_gap := 0.0
 var _hit_light_gap := 0.0
@@ -129,7 +153,7 @@ func _ready() -> void:
 	# actor tree, before their first frame: no resource is created mid-battle.
 	if _world != null and _world.actors != null:
 		_world.actors.child_entered_tree.connect(_on_actor_entered)
-	var sizes := {"burst": MAX_BURSTS, "beam": MAX_BEAMS, "slash": MAX_SLASHES}
+	var sizes := {"burst": MAX_BURSTS, "beam": MAX_BEAMS, "slash": MAX_SLASHES, "skill": MAX_SKILLS}
 	for key in _generation.keys():
 		var gen: Array = _generation[key]
 		gen.resize(int(sizes[key]))
@@ -142,6 +166,7 @@ func _ready() -> void:
 	_beams = _pool("Beams", _beam_mesh(), MAX_BEAMS, 1, MAX_BEAMS)
 	_slashes = _pool("Slashes", _slash_mesh(), MAX_SLASHES, 1, MAX_SLASHES)
 	_zones = _pool("Zones", _zone_mesh(), MAX_ZONES + MAX_CASTS, -2)
+	_skills = _pool("Skills", _skill_mesh(), MAX_SKILLS, 1, MAX_SKILLS)
 	for n in range(2):
 		var dome := MeshInstance3D.new()
 		dome.name = "Dome" + str(n)
@@ -169,6 +194,8 @@ func _ready() -> void:
 func _on_actor_entered(node: Node) -> void:
 	if node is Node3D and (node.has_meta("native_id") or node.has_meta("_stellar_native_monster")):
 		StellarShading.prepare_instance(node)
+		# The world sets a body's root scale before it joins the actors (bosses: 2x).
+		if fit_body(node): _big_bodies.append(node)
 
 # --------------------------------------------------------------------------- #
 # Pools, meshes and materials (created once)
@@ -178,6 +205,7 @@ func _material(shader: Shader, priority: int) -> ShaderMaterial:
 	material.shader = shader
 	material.render_priority = priority
 	material.set_shader_parameter("sprites", SPRITES)
+	material.set_shader_parameter("skill_sprites", SKILL_SPRITES)
 	material.set_shader_parameter("noise_tex", NOISE)
 	material.set_shader_parameter("vfx_time", _clock)
 	material.set_shader_parameter("vfx_epoch", _epoch)
@@ -310,6 +338,34 @@ func _slash_mesh() -> ArrayMesh:
 				st.add_vertex(points[i])
 		st.set_material(_material(SHADER_SLASH_BASE, 0) if layer == 0 else _material(SHADER_SLASH, 1))
 		mesh = st.commit(mesh)
+	return mesh
+
+## One sequence per instance (vfx_skill / vfx_skill_mix): every quad is a part of the
+## timeline (UV2.x) and the shaders place it from the instance's age. Additive surface:
+## shock ring, sigil, flash, flare, pillar, comet tail strip + head, 16 sparks, 12 embers,
+## afterglow, sky flare, 4 lightning bolts, portal ring, crack glow. Mix surface: cracks,
+## dark ring, 6 smoke puffs, 10 debris chunks, 8 mist wisps.
+func _skill_mesh() -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for part in [0, 1, 2, 3, 4]: _quad(st, part, 0)
+	_strip(st, 5, 0, 8)
+	_quad(st, 6, 0)
+	for n in range(16): _quad(st, 7, n)
+	for n in range(12): _quad(st, 8, n)
+	for part in [9, 10]: _quad(st, part, 0)
+	for n in range(4): _quad(st, 11, n)
+	for part in [12, 13]: _quad(st, part, 0)
+	st.set_material(_material(SHADER_SKILL, 1))
+	var mesh := st.commit()
+	var soft := SurfaceTool.new()
+	soft.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for part in [20, 21]: _quad(soft, part, 0)
+	for n in range(6): _quad(soft, 22, n)
+	for n in range(10): _quad(soft, 23, n)
+	for n in range(8): _quad(soft, 24, n)
+	soft.set_material(_material(SHADER_SKILL_MIX, -3))
+	soft.commit(mesh)
 	return mesh
 
 func _zone_mesh() -> ArrayMesh:
@@ -513,10 +569,22 @@ func _melee_hit(e: Dictionary) -> void:
 	var p: Vector2 = e.get("p", Vector2.ZERO)
 	var color := Color(e.get("c", Color("#eacb81")))
 	var elem := float(ELEM_INDEX.get(String(e.get("el", "none")), 0))
-	var origin := world(p, clampf(_monster_height(int(e.get("sid", 0))) * 0.55, 0.3, 1.1))
+	# Body centre. The ceiling keeps tall ordinary bodies near the blade's plane and grows
+	# with the root scale, so a 2x boss is cut on its body, not at its ankles.
+	var sid := int(e.get("sid", 0))
+	var big := _big_body_at(p)
+	var body := big.scale.y if big != null else 1.0
+	var origin := world(p, clampf(_monster_height(sid) * 0.55, 0.3, 1.1 * body))
 	var basis := _yaw()
 	var delay := 0.0
 	var record: Dictionary = _melee.get(src, {})
+	if big != null and not record.is_empty():
+		# On a boss the cut sits on the flank that faces the blade, so two guardians on
+		# either side leave two readable marks instead of one at the body's axis.
+		var toward: Vector2 = Vector2(record["at"]) - p
+		if toward.length_squared() > 1.0:
+			toward = toward.normalized() * float(big.get_meta(META_BODY_RADIUS, 0.0)) * 0.5
+			origin += Vector3(toward.x, 0.0, toward.y)
 	if not record.is_empty() and _clock - float(record["birth"]) < 0.5:
 		var d: Vector2 = record["d"]
 		var facing := Basis.looking_at(Vector3(d.x, 0.0, d.y), Vector3.UP)
@@ -533,7 +601,7 @@ func _melee_hit(e: Dictionary) -> void:
 		# The head eases out across the arc (vfx_slash); invert that for the arrival time.
 		delay = maxf(0.0, float(record["birth"]) + SLASH_SWEEP * (1.0 - sqrt(1.0 - fraction)) - _clock)
 	var fx := {"at": _clock + delay, "kind": Kind.SLASH_HIT, "origin": origin, "basis": basis,
-		"color": color, "size": scale, "elem": elem}
+		"color": color, "size": scale, "elem": elem, "body": body}
 	if (bool(e.get("crit", false)) or float(e.get("em", 1.0)) >= 2.0) and _hit_light_gap <= 0.0:
 		_hit_light_gap = 0.08
 		fx["pulse"] = 1.4 * scale
@@ -570,6 +638,9 @@ func event(e: Dictionary) -> void:
 		if seen > int(FRAME_CAPS[type]): return
 	var color := Color(e.get("c", Color("#eacb81")))
 	var elem := float(ELEM_INDEX.get(String(e.get("el", "none")), 0))
+	# Root scale of the boss whose body this effect lands in (1 anywhere else): the air
+	# parts of the burst then lift with the body and are drawn in front of it.
+	var body := _body_scale_at(e.get("b", e.get("p")))
 	match type:
 		"hit":
 			if bool(e.get("melee", false)):
@@ -579,7 +650,7 @@ func event(e: Dictionary) -> void:
 			var p: Vector2 = e.get("p", Vector2.ZERO)
 			var scale := _impact_scale(e)
 			if scale <= 0.0: return
-			_burst(Kind.HIT, world(p, 0.0), _yaw(), color, scale, elem)
+			_burst(Kind.HIT, world(p, 0.0), _yaw(), color, scale, elem, body)
 			if (bool(e.get("crit", false)) or float(e.get("em", 1.0)) >= 2.0) and _hit_light_gap <= 0.0:
 				_hit_light_gap = 0.08
 				_pulse(world(p, 0.6), color, 1.4 * scale, 2.0, 0.12)
@@ -592,11 +663,11 @@ func event(e: Dictionary) -> void:
 				# Split warheads burst on every hit: a small bloom, rate limited.
 				if _split_gap > 0.0: return
 				_split_gap = 0.09
-				_burst(Kind.SPLASH, world(p, 0.0), facing, color, radius * 0.55, elem)
+				_burst(Kind.SPLASH, world(p, 0.0), facing, color, radius * 0.55, elem, body)
 				return
 			var scale := _impact_scale(e)
 			if scale <= 0.0: return
-			_burst(Kind.SPLASH, world(p, 0.0), facing, color, radius * minf(scale, 1.3), elem)
+			_burst(Kind.SPLASH, world(p, 0.0), facing, color, radius * minf(scale, 1.3), elem, body)
 			_pulse(world(p, 0.5), color, 2.2 * scale, 2.6 + radius, 0.18)
 		"zone_tick":
 			var p: Vector2 = e.get("p", Vector2.ZERO)
@@ -605,13 +676,13 @@ func event(e: Dictionary) -> void:
 			var a := world(Vector2(e.get("a", Vector2.ZERO)), 0.92)
 			var b := world(Vector2(e.get("b", Vector2.ZERO)), 0.62)
 			_beam(0, a, b, color, 1.0 if bool(e.get("big", false)) else 0.0)
-			_burst(Kind.BEAM_CAP, b, _yaw(), color, 1.0, elem)
+			_burst(Kind.BEAM_CAP, b, _yaw(), color, 1.0, elem, body)
 			_pulse(b, color, 1.6, 2.2, 0.16)
 		"bolt":
 			var a := world(Vector2(e.get("a", Vector2.ZERO)), 0.62)
 			var b := world(Vector2(e.get("b", Vector2.ZERO)), 0.62)
 			_beam(1, a, b, color, 0.0)
-			_burst(Kind.BOLT_CAP, b, _yaw(), color, 1.0, 3.0)
+			_burst(Kind.BOLT_CAP, b, _yaw(), color, 1.0, 3.0, body)
 		"ric":
 			var a := world(Vector2(e.get("a", Vector2.ZERO)), BULLET_HEIGHT)
 			var b := world(Vector2(e.get("b", Vector2.ZERO)), BULLET_HEIGHT)
@@ -619,7 +690,7 @@ func event(e: Dictionary) -> void:
 			_burst(Kind.RIC_SPARK, a, _yaw(), color, 1.0, elem)
 		"die":
 			var p: Vector2 = e.get("p", Vector2.ZERO)
-			_burst(Kind.DIE, world(p, 0.0), _yaw(), color, 1.0, elem)
+			_burst(Kind.DIE, world(p, 0.0), _yaw(), color, 1.0, elem, body)
 			_pulse(world(p, 0.5), color.lightened(0.3), 1.3, 2.2, 0.35)
 		"leak":
 			var p: Vector2 = e.get("p", Vector2.ZERO)
@@ -637,14 +708,14 @@ func event(e: Dictionary) -> void:
 			if node != null:
 				var back: Vector3 = node.global_basis.z
 				if back.length_squared() > 0.001: facing = Basis.looking_at(Vector3(back.x, 0, back.z).normalized(), Vector3.UP)
-			_burst(Kind.PUSH, world(p, 0.0), facing, PUSH_COLOR, 1.0, 0.0)
+			_burst(Kind.PUSH, world(p, 0.0), facing, PUSH_COLOR, 1.0, 0.0, body)
 		"frost":
-			_burst(Kind.FROST, world(Vector2(e.get("p", Vector2.ZERO)), 0.0), _yaw(), Look.ICE, 1.0, 2.0)
+			_burst(Kind.FROST, world(Vector2(e.get("p", Vector2.ZERO)), 0.0), _yaw(), Look.ICE, 1.0, 2.0, body)
 		"stun":
 			var sid := int(e.get("sid", 0))
-			_burst(Kind.STUN, world(Vector2(e.get("p", Vector2.ZERO)), 0.0), _yaw(), STUN_COLOR, _monster_height(sid) + 0.12, 3.0)
+			_burst(Kind.STUN, world(Vector2(e.get("p", Vector2.ZERO)), 0.0), _yaw(), STUN_COLOR, _monster_height(sid) + 0.12 * _monster_scale(sid), 3.0, body)
 		"curse":
-			_burst(Kind.CURSE, world(Vector2(e.get("p", Vector2.ZERO)), 0.0), _yaw(), CURSE_COLOR, 1.0, 0.0)
+			_burst(Kind.CURSE, world(Vector2(e.get("p", Vector2.ZERO)), 0.0), _yaw(), CURSE_COLOR, 1.0, 0.0, body)
 		"spawn":
 			var p: Vector2 = e.get("p", Vector2.ZERO)
 			_burst(Kind.SPAWN, world(p, 0.0), _yaw(), PORTAL_COLOR, 1.0, 0.0)
@@ -655,23 +726,40 @@ func event(e: Dictionary) -> void:
 			_burst(Kind.WILDFIRE, world(p, 0.0), _yaw(), Balance.elem_color("fire"), radius, 1.0)
 			_pulse(world(p, 0.4), Balance.elem_color("fire"), 2.0, 2.0 + radius, 0.4)
 
-## Arena-wide guardian skills (blast / freeze / ward).
+## Arena-wide guardian skills (blast / freeze / ward) and the boss gate.
+##   arena_blast         p (ground point), r (damage radius, logical units)
+##   arena_freeze        p, r (map diagonal)      arena_ward  p, r (altar radius)
+##   arena_boss_warning  p (the gate the boss will come through), sec (seconds until it does;
+##                       the gather runs exactly that long and hands over to the burst)
+##   arena_boss          p (where the boss stands as it arrives)
 func arena_event(e: Dictionary) -> void:
 	if _bullets == null: return
 	var type := String(e.get("t", ""))
-	if type not in ["arena_blast", "arena_freeze", "arena_ward"]: return
 	var at := world(Vector2(e.get("p", Balance.ARENA_CENTER)), 0.0)
 	var radius := float(e.get("r", 70.0)) / UNIT
-	if type == "arena_blast":
-		_burst(Kind.BLAST, at, _yaw(), Look.GOLD, radius, 1.0)
-		_pulse(at + Vector3(0, 0.6, 0), Look.GOLD, 6.0, radius * 2.6, 0.5)
-	elif type == "arena_freeze":
-		_burst(Kind.FREEZE, at, _yaw(), Look.ICE, minf(radius * 0.36, 10.5), 2.0)
-		_pulse(at + Vector3(0, 0.8, 0), Look.ICE_DEEP, 4.0, 8.0, 0.6)
-	else:
-		_burst(Kind.WARD, at, _yaw(), Look.CRYSTAL, radius, 0.0)
-		_dome(at, radius * 1.25, Look.CRYSTAL, 0.95)
-		_pulse(at + Vector3(0, 1.0, 0), Look.CRYSTAL, 3.2, 4.5, 0.55)
+	match type:
+		"arena_blast":
+			# The star is born at the cast (sky flare + lock-on on the struck radius), hits
+			# BLAST_FALL later; the big light waits for the impact on the effect clock.
+			radius = float(e.get("r", Balance.ARENA_BLAST_RADIUS)) / UNIT
+			_skill(SkillKind.BLAST, at, radius, Look.GOLD, 0.0, BLAST_LIFE)
+			_pulse(at + Vector3(0, 0.5, 0), Look.GOLD, 2.0, radius * 1.8, BLAST_FALL + 0.05)
+			_delayed.append({"at": _clock + BLAST_FALL, "kind": -1, "origin": at + Vector3(0, 0.8, 0),
+				"color": BLAST_HOT, "pulse": 9.0, "range": radius * 3.6, "life": 0.9})
+		"arena_freeze":
+			_burst(Kind.FREEZE, at, _yaw(), Look.ICE, minf(radius * 0.36, 10.5), 2.0)
+			_pulse(at + Vector3(0, 0.8, 0), Look.ICE_DEEP, 4.0, 8.0, 0.6)
+		"arena_ward":
+			_burst(Kind.WARD, at, _yaw(), Look.CRYSTAL, radius, 0.0)
+			_dome(at, radius * 1.25, Look.CRYSTAL, 0.95)
+			_pulse(at + Vector3(0, 1.0, 0), Look.CRYSTAL, 3.2, 4.5, 0.55)
+		"arena_boss_warning":
+			var sec := maxf(float(e.get("sec", 4.0)), 0.5)
+			_skill(SkillKind.BOSS_WARNING, at, BOSS_SIZE, BOSS_RED, sec, sec + 0.2)
+			_pulse(at + Vector3(0, 0.7, 0), BOSS_VIOLET, 4.5, BOSS_SIZE * 5.5, sec, 1)
+		"arena_boss":
+			_skill(SkillKind.BOSS_BURST, at, BOSS_SIZE, BOSS_RED, 0.0, BOSS_BURST_LIFE)
+			_pulse(at + Vector3(0, 1.3, 0), BOSS_VIOLET.lerp(Color.WHITE, 0.3), 8.0, BOSS_SIZE * 7.5, 1.5, 2)
 
 func update(dt: float) -> void:
 	if _bullets == null: return
@@ -682,12 +770,14 @@ func update(dt: float) -> void:
 		for material in _status_materials.values(): material.set_shader_parameter("vfx_time", _clock)
 	_split_gap = maxf(0.0, _split_gap - dt)
 	_hit_light_gap = maxf(0.0, _hit_light_gap - dt)
-	# Blade contacts spawn when the sweeping head reaches them; a paused clock holds them.
+	# Blade contacts spawn when the sweeping head reaches them, the blast's light when the
+	# star lands; a paused clock holds them. kind -1 is a pulse without a burst.
 	for i in range(_delayed.size() - 1, -1, -1):
 		var fx: Dictionary = _delayed[i]
 		if float(fx["at"]) > _clock: continue
-		_burst(int(fx["kind"]), fx["origin"], fx["basis"], fx["color"], float(fx["size"]), float(fx["elem"]))
-		if fx.has("pulse"): _pulse(fx["origin"], fx["color"], float(fx["pulse"]), 2.0, 0.12)
+		if int(fx["kind"]) >= 0:
+			_burst(int(fx["kind"]), fx["origin"], fx["basis"], fx["color"], float(fx["size"]), float(fx["elem"]), float(fx.get("body", 1.0)))
+		if fx.has("pulse"): _pulse(fx["origin"], fx["color"], float(fx["pulse"]), float(fx.get("range", 2.0)), float(fx.get("life", 0.12)))
 		_delayed.remove_at(i)
 	for i in range(effects.size() - 1, -1, -1):
 		var fx = effects[i]
@@ -706,7 +796,7 @@ func update(dt: float) -> void:
 			_lights[i].visible = false
 			_lights[i].light_energy = 0.0
 		else:
-			_lights[i].light_energy = float(fx["energy"]) * (1.0 - q) * (1.0 - q)
+			_lights[i].light_energy = float(fx["energy"]) * _light_curve(int(fx.get("mode", 0)), q, float(fx["age"]))
 	for i in range(_domes.size()):
 		var fx: Dictionary = _dome_fx[i]
 		if float(fx["life"]) <= 0.0: continue
@@ -733,7 +823,11 @@ func _record(pool: String, slot: int, life: float, priority: int, custom: Color)
 		"pri": priority, "birth": _clock, "custom": custom})
 
 func _pool_node(pool: String) -> MultiMeshInstance3D:
-	return _bursts if pool == "burst" else _beams if pool == "beam" else _slashes
+	match pool:
+		"burst": return _bursts
+		"beam": return _beams
+		"skill": return _skills
+	return _slashes
 
 ## Move the shader epoch forward and re-encode every live birth relative to it.
 func _rebase() -> void:
@@ -780,16 +874,33 @@ func _release(fx: Dictionary) -> void:
 	var free: Array = _free[pool]
 	if not free.has(slot): free.append(slot)
 
-func _burst(kind: int, origin: Vector3, basis: Basis, color: Color, size: float, elem: float) -> void:
+## `body` is the root scale of the body the burst lands in (see _body_scale_at); it rides in
+## the instance colour's alpha, which the burst shaders read as lift and camera clearance.
+func _burst(kind: int, origin: Vector3, basis: Basis, color: Color, size: float, elem: float, body: float = 1.0) -> void:
 	if not _make_room(KIND_PRIORITY[kind]): return
 	var slot := _take("burst", KIND_PRIORITY[kind])
 	if slot < 0: return
 	var multimesh := _bursts.multimesh
 	multimesh.set_instance_transform(slot, Transform3D(basis, origin))
+	color.a = maxf(body, 1.0)
 	multimesh.set_instance_color(slot, color)
 	var custom := Color(_clock - _epoch, size, elem, float(kind))
 	multimesh.set_instance_custom_data(slot, custom)
 	_record("burst", slot, KIND_LIFE[kind], KIND_PRIORITY[kind], custom)
+
+## A whole skill / gate sequence in one Skills instance (priority 4: never evicted by
+## ordinary combat effects). `radius` is in world units; `duration` is the warning's
+## length (its parts stop exactly there so the arrival burst takes over).
+func _skill(kind: int, origin: Vector3, radius: float, color: Color, duration: float, life: float) -> void:
+	if not _make_room(4): return
+	var slot := _take("skill", 4)
+	if slot < 0: return
+	var multimesh := _skills.multimesh
+	multimesh.set_instance_transform(slot, Transform3D(_yaw(), origin))
+	multimesh.set_instance_color(slot, color)
+	var custom := Color(_clock - _epoch, radius, duration, float(kind))
+	multimesh.set_instance_custom_data(slot, custom)
+	_record("skill", slot, life, 4, custom)
 
 func _beam(kind: int, a: Vector3, b: Vector3, color: Color, big: float) -> void:
 	if not _make_room(1): return
@@ -844,7 +955,18 @@ func _dome(at: Vector3, radius: float, color: Color, life: float) -> void:
 	dome.visible = true
 	_dome_fx[index] = {"age": 0.0, "life": life}
 
-func _pulse(at: Vector3, color: Color, energy: float, range_value: float, life: float) -> void:
+## Energy envelope of a pulse light over its life fraction q:
+##   0 decay (impacts, releases)   1 gather: throbbing ramp that peaks at the end (boss warning)
+##   2 arrival: a hard flash that settles into a slow tail (boss burst)
+static func _light_curve(mode: int, q: float, age: float) -> float:
+	match mode:
+		1:
+			return (0.25 + 0.75 * q * q) * (0.8 + 0.2 * sin(age * (7.0 + 9.0 * q))) + 0.6 * maxf(0.0, (q - 0.88) / 0.12)
+		2:
+			return 0.55 * pow(maxf(0.0, 1.0 - q * 5.0), 1.2) + 0.45 * pow(1.0 - q, 2.0)
+	return (1.0 - q) * (1.0 - q)
+
+func _pulse(at: Vector3, color: Color, energy: float, range_value: float, life: float, mode: int = 0) -> void:
 	var index := -1
 	var oldest := -1.0
 	for i in range(_lights.size()):
@@ -862,7 +984,7 @@ func _pulse(at: Vector3, color: Color, energy: float, range_value: float, life: 
 	light.light_energy = energy
 	light.omni_range = range_value
 	light.visible = true
-	_light_fx[index] = {"age": 0.0, "life": life, "energy": energy}
+	_light_fx[index] = {"age": 0.0, "life": life, "energy": energy, "mode": mode}
 
 # --------------------------------------------------------------------------- #
 # Status markers for body adapters (replacement for the old cone groups)
@@ -872,16 +994,6 @@ func _pulse(at: Vector3, color: Color, energy: float, range_value: float, life: 
 ## the mesh and one material per kind are shared by every body, nothing is created
 ## per frame. `height` is the body height in world units (stun ring sits above it).
 static func status_group(status: String, height: float = 0.9) -> MeshInstance3D:
-	var kind: int = {"Burn": 0, "Frost": 1, "Stun": 2}.get(status, 0)
-	var key := "%s:%.2f" % [status, height]
-	if not _status_materials.has(key):
-		var material := ShaderMaterial.new()
-		material.shader = SHADER_STATUS
-		material.render_priority = 1
-		material.set_shader_parameter("sprites", SPRITES)
-		material.set_shader_parameter("kind", kind)
-		material.set_shader_parameter("height", height)
-		_status_materials[key] = material
 	if _status_mesh == null:
 		var st := SurfaceTool.new()
 		st.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -890,11 +1002,66 @@ static func status_group(status: String, height: float = 0.9) -> MeshInstance3D:
 	var node := MeshInstance3D.new()
 	node.name = "Stellar" + status
 	node.mesh = _status_mesh
-	node.material_override = _status_materials[key]
+	node.material_override = _status_material(status, height, 1.0)
 	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	node.custom_aabb = AABB(Vector3(-1.5, -0.5, -1.5), Vector3(3, 4, 3))
 	node.visible = false
 	return node
+
+## The shared marker material of one status, body height (unscaled), root scale and girth.
+static func _status_material(status: String, height: float, body_scale: float, orbit: float = 0.0) -> ShaderMaterial:
+	var key := "%s:%.2f:%.2f:%.2f" % [status, height, body_scale, orbit]
+	if not _status_materials.has(key):
+		var material := ShaderMaterial.new()
+		material.shader = SHADER_STATUS
+		material.render_priority = 1
+		material.set_shader_parameter("sprites", SPRITES)
+		material.set_shader_parameter("kind", int({"Burn": 0, "Frost": 1, "Stun": 2}.get(status, 0)))
+		material.set_shader_parameter("height", height)
+		material.set_shader_parameter("body_scale", body_scale)
+		material.set_shader_parameter("orbit", orbit)
+		_status_materials[key] = material
+	return _status_materials[key]
+
+## A body whose root is scaled (bosses stand at 2x) is measured once, when it joins the
+## world: its girth (mean half-extent of its meshes at rest, world units) is remembered on
+## the node, and its status marks switch to the material of that scale and girth, so the
+## flames and shards circle the body instead of sitting inside it and the stun ring orbits
+## its real head height. Ordinary bodies (scale 1) are left exactly as they were.
+## Returns true for a scaled body.
+static func fit_body(root: Node3D) -> bool:
+	var body_scale := root.scale.y
+	if is_equal_approx(body_scale, 1.0): return false
+	var radius := _body_radius(root)
+	root.set_meta(META_BODY_RADIUS, radius)
+	for status in ["Burn", "Frost", "Stun"]:
+		var marker := root.get_node_or_null("Stellar" + status) as MeshInstance3D
+		if marker == null: continue
+		var current := marker.material_override as ShaderMaterial
+		if current == null or current.shader != SHADER_STATUS: continue
+		marker.material_override = _status_material(status, float(current.get_shader_parameter("height")), body_scale, snappedf(radius * 0.75, 0.01))
+	return true
+
+## Mean horizontal half-extent of a body's meshes at rest, in world units (root scale
+## included). Parent transforms are walked by hand: the body's children have not entered
+## the tree yet when it joins the actors.
+static func _body_radius(root: Node3D) -> float:
+	var low := Vector2(INF, INF)
+	var high := Vector2(-INF, -INF)
+	for mesh in root.find_children("*", "MeshInstance3D", true, false):
+		if String(mesh.name).begins_with("Stellar"): continue
+		var to_root := Transform3D.IDENTITY
+		var walk: Node = mesh
+		while walk != null and walk != root:
+			if walk is Node3D: to_root = (walk as Node3D).transform * to_root
+			walk = walk.get_parent()
+		var aabb: AABB = (mesh as MeshInstance3D).get_aabb()
+		for corner in range(8):
+			var point: Vector3 = to_root * aabb.get_endpoint(corner)
+			low = low.min(Vector2(point.x, point.z))
+			high = high.max(Vector2(point.x, point.z))
+	if not low.is_finite() or not high.is_finite(): return 0.0
+	return 0.25 * (high.x - low.x + high.y - low.y) * absf(root.scale.x)
 
 # --------------------------------------------------------------------------- #
 # Lookups (presentation data only)
@@ -948,6 +1115,32 @@ func _monster_height(sid: int) -> float:
 	var id := String(node.get_meta("_stellar_monster_id", ""))
 	var row: Dictionary = NativeMonsterModel.manifest().get("monsters", {}).get(id, {})
 	return float(row.get("height", 0.9)) * maxf(node.scale.y, 0.01)
+
+## Root scale of a monster body (bosses stand at StellarModels.BOSS_SCALE).
+func _monster_scale(sid: int) -> float:
+	if _world == null: return 1.0
+	var node := _world.monster_node(sid)
+	return maxf(node.scale.y, 0.01) if node != null else 1.0
+
+## The scaled body (a boss) whose girth contains the logical point, or null. Only scaled
+## bodies are tracked, so this is a loop over at most a couple of nodes.
+func _big_body_at(p: Vector2) -> Node3D:
+	if _big_bodies.is_empty(): return null
+	var at := world(p, 0.0)
+	for i in range(_big_bodies.size() - 1, -1, -1):
+		var node := _big_bodies[i]
+		if not is_instance_valid(node) or not node.is_inside_tree():
+			_big_bodies.remove_at(i)
+			continue
+		var radius := maxf(float(node.get_meta(META_BODY_RADIUS, 0.0)), 0.4)
+		if Vector2(node.position.x - at.x, node.position.z - at.z).length_squared() <= radius * radius: return node
+	return null
+
+## Root scale of the boss whose body contains an event's position (1 when there is none).
+func _body_scale_at(p) -> float:
+	if _big_bodies.is_empty() or not (p is Vector2): return 1.0
+	var node := _big_body_at(p)
+	return node.scale.y if node != null else 1.0
 
 ## A deterministic pseudo-random yaw (never touches any gameplay RNG).
 func _yaw() -> Basis:

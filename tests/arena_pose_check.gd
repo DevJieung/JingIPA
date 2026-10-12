@@ -17,12 +17,23 @@ func _ready() -> void:
 			if bone >= 0: rests[bone] = skeleton.get_bone_pose(bone)
 		check(rests.size() == 2, String(unit["id"]) + " has native leg controls")
 		var maximum_drift := 0.0
+		var early_drift := 0.0
+		var late_drift := 0.0
 		for frame in range(1, 1801):
 			data["pos"] = Balance.ARENA_CENTER + Vector2(sin(frame * 0.01), cos(frame * 0.01)) * 100
 			world.sync_heroes([data], frame / 60.0, true)
 			for bone in rests:
-				maximum_drift = maxf(maximum_drift, skeleton.get_bone_pose_position(bone).distance_to(rests[bone].origin))
-		check(maximum_drift < 0.10, String(unit["id"]) + " leg position stays grounded after 30 seconds: " + str(maximum_drift))
+				var drift := skeleton.get_bone_pose_position(bone).distance_to(rests[bone].origin)
+				maximum_drift = maxf(maximum_drift, drift)
+				if frame <= 600: early_drift = maxf(early_drift, drift)
+				elif frame > 1200: late_drift = maxf(late_drift, drift)
+		# The planted gait (2026-10-12) carries the leg pivots on the solved hip height and
+		# the swing lift (0.11~0.13 across the roster), so "grounded" is no longer "within
+		# 0.10 of rest". What this regression guards is accumulation: a pose that adds to
+		# itself every frame grows without bound, so the last ten seconds may not exceed
+		# the first ten, and the whole walk stays inside a fixed envelope.
+		check(maximum_drift < 0.20, String(unit["id"]) + " leg pivot stays inside the gait envelope for 30 seconds: " + str(maximum_drift))
+		check(late_drift <= early_drift + 0.005, String(unit["id"]) + " leg pivot does not accumulate (first 10 s %.4f, last 10 s %.4f)" % [early_drift, late_drift])
 		var paused: Dictionary = {}
 		for bone in rests: paused[bone] = skeleton.get_bone_pose(bone)
 		for frame in range(120): world.sync_heroes([data], 30.0, true)

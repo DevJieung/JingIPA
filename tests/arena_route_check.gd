@@ -3,6 +3,7 @@ extends Harness
 func _ready() -> void:
 	if not require_no_save(): return
 	Run.running = false
+	_check_spatial_indexes()
 	_check_routes()
 	_check_spawn_entries()
 	_check_moving_guardian()
@@ -22,6 +23,55 @@ func _battle() -> ArenaSim:
 	Arena.sim._rebuild_navigation()
 	return Arena.sim
 
+## The road test's grid broad phase and the incremental guardian footprint are pure
+## optimisations: both must agree with their exhaustive definitions everywhere.
+func _check_spatial_indexes() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 20261012
+	var mismatches := 0
+	var on := 0
+	for n in range(4000):
+		var point := Balance.ARENA_CENTER + Vector2.from_angle(rng.randf() * TAU) * sqrt(rng.randf()) * (ArenaGeometry.RADIUS + 20.0)
+		for margin in [-60.0, 0.0, Balance.ARENA_MONSTER_RADIUS, Balance.ARENA_MONSTER_RADIUS + 1.0, Balance.ARENA_MONSTER_RADIUS + 3.0]:
+			var fast := ArenaGeometry.on_road(point, margin)
+			if fast: on += 1
+			if fast != ArenaGeometry.on_road_exhaustive(point, margin): mismatches += 1
+	# Points exactly on the kerb and on segment joints, where a broad phase is most likely to slip.
+	for road in ArenaGeometry.road_polylines():
+		for i in range(0, road.size() - 1, 3):
+			var normal := (road[i + 1] - road[i]).normalized().orthogonal()
+			for side in [-1.0, 1.0]:
+				for offset in [ArenaGeometry.ROAD_WIDTH * 0.5 - 0.01, ArenaGeometry.ROAD_WIDTH * 0.5 + 0.01, ArenaGeometry.ROAD_WIDTH * 0.5 - Balance.ARENA_MONSTER_RADIUS]:
+					var point: Vector2 = road[i] + normal * side * offset
+					for margin in [0.0, Balance.ARENA_MONSTER_RADIUS]:
+						if ArenaGeometry.on_road(point, margin) != ArenaGeometry.on_road_exhaustive(point, margin): mismatches += 1
+	check(mismatches == 0 and on > 2000, "도로 판정 격자 색인이 전수 판정과 일치 (불일치 %d·도로 위 %d)" % [mismatches, on])
+	var sim := _battle()
+	for unit in Roster.UNITS:
+		if Arena.heroes.size() >= Balance.ARENA_HERO_LIMIT: break
+		if String(unit["id"]) != String(Arena.heroes[0]["unit"]["id"]): Arena.gain_hero(unit, 1)
+	sim.refresh_heroes()
+	var radius := Balance.ARENA_HERO_RADIUS + Balance.ARENA_MONSTER_RADIUS + 4.0
+	var wrong := 0
+	var closed := 0
+	for round_index in range(60):
+		for i in range(Arena.heroes.size()):
+			# Roads, kerbs, overlapping footprints, the rim and the plaza edge.
+			var at := Balance.ARENA_CENTER + Vector2.from_angle(rng.randf() * TAU) * rng.randf_range(Balance.ALTAR_R + Balance.ARENA_HERO_RADIUS, ArenaGeometry.RADIUS - Balance.ARENA_HERO_RADIUS)
+			if round_index % 3 == 0: at = ArenaGeometry.route_points(i % ArenaGeometry.ROUTE_COUNT)[rng.randi_range(2, 90)] + Vector2(rng.randf_range(-30, 30), rng.randf_range(-30, 30))
+			if round_index % 5 == 0 and i > 0: at = Vector2(Arena.heroes[0]["position"]) + Vector2(rng.randf_range(-40, 40), rng.randf_range(-40, 40))
+			Arena.heroes[i]["position"] = ArenaGeometry.clamp_point(at, Balance.ARENA_HERO_RADIUS)
+		sim.refresh_heroes()
+		sim._rebuild_navigation()
+		for cell in sim._road_cells:
+			var p := sim._nav.get_point_position(cell)
+			var solid := false
+			for hero in sim.heroes:
+				if p.distance_squared_to((Vector2(hero["pos"]) / 4.0).round() * 4.0) < radius * radius: solid = true
+			if solid: closed += 1
+			if sim._nav.is_point_solid(cell) != solid: wrong += 1
+	check(wrong == 0 and closed > 1000, "수호자 발자국 증분 갱신이 전체 재계산과 일치 (불일치 %d·막힌 칸 누계 %d)" % [wrong, closed])
+
 func _check_routes() -> void:
 	var sim := _battle()
 	check(not ArenaGeometry.on_road(sim.heroes[0]["pos"]), "아군의 길 밖 위치 허용")
@@ -35,14 +85,22 @@ func _check_routes() -> void:
 		var route := ArenaGeometry.route_points(lane)
 		var road_length := 0.0
 		for i in range(1, route.size()): road_length += route[i - 1].distance_to(route[i])
-		check(road_length > 1100, "진입로 중심선 길이 1100 이상 %d" % lane)
+		# Spiral roads (2026-10-12): the two arms wind more than a full turn, the two
+		# feeders join them a quarter turn in. Both are far longer than the old bends.
+		check(road_length > (2100 if lane < ArenaGeometry.ARM_COUNT else 1600), "진입로 중심선 길이 %d" % lane)
+		var sweep := 0.0
+		for i in range(1, route.size() - 1):
+			sweep += (route[i - 1] - Balance.ARENA_CENTER).angle_to(route[i] - Balance.ARENA_CENTER)
+		check(sweep > (TAU if lane < ArenaGeometry.ARM_COUNT else TAU * 0.7), "수정 둘레를 나선으로 감아 내려감 %d (%.0f도)" % [lane, rad_to_deg(sweep)])
+		var first_leg := route[0].distance_to(route[4])
+		check(absf((route[4] - route[0]).normalized().dot((Balance.ARENA_CENTER - route[0]).normalized()) - 1.0) < 0.001 and first_leg > 40, "입구에서는 수정을 향해 곧게 들어옴 %d" % lane)
 		mo["pos"] = route[0]
 		mo["nav_v"] = -1
 		mo["spd"] = 1.0
 		var travelled := 0.0
 		var road_only := true
 		var radial_line := true
-		for step_index in range(1500):
+		for step_index in range(2400):
 			var at: Vector2 = mo["pos"]
 			sim._move_monsters(1.0 / 60.0)
 			var p: Vector2 = mo["pos"]
@@ -53,7 +111,7 @@ func _check_routes() -> void:
 			if p.distance_to(Balance.ARENA_CENTER) <= Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS: break
 		check(road_only, "모든 프레임에서 길 안에 머무름 %d" % lane)
 		var direct_distance := route[0].distance_to(Balance.ARENA_CENTER) - Balance.ALTAR_R - Balance.ARENA_MONSTER_RADIUS
-		check(not radial_line and travelled > direct_distance * 2.0, "직선의 두 배 이상 긴 굽은 도로 이동 %d (거리 %.1f)" % [lane, travelled])
+		check(not radial_line and travelled > direct_distance * 2.5, "직선의 2.5배 이상 긴 나선 도로 이동 %d (거리 %.1f)" % [lane, travelled])
 		print("입구 %d 실제 이동 거리 %.1f / 도로 중심선 %.1f" % [lane, travelled, road_length])
 		check(Vector2(mo["pos"]).distance_to(Balance.ARENA_CENTER) <= Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS + 1, "네 입구 모두 수정 도착 %d" % lane)
 	# A single central guardian leaves room to pass throughout the road.
@@ -106,7 +164,7 @@ func _check_spawn_entries() -> void:
 		var mo: Dictionary = sim.monsters[0]
 		lanes[mo["route"]] = true
 		mo["spd"] = 1.0
-		for frame in range(1500):
+		for frame in range(2400):
 			sim._move_monsters(1.0 / 60.0)
 			if mo["blocked"]:
 				waiting += 1
@@ -141,7 +199,8 @@ func _check_spawn_entries() -> void:
 		"영웅 이동 없이도 이어하기 직후 입구 정체 해소")
 	check(ArenaValidation.valid(Arena.snapshot()), "입구 정체 복구 뒤 저장 유효")
 	# Also recover a still-cached shortcut before it becomes an empty path.
-	saved["sim"]["monsters"][0]["path"] = PackedVector2Array([Balance.ARENA_CENTER + Vector2(350, 130)])
+	# A waypoint far around the first arm: the straight line to it leaves the road.
+	saved["sim"]["monsters"][0]["path"] = PackedVector2Array([ArenaGeometry.route_points(0)[70]])
 	check(Arena.restore(saved), "이전 빌드의 가장자리를 스치는 경로 불러오기")
 	sim = Arena.sim
 	before = sim.monsters[0]["pos"]
@@ -178,7 +237,10 @@ func _check_center_guardians() -> void:
 	# between grid centres must leave a usable passage beside a single hero.
 	for lane in range(ArenaGeometry.ROUTE_COUNT):
 		var route := ArenaGeometry.route_points(lane)
-		for sample in [6, 12, 18, 24, 30, 36, 42, 48, 54]:
+		# Approach, bend and the spiral itself (samples are 12 units apart; feeder
+		# lanes are shorter, so the deep samples only exist on the arms).
+		for sample in [6, 12, 18, 24, 30, 36, 42, 48, 54, 72, 96, 120, 144]:
+			if sample >= route.size() - 8: continue
 			for offset in [Vector2.ZERO, Vector2(3, 3)]:
 				var guardian: Vector2 = route[sample] + offset
 				Arena.heroes[0]["position"] = guardian
@@ -192,7 +254,7 @@ func _check_center_guardians() -> void:
 				var safe := true
 				var road_only := true
 				var keeps_moving := true
-				for frame in range(1500):
+				for frame in range(2400):
 					sim._move_monsters(1.0 / 60.0)
 					var at: Vector2 = mo["pos"]
 					safe = safe and at.distance_to(guardian) >= Balance.ARENA_HERO_RADIUS + Balance.ARENA_MONSTER_RADIUS - 0.01
@@ -233,7 +295,7 @@ func _check_migration() -> void:
 	narrow_road["sim"]["monsters"][0]["spd"] = 1.0
 	check(Arena.restore(narrow_road), "좁은 도로에서 영웅에게 막힌 기존 저장 불러오기")
 	check(Arena.sim.monsters[0]["path"].is_empty() and Arena.sim.monsters[0]["nav_v"] == -1, "이전 충돌 반경·격자 경로를 폐기하고 재탐색")
-	for frame in range(1500):
+	for frame in range(2400):
 		Arena.sim._move_monsters(1.0 / 60.0)
 		if Vector2(Arena.sim.monsters[0]["pos"]).distance_to(Balance.ARENA_CENTER) <= Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS: break
 	check(not Arena.sim.monsters[0]["blocked"] and Vector2(Arena.sim.monsters[0]["pos"]).distance_to(Balance.ARENA_CENTER) <= Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS,
@@ -310,5 +372,18 @@ func _check_floating_input() -> void:
 	_drag(screen, 4, Vector2(250, 350))
 	screen.notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
 	check(screen._joy_pointer == -99 and screen.joystick == Vector2.ZERO, "앱 전환·포커스 상실 뒤 이동 잔류 없음")
+	# Battle speed: the simulator, hero movement and the drawn dt all follow it.
+	screen.set_speed(3.0)
+	check(is_equal_approx(Save.speed, 3.0) and is_equal_approx(screen.speed, 3.0), "배속 3배 선택이 설정에 남음")
+	var elapsed_before: float = Arena.sim.elapsed
+	# One 30 fps frame: the simulator caps a single step at 0.25 s of battle time.
+	screen._process(1.0 / 30.0)
+	check(absf(Arena.sim.elapsed - elapsed_before - 0.1) < 1.0 / 60.0 + 0.001 and is_equal_approx(screen._draw_dt, 0.1), "3배속은 실제 1/30초에 전투 0.1초 진행")
+	screen.set_speed(7.0)
+	check(is_equal_approx(screen.speed, 3.0), "배속은 1~3배로 제한")
+	screen.set_speed(1.0)
+	elapsed_before = Arena.sim.elapsed
+	screen._process(1.0 / 30.0)
+	check(absf(Arena.sim.elapsed - elapsed_before - 1.0 / 30.0) < 1.0 / 60.0 + 0.001, "1배속 복귀")
 	main.queue_free()
 	await frames(3)

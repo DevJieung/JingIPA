@@ -158,7 +158,10 @@ func _locomotion_contract(model: NativeCharacterModel, other: NativeCharacterMod
 	var legs_move := false
 	for index in legs:
 		if not walking[index].is_equal_approx(idle[index]): legs_move = true
-		check(walking[index].origin.distance_to(idle[index].origin) < 0.10, id + ": walking keeps the leg pivot grounded")
+		# Planted gait (2026-10-12): the pivot rides the solved hip height and the swing lift
+		# (up to 0.146 across the roster at 3.4 u/s). The envelope still catches a leg that
+		# flies away; accumulation over time is covered by tests/arena_pose_check.
+		check(walking[index].origin.distance_to(idle[index].origin) < 0.20, id + ": walking keeps the leg pivot inside the gait envelope")
 	check(legs_move, id + ": velocity drives an actual leg cycle")
 	check(_poses(_skeleton(other)) != walking, id + ": cached cards do not share locomotion")
 	check((model.basis * Vector3.FORWARD).dot(Vector3(0, 0, 1)) > 0.999, id + ": the body faces its travel direction")

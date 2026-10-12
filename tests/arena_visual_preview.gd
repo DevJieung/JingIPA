@@ -9,6 +9,9 @@ func _ready() -> void:
 	if not require_no_save(): return
 	out_dir = arg("--out", out_dir)
 	DirAccess.make_dir_recursive_absolute(out_dir)
+	if has_arg("--spiral-only"):
+		await _spiral_only()
+		return
 	if has_arg("--road-only"):
 		await _road_only()
 		return
@@ -84,7 +87,7 @@ func _ready() -> void:
 			await _capture(locale + "_move_%02d" % n)
 		check(Vector2(Arena.sim.heroes[1]["pos"]).distance_to(before) > 1, "joystick actually moves selected native hero")
 		check(Vector2(Arena.sim.heroes[0]["pos"]).is_equal_approx(untouched), "other heroes hold their assigned positions")
-		check(is_equal_approx(screen.view_3d.world.camera.size, 26.0), "following preserves object scale")
+		check(is_equal_approx(screen.view_3d.world.camera.size, ArenaWorld.CAMERA_SIZE), "following preserves object scale")
 		finger.pressed = false
 		screen._input(finger)
 		check(screen.joystick == Vector2.ZERO, "touch release stops joystick")
@@ -264,6 +267,105 @@ func _motion_only() -> void:
 	file = null
 	finish("Battle motion overhaul capture")
 
+## 2026-10-12 spiral field: zoomed-out full-field framing, battle speed chips, the ward
+## countdown, cast counts, the boss warning banner and the boss entrance camera.
+func _spiral_only() -> void:
+	var hero_px := 0.0
+	var boss_tops: Array = []
+	for locale in ["ko", "en"]:
+		I18n.set_locale(locale)
+		Arena.start_run(20261012)
+		main = load("res://game/main.gd").new()
+		add_child(main)
+		await frames(3)
+		main.show_arena()
+		screen = main.screen
+		screen.set_process(false)
+		Arena.choose_theme(0)
+		Arena.confirm_summon()
+		Arena.close_modal()
+		_prepare_field()
+		Arena.gold = 480
+		screen.set_speed(1.0)
+		screen.view_3d._follow_offset = Vector3.ZERO
+		screen.view_3d._camera_initialized = false
+		await _capture(locale + "_spiral_field")
+		for point in ArenaGeometry.outline(16):
+			check(ArenaScreen.BATTLEFIELD.grow(-20).has_point(screen.view_3d.project(point, 0.0)), "whole spiral rim framed inside the open field")
+		check(is_equal_approx(screen.view_3d.world.camera.size, ArenaWorld.CAMERA_SIZE), "zoomed-out framing")
+		var hero_at: Vector2 = Arena.sim.heroes[Arena.selected]["pos"]
+		hero_px = screen.view_3d.project(hero_at, 2.0).distance_to(screen.view_3d.project(hero_at, 0.0))
+		# Battle speed chips: each tap selects, the chosen chip reads as the solid one.
+		for value in [1, 2, 3]:
+			check(tap(screen, "speed:%d" % value) and is_equal_approx(screen.speed, float(value)), "speed chip %d selects" % value)
+			await _capture(locale + "_speed_%d" % value)
+		screen.set_speed(1.0)
+		var menu_rect: Rect2 = Hud.MENU_RECT
+		for zone in screen.ui.zones:
+			if String(zone["id"]).begins_with("speed:"):
+				check(not Rect2(zone["rect"]).intersects(menu_rect), "speed chips never overlap the menu button")
+		# Crystal ward: the countdown right after the cast and four seconds later.
+		Arena.sim.skill_cooldowns["ward"] = 0.0
+		await paint(screen)
+		check(tap(screen, "skill:ward") and Arena.sim.shield > 0, "ward cast from the rail")
+		await _capture(locale + "_ward_cast")
+		for n in range(16): screen._process(0.25)
+		check(Arena.sim.shield_t > 3.5 and Arena.sim.shield_t < 4.5, "four simulated seconds of ward elapsed")
+		await _capture(locale + "_ward_4s")
+		for n in range(8): screen._process(0.25)
+		await _capture(locale + "_ward_6s")
+		# Casts left 2 / 1 / 0: the exhausted ward is disabled apart from its cooldown.
+		Arena.sim.shield = 0.0
+		Arena.sim.shield_t = 0.0
+		Arena.sim.skill_uses["blast"] = Balance.ARENA_BLAST_USES - 2
+		Arena.sim.skill_uses["freeze"] = Balance.ARENA_FREEZE_USES - 1
+		Arena.sim.skill_uses["ward"] = Balance.ARENA_WARD_USES
+		for id in ["blast", "freeze", "ward"]: Arena.sim.skill_cooldowns[id] = 0.0
+		await _capture(locale + "_uses_210")
+		check(not tap(screen, "skill:ward"), "exhausted ward button is disabled")
+		check(tap(screen, "skill:freeze") and Arena.sim.skill_uses_left("freeze") == 0, "last freeze cast spends the final use")
+		await _capture(locale + "_uses_200")
+		# Boss warning 4 → 1, then the entrance: 24 frames at 15 fps around the spawn.
+		Arena.sim.monsters.clear()
+		Arena.sim.elapsed = Balance.ARENA_BOSS_AT - Balance.ARENA_BOSS_WARNING - 0.02
+		screen._process(0.05)
+		check(Arena.sim.boss_warned and not Arena.sim.boss_spawned, "warning raised four seconds before the boss")
+		await _capture(locale + "_boss_warn_04")
+		check(Arena.sim.boss_gate().is_finite(), "warning names a gate")
+		for second in [3, 2, 1]:
+			for n in range(4): screen._process(0.25)
+			await _capture(locale + "_boss_warn_%02d" % second)
+		var rest_size: float = screen.view_3d.world.camera.size
+		var smallest := INF
+		for n in range(42):
+			screen._process(1.0 / 15)
+			await _capture(locale + "_boss_spawn_%02d" % n)
+			smallest = minf(smallest, screen.view_3d.world.camera.size)
+			for height in [0.08, 1.95]:
+				check(ArenaScreen.BATTLEFIELD.has_point(screen.view_3d.project(Balance.ARENA_CENTER, height)), "crystal stays framed during the boss entrance")
+		check(Arena.sim.boss_spawned, "boss actually spawned on camera")
+		check(smallest < rest_size, "entrance punch zoomed the camera in")
+		check(is_equal_approx(screen.view_3d.world.camera.size, rest_size), "camera settled back after the entrance")
+		for n in range(12): screen._process(0.25)
+		await _capture(locale + "_boss_bar")
+		var boss_top := -1.0
+		for mo in Arena.sim.monsters:
+			if String(mo.get("kind", "")) == "boss": boss_top = screen._monster_top(mo)
+		# The bar height is measured from the boss mesh bounds, so it follows whatever
+		# body scale the model carries (1.4x today, 2.8x once the walker's change lands).
+		check(boss_top > 1.5, "boss bar floats above the measured body (top %.2f)" % boss_top)
+		boss_tops.append(boss_top)
+		main.queue_free()
+		main = null
+		screen = null
+		await frames(4)
+	I18n.set_locale("ko")
+	var file := FileAccess.open(out_dir + "/spiral-report.json", FileAccess.WRITE)
+	file.store_string(JSON.stringify({"checks": checks, "failures": failures, "text_boxes": _audit_count,
+		"camera_size": ArenaWorld.CAMERA_SIZE, "hero_height_px": hero_px, "boss_bar_heights": boss_tops, "device_fps_measured": false}, "  ") + "\n")
+	file = null
+	finish("Spiral field framing, speed, ward, casts and boss entrance")
+
 func _road_only() -> void:
 	var trajectories: Array = []
 	for locale in ["ko", "en"]:
@@ -401,7 +503,11 @@ func _hud_only() -> void:
 		Arena.gold = 99999
 		await _capture(locale + "_field_six")
 		for zone in screen.ui.zones:
-			check(ArenaScreen.SIDEBAR.encloses(Rect2(zone["rect"])), "all battle commands remain in the right HUD")
+			# Battle speed chips live in the top strip (user: "배속설정은 상단으로"); every
+			# other command stays in the right rail.
+			var strip := Rect2(0, 0, Hud.MENU_RECT.position.x, 70)
+			var allowed: bool = ArenaScreen.SIDEBAR.encloses(Rect2(zone["rect"])) or (String(zone["id"]).begins_with("speed:") and strip.encloses(Rect2(zone["rect"])))
+			check(allowed, "all battle commands remain in the right HUD or the top strip")
 		var last := zone_of(screen, "hero:5")
 		_window_touch(Rect2(last["rect"]).get_center(), true)
 		_window_touch(Rect2(last["rect"]).get_center(), false)

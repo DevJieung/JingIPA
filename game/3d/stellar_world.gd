@@ -3,6 +3,14 @@ class_name StellarWorld
 
 ## Rendering adapter. BattleSim owns every position, target, timer and damage value.
 const UNIT := 50.0
+## Actor root heights: every model's soles sit at its own y = 0. The arena soil disc
+## tops out at 0.015, its roads at 0.029 and the plaza at 0.046 (arena_world.gd);
+## heroes mostly stand on soil, monsters besiege the crystal on the plaza. The legacy
+## map builds a taller soil (top 0.055) and raises both in build_map().
+const HERO_GROUND := 0.03
+const MONSTER_GROUND := 0.04
+var hero_ground := HERO_GROUND
+var monster_ground := MONSTER_GROUND
 var camera := Camera3D.new()
 var terrain := Node3D.new()
 var actors := Node3D.new()
@@ -84,6 +92,8 @@ func build_map(theme: Dictionary) -> void:
 	theme_id = id
 	_clear(terrain)
 	crystals.clear()
+	hero_ground = 0.07
+	monster_ground = 0.14
 	var body := String(theme.get("main_body","wood"))
 	var motif := String(Scenery.MAP_MOTIFS.get(id,"gravel"))
 	var palette := {"aqua":"#253e46","flame":"#3e3239","wood":"#263d35","rock":"#424041","frost":"#5b6d7b"}
@@ -340,14 +350,16 @@ func sync_heroes(heroes: Array, time: float, battle: bool = false) -> void:
 		keep[key] = true
 		if not hero_nodes.has(key):
 			var model := StellarModels.hero(hero["unit"],grade)
-			StellarModels.contact(model,Vector3(0,0.008,0),Vector2(0.96,0.68),0.40)
+			# The contact shadow plane rides 0.02 above the soles so it stays above the plaza
+			# disc (0.046) while the root stands on the lower soil.
+			StellarModels.contact(model,Vector3(0,0.02,0),Vector2(0.96,0.68),0.40)
 			var team_ring := StellarModels.part(model,"ring",Vector3(0,0.019,0),Vector3(0.79,0.021,0.79),Color("#879e91"),0.1,0.04)
 			team_ring.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			actors.add_child(model)
 			hero_nodes[key] = model
 		var node: Node3D = hero_nodes[key]
 		var p: Vector2 = data["pos"] if battle else Run.hero_position(hero)
-		node.position = world(p,0.07)
+		node.position = world(p,hero_ground)
 		var ft := float(data.get("fx_t",9))
 		var raw_wind := float(data.get("fx_w",0.35))
 		if node is NativeCharacterModel:
@@ -488,13 +500,13 @@ func sync_battle(sim, time: float, lives: int, dt: float = 0.016) -> void:
 		if native_monster:
 			# The simulator's forward-only clock already includes pause, slow,
 			# stun and battle speed. Authored locomotion owns the body movement.
-			node.position = world(p,0.14)
+			node.position = world(p,monster_ground)
 			node.rotation.z = 0.0
 			if node.has_method("set_hit_flash"): node.call("set_hit_flash", float(mo.get("flash", 0.0)))
 			if node.has_method("set_siege"): node.call("set_siege", _monster_siege(mo, p))
 			node.call("animate_visual", float(mo.get("motion_t",0.0))+float(mo.get("motion_phase",0.0)), _monster_moving(mo))
 		else:
-			node.position = world(p,0.14+sin(time*10+key)*0.035)
+			node.position = world(p,monster_ground+sin(time*10+key)*0.035)
 			node.rotation.z = sin(time*10+key)*0.035
 		node.get_node("StellarBurn").visible=float(mo.get("burn_t",0))>0
 		node.get_node("StellarFrost").visible=float(mo.get("slow_t",0))>0

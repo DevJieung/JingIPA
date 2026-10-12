@@ -262,7 +262,7 @@ func _world_contract(data: Dictionary) -> void:
 		check(first.get_node("StellarBurn").visible and first.get_node("StellarFrost").visible and first.get_node("StellarStun").visible, "battle retains burn, slow and stun visibility")
 		check(not second.get_node("StellarBurn").visible and not second.get_node("StellarFrost").visible and not second.get_node("StellarStun").visible, "status effects do not leak to another instance")
 		var at := BattleSim.mpos(sim.monsters[0])
-		check(first.position.is_equal_approx(world.world(at, 0.14)) and is_zero_approx(first.rotation.z), "native body uses actual path position and stable authored ground")
+		check(first.position.is_equal_approx(world.world(at, world.monster_ground)) and is_zero_approx(first.rotation.z), "native body uses actual path position and stable authored ground")
 		var pose := _poses(_skeleton(first))
 		var second_pose := _poses(_skeleton(second))
 		var reference := StellarModels.monster(data)
