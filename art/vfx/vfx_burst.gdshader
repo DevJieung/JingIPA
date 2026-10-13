@@ -14,6 +14,9 @@ render_mode unshaded, blend_add, depth_draw_never, cull_disabled, skip_vertex_tr
 //        10 spawn 11 wildfire 12 blast 13 freeze 14 ward 15 muzzle_smoke 16 ric_spark
 //        17 beam_cap 18 bolt_cap 19 cast_release 20 slash_hit (blade contact: origin is the
 //        3D point on the body, -Z = the blade's travel direction there)
+//        21 seal (the revival's shockwave reaching a monster: a ring closing on it)
+//        22 scatter (an escort fleeing after its stage boss fell: -Z = the way it runs;
+//        wisps and a drifting haze, no ground ring, no star flash: it must not read as a kill)
 // Parts (UV2.x): 0 ground ring, 1 flash billboard, 2 sparks x8, 3 motes x8, 5 facing ring
 // (kind 20 draws its crescent cut mark in part 5).
 uniform sampler2D sprites : source_color, filter_linear_mipmap, repeat_disable;
@@ -47,6 +50,8 @@ float kind_lift(int k, float size) {
 	if (k == 13) return 0.4;
 	if (k == 14) return 0.6;
 	if (k == 19) return 0.05;
+	if (k == 21) return 0.55;
+	if (k == 22) return 0.5;
 	return 0.0;
 }
 
@@ -68,6 +73,7 @@ vec4 ring_params(int k, float size) {
 	if (k == 13) return vec4(0.40, size, 0.95, 1.30);
 	if (k == 14) return vec4(0.50, size * 1.5, 0.52, 0.16);
 	if (k == 19) return vec4(0.30, 0.95, 0.36, 0.12);
+	if (k == 21) return vec4(0.95, 0.34, 0.30, 0.10);
 	return vec4(0.0, 0.0, 0.1, 0.1);
 }
 
@@ -93,6 +99,8 @@ vec4 flash_params(int k, int e) {
 	if (k == 18) return vec4(0.46, 0.13, 2.0, 0.0);
 	if (k == 19) return vec4(0.55, 0.16, 2.0, 0.0);
 	if (k == 20) return vec4(0.30, 0.08, float(star), 0.0);
+	if (k == 21) return vec4(0.56, 0.16, 1.0, 0.0);
+	if (k == 22) return vec4(0.90, 0.30, 0.0, 0.0);
 	return vec4(0.0, 0.1, 0.0, 0.0);
 }
 
@@ -113,6 +121,7 @@ vec4 spark_params(int k) {
 	if (k == 17) return vec4(4.0, 2.0, 0.22, 1.0);
 	if (k == 18) return vec4(6.0, 2.2, 0.22, 0.9);
 	if (k == 20) return vec4(7.0, 3.6, 0.26, 1.5);
+	if (k == 22) return vec4(3.0, 4.6, 0.75, 2.6);
 	return vec4(0.0, 0.0, 0.1, 1.0);
 }
 
@@ -126,6 +135,7 @@ vec4 spark_shape(int k) {
 	if (k == 15) return vec4(0.9, 0.15, 0.6, 0.0);
 	if (k == 16) return vec4(0.3, 0.5, 0.8, 0.0);
 	if (k == 20) return vec4(0.72, 0.30, 0.9, 0.0);
+	if (k == 22) return vec4(0.90, 0.45, 0.0, 0.0);
 	return vec4(0.0, 0.55, 1.0, 0.0);
 }
 
@@ -145,6 +155,8 @@ vec4 mote_params(int k, float size) {
 	if (k == 14) return vec4(1.50, 0.80, 0.90, 0.10);
 	if (k == 19) return vec4(1.00, 0.45, 0.45, 0.08);
 	if (k == 20) return vec4(0.30, 0.42, 0.14, 0.06);
+	if (k == 21) return vec4(0.85, 0.80, 0.30, 0.09);
+	if (k == 22) return vec4(1.50, 0.95, 0.30, 0.10);
 	return vec4(0.0, 0.1, 0.0, 0.0);
 }
 
@@ -155,6 +167,7 @@ vec4 ring2_params(int k, float size) {
 	if (k == 5) return vec4(0.95, 0.38, 13.0, 0.0);
 	if (k == 12) return vec4(size * 1.4, 0.40, 3.0, 0.0);
 	if (k == 19) return vec4(0.90, 0.32, 3.0, 0.0);
+	if (k == 21) return vec4(0.85, 0.34, 3.0, 0.0);
 	return vec4(0.0, 0.1, 3.0, 0.0);
 }
 
@@ -211,7 +224,7 @@ void vertex() {
 		alpha = pow(1.0 - f, 1.6) * (fp.x > 0.001 ? 1.0 : 0.0);
 		cell = fp.z;
 		// Impacts flash hot-white; deaths, portals, crystal hits and skills keep their colour.
-		float keep = (kind == 9 || kind == 10) ? 0.9 : (kind == 3 || kind == 4 || kind == 5 || kind == 12 || kind == 13 || kind == 14) ? 0.82 : 0.35;
+		float keep = (kind == 9 || kind == 10) ? 0.9 : (kind == 3 || kind == 4 || kind == 5 || kind == 12 || kind == 13 || kind == 14 || kind == 21 || kind == 22) ? 0.82 : 0.35;
 		col = mix(elem_hot(elem), COLOR.rgb, keep);
 	} else if (part == 2) {
 		vec4 sp = spark_params(kind);
@@ -231,15 +244,18 @@ void vertex() {
 		vec3 along = normalize(now + vec3(0.0, 0.0001, 0.0));
 		vec3 side = cross(along, cam_fwd);
 		side = length(side) < 0.02 ? cam_right : normalize(side);
-		float base = (kind == 12 ? 0.22 : kind == 13 ? 0.20 : kind == 20 ? 0.15 : 0.12) * (0.8 + 0.4 * h2);
+		float base = (kind == 22 ? 0.34 : kind == 12 ? 0.22 : kind == 13 ? 0.20 : kind == 20 ? 0.15 : 0.12) * (0.8 + 0.4 * h2);
 		float len = base * sp.w * (1.3 - 0.6 * f) * (elem == 3 ? 1.5 : 1.0);
-		float wid = base * (elem == 2 ? 0.9 : 0.55);
+		float wid = base * (kind == 22 ? 0.85 : elem == 2 ? 0.9 : 0.55);
 		world = at + along * c.y * len + side * c.x * wid - cam_fwd * 0.26;
 		cell = float(spark_cell(elem));
 		if (kind == 4) cell = 6.0;
+		// Scatter: soft wisps, not sparks.
+		if (kind == 22) cell = 0.0;
 		col = mix(elem_tint(elem), elem_hot(elem), 0.45);
 		if (kind == 4 || kind == 5 || kind == 14) col = mix(COLOR.rgb, vec3(1.0), 0.4);
-		alpha = (idx < count ? 1.0 : 0.0) * pow(1.0 - f, 1.1);
+		if (kind == 22) col = mix(COLOR.rgb, vec3(1.0), 0.2);
+		alpha = (idx < count ? 1.0 : 0.0) * pow(1.0 - f, 1.1) * (kind == 22 ? 0.8 : 1.0);
 		if (idx >= count) world = origin;
 	} else if (part == 3) {
 		vec4 mp = mote_params(kind, size);
@@ -255,7 +271,7 @@ void vertex() {
 		vec2 r = rot2(c, h1 * 6.283 + g * 2.0);
 		world = at + (cam_right * r.x + cam_up * r.y) * s - cam_fwd * 0.2;
 		cell = float(mote_cell(kind == 3 || kind == 10 ? 0 : elem));
-		if (kind == 10 || kind == 14) cell = 2.0;
+		if (kind == 10 || kind == 14 || kind == 21) cell = 2.0;
 		col = mix(mix(COLOR.rgb, elem_tint(elem), 0.5), vec3(1.0), 0.25);
 		alpha = pow(sin(g * 3.14159), 0.8) * (mp.w > 0.001 ? 0.95 : 0.0);
 	} else if (kind == 20) {

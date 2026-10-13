@@ -185,6 +185,8 @@ godot_run 240 "$TMP/speed-melee.log" res://tests/hero_speed_melee_check.tscn
 expect "영웅별 이동 속도·검 근접 타격" "판정: 정상" "$TMP/speed-melee.log"
 godot_run 180 "$TMP/arena-play.log" res://tests/arena_play_check.tscn
 expect "연속 수호전 실제 UI 흐름" "판정: 정상" "$TMP/arena-play.log"
+godot_run 120 "$TMP/store.log" res://tests/store_check.tscn
+expect "상점·무료 배속·수호자의 가호·플랫폼 연동" "판정: 정상" "$TMP/store.log"
 godot_run 90 "$TMP/stellar-identity.log" res://tests/stellar_identity_check.tscn
 expect "Stellar Defense 명칭·저장 이전" "판정: 정상" "$TMP/stellar-identity.log"
 godot_run 120 "$TMP/stellar-gameplay.log" res://tests/stellar_gameplay_check.tscn
@@ -256,6 +258,16 @@ godot_run 360 "$TMP/play.log" res://tests/play_check.tscn
 expect "화면 한 바퀴" "판정: 정상" "$TMP/play.log"
 # 부팅과 같은 이유로 여기서도 본다 — 전투·편성 판은 부팅만으로는 한 번도 안 그려진다.
 forbid "화면 한 바퀴" "triangulation failed" "$TMP/play.log"
+
+step "7-0. 연속 수호전 탄별 난이도 (자동 플레이로 열 탄)"
+# 탄마다 전장·길·보스가 바뀌고 몬스터가 두꺼워진다(Balance.ARENA_STAGE_HP_GROW).
+# 평범한 자동 플레이가 앞 탄은 무사히 넘기고 뒤 탄에서 실제로 밀리는지를 본다.
+# 한 판에 35초쯤 걸린다. 판 수가 적어 판정은 넓게 잡았다(tests/arena_balance_check.gd).
+ARENA_RUNS=6
+[ $QUICK -eq 1 ] && ARENA_RUNS=3
+godot_run 900 "$TMP/arena-bal.log" res://tests/arena_balance_check.tscn -- --runs $ARENA_RUNS
+expect "연속 수호전 탄별 난이도" "판정: 정상" "$TMP/arena-bal.log"
+grep -E "^도달 탄" "$TMP/arena-bal.log" | sed 's/^/   /'
 
 step "7. 자동 플레이로 밸런스 (100탄까지)"
 RUNS=12

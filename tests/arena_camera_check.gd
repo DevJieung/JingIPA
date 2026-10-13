@@ -40,7 +40,13 @@ func _check_expanded_battle() -> void:
 	# Exercise real firing and damage along the outer entrance.
 	sim.monsters.clear()
 	var left := Vector2(limits.position.x + 2, Balance.ARENA_CENTER.y)
-	Arena.heroes[0]["position"] = left
+	# This is about a projectile at the rim. The run's first hero may be a sword hero,
+	# whose strike has no projectile, so a bow joins and fires instead.
+	var archer := 0
+	if Balance.is_melee(Arena.heroes[0]["unit"]):
+		Arena.gain_hero(Roster.unit_by_id("echo"), 1)
+		archer = Arena.heroes.size() - 1
+	Arena.heroes[archer]["position"] = left
 	sim.refresh_heroes()
 	sim._spawn(Arena.spawns_for(1)[0])
 	var enemy: Dictionary = sim.monsters[0]
@@ -48,8 +54,8 @@ func _check_expanded_battle() -> void:
 	enemy["hp"] = 10000.0
 	enemy["max"] = 10000.0
 	sim._cache_positions()
-	sim.heroes[0]["fx_d"] = (enemy["pos"] - left).normalized()
-	sim._shoot(0, 0, 100, "shot", false)
+	sim.heroes[archer]["fx_d"] = (enemy["pos"] - left).normalized()
+	sim._shoot(archer, 0, 100, "shot", false)
 	check(not sim.bullets.is_empty(), "확장 왼쪽 경계에서 발사")
 	for i in range(90): sim._move_bullets(1.0 / 60.0)
 	check(float(enemy["hp"]) < 10000.0, "확장 경계의 탄환이 조기 소멸 없이 명중")
@@ -74,7 +80,7 @@ func _check_camera() -> void:
 	# inside the open battle box at rest, so the roads read without any camera travel.
 	for point in ArenaGeometry.outline(24):
 		check(view.battle_box.grow(-20).has_point(view.project(point, 0.0)), "정지 시점에서 원 테두리 전체가 전장 안에 보임")
-	for lane in range(ArenaGeometry.ROUTE_COUNT):
+	for lane in range(ArenaGeometry.route_count()):
 		check(view.battle_box.grow(-20).has_point(view.project(ArenaGeometry.route_points(lane)[0], 0.0)), "네 입구가 모두 보임")
 	var hero_px := actor_height
 	check(hero_px > 50 and hero_px < 70, "2u 영웅 화면 높이 50~70px (실측 %.1f)" % hero_px)

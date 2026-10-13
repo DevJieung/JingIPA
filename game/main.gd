@@ -1,7 +1,7 @@
 extends Node2D
 
 ## 화면을 갈아 끼우는 곳. 게임의 진행 순서가 여기 한 줄로 보인다:
-##   타이틀 → 테마 선택 → 첫 의식 → 연속 수호전 → 최종 보스 → 끝
+##   타이틀 → 1탄 전장 카드(무작위 전장) → 첫 의식 → 탄마다 보스 → 다음 전장 … → 최종 보스 → 끝
 ##
 ## 화면들은 .tscn 없이 코드로 만든다. 화면 하나가 파일 하나(.gd)라 옮기고 지우기 쉽고,
 ## 헤드리스 검사기가 씬 파일 없이 화면을 그대로 세워 볼 수 있다.
@@ -112,9 +112,9 @@ func screen_modal_open() -> bool:
 	if not is_instance_valid(screen):
 		return false
 	if screen is ArenaScreen:
-		return not Arena.modal.is_empty()
+		return not Arena.modal.is_empty() or screen.store.opened
 	if screen is TitleScreen:
-		return screen.collection.opened
+		return screen.collection.opened or screen.store.opened
 	if screen is DrawScreen:
 		return screen.fusion.active() or screen.hv.info >= 0
 	if screen is ShopScreen:
@@ -128,6 +128,9 @@ func _notification(what: int) -> void:
 	if menu == null:
 		return
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		if (screen is ArenaScreen or screen is TitleScreen) and screen.store.opened:
+			screen.store.close()
+			return
 		if screen is ArenaScreen and Arena.modal in ["shop", "bench"]:
 			Arena.close_modal()
 			return

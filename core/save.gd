@@ -20,6 +20,9 @@ var legacy_loaded: bool = false
 var legacy_storage_paths: PackedStringArray = []
 
 var best_wave: int = 0          ## 여태 간 가장 높은 탄
+## 연속 수호전에서 여태 밟아 본 가장 높은 탄(1~Balance.ARENA_STAGES). 옛 웨이브 모드의
+## best_wave(최대 100)와 뜻이 달라서 따로 둔다.
+var best_stage: int = 0
 var runs: int = 0               ## 시작한 판 수
 var clears: int = 0             ## 100탄까지 끝낸 판 수
 var total_kills: int = 0
@@ -46,6 +49,12 @@ var speed: float = 1.0
 var sfx: bool = true
 var music: bool = true
 var language: String = "ko"
+
+## 구매한 상품(Store 의 id)의 사본. **상점이 원본이다** — 상점이 답하면 그 답으로 덮는다
+## (core/store.gd). 연결 없이 켰을 때만 이 사본으로 연다.
+var iap_owned: Array = []
+## 개발 빌드에서 결제 없이 연 상품. 출시 빌드는 읽지 않는다.
+var iap_sandbox: Array = []
 
 var _readonly: bool = false
 ## ★ 자동 저장은 **탄마다** 불린다. 값이 하나도 안 바뀌었는데 파일을 다시 쓰면
@@ -113,6 +122,8 @@ func load_file() -> void:
 			recovered_backup = true
 	_last_written = ""
 	best_wave = cf.get_value("run", "best_wave", 0)
+	var stage_value: Variant = cf.get_value("run", "best_stage", 0)
+	best_stage = clampi(int(stage_value), 0, Balance.ARENA_STAGES) if stage_value is int else 0
 	runs = cf.get_value("run", "runs", 0)
 	clears = cf.get_value("run", "clears", 0)
 	total_kills = cf.get_value("run", "total_kills", 0)
@@ -127,6 +138,8 @@ func load_file() -> void:
 	language = String(cf.get_value("opt", "language", "ko"))
 	if language not in ["ko", "en"]:
 		language = "ko"
+	iap_owned = _strings(cf.get_value("iap", "owned", []))
+	iap_sandbox = _strings(cf.get_value("iap", "sandbox", []))
 
 
 func _legacy_candidates() -> PackedStringArray:
@@ -149,6 +162,7 @@ func save_file() -> bool:
 		return true
 	var cf := ConfigFile.new()
 	cf.set_value("run", "best_wave", best_wave)
+	cf.set_value("run", "best_stage", best_stage)
 	cf.set_value("run", "runs", runs)
 	cf.set_value("run", "clears", clears)
 	cf.set_value("run", "total_kills", total_kills)
@@ -161,6 +175,8 @@ func save_file() -> bool:
 	cf.set_value("opt", "sfx", sfx)
 	cf.set_value("opt", "music", music)
 	cf.set_value("opt", "language", language)
+	cf.set_value("iap", "owned", iap_owned)
+	cf.set_value("iap", "sandbox", iap_sandbox)
 	var text := cf.encode_to_text()
 	if text == _last_written and last_error == OK:
 		return true
@@ -202,7 +218,10 @@ func _load_checked(cf: ConfigFile, path: String) -> bool:
 	if not state is Dictionary:
 		return false
 	if not state.is_empty():
-		if state.get("mode") == "arena":
+		if ArenaValidation.outdated(state):
+			# 탄 사슬이 들어오기 전의 판은 이어 할 수 없다. 평생 기록과 설정은 보존한다.
+			cf.set_value("cur", "state", {})
+		elif state.get("mode") == "arena":
 			if not ArenaValidation.valid(state):
 				return false
 		elif state.get("v", 0) is int and int(state.get("v", 0)) != Run.SAVE_VERSION:
@@ -271,6 +290,30 @@ func set_music(on: bool) -> void:
 	Sfx.sync_music()
 
 
+func _strings(value: Variant) -> Array:
+	var out: Array = []
+	if value is Array:
+		for item in value:
+			if item is String and not out.has(item): out.append(item)
+	return out
+
+
+func set_iap_owned(ids: Array) -> void:
+	iap_owned = _strings(ids)
+	save_file()
+
+
+func set_iap_sandbox(id: String, on: bool) -> void:
+	if on and not iap_sandbox.has(id): iap_sandbox.append(id)
+	elif not on: iap_sandbox.erase(id)
+	save_file()
+
+
+func clear_iap_sandbox() -> void:
+	iap_sandbox = []
+	save_file()
+
+
 func set_language(code: String) -> void:
 	if code not in ["ko", "en"] or language == code:
 		return
@@ -291,6 +334,18 @@ func record_run(wave: int, kills: int, cleared: bool) -> void:
 	cur_run = {}
 	_last_written = ""
 	save_file()
+
+
+## 연속 수호전에서 그 탄을 밟았다. 파일은 부르는 쪽의 자동 저장에 같이 담긴다.
+func note_stage(number: int) -> void:
+	best_stage = maxi(best_stage, clampi(number, 0, Balance.ARENA_STAGES))
+
+
+## 결과 화면에서 「수호자의 가호」를 사서 방금 끝난 판을 되살린다. record_run 이 이미 더한
+## 처치 수를 되돌려, 그 판이 다시 끝날 때 두 번 세지 않게 한다.
+func reopen_run(kills: int) -> void:
+	total_kills = maxi(0, total_kills - maxi(0, kills))
+	_last_written = ""
 
 
 ## 도감에 실제로 셀 수 있는 캐릭터 수. 표에서 사라진 id 는 빼고 센다.

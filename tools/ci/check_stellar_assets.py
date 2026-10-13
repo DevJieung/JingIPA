@@ -34,6 +34,21 @@ def main():
         check_imported_resource(archive, names, "assets/art/models/arena_ground.gdshader")
         check_imported_resource(archive, names, "assets/art/models/arena_road.gdshader")
         check_imported_resource(archive, names, "assets/art/models/contact_shadow.gdshader")
+        # Stage chain (2026-10-13): per-battlefield land, scenery and the run-level moments.
+        for module in ["arena_biome", "arena_land", "arena_scenery"]:
+            source = f"assets/game/3d/{module}.gd"
+            assert source in names or source + ".remap" in names, f"Missing battlefield module: {module}"
+        for shader in ["arena_terrain", "arena_liquid", "arena_scenery", "arena_haze"]:
+            check_imported_resource(archive, names, f"assets/art/models/{shader}.gdshader")
+        check_texture(archive, names, "assets/art/models/terrain_noise.png")
+        for shader in ["vfx_moment", "vfx_moment_mix", "vfx_aegis", "vfx_aegis_base", "vfx_road", "vfx_road_base"]:
+            check_imported_resource(archive, names, f"assets/art/vfx/{shader}.gdshader")
+        for include in ["vfx_moment", "vfx_aegis", "vfx_road"]:
+            check_imported_resource(archive, names, f"assets/art/vfx/{include}.gdshaderinc")
+        # Shop: one autoload, one backend per platform, one purchase sheet.
+        for module in ["core/store", "core/store/play", "core/store/apple", "core/store/steam", "game/store_view"]:
+            source = f"assets/{module}.gd"
+            assert source in names or source + ".remap" in names, f"Missing shop module: {module}"
         # Battle VFX, lighting and shading of the 2026-10 motion overhaul.
         for shader in ["vfx_projectile", "vfx_muzzle", "vfx_burst", "vfx_burst_mix", "vfx_beam", "vfx_zone",
                        "vfx_zone_base", "vfx_slash", "vfx_dome", "vfx_status", "vfx_skill", "vfx_skill_mix",
@@ -46,10 +61,12 @@ def main():
             source = f"assets/game/3d/{module}.gd"
             assert source in names or source + ".remap" in names, f"Missing motion module: {module}"
         assert not any(name in names for name in ("assets/asis.jpg", "assets/asis.jpg.import",
-                       "assets/tobe.png", "assets/tobe.png.import")), "Design references must not ship"
+                       "assets/tobe.png", "assets/tobe.png.import",
+                       "assets/Voc.jpg", "assets/Voc.jpg.import")), "Design references must not ship"
         catalog = json.loads(archive.read("assets/core/locales/ui.json"))
         for locale in ("ko", "en"):
-            for key in ("arena.title", "arena.rules.control", "arena.rules.growth", "arena.rules.boss"):
+            for key in ("arena.title", "arena.rules.control", "arena.rules.growth", "arena.rules.boss",
+                        "arena.stage_n", "arena.final_clear", "store.title", "store.guardian.name"):
                 assert catalog[locale].get(key), f"Missing continuous battle translation: {locale}/{key}"
         adapter = "assets/game/3d/limne_model.gd"
         assert adapter in names or adapter + ".remap" in names, "Missing Limne model adapter"

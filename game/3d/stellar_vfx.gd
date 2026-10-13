@@ -16,11 +16,22 @@ class_name StellarVfx
 ##   Skills   (6)    whole sequences in one instance each: the Starlight Burst (falling
 ##                   star, impact, shockwave to the damage radius, fragments, afterglow)
 ##                   and the boss gate (four-second warning gather, arrival burst)
-## plus two energy domes and six pooled OmniLights for the brightest pulses.
+##   Moments  (8)    run-level sequences, one instance each: the crystal's revival, a stage
+##                   clear (the last one settles into a held picture and seals every gate),
+##                   the reveal of a new battlefield (one sweep from the crystal and a beacon
+##                   per gate) and the final boss's extra layers. Hidden while idle.
+## plus two energy domes, the Guardian's aegis (a faceted gem around the revived crystal),
+## the road ribbons of a battlefield reveal and six pooled OmniLights for the brightest pulses.
 ## Instances animate in their shaders from `vfx_time`, a clock that only advances in
 ## update(dt): a paused battle freezes every effect, and no node, mesh or material is
-## created after start-up. The `effects` array is shared with StellarWorld and acts as
-## the one-shot budget (EFFECT_LIMIT); the pools recycle their oldest slot when full.
+## created after start-up (one exception: the road ribbon mesh is refilled when a new
+## battlefield opens, in the paused frame its world is rebuilt in). The `effects` array
+## is shared with StellarWorld and acts as the one-shot budget (EFFECT_LIMIT); the pools
+## recycle their oldest slot when full.
+## The world is paused (dt 0) under every card and panel, so what is alive when a pause
+## begins stays on screen for as long as the player reads. Two rules follow: a new
+## battlefield (arena_stage) and a new run start from nothing (_clear_field), and a won
+## run freezes on the last clear at rest and nothing else (_settle_victory).
 const UNIT := 50.0
 const EFFECT_LIMIT := 72
 const MAX_BULLETS := 120
@@ -31,6 +42,7 @@ const MAX_SLASHES := 12
 const MAX_ZONES := 24
 const MAX_CASTS := 12
 const MAX_SKILLS := 6
+const MAX_MOMENTS := 8
 const MAX_LIGHTS := 6
 ## Sword presentation. Swords fly no projectile: at the release the simulator cuts the
 ## bodies inside Balance.MELEE_ARC within the hero's reach (fire.melee, then hit.melee
@@ -69,6 +81,12 @@ const SHADER_DOME: Shader = preload("res://art/vfx/vfx_dome.gdshader")
 const SHADER_STATUS: Shader = preload("res://art/vfx/vfx_status.gdshader")
 const SHADER_SKILL: Shader = preload("res://art/vfx/vfx_skill.gdshader")
 const SHADER_SKILL_MIX: Shader = preload("res://art/vfx/vfx_skill_mix.gdshader")
+const SHADER_MOMENT: Shader = preload("res://art/vfx/vfx_moment.gdshader")
+const SHADER_MOMENT_MIX: Shader = preload("res://art/vfx/vfx_moment_mix.gdshader")
+const SHADER_AEGIS: Shader = preload("res://art/vfx/vfx_aegis.gdshader")
+const SHADER_AEGIS_BASE: Shader = preload("res://art/vfx/vfx_aegis_base.gdshader")
+const SHADER_ROAD: Shader = preload("res://art/vfx/vfx_road.gdshader")
+const SHADER_ROAD_BASE: Shader = preload("res://art/vfx/vfx_road_base.gdshader")
 ## Shared looping status materials (burn / frost / stun) handed to body adapters by
 ## status_group(); the live world's VFX node keeps their clock in step with the battle.
 static var _status_materials: Dictionary = {}
@@ -76,10 +94,11 @@ static var _status_mesh: ArrayMesh
 
 ## Burst kinds; the shaders key their timing tables on this order.
 enum Kind { HIT, SPLASH, ZONE_TICK, DIE, LEAK, BLOCK, PUSH, FROST, STUN, CURSE, SPAWN, WILDFIRE,
-	BLAST, FREEZE, WARD, MUZZLE_SMOKE, RIC_SPARK, BEAM_CAP, BOLT_CAP, CAST_RELEASE, SLASH_HIT }
+	BLAST, FREEZE, WARD, MUZZLE_SMOKE, RIC_SPARK, BEAM_CAP, BOLT_CAP, CAST_RELEASE, SLASH_HIT,
+	SEAL, SCATTER }
 ## Seconds a burst slot stays reserved: at least the longest layer of that kind.
 const KIND_LIFE := [0.50, 0.75, 0.55, 1.05, 0.60, 0.45, 0.35, 0.95, 0.45, 0.65, 0.90, 1.10,
-	1.30, 1.40, 0.90, 0.62, 0.25, 0.30, 0.30, 0.50, 0.44]
+	1.30, 1.40, 0.90, 0.62, 0.25, 0.30, 0.30, 0.50, 0.44, 0.82, 0.96]
 const ELEM_INDEX := {"none": 0, "fire": 1, "ice": 2, "elec": 3, "water": 4}
 const WEAPON_INDEX := {"rifle": 0, "gun": 0, "bow": 1, "cast": 2, "artillery": 3, "sword": 4, "tool": 5}
 ## Projectile head sprites: 0 tracer, 1 arrow, 2 shell, 3 bead, 4 orb, 5 crescent.
@@ -87,7 +106,7 @@ const BULLET_SIZE := {"shot": 0.13, "pierce": 0.15, "splash": 0.19, "chain": 0.1
 const TRAIL_LENGTH := {"shot": 1.05, "pierce": 1.65, "splash": 0.85, "chain": 1.15, "ricochet": 0.95}
 ## Budget priority per burst kind: when the shared 72-slot budget is full, a new
 ## effect evicts the oldest live effect of lower or equal priority (skills never drop).
-const KIND_PRIORITY := [0, 1, 0, 2, 3, 2, 1, 1, 1, 1, 2, 2, 4, 4, 4, 0, 0, 1, 1, 1, 0]
+const KIND_PRIORITY := [0, 1, 0, 2, 3, 2, 1, 1, 1, 1, 2, 2, 4, 4, 4, 0, 0, 1, 1, 1, 0, 2, 2]
 ## Per-frame caps keep bulk events (a freeze slowing 40 bodies) from flooding one frame.
 const FRAME_CAPS := {"hit": 10, "splash": 6, "frost": 4, "stun": 5, "die": 8, "push": 6, "zone_tick": 8}
 ## Girth of a scaled body in world units, measured once by fit_body().
@@ -109,6 +128,62 @@ const BOSS_SIZE := 1.5
 const BOSS_BURST_LIFE := 2.4
 const STUN_COLOR := Color("#ffe38b")
 const CURSE_COLOR := Color("#7a4fc9")
+## Sequence kinds of the Moments pool (vfx_moment*.gdshader key their timelines on this order).
+enum MomentKind { REVIVE, STAGE_CLEAR, STAGE_SWEEP, GATE_BEACON, FINAL_WARNING, FINAL_BURST, GATE_SEAL }
+## Crystal revival (Guardian's blessing). The simulator has already revived the crystal and
+## stopped every monster when the event arrives; the picture tells it as a break and a
+## reforming: REVIVE_FLASH seconds of collapse, the flash, a shockwave that crosses the field
+## in REVIVE_WAVE seconds (a seal closes on each monster as it passes), the shards drawn
+## back in, the crystal whole again at REVIVE_WHOLE, and the aegis for the rest of `sec`.
+const REVIVE_FLASH := 0.26
+const REVIVE_WAVE := 0.50
+const REVIVE_WHOLE := 0.94
+const SEAL_CAP := 24
+## Additive gold has to be deeper than Look.GOLD to stay gold on a pale road.
+const BLESSING_LIGHT := Color("#ffc24a")
+const SEAL_COLOR := Color("#ffbd47")
+## The aegis gem: base radius and height in world units (the altar is 1.15 wide, the
+## crystal 1.95 tall, besiegers stand 1.36 from the centre: they stay outside the gem).
+const AEGIS_RADIUS := 1.12
+const AEGIS_HEIGHT := 2.55
+const AEGIS_SPIN := 0.45
+## The revival reshapes the real crystal for a second (it shatters and regrows); false
+## leaves the crystal node alone and only the effect layers tell the story.
+const REVIVE_DRIVES_CRYSTAL := true
+## Stage clear: the victory wave crosses the field in CLEAR_WAVE seconds and each escort
+## turns to haze as it passes (scatter_delay). Nothing of it may outlive `sec`: the world
+## is rebuilt then and the next battlefield opens paused under its card.
+const CLEAR_WAVE := 0.60
+## Every escort gets its haze (the arena holds at most 48 bodies; they are spread over the
+## 0.6 s the wave needs, inside the burst pool of 64).
+const SCATTER_CAP := 48
+## Radians a fleeing escort's heading may turn off the straight line from the crystal.
+const SCATTER_SPREAD := 0.6
+const SPIRIT_COLOR := Color("#cfe2ff")
+## The last stage's clear (arena_stage_clear with final): the run is won. A second wave
+## locks on the rim as a gold ring, the guardian crest is stamped on the plaza and on every
+## gate (the gates are sealed), a quiet column stays on the crystal. Everything that moves
+## is over by FINAL_REST seconds; the result panel opens at `sec` and freezes the picture,
+## so from FINAL_REST on it is a still. It stays for FINAL_HOLD more seconds if time runs on.
+const FINAL_REST := 1.62
+const FINAL_CREST := 0.42
+const FINAL_HOLD := 3.6
+## New battlefield: the scan from the crystal reaches the rim at SWEEP_ARRIVE, the gate
+## beacons flare and a runner leaves every gate down its road at ROAD_SPEED units a second.
+const SWEEP_ARRIVE := 0.75
+const SWEEP_LIFE := 2.1
+const BEACON_LIFE := 2.75
+const ROAD_SPEED := 30.0
+const ROAD_HEIGHT := 0.085
+## The same coral the battlefield card and the minimap mark gates with.
+const GATE_COLOR := Color("#ff9a7a")
+const STAR_PALE := Color("#ffe9c2")
+const GATE_INSET := 28.0
+## Final boss: the ordinary gate grown by FINAL_SCALE plus the dark sun's layers.
+const FINAL_SCALE := 1.3
+const FINAL_AFTERSHOCK := 0.24
+const FINAL_BURST_LIFE := 3.5
+const FINAL_EMBER := Color("#ffb347")
 
 var projectiles: Node3D                 # shared parent for pooled bullet nodes
 var effects: Array[Dictionary] = []     # shared with StellarWorld.effects (same array)
@@ -125,13 +200,31 @@ var _beams: MultiMeshInstance3D
 var _slashes: MultiMeshInstance3D
 var _zones: MultiMeshInstance3D
 var _skills: MultiMeshInstance3D
+var _moments: MultiMeshInstance3D
+var _live_moments := 0
+var _aegis: MeshInstance3D
+var _aegis_fx := {"age": 0.0, "life": 0.0}
+var _roads: MeshInstance3D
+var _roads_fx := {"age": 0.0, "life": 0.0}
+var _reform := {"t": -1.0}               # the crystal node being reshaped by a revival
+var _boss_fall := {"clock": -99.0}       # where the last scaled body died (stage clear link)
+var _sim_ref: WeakRef                    # the simulator of the last sync (read only)
+var _final_stage := false
+var _reveal_pending := false             # arena_stage arrived this frame (spawned in update)
+var _reveal_at := Vector3.ZERO
+var _won_seen := false                   # the simulator's victory has been settled
+## Frames the idle Moments pool, aegis and road ribbons are still drawn after start-up
+## (nothing shows: every part is at alpha 0). GL compiles a shader at its first draw; this
+## puts that cost on the loading frames instead of on the frame a stage boss falls.
+var _warm := 3
+var _road_materials: Array[ShaderMaterial] = []
 var _domes: Array[MeshInstance3D] = []
 var _dome_fx: Array[Dictionary] = []
 var _lights: Array[OmniLight3D] = []
 var _light_fx: Array[Dictionary] = []
 var _next := {"dome": 0}
-var _generation := {"burst": [], "beam": [], "slash": [], "skill": []}
-var _free := {"burst": [], "beam": [], "slash": [], "skill": []}
+var _generation := {"burst": [], "beam": [], "slash": [], "skill": [], "moment": []}
+var _free := {"burst": [], "beam": [], "slash": [], "skill": [], "moment": []}
 var _pending_fires: Array[Dictionary] = []
 var _pending_hits: Array[Dictionary] = []   # this tick's melee hits, timed after their fire
 var _delayed: Array[Dictionary] = []        # bursts / pulses waiting on the effect clock
@@ -153,7 +246,7 @@ func _ready() -> void:
 	# actor tree, before their first frame: no resource is created mid-battle.
 	if _world != null and _world.actors != null:
 		_world.actors.child_entered_tree.connect(_on_actor_entered)
-	var sizes := {"burst": MAX_BURSTS, "beam": MAX_BEAMS, "slash": MAX_SLASHES, "skill": MAX_SKILLS}
+	var sizes := {"burst": MAX_BURSTS, "beam": MAX_BEAMS, "slash": MAX_SLASHES, "skill": MAX_SKILLS, "moment": MAX_MOMENTS}
 	for key in _generation.keys():
 		var gen: Array = _generation[key]
 		gen.resize(int(sizes[key]))
@@ -167,6 +260,28 @@ func _ready() -> void:
 	_slashes = _pool("Slashes", _slash_mesh(), MAX_SLASHES, 1, MAX_SLASHES)
 	_zones = _pool("Zones", _zone_mesh(), MAX_ZONES + MAX_CASTS, -2)
 	_skills = _pool("Skills", _skill_mesh(), MAX_SKILLS, 1, MAX_SKILLS)
+	_moments = _pool("Moments", _moment_mesh(), MAX_MOMENTS, 1, MAX_MOMENTS)
+	_aegis = MeshInstance3D.new()
+	_aegis.name = "Aegis"
+	_aegis.mesh = _aegis_mesh()
+	_aegis.scale = Vector3(AEGIS_RADIUS, AEGIS_HEIGHT, AEGIS_RADIUS)
+	_aegis.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_aegis)
+	_roads = MeshInstance3D.new()
+	_roads.name = "Roads"
+	_roads.mesh = ArrayMesh.new()
+	_roads.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_roads.custom_aabb = AABB(Vector3(-20, -1, -20), Vector3(40, 3, 40))
+	add_child(_roads)
+	_road_materials.assign([_material(SHADER_ROAD_BASE, -3), _material(SHADER_ROAD, -1)])
+	# One buried quad so the road shaders are compiled with the others (see _warm).
+	var warm := SurfaceTool.new()
+	warm.begin(Mesh.PRIMITIVE_TRIANGLES)
+	_road_ribbon(warm, PackedVector2Array([Balance.ARENA_CENTER, Balance.ARENA_CENTER + Vector2(40, 0)]), 0.1)
+	var warm_arrays := warm.commit_to_arrays()
+	for layer in range(2):
+		(_roads.mesh as ArrayMesh).add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, warm_arrays)
+		_roads.mesh.surface_set_material(layer, _road_materials[layer])
 	for n in range(2):
 		var dome := MeshInstance3D.new()
 		dome.name = "Dome" + str(n)
@@ -343,8 +458,9 @@ func _slash_mesh() -> ArrayMesh:
 ## One sequence per instance (vfx_skill / vfx_skill_mix): every quad is a part of the
 ## timeline (UV2.x) and the shaders place it from the instance's age. Additive surface:
 ## shock ring, sigil, flash, flare, pillar, comet tail strip + head, 16 sparks, 12 embers,
-## afterglow, sky flare, 4 lightning bolts, portal ring, crack glow. Mix surface: cracks,
-## dark ring, 6 smoke puffs, 10 debris chunks, 8 mist wisps.
+## afterglow, sky flare, 4 lightning bolts, portal ring, crack glow. Mix surface: ground
+## colour and sigil body (first, so everything else lies on them; they only draw on bright
+## fields), cracks, dark ring, 6 smoke puffs, 10 debris chunks, 8 mist wisps.
 func _skill_mesh() -> ArrayMesh:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -360,12 +476,82 @@ func _skill_mesh() -> ArrayMesh:
 	var mesh := st.commit()
 	var soft := SurfaceTool.new()
 	soft.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for part in [20, 21]: _quad(soft, part, 0)
+	for part in [26, 25, 20, 21]: _quad(soft, part, 0)
 	for n in range(6): _quad(soft, 22, n)
 	for n in range(10): _quad(soft, 23, n)
 	for n in range(8): _quad(soft, 24, n)
 	soft.set_material(_material(SHADER_SKILL_MIX, -3))
 	soft.commit(mesh)
+	return mesh
+
+## One run-level sequence per instance (vfx_moment / vfx_moment_mix), built like the Skills
+## mesh. Additive surface: 3 ground rings, 2 ground sprites, 2 flashes, 2 flares, 2 pillars,
+## 16 shards, 16 motes, 4 marks, 6 lightning bolts. Mix surface (the bodies the light
+## rides on): 3 rings, 3 discs, 6 smoke puffs, 8 stones, 4 marks, 16 shards.
+func _moment_mesh() -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for n in range(3): _quad(st, 0, n)
+	for part in [1, 2, 3, 4]:
+		for n in range(2): _quad(st, part, n)
+	for n in range(16): _quad(st, 5, n)
+	for n in range(16): _quad(st, 6, n)
+	for n in range(4): _quad(st, 7, n)
+	for n in range(6): _quad(st, 8, n)
+	st.set_material(_material(SHADER_MOMENT, 1))
+	var mesh := st.commit()
+	var soft := SurfaceTool.new()
+	soft.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for part in [20, 21]:
+		for n in range(3): _quad(soft, part, n)
+	for n in range(6): _quad(soft, 22, n)
+	for n in range(8): _quad(soft, 23, n)
+	for n in range(4): _quad(soft, 24, n)
+	for n in range(16): _quad(soft, 25, n)
+	soft.set_material(_material(SHADER_MOMENT_MIX, -3))
+	soft.commit(mesh)
+	return mesh
+
+## The Guardian's aegis: a gem of unit height and unit base radius cut in three tiers of
+## eight (base, belt turned half a side, shoulder, tip), 40 flat facets. Each triangle
+## carries barycentric weights in UV (the edge lines) and its own hash in UV2.x. Two
+## surfaces over the same facets: the gold body (alpha-blended), then the additive light.
+func _aegis_mesh() -> ArrayMesh:
+	var tiers := [[0.0, 1.0, 0.0], [0.34, 1.06, 0.5], [0.74, 0.70, 0.0]]   # height, radius, turn
+	var sides := 8
+	var facets: Array = []
+	var ring := func(tier: Array, n: int) -> Vector3:
+		var angle := TAU * (float(n) + float(tier[2])) / sides
+		return Vector3(cos(angle) * float(tier[1]), float(tier[0]), sin(angle) * float(tier[1]))
+	for band in range(tiers.size() - 1):
+		var low: Array = tiers[band]
+		var high: Array = tiers[band + 1]
+		# The upper tier is turned half a side against the lower one: an antiprism band.
+		var lead := 0 if float(high[2]) > float(low[2]) else 1
+		for n in range(sides):
+			facets.append([ring.call(low, n), ring.call(low, n + 1), ring.call(high, n + lead)])
+			facets.append([ring.call(high, n), ring.call(high, n + 1), ring.call(low, n + 1 - lead)])
+	var tip := Vector3(0, 1, 0)
+	for n in range(sides):
+		facets.append([ring.call(tiers[-1], n), ring.call(tiers[-1], n + 1), tip])
+	var weights := [Vector2(1, 0), Vector2(0, 1), Vector2(0, 0)]
+	var mesh: ArrayMesh = null
+	for layer in range(2):
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		for index in range(facets.size()):
+			var corners: Array = facets[index]
+			var normal: Vector3 = (corners[1] - corners[0]).cross(corners[2] - corners[0]).normalized()
+			var centre: Vector3 = (corners[0] + corners[1] + corners[2]) / 3.0
+			if normal.dot(Vector3(centre.x, 0.25, centre.z)) < 0.0: normal = -normal
+			var facet := fposmod(float(index) * 0.6180339 + 0.137, 1.0)
+			for corner in range(3):
+				st.set_normal(normal)
+				st.set_uv(weights[corner])
+				st.set_uv2(Vector2(facet, float(index)))
+				st.add_vertex(corners[corner])
+		st.set_material(_material(SHADER_AEGIS_BASE, 1) if layer == 0 else _material(SHADER_AEGIS, 2))
+		mesh = st.commit(mesh)
 	return mesh
 
 func _zone_mesh() -> ArrayMesh:
@@ -388,6 +574,23 @@ func _zone_mesh() -> ArrayMesh:
 func sync(sim, _time: float) -> void:
 	if _bullets == null: return
 	_frame_counts.clear()
+	if _sim_ref == null or _sim_ref.get_ref() != sim:
+		# Another run on this world (a retry, a restored save): nothing of the last one
+		# may be left on its first, paused picture. This frame's events were handled
+		# before sync(): a reveal the new run has just announced (arena_stage for its
+		# first battlefield) stays pending and is born at the end of update().
+		if _sim_ref != null: _clear_field()
+		_sim_ref = weakref(sim)
+		_won_seen = false
+	_final_stage = sim.has_method("final_stage") and bool(sim.final_stage())
+	var won: bool = "won" in sim and bool(sim.won)
+	if won and not _won_seen: _settle_victory()
+	_won_seen = won
+	# The revival's untouchable window is simulator state: it carries over a stage change
+	# and a restored save, and neither sends arena_revive. Show the rest of the aegis from
+	# that state (no burst) so the protection that is still running can be read.
+	if not won and float(_aegis_fx["life"]) <= 0.0 and "invuln_t" in sim and float(sim.invuln_t) > 0.1:
+		_resume_aegis(float(sim.invuln_t))
 	_sync_wash()
 	_sync_bullets(sim)
 	_sync_muzzles(sim)
@@ -395,13 +598,21 @@ func sync(sim, _time: float) -> void:
 	_flush_fires(sim)
 
 ## Bright snow and ice fields wash additive layers out to white; tell the shaders.
+## The arena states how bright its playfield is itself (ArenaWorld.ground_wash, 0 dark
+## soil .. 1 snow, set per battlefield); worlds without it fall back to the biome rule.
 func _sync_wash() -> void:
-	if _world == null or _world.theme_id == _wash_theme: return
-	_wash_theme = _world.theme_id
+	if _world == null: return
+	var hint := float(_world.get("ground_wash")) if "ground_wash" in _world else -1.0
+	var key := "%s|%.2f" % [_world.theme_id, hint]
+	if key == _wash_theme: return
+	_wash_theme = key
 	var bright := 0.0
-	for theme in Roster.THEMES:
-		if String(theme.get("id", "")) == _wash_theme and String(theme.get("main_body", "")) in ["aqua", "frost"]:
-			bright = 1.0
+	if hint >= 0.0:
+		bright = clampf(hint, 0.0, 1.0)
+	else:
+		for theme in Roster.THEMES:
+			if String(theme.get("id", "")) == _world.theme_id and String(theme.get("main_body", "")) in ["aqua", "frost"]:
+				bright = 1.0
 	for material in _materials: material.set_shader_parameter("vfx_wash", bright)
 
 func _sync_bullets(sim) -> void:
@@ -632,6 +843,13 @@ func event(e: Dictionary) -> void:
 		"fire":
 			_pending_fires.append(e)
 			return
+		"die":
+			if bool(e.get("scatter", false)):
+				_scatter(e)
+				return
+			# A scaled body (a boss) fell here: a stage clear in the same tick links to it.
+			if e.get("p") is Vector2 and _big_body_at(e["p"]) != null:
+				_boss_fall = {"clock": _clock, "p": e["p"]}
 	if FRAME_CAPS.has(type):
 		var seen := int(_frame_counts.get(type, 0)) + 1
 		_frame_counts[type] = seen
@@ -730,8 +948,19 @@ func event(e: Dictionary) -> void:
 ##   arena_blast         p (ground point), r (damage radius, logical units)
 ##   arena_freeze        p, r (map diagonal)      arena_ward  p, r (altar radius)
 ##   arena_boss_warning  p (the gate the boss will come through), sec (seconds until it does;
-##                       the gather runs exactly that long and hands over to the burst)
-##   arena_boss          p (where the boss stands as it arrives)
+##                       the gather runs exactly that long and hands over to the burst).
+##                       On the last stage (final in the event, else read from the simulator)
+##                       the gate is larger and a dark sun gathers over it.
+##   arena_boss          p (where the boss stands as it arrives), final (the last stage's boss)
+##   arena_revive        p (crystal), r (field radius), sec (seconds the crystal cannot be hurt:
+##                       the aegis lasts exactly that long), stun
+##   arena_stage_clear   p, heal (crystal health restored), sec (seconds until the world is
+##                       rebuilt: every layer is gone by then), final (the last stage: the
+##                       run ends in victory at `sec` and the result panel freezes the
+##                       picture, so this one settles into a still by FINAL_REST)
+##   arena_stage         p: a battlefield has just been built and is paused under its card
+##                       (every stage, the run's first included; a restored run sends
+##                       none); everything born before it is released first
 func arena_event(e: Dictionary) -> void:
 	if _bullets == null: return
 	var type := String(e.get("t", ""))
@@ -755,11 +984,43 @@ func arena_event(e: Dictionary) -> void:
 			_pulse(at + Vector3(0, 1.0, 0), Look.CRYSTAL, 3.2, 4.5, 0.55)
 		"arena_boss_warning":
 			var sec := maxf(float(e.get("sec", 4.0)), 0.5)
-			_skill(SkillKind.BOSS_WARNING, at, BOSS_SIZE, BOSS_RED, sec, sec + 0.2)
-			_pulse(at + Vector3(0, 0.7, 0), BOSS_VIOLET, 4.5, BOSS_SIZE * 5.5, sec, 1)
+			if bool(e.get("final", _final_stage)):
+				# The last boss: the same gate, larger, under a dark sun that gathers over it.
+				var size := BOSS_SIZE * FINAL_SCALE
+				var facing := _inward(at)
+				_skill(SkillKind.BOSS_WARNING, at, size, BOSS_RED, sec, sec + 0.2)
+				_moment(MomentKind.FINAL_WARNING, at, facing, size, BOSS_RED, 1.0, sec, sec + 0.05)
+				_pulse(at + Vector3(0, 0.7, 0), BOSS_VIOLET, 5.5, size * 5.5, sec, 1)
+				# The dark sun's own glow (vfx_moment.gdshaderinc dark_sun: 2.2 inside the gate, 3 up).
+				_pulse(at - facing.z * 2.2 + Vector3(0, 3.0, 0), BOSS_RED.lerp(FINAL_EMBER, 0.4), 3.5, 9.0, sec, 1)
+			else:
+				_skill(SkillKind.BOSS_WARNING, at, BOSS_SIZE, BOSS_RED, sec, sec + 0.2)
+				_pulse(at + Vector3(0, 0.7, 0), BOSS_VIOLET, 4.5, BOSS_SIZE * 5.5, sec, 1)
 		"arena_boss":
-			_skill(SkillKind.BOSS_BURST, at, BOSS_SIZE, BOSS_RED, 0.0, BOSS_BURST_LIFE)
-			_pulse(at + Vector3(0, 1.3, 0), BOSS_VIOLET.lerp(Color.WHITE, 0.3), 8.0, BOSS_SIZE * 7.5, 1.5, 2)
+			if bool(e.get("final", false)):
+				var size := BOSS_SIZE * FINAL_SCALE
+				_skill(SkillKind.BOSS_BURST, at, size, BOSS_RED, 0.0, BOSS_BURST_LIFE)
+				_moment(MomentKind.FINAL_BURST, at, _inward(at), size, BOSS_RED, 1.0, 0.0, FINAL_BURST_LIFE)
+				_pulse(at + Vector3(0, 1.6, 0), FINAL_EMBER.lerp(BOSS_RED, 0.25), 8.5, 15.0, 1.8, 2)
+				_delayed.append({"at": _clock + FINAL_AFTERSHOCK, "kind": -1, "origin": at + Vector3(0, 1.0, 0),
+					"color": BOSS_RED.lerp(FINAL_EMBER, 0.4), "pulse": 5.0, "range": 12.0, "life": 1.2})
+			else:
+				_skill(SkillKind.BOSS_BURST, at, BOSS_SIZE, BOSS_RED, 0.0, BOSS_BURST_LIFE)
+				_pulse(at + Vector3(0, 1.3, 0), BOSS_VIOLET.lerp(Color.WHITE, 0.3), 8.0, BOSS_SIZE * 7.5, 1.5, 2)
+		"arena_revive":
+			_revive(at, float(e.get("r", ArenaGeometry.RADIUS)) / UNIT, maxf(float(e.get("sec", Balance.ARENA_REVIVE_INVULN)), 1.3))
+		"arena_stage_clear":
+			_stage_clear(at, e)
+		"arena_stage":
+			# The card pauses the battle from the next frame on: nothing of the previous
+			# field may be left in that picture (a late burst, a pulse light, a dome, a
+			# queued entry would stay frozen on the new field while the player reads).
+			_clear_field()
+			# The reveal itself is spawned at the end of update(), after this frame's clock
+			# step, so the picture behind the card is the reveal at age 0 whatever this
+			# frame's dt was.
+			_reveal_pending = true
+			_reveal_at = at
 
 func update(dt: float) -> void:
 	if _bullets == null: return
@@ -777,7 +1038,9 @@ func update(dt: float) -> void:
 		if float(fx["at"]) > _clock: continue
 		if int(fx["kind"]) >= 0:
 			_burst(int(fx["kind"]), fx["origin"], fx["basis"], fx["color"], float(fx["size"]), float(fx["elem"]), float(fx.get("body", 1.0)))
-		if fx.has("pulse"): _pulse(fx["origin"], fx["color"], float(fx["pulse"]), float(fx.get("range", 2.0)), float(fx.get("life", 0.12)))
+		if fx.has("pulse"):
+			var lit := _pulse(fx["origin"], fx["color"], float(fx["pulse"]), float(fx.get("range", 2.0)), float(fx.get("life", 0.12)), int(fx.get("mode", 0)))
+			if lit >= 0 and bool(fx.get("rest", false)): _light_fx[lit]["rest"] = true
 		_delayed.remove_at(i)
 	for i in range(effects.size() - 1, -1, -1):
 		var fx = effects[i]
@@ -804,6 +1067,31 @@ func update(dt: float) -> void:
 		if float(fx["age"]) >= float(fx["life"]):
 			fx["life"] = 0.0
 			_domes[i].visible = false
+	if _warm > 0:
+		# Still inside the start-up frames that compile the idle shaders.
+		_warm -= 1
+		if _warm == 0:
+			_aegis.visible = float(_aegis_fx["life"]) > 0.0
+			_roads.visible = float(_roads_fx["life"]) > 0.0
+	else:
+		_moments.visible = _live_moments > 0
+	if float(_aegis_fx["life"]) > 0.0:
+		_aegis_fx["age"] = float(_aegis_fx["age"]) + dt
+		_aegis.rotation.y += dt * AEGIS_SPIN
+		if float(_aegis_fx["age"]) >= float(_aegis_fx["life"]):
+			_aegis_fx["life"] = 0.0
+			_aegis.visible = false
+	if float(_roads_fx["life"]) > 0.0:
+		_roads_fx["age"] = float(_roads_fx["age"]) + dt
+		if float(_roads_fx["age"]) >= float(_roads_fx["life"]):
+			_roads_fx["life"] = 0.0
+			_roads.visible = false
+	_reform_crystal(dt)
+	# Last, so that nothing above has aged it: the reveal of a new battlefield is born
+	# after this frame's clock step and stays at age 0 for as long as the card is open.
+	if _reveal_pending:
+		_reveal_pending = false
+		_stage_reveal(_reveal_at)
 
 # --------------------------------------------------------------------------- #
 # Slot allocation
@@ -827,6 +1115,7 @@ func _pool_node(pool: String) -> MultiMeshInstance3D:
 		"burst": return _bursts
 		"beam": return _beams
 		"skill": return _skills
+		"moment": return _moments
 	return _slashes
 
 ## Move the shader epoch forward and re-encode every live birth relative to it.
@@ -873,6 +1162,7 @@ func _release(fx: Dictionary) -> void:
 	node.multimesh.set_instance_custom_data(slot, Color(-1000.0, 0.0, 0.0, 0.0))
 	var free: Array = _free[pool]
 	if not free.has(slot): free.append(slot)
+	if pool == "moment": _live_moments = maxi(0, _live_moments - 1)
 
 ## `body` is the root scale of the body the burst lands in (see _body_scale_at); it rides in
 ## the instance colour's alpha, which the burst shaders read as lift and camera clearance.
@@ -901,6 +1191,342 @@ func _skill(kind: int, origin: Vector3, radius: float, color: Color, duration: f
 	var custom := Color(_clock - _epoch, radius, duration, float(kind))
 	multimesh.set_instance_custom_data(slot, custom)
 	_record("skill", slot, life, 4, custom)
+
+# --------------------------------------------------------------------------- #
+# Run-level moments: crystal revival, stage clear, new battlefield, final boss
+# --------------------------------------------------------------------------- #
+## A whole run-level sequence in one Moments instance (priority 4). `basis` gives the
+## sequence its directions (see vfx_moment.gdshader) and a uniform scale on it carries one
+## distance; `amount` is the kind's scalar, `duration` its length in seconds. `elapsed`
+## starts the sequence that many seconds in (a revival's aura resumed from a save).
+func _moment(kind: int, origin: Vector3, basis: Basis, radius: float, color: Color, amount: float, duration: float, life: float, elapsed: float = 0.0) -> bool:
+	if not _make_room(4): return false
+	var slot := _take("moment", 4)
+	if slot < 0: return false
+	var multimesh := _moments.multimesh
+	multimesh.set_instance_transform(slot, Transform3D(basis, origin))
+	color.a = amount
+	multimesh.set_instance_color(slot, color)
+	var custom := Color(_clock - elapsed - _epoch, radius, duration, float(kind))
+	multimesh.set_instance_custom_data(slot, custom)
+	_record("moment", slot, life, 4, custom)
+	if elapsed > 0.0:
+		effects[-1]["age"] = elapsed
+		effects[-1]["birth"] = _clock - elapsed
+	_live_moments += 1
+	_moments.visible = true
+	return true
+
+## Release everything this node shows that is not read from the simulator each frame:
+## one-shot records of every pool, queued entries, pulse lights, domes, the aegis, the
+## road ribbons and a crystal caught mid-reform. With `keep_rest` the sequences and the
+## light of a held picture (the last clear) stay.
+func _clear_field(keep_rest: bool = false) -> void:
+	for i in range(effects.size() - 1, -1, -1):
+		var fx = effects[i]
+		if typeof(fx) != TYPE_DICTIONARY or not fx.has("vfx"): continue
+		if keep_rest and bool(fx.get("rest", false)): continue
+		_release(fx)
+		effects.remove_at(i)
+	_delayed.clear()
+	_pending_fires.clear()
+	_pending_hits.clear()
+	_aims.clear()
+	_melee.clear()
+	_boss_fall = {"clock": -99.0}
+	for i in range(_lights.size()):
+		if keep_rest and bool(_light_fx[i].get("rest", false)): continue
+		_light_fx[i]["life"] = 0.0
+		_lights[i].visible = false
+		_lights[i].light_energy = 0.0
+	for i in range(_domes.size()):
+		_dome_fx[i]["life"] = 0.0
+		_domes[i].visible = false
+	# During the start-up frames these two stay drawn (empty) to compile their shaders.
+	_aegis_fx["life"] = 0.0
+	_aegis.visible = _warm > 0
+	_roads_fx["life"] = 0.0
+	_roads.visible = _warm > 0
+	if float(_reform["t"]) >= 0.0 and is_instance_valid(_reform.get("node")):
+		(_reform["node"] as Node3D).scale = _reform["base"]
+	_reform = {"t": -1.0}
+	if _warm == 0: _moments.visible = _live_moments > 0
+
+## The run is won: the result panel freezes the picture from this frame on. Whatever the
+## clocks did on the way (a hitch can leave the effect clock behind the simulator's), the
+## frozen picture is the last clear at rest and nothing else: every other effect is
+## released, and the clear's own sequences jump to their rest if they are not there yet.
+func _settle_victory() -> void:
+	_clear_field(true)
+	var lit := false
+	for fx in _light_fx: lit = lit or (float(fx["life"]) > 0.0 and bool(fx.get("rest", false)))
+	for fx in effects:
+		if typeof(fx) != TYPE_DICTIONARY or not bool(fx.get("rest", false)): continue
+		if float(fx["age"]) < FINAL_REST:
+			var custom: Color = fx["custom"]
+			fx["birth"] = _clock - FINAL_REST
+			fx["age"] = FINAL_REST
+			custom.r = float(fx["birth"]) - _epoch
+			fx["custom"] = custom
+			_moments.multimesh.set_instance_custom_data(int(fx["slot"]), custom)
+		if not lit and int(round((fx["custom"] as Color).a)) == MomentKind.STAGE_CLEAR:
+			lit = true
+			var index := _pulse(world(Balance.ARENA_CENTER, 1.3), BLESSING_LIGHT, 1.5, 6.0, FINAL_HOLD, 3)
+			if index >= 0: _light_fx[index]["rest"] = true
+
+## A basis whose -Z points from the world point `at` to the crystal (a random yaw at the
+## crystal itself): the final boss's dark sun hangs a little inside its gate.
+func _inward(at: Vector3) -> Basis:
+	var to := world(Balance.ARENA_CENTER, 0.0) - Vector3(at.x, 0.0, at.z)
+	return _yaw() if to.length_squared() < 0.01 else Basis.looking_at(to.normalized(), Vector3.UP)
+
+## Seconds a ring that grows from `start` to `reach` in `seconds` (ease-out of `power`,
+## the curve the moment shaders draw) needs to reach `distance`.
+static func _wave_delay(distance: float, reach: float, seconds: float, power: float, start: float) -> float:
+	var k := clampf((distance - start) / maxf(reach - start, 0.01), 0.0, 1.0)
+	return seconds * (1.0 - pow(1.0 - k, 1.0 / power))
+
+## The crystal broke and the Guardian's blessing brought it back (see REVIVE_FLASH).
+func _revive(at: Vector3, radius: float, sec: float) -> void:
+	_moment(MomentKind.REVIVE, at, Basis.IDENTITY, radius, Look.GOLD, 1.0, sec, sec + 0.4)
+	# The hard flash, then the aura's own glow for exactly as long as it holds.
+	_delayed.append({"at": _clock + REVIVE_FLASH, "kind": -1, "origin": at + Vector3(0, 1.4, 0),
+		"color": BLESSING_LIGHT, "pulse": 7.0, "range": 10.0, "life": 0.6, "mode": 2})
+	_delayed.append({"at": _clock + REVIVE_FLASH, "kind": -1, "origin": at + Vector3(0, 1.2, 0),
+		"color": BLESSING_LIGHT, "pulse": 1.3, "range": 4.5, "life": maxf(sec - REVIVE_FLASH, 0.5), "mode": 3})
+	_raise_aegis(at, sec, 0.0)
+	_shatter_crystal()
+	# The wave is what stops the monsters: a seal closes on each one as it passes
+	# (nearest first; the cap keeps a full field inside the burst pool).
+	var sim = _sim_ref.get_ref() if _sim_ref != null else null
+	if sim == null: return
+	var reached: Array = []
+	for mo in sim.monsters:
+		if float(mo.get("hp", 1.0)) <= 0.0: continue
+		var p: Vector2 = BattleSim.mpos(mo)
+		reached.append([world(p, 0.0).distance_to(at), p])
+	reached.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
+	for i in range(mini(reached.size(), SEAL_CAP)):
+		var p: Vector2 = reached[i][1]
+		var delay := REVIVE_FLASH + _wave_delay(float(reached[i][0]), radius * 1.06, REVIVE_WAVE, 2.4, 0.3)
+		_delayed.append({"at": _clock + delay, "kind": Kind.SEAL, "origin": world(p, 0.0), "basis": _yaw(),
+			"color": SEAL_COLOR, "size": 1.0, "elem": 0.0, "body": _body_scale_at(p)})
+
+## The aegis gem around the crystal for `sec` seconds, `elapsed` of which have already run.
+func _raise_aegis(at: Vector3, sec: float, elapsed: float) -> void:
+	_aegis.position = at + Vector3(0, 0.03, 0)
+	_aegis.rotation.y = elapsed * AEGIS_SPIN
+	for surface in range(_aegis.mesh.get_surface_count()):
+		var material := _aegis.mesh.surface_get_material(surface) as ShaderMaterial
+		material.set_shader_parameter("birth", _clock - elapsed)
+		material.set_shader_parameter("duration", sec)
+	_aegis.visible = true
+	_aegis_fx = {"age": elapsed, "life": sec}
+
+## The rest of a revival's aura for a run restored inside it: the sequence is a function
+## of its age, so it simply continues from where the untouchable window stands (the gem,
+## the crest and the timer ring end exactly when the crystal can be hurt again).
+func _resume_aegis(left: float) -> void:
+	var sec: float = maxf(Balance.ARENA_REVIVE_INVULN, left)
+	var elapsed := sec - left
+	if elapsed >= sec - 0.05: return
+	var at := world(Balance.ARENA_CENTER, 0.0)
+	_moment(MomentKind.REVIVE, at, Basis.IDENTITY, ArenaGeometry.RADIUS / UNIT, Look.GOLD, 1.0, sec, sec + 0.4, elapsed)
+	_pulse(at + Vector3(0, 1.2, 0), BLESSING_LIGHT, 1.3, 4.5, sec - elapsed, 3)
+	_raise_aegis(at, sec, elapsed)
+
+## The revival on the real crystal: it shatters (or is already gone, when the blessing
+## takes back a defeat), stays away while the shards hang in the air and regrows with a
+## small overshoot as they arrive. Only its scale is touched, and only for REVIVE_WHOLE
+## seconds; visibility stays with the world.
+func _shatter_crystal() -> void:
+	if not REVIVE_DRIVES_CRYSTAL or _world == null or _world.crystals.is_empty(): return
+	var node: Node3D = _world.crystals[0]
+	if not is_instance_valid(node): return
+	if float(_reform["t"]) >= 0.0 and is_instance_valid(_reform.get("node")):
+		(_reform["node"] as Node3D).scale = _reform["base"]
+	var broken := not node.visible
+	_reform = {"t": 0.0, "node": node, "base": node.scale, "broken": broken}
+	if broken: node.scale = node.scale * 0.001
+
+func _reform_crystal(dt: float) -> void:
+	if float(_reform["t"]) < 0.0: return
+	var node = _reform.get("node")
+	if not is_instance_valid(node):
+		# The battlefield was rebuilt in the meantime: its new crystal is whole.
+		_reform = {"t": -1.0}
+		return
+	var t := float(_reform["t"]) + dt
+	_reform["t"] = t
+	var base: Vector3 = _reform["base"]
+	if t >= REVIVE_WHOLE + 0.12:
+		node.scale = base
+		_reform = {"t": -1.0}
+		return
+	node.scale = base * crystal_scale(t, bool(_reform["broken"]))
+
+## Shape of the crystal `t` seconds into a revival (1 = whole). It implodes to a sliver in
+## 0.07 s unless it was already broken, is gone until the shards return, then grows back
+## stretched along its axis and settles at REVIVE_WHOLE.
+static func crystal_scale(t: float, broken: bool) -> Vector3:
+	if t < 0.07 and not broken:
+		var f := t / 0.07
+		return Vector3(maxf(1.0 - pow(f, 1.5), 0.001), maxf(1.0 - pow(f, 2.5), 0.001), maxf(1.0 - pow(f, 1.5), 0.001))
+	if t < 0.56: return Vector3.ONE * 0.001
+	if t >= REVIVE_WHOLE: return Vector3.ONE
+	var g := (t - 0.56) / (REVIVE_WHOLE - 0.56)
+	var x := g - 1.0
+	var k := maxf(1.0 + 2.70158 * x * x * x + 1.70158 * x * x, 0.001)
+	var stretch := sin(PI * g)
+	return Vector3(k * (1.0 - 0.07 * stretch), k * (1.0 + 0.14 * stretch), k * (1.0 - 0.07 * stretch))
+
+## An escort removed when its stage boss fell (die with scatter). The body is not killed:
+## NativeMonsterModel halts it and, when the victory wave reaches it, runs it away from
+## the crystal while it thins out (NativeMonsterModel.FLEE_SEC). This is the haze it thins
+## into: born when the wave arrives (scatter_delay), drifting the way the body runs
+## (scatter_heading) with a few wisps ahead of it. No ground ring, no star flash, no halo,
+## no pulse light: it must not read as a kill.
+func _scatter(e: Dictionary) -> void:
+	var seen := int(_frame_counts.get("scatter", 0)) + 1
+	_frame_counts["scatter"] = seen
+	if seen > SCATTER_CAP: return
+	var p: Vector2 = e.get("p", Vector2.ZERO)
+	var heading := scatter_heading(p, int(e.get("sid", 0)))
+	var basis := Basis.looking_at(Vector3(heading.x, 0.0, heading.y), Vector3.UP)
+	var color := Color(e.get("c", SPIRIT_COLOR)).lerp(SPIRIT_COLOR, 0.5)
+	_delayed.append({"at": _clock + scatter_delay(p), "kind": Kind.SCATTER, "origin": world(p, 0.0), "basis": basis,
+		"color": color, "size": 1.0, "elem": 0.0, "body": _body_scale_at(p)})
+
+## Seconds after arena_stage_clear at which the victory wave reaches the logical point `p`:
+## the moment a fleeing body bolts and its haze is born.
+static func scatter_delay(p: Vector2) -> float:
+	return _wave_delay(p.distance_to(Balance.ARENA_CENTER) / UNIT, ArenaGeometry.RADIUS / UNIT * 1.04, CLEAR_WAVE, 2.2, 0.4)
+
+## The way an escort flees from the logical point `p` (unit vector, +y south): away from
+## the crystal, turned a little by its spawn id so a crowd does not leave as one pattern
+## of spokes. Body and haze both use it.
+static func scatter_heading(p: Vector2, sid: int) -> Vector2:
+	var away := p - Balance.ARENA_CENTER
+	var turn := fposmod(float(sid) * 0.6180339 + 0.17, 1.0)
+	if away.length_squared() < 4.0: return Vector2.from_angle(turn * TAU)
+	return away.normalized().rotated((turn - 0.5) * SCATTER_SPREAD)
+
+## A stage boss fell: the release at the crystal, the mend, and what is left of the boss
+## flowing to the crystal when it fell this very tick. Every layer is gone by `sec`.
+## The last stage's boss (`final`) wins the run: the same release, then the field is
+## sealed (see FINAL_REST) and that picture is held under the result panel.
+func _stage_clear(at: Vector3, e: Dictionary) -> void:
+	var sec := maxf(float(e.get("sec", Balance.ARENA_CLEAR_DELAY)), 1.0)
+	var heal := float(e.get("heal", 0.0))
+	var mend := 0.0 if heal <= 0.0 else clampf(0.55 + 0.45 * heal / maxf(1.0, Balance.ARENA_CRYSTAL_HP * Balance.ARENA_STAGE_HEAL), 0.0, 1.0)
+	var basis := Basis.IDENTITY
+	if _boss_fall.has("p") and _clock - float(_boss_fall["clock"]) < 0.05:
+		var to: Vector3 = world(_boss_fall["p"], 0.0) - at
+		if to.length() > 0.6: basis = Basis.looking_at(to.normalized(), Vector3.UP).scaled(Vector3.ONE * (1.0 + to.length()))
+	var radius := ArenaGeometry.RADIUS / UNIT
+	if bool(e.get("final", false)):
+		# The shaders read a mend above 1.5 as "the last clear" (mend + 2).
+		if _moment(MomentKind.STAGE_CLEAR, at, basis, radius, Look.GOLD, mend + 2.0, sec, sec + FINAL_HOLD): effects[-1]["rest"] = true
+		for lane in range(mini(ArenaGeometry.route_count(), ArenaGeometry.MAX_ROUTES)):
+			var gate := ArenaGeometry.gate_point(lane, GATE_INSET)
+			var inward := Balance.ARENA_CENTER - gate
+			if _moment(MomentKind.GATE_SEAL, world(gate, 0.0), Basis.looking_at(Vector3(inward.x, 0.0, inward.y).normalized(), Vector3.UP),
+					radius, Look.GOLD, 3.0, sec, sec + FINAL_HOLD):
+				effects[-1]["rest"] = true
+		_pulse(at + Vector3(0, 1.2, 0), BLAST_HOT, 8.0, 12.0, 0.7)
+		# The light of the held picture: it comes up with the crest and stays with it.
+		_delayed.append({"at": _clock + FINAL_CREST, "kind": -1, "origin": at + Vector3(0, 1.3, 0), "color": BLESSING_LIGHT,
+			"pulse": 1.5, "range": 6.0, "life": sec + FINAL_HOLD - FINAL_CREST, "mode": 3, "rest": true})
+	else:
+		_moment(MomentKind.STAGE_CLEAR, at, basis, radius, Look.GOLD, mend, sec, sec - 0.02)
+		_pulse(at + Vector3(0, 1.2, 0), BLAST_HOT, 6.0, 10.0, minf(0.7, sec - 0.1))
+	if mend > 0.0:
+		_delayed.append({"at": _clock + 0.35, "kind": -1, "origin": at + Vector3(0, 1.0, 0), "color": Look.CRYSTAL,
+			"pulse": 2.6, "range": 5.0, "life": clampf(sec - 0.55, 0.2, 0.8)})
+
+## A new battlefield has just been built and waits, paused, under its card. Everything
+## spawned here is drawn at age 0 until the card is confirmed: the rim, the charged ring
+## at the plaza and a column of light at every gate. The ground mark of a gate (ring and
+## chevrons) is the HUD's while the card is up (ArenaScreen._draw_gate_beacons); ours
+## grows out of it when time runs again. Then the scan runs out from the crystal, the
+## gates flare when it lands and a runner goes down every road.
+func _stage_reveal(at: Vector3) -> void:
+	var radius := ArenaGeometry.RADIUS / UNIT
+	# The sweep's duration is the moment the first runner reaches the plaza (its ping there).
+	var arrival := _roads_start()
+	_moment(MomentKind.STAGE_SWEEP, at, Basis.IDENTITY, radius, STAR_PALE, 1.0, arrival, maxf(SWEEP_LIFE, arrival + 0.6))
+	for lane in range(mini(ArenaGeometry.route_count(), ArenaGeometry.MAX_ROUTES)):
+		var gate := ArenaGeometry.gate_point(lane, GATE_INSET)
+		var inward := Balance.ARENA_CENTER - gate
+		_moment(MomentKind.GATE_BEACON, world(gate, 0.0), Basis.looking_at(Vector3(inward.x, 0.0, inward.y).normalized(), Vector3.UP),
+			radius, GATE_COLOR, 1.0, 0.0, BEACON_LIFE)
+	_pulse(at + Vector3(0, 1.2, 0), STAR_PALE, 2.2, 6.5, 0.9)
+
+## Rebuild the road ribbons for the battlefield that has just opened and start their
+## reveal: one ribbon per drawable road of the layout, from the rim to where it ends.
+## This is the one place a mesh surface is rebuilt after start-up; it happens while the
+## battle is paused under the card, in the frame the world itself was rebuilt.
+## Returns the seconds until the first runner reaches the plaza (the shortest arm).
+func _roads_start() -> float:
+	var mesh := _roads.mesh as ArrayMesh
+	mesh.clear_surfaces()
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var half := ArenaGeometry.ROAD_WIDTH / UNIT * 0.5 * 0.92
+	var longest := 0.0
+	var shortest_arm := INF
+	var roads := ArenaGeometry.road_polylines()
+	for i in range(roads.size()):
+		var length := _road_ribbon(st, roads[i], half)
+		longest = maxf(longest, length)
+		# Arms end at the plaza; feeders end where they join an arm.
+		if length > 0.0 and ArenaGeometry.road_layer(i) == 0: shortest_arm = minf(shortest_arm, length)
+	if longest <= 0.0:
+		_roads.visible = false
+		_roads_fx["life"] = 0.0
+		return SWEEP_LIFE
+	var arrays := st.commit_to_arrays()
+	for layer in range(2):
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+		mesh.surface_set_material(layer, _road_materials[layer])
+		_road_materials[layer].set_shader_parameter("birth", _clock)
+		_road_materials[layer].set_shader_parameter("field_radius", ArenaGeometry.RADIUS / UNIT)
+	_road_materials[1].set_shader_parameter("color", GATE_COLOR)
+	_roads.visible = true
+	_roads_fx = {"age": 0.0, "life": SWEEP_ARRIVE + longest / ROAD_SPEED + 1.2}
+	return SWEEP_ARRIVE + (shortest_arm if is_finite(shortest_arm) else longest) / ROAD_SPEED
+
+## One road as a ribbon of quads: UV.x across, UV.y the distance from its gate, UV2.y its
+## length (all world units). Returns that length.
+func _road_ribbon(st: SurfaceTool, road: PackedVector2Array, half: float) -> float:
+	if road.size() < 2: return 0.0
+	# From the rim: the drawn road runs to the edge of the field.
+	var rim: Vector2 = Balance.ARENA_CENTER + (road[0] - Balance.ARENA_CENTER).normalized() * ArenaGeometry.RADIUS
+	var points: Array[Vector3] = [world(rim, ROAD_HEIGHT)]
+	for p in road:
+		var at := world(p, ROAD_HEIGHT)
+		if at.distance_to(points[-1]) >= 0.44: points.append(at)
+	var last := world(road[road.size() - 1], ROAD_HEIGHT)
+	if last.distance_to(points[-1]) > 0.05: points.append(last)
+	if points.size() < 2: return 0.0
+	var along: Array[float] = [0.0]
+	for i in range(1, points.size()): along.append(along[-1] + points[i].distance_to(points[i - 1]))
+	var total: float = along[-1]
+	var left: Array[Vector3] = []
+	var right: Array[Vector3] = []
+	for i in range(points.size()):
+		var tangent := (points[mini(i + 1, points.size() - 1)] - points[maxi(i - 1, 0)]).normalized()
+		var normal := Vector3(-tangent.z, 0.0, tangent.x) * half
+		left.append(points[i] - normal)
+		right.append(points[i] + normal)
+	for i in range(points.size() - 1):
+		var corners := [left[i], right[i], right[i + 1], left[i + 1]]
+		var uvs := [Vector2(0, along[i]), Vector2(1, along[i]), Vector2(1, along[i + 1]), Vector2(0, along[i + 1])]
+		for n in [0, 1, 2, 0, 2, 3]:
+			st.set_uv(uvs[n])
+			st.set_uv2(Vector2(0.0, total))
+			st.add_vertex(corners[n])
+	return total
 
 func _beam(kind: int, a: Vector3, b: Vector3, color: Color, big: float) -> void:
 	if not _make_room(1): return
@@ -958,26 +1584,32 @@ func _dome(at: Vector3, radius: float, color: Color, life: float) -> void:
 ## Energy envelope of a pulse light over its life fraction q:
 ##   0 decay (impacts, releases)   1 gather: throbbing ramp that peaks at the end (boss warning)
 ##   2 arrival: a hard flash that settles into a slow tail (boss burst)
+##   3 hold: a steady, slowly breathing glow that goes out at the end (the aegis)
 static func _light_curve(mode: int, q: float, age: float) -> float:
 	match mode:
+		3:
+			return (0.82 + 0.18 * sin(age * 3.0)) * (1.0 - smoothstep(0.90, 1.0, q))
 		1:
 			return (0.25 + 0.75 * q * q) * (0.8 + 0.2 * sin(age * (7.0 + 9.0 * q))) + 0.6 * maxf(0.0, (q - 0.88) / 0.12)
 		2:
 			return 0.55 * pow(maxf(0.0, 1.0 - q * 5.0), 1.2) + 0.45 * pow(1.0 - q, 2.0)
 	return (1.0 - q) * (1.0 - q)
 
-func _pulse(at: Vector3, color: Color, energy: float, range_value: float, life: float, mode: int = 0) -> void:
+## Light one pooled pulse (the oldest is reused when all six are lit; the light of a held
+## picture is never taken). Returns the light's index, -1 when none could be used.
+func _pulse(at: Vector3, color: Color, energy: float, range_value: float, life: float, mode: int = 0) -> int:
 	var index := -1
 	var oldest := -1.0
 	for i in range(_lights.size()):
 		if float(_light_fx[i]["life"]) <= 0.0:
 			index = i
 			break
+		if bool(_light_fx[i].get("rest", false)): continue
 		var q := float(_light_fx[i]["age"]) / float(_light_fx[i]["life"])
 		if q > oldest:
 			oldest = q
 			index = i
-	if index < 0: return
+	if index < 0: return -1
 	var light := _lights[index]
 	light.position = at
 	light.light_color = color
@@ -985,6 +1617,7 @@ func _pulse(at: Vector3, color: Color, energy: float, range_value: float, life: 
 	light.omni_range = range_value
 	light.visible = true
 	_light_fx[index] = {"age": 0.0, "life": life, "energy": energy, "mode": mode}
+	return index
 
 # --------------------------------------------------------------------------- #
 # Status markers for body adapters (replacement for the old cone groups)

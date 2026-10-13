@@ -797,9 +797,197 @@ static func wrap_text(ci: CanvasItem, s: String, box: Rect2, size: int, col: Col
 		else:
 			text_center(ci, Vector2(box.get_center().x, y), line, size, col)
 
+# --------------------------------------------------------------------------- #
+# Stage chain · purchases (2026-10-13, docs/UI_STAGE_STORE.md)
+# --------------------------------------------------------------------------- #
+## Where monsters come from: gate marks on the minimap, the route diagram and the field.
+const GATE_MARK := Color("#ff9a7a")
+## Steel line of the arena rail and its sheets.
+const STEEL := Color("#84a8b5")
+
+
+## The run as `total` steps: beaten ones filled, the current one bright, the rest hollow.
+## The last step ends in a point: the final boss waits there. `cleared` is the number of
+## stages already beaten (current - 1 while fighting, `total` after a win). `glow` 0..1
+## lifts the current step (callers pulse it; a still picture passes 0). `fallen` marks
+## the current step as the one the run ended on (the defeat screen). `alpha` fades the
+## whole track. `glint` 0..1 runs a glint across it, step by step (the gaps stay dark);
+## outside that range there is none.
+static func draw_stage_track(ci: CanvasItem, rect: Rect2, current: int, total: int,
+		cleared: int = -1, glow: float = 0.0, fallen: bool = false, alpha: float = 1.0,
+		glint: float = -1.0) -> void:
+	if total <= 0 or rect.size.x <= 0.0 or rect.size.y <= 0.0 or alpha <= 0.0:
+		return
+	if cleared < 0:
+		cleared = current - 1
+	var glinting := glint > 0.0 and glint < 1.0
+	var glint_at := lerpf(-0.16, 1.16, glint)
+	var gap := clampf(rect.size.x * 0.016, 2.0, 5.0)
+	var width := (rect.size.x - gap * float(total - 1)) / float(total)
+	var h := rect.size.y
+	for i in range(total):
+		var x := rect.position.x + float(i) * (width + gap)
+		var y := rect.position.y
+		var last := i == total - 1
+		var here := i == current - 1 and i >= cleared
+		var color := Color(0.17, 0.26, 0.32, 0.92)
+		if i < cleared:
+			color = GOLD
+		elif here:
+			color = RED.lerp(INK, 0.18) if fallen else Color("#ff9d86") if last else Color("#fff0c7")
+		elif last:
+			color = Color(0.36, 0.20, 0.25, 0.95)
+		if glinting:
+			var near := clampf(1.0 - absf((float(i) + 0.5) / float(total) - glint_at) / 0.16, 0.0, 1.0)
+			color = color.lerp(Color(1, 1, 1, color.a), 0.80 * near)
+		var shape := PackedVector2Array([Vector2(x, y), Vector2(x + width, y), Vector2(x + width, y + h), Vector2(x, y + h)])
+		if last:
+			var tip := minf(h * 0.5, width * 0.45)
+			shape = PackedVector2Array([Vector2(x, y), Vector2(x + width - tip, y), Vector2(x + width, y + h * 0.5),
+				Vector2(x + width - tip, y + h), Vector2(x, y + h)])
+		if here:
+			# A plain rectangle: its alpha changes every frame, and fill_round keeps one
+			# cached surface per colour.
+			ci.draw_rect(Rect2(x - 2.0, y - 2.0, width + 4.0, h + 4.0), Color(color, (0.22 + 0.22 * clampf(glow, 0.0, 1.0)) * alpha))
+		ci.draw_colored_polygon(shape, Color(color, color.a * alpha))
+		if i >= cleared and not here:
+			ci.draw_line(Vector2(x, y + 0.5), Vector2(x + width - (h * 0.5 if last else 0.0), y + 0.5), Color(1, 1, 1, 0.10 * alpha), 1.0)
+
+
+## A tick from two strokes (owned · done). U+2713 is in the font, but a drawn tick keeps
+## its weight at every size and never depends on the text baseline.
+static func draw_check(ci: CanvasItem, c: Vector2, size: float, col: Color, width: float = 0.0) -> void:
+	var w := width if width > 0.0 else maxf(1.6, size * 0.20)
+	var a := c + Vector2(-size * 0.50, 0.02 * size)
+	var b := c + Vector2(-size * 0.14, size * 0.38)
+	var d := c + Vector2(size * 0.52, -size * 0.36)
+	ci.draw_polyline(PackedVector2Array([a, b, d]), col, w, true)
+
+
+## A rectangle whose colour runs from `from` to `to`, left to right or top to bottom.
+static func gradient_rect(ci: CanvasItem, rect: Rect2, from: Color, to: Color, vertical: bool = false) -> void:
+	if rect.size.x <= 0.0 or rect.size.y <= 0.0:
+		return
+	var p := rect.position
+	var e := rect.end
+	ci.draw_polygon(PackedVector2Array([p, Vector2(e.x, p.y), e, Vector2(p.x, e.y)]),
+		PackedColorArray([from, from if vertical else to, to, to if vertical else from]))
+
+
+## A monster's studio render for cards and lists: {"tex", "src"} or {} without the file.
+##
+## The render is 256x320 and a card shows it at a fifth of that, so this one texture is
+## sampled linearly through mipmaps (the same portrait exception as Art.unit_preview);
+## every other canvas texture keeps the project's Nearest default.
+static var _monster_portraits: Dictionary = {}
+
+static func monster_portrait(id: String) -> Dictionary:
+	if _monster_portraits.has(id):
+		return _monster_portraits[id]
+	var out: Dictionary = {}
+	var path := "res://art/models/monsters/%s.png" % id
+	var source: Texture2D = ResourceLoader.load(path) if not id.is_empty() and ResourceLoader.exists(path) else null
+	var image: Image = source.get_image() if source != null else null
+	if image != null and not image.is_empty():
+		if image.is_compressed():
+			image.decompress()
+		var used := image.get_used_rect()
+		if used.has_area():
+			image.generate_mipmaps()
+			var filtered := CanvasTexture.new()
+			filtered.diffuse_texture = ImageTexture.create_from_image(image)
+			filtered.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+			out = {"tex": filtered, "src": Rect2(used)}
+	_monster_portraits[id] = out
+	return out
+
+
+## Draw that render standing on the bottom of `box`. Returns false when there is none,
+## so the caller can fall back to the body badge.
+static func draw_monster_portrait(ci: CanvasItem, id: String, box: Rect2, mod: Color = Color.WHITE) -> bool:
+	var portrait := monster_portrait(id)
+	if portrait.is_empty() or not box.has_area():
+		return false
+	var src: Rect2 = portrait["src"]
+	ci.draw_texture_rect_region(portrait["tex"], Art.fit_rect(src.size, box), src, mod)
+	return true
+
+
+## Text that comes from outside the game: a shop's price string in the buyer's currency.
+##
+## ★ It is never translated and never trimmed by the catalog (I18n would rewrite a word
+##   it happens to know). Spaces a shop uses between the amount and the sign (no-break,
+##   narrow no-break, thin) become plain spaces and direction marks are dropped: the
+##   bundled font has no glyph for them and would draw a box.
+## ★ The bundled font carries ₩ $ € £ ¥ ₫ but not ₹ ₽ ₺ ฿ ₱ ₪ or Cyrillic / Arabic / Thai
+##   currency names. Only this text may borrow the missing glyph from the device's font
+##   (price_font); everything the game writes itself stays on the bundled font.
+static func price_text(raw: String) -> String:
+	var out := ""
+	for ch in raw:
+		var code := ch.unicode_at(0)
+		if code in [0x00A0, 0x202F, 0x2009, 0x2007, 0x200A, 0x3000]:
+			out += " "
+		elif code in [0x200B, 0x200E, 0x200F, 0x061C, 0xFEFF] or (code >= 0x2066 and code <= 0x2069) or (code >= 0x202A and code <= 0x202E):
+			continue
+		elif code >= 0x20:
+			out += ch
+	return out.strip_edges()
+
+
+static var _price_font: Font = null
+
+static func price_font(s: String) -> Font:
+	var own := font()
+	var complete := true
+	for ch in s:
+		if not own.has_char(ch.unicode_at(0)):
+			complete = false
+			break
+	if complete:
+		return own
+	if _price_font == null:
+		var device := SystemFont.new()
+		device.font_names = PackedStringArray(["sans-serif", "Noto Sans", "Roboto", "Helvetica Neue", "Arial"])
+		device.font_weight = 700
+		device.allow_system_fallback = true
+		var mixed := FontVariation.new()
+		mixed.base_font = own
+		var borrowed: Array[Font] = [device]
+		mixed.fallbacks = borrowed
+		_price_font = mixed
+	return _price_font
+
+
+## Draw a price in `box` (centred unless `align` says left or right), shrunk to fit.
+## Returns the size used.
+static func price_box(ci: CanvasItem, box: Rect2, raw: String, size: int, col: Color,
+		align: int = HORIZONTAL_ALIGNMENT_CENTER) -> int:
+	var s := price_text(raw)
+	if s.is_empty():
+		return size
+	var f := price_font(s)
+	var fitted := size
+	while fitted > 1 and (f.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, fitted).x > box.size.x or f.get_height(fitted) > box.size.y):
+		fitted -= 1
+	var w := f.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, fitted).x
+	var at := box.get_center() - Vector2(w * 0.5, 0)
+	if align == HORIZONTAL_ALIGNMENT_LEFT:
+		at.x = box.position.x
+	elif align == HORIZONTAL_ALIGNMENT_RIGHT:
+		at.x = box.end.x - w
+	if text_audit_enabled:
+		text_audit.append({"text": s, "box": box, "size": fitted, "lines": 1, "width": w, "height": f.get_height(fitted)})
+		raw_text_audit.append({"text": s, "rect": Rect2(at - Vector2(0, f.get_height(fitted) * 0.5), Vector2(w, f.get_height(fitted))),
+			"size": fitted, "canvas": ci.get_script().resource_path if ci.get_script() != null else ""})
+	ci.draw_string(f, _baseline(f, at, fitted), s, HORIZONTAL_ALIGNMENT_LEFT, -1, fitted, col)
+	return fitted
+
+
 ## Frosted blue glass for the continuous arena HUD. Text stays native and crisp.
+## `alpha` fades the whole panel (face, rim and highlights together); 1.0 draws it as ever.
 static func glass_panel(ci: CanvasItem, rect: Rect2, edge: Color = PANEL_EDGE,
-		face: Color = Color(0.035, 0.09, 0.13, 0.82), selected: bool = false) -> void:
+		face: Color = Color(0.035, 0.09, 0.13, 0.82), selected: bool = false, alpha: float = 1.0) -> void:
 	var p := rect.position
 	var e := rect.end
 	var cut := 5.0
@@ -807,13 +995,14 @@ static func glass_panel(ci: CanvasItem, rect: Rect2, edge: Color = PANEL_EDGE,
 		Vector2(e.x - cut, p.y + 3), Vector2(e.x, p.y + cut), Vector2(e.x, e.y - cut),
 		Vector2(e.x - cut, e.y - 3), e - Vector2(cut, 0), Vector2(p.x + cut, e.y),
 		Vector2(p.x + cut, e.y - 3), Vector2(p.x, e.y - cut), p + Vector2(0, cut), p + Vector2(cut, 3)])
-	ci.draw_colored_polygon(shape, face)
-	ci.draw_polyline(shape + PackedVector2Array([shape[0]]), Color(edge, 0.95 if selected else 0.70), 1.6 if selected else 1.0, true)
-	ci.draw_line(p + Vector2(9, 2), Vector2(e.x - 9, p.y + 2), Color(edge.lightened(0.35), 0.62), 1, true)
-	ci.draw_line(Vector2(p.x + 9, e.y - 2), e - Vector2(9, 2), Color(edge, 0.26), 1, true)
+	ci.draw_colored_polygon(shape, Color(face, face.a * alpha))
+	ci.draw_polyline(shape + PackedVector2Array([shape[0]]), Color(edge, (0.95 if selected else 0.70) * alpha), 1.6 if selected else 1.0, true)
+	ci.draw_line(p + Vector2(9, 2), Vector2(e.x - 9, p.y + 2), Color(edge.lightened(0.35), 0.62 * alpha), 1, true)
+	ci.draw_line(Vector2(p.x + 9, e.y - 2), e - Vector2(9, 2), Color(edge, 0.26 * alpha), 1, true)
 	for n in range(9):
-		ci.draw_line(p + Vector2(7, 4 + n), Vector2(e.x - 7, p.y + 4 + n), Color(edge, (0.045 if selected else 0.020) * (1 - n / 9.0)), 1)
+		ci.draw_line(p + Vector2(7, 4 + n), Vector2(e.x - 7, p.y + 4 + n), Color(edge, (0.045 if selected else 0.020) * (1 - n / 9.0) * alpha), 1)
 	if selected:
 		for side in [-1, 1]:
 			var x: float = rect.get_center().x + side * (rect.size.x * 0.5 - 3)
-			ci.draw_circle(Vector2(x, p.y + 7), 1.8, edge.lightened(0.35))
+			var dot := edge.lightened(0.35)
+			ci.draw_circle(Vector2(x, p.y + 7), 1.8, Color(dot, dot.a * alpha))

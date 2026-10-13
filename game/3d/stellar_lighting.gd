@@ -104,6 +104,33 @@ static func apply_arena(world: Node3D) -> void:
 			child.basis = Basis.looking_at(Vector3(-0.40, -0.80, 0.45).normalized(), Vector3.UP)
 			child.directional_shadow_max_distance = 66
 
+## Mood of one arena battlefield (`look` of game/3d/arena_biome.gd): sky, fog, ambient
+## and the colour and strength of the three lights. Their directions and the shadow
+## stay as apply_arena() set them, so actors keep the same form light on every field
+## and only the colour of the place changes around them.
+static func apply_biome(world: Node3D, look: Dictionary) -> void:
+	for child in world.get_children():
+		if child is WorldEnvironment:
+			var env: Environment = child.environment
+			env.background_color = look["sky"]
+			env.fog_light_color = look["fog"]
+			env.fog_density = float(look["fog_density"])
+			env.ambient_light_color = look["ambient"]
+			env.ambient_light_energy = float(look["ambient_energy"])
+			env.glow_intensity = float(look["bloom"])
+			env.tonemap_exposure = float(look["exposure"])
+		elif child is DirectionalLight3D:
+			match String(child.name):
+				"KeyLight":
+					child.light_color = look["key"]
+					child.light_energy = float(look["key_energy"])
+				"FillLight":
+					child.light_color = look["fill"]
+					child.light_energy = float(look["fill_energy"])
+				"RimLight":
+					child.light_color = look["rim"]
+					child.light_energy = float(look["rim_energy"])
+
 ## Transient point light used by effects: warm or elemental pulses that die fast.
 static func pulse_light(color: Color, energy: float, range_value: float) -> OmniLight3D:
 	var light := OmniLight3D.new()

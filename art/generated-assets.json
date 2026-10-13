@@ -619,6 +619,12 @@
       "manifest": "art/models/generated-assets.json",
       "source": "art/models/manifest.json",
       "notes": "Every half-star tier uses the same actual 3D battle rig with additional equipment; per-model camera bounds fit."
+    },
+    {
+      "path": "art/models/terrain_noise.png",
+      "generator": "tools/3d/gen_terrain_noise.py (procedural, numpy; seed 20261013, no external art)",
+      "sha256": "1112c6f8a7462a9d6123026c333cd45cd948849e1688089fc624fa3dfb47e2b5",
+      "notes": "512x512 RGBA tileable pattern for the arena battlefield shaders: R cloud, G distance to cell border, B cell value, A ridge. Every ground, road, liquid and scenery pattern is thresholded from this one texture. See docs/BATTLEFIELD_BIOMES.md."
     }
   ]
 }

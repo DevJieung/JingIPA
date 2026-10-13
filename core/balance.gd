@@ -4,7 +4,36 @@ class_name Balance
 ## 연속 수호전의 초기 밸런스. 원본은 data/game.db의 tuning 표다.
 ## 새 키 등록용 기본값이며 DB에서 승인된 수치를 제자리에 내린다.
 const ARENA_HERO_LIMIT := 6
-const ARENA_BOSS_AT := 1080.0
+## 한 탄에서 보스가 나올 때까지의 시간(초). 한 판은 ARENA_STAGES 탄이다.
+## 2026-10-13: 한 전장 1080초였던 것을 열 탄으로 나눴다(108초 x 10 = 같은 길이).
+const ARENA_BOSS_AT := 108.0
+## 한 판의 탄 수. 탄마다 전장이 무작위로 바뀌고 마지막 탄의 보스를 잡으면 이긴다.
+const ARENA_STAGES := 10
+## 탄이 하나 오를 때마다 몬스터 체력에 곱하는 값. 1탄은 예전 투기장과 같은 체력이다.
+## ★ 이 값을 고치면 tests/arena_balance_check 를 다시 돌려라.
+const ARENA_STAGE_HP_GROW := 1.42
+## 탄이 하나 오를 때마다 처치 골드의 밑값에 더하는 값.
+const ARENA_STAGE_GOLD_STEP := 0.35
+## 탄을 돌파했을 때의 골드(밑값 + 탄 번호 x 증가분)와 수정 회복(최대치 대비 비율).
+const ARENA_STAGE_BONUS := 60
+const ARENA_STAGE_BONUS_STEP := 10
+const ARENA_STAGE_HEAL := 0.15
+## 보스가 쓰러진 뒤 다음 전장으로 넘어가기까지의 연출 시간(초).
+const ARENA_CLEAR_DELAY := 1.8
+## 마지막 탄의 보스 체력에 곱하는 값.
+const ARENA_FINAL_BOSS_HP := 1.5
+## 1탄 보스의 체력 배수. 탄이 오를수록 1.0 으로 차오른다(마지막 탄에서 1.0).
+## 1탄 보스는 영웅이 두셋뿐인 108초에 오므로 「보스」 표의 18배를 그대로 쓰면 벽이 된다.
+const ARENA_BOSS_HP_EARLY := 0.30
+## 「수호자의 가호」 — 한 판에 USES 번까지, 수정이 깨지는 순간 이 비율로 되살아난다.
+## 되살아난 뒤 INVULN 초 동안 수정은 피해를 받지 않고 모든 몬스터가 STUN 초 멎는다.
+## 되살아날 때마다 골드를 받는다: GOLD + GOLD_STEP x 탄(arena_revive_gold).
+const ARENA_REVIVE_USES := 3
+const ARENA_REVIVE_HP := 0.5
+const ARENA_REVIVE_INVULN := 5.0
+const ARENA_REVIVE_STUN := 2.5
+const ARENA_REVIVE_GOLD := 100
+const ARENA_REVIVE_GOLD_STEP := 10
 const ARENA_SUMMON_COST := 70
 const ARENA_CRYSTAL_HP := 1200.0
 const ARENA_HERO_SPEED := 170.0
@@ -29,12 +58,45 @@ const ARENA_FREEZE_DURATION := 5.0
 const ARENA_WARD_COOLDOWN := 30.0
 const ARENA_WARD_SHIELD := 160.0
 const ARENA_WARD_DURATION := 8.0
-## 공용 기술은 한 판(전장 선택부터 보스까지)에 이 횟수만 쓸 수 있다. 쿨타임과 별개다.
+## 공용 기술은 한 판(1탄부터 마지막 보스까지)에 이 횟수만 쓸 수 있다. 쿨타임과 별개다.
 const ARENA_BLAST_USES := 6
 const ARENA_FREEZE_USES := 4
 const ARENA_WARD_USES := 3
 ## 보스 출현 몇 초 전에 입구를 예고하는가.
 const ARENA_BOSS_WARNING := 4.0
+
+## 연속 수호전의 탄별 난이도. 1탄은 예전 투기장 값 그대로이고 탄마다 곱으로 오른다.
+## rank 는 그 탄이 걸린 전장의 험한 정도(1~5)다.
+static func arena_hp(stage: int, rank: int = 1) -> float:
+	return wave_hp(1, rank) * ARENA_HP_SCALE * pow(ARENA_STAGE_HP_GROW, float(maxi(1, stage) - 1))
+
+## 탄 보스의 체력. 일반 몬스터의 곡선에 보스 배수를 곱하되 앞 탄은 덜어 준다.
+static func arena_boss_hp(stage: int, rank: int = 1) -> float:
+	var t := float(clampi(stage, 1, ARENA_STAGES) - 1) / float(maxi(1, ARENA_STAGES - 1))
+	var hp := arena_hp(stage, rank) * float(MKIND["boss"]["hp"]) * lerpf(ARENA_BOSS_HP_EARLY, 1.0, t)
+	return hp * (ARENA_FINAL_BOSS_HP if stage >= ARENA_STAGES else 1.0)
+
+## 탄별 처치 골드(배수 적용 전). 몬스터가 두꺼워지는 만큼 벌이도 따라 오른다.
+static func arena_kill_gold(stage: int, kind: String) -> int:
+	var base := 2.82 + 0.105 + ARENA_STAGE_GOLD_STEP * float(maxi(1, stage) - 1)
+	return int(round(base * float(MKIND[kind]["gold"])))
+
+static func arena_stage_bonus(stage: int) -> int:
+	return ARENA_STAGE_BONUS + ARENA_STAGE_BONUS_STEP * maxi(1, stage)
+
+## 수호자의 가호로 되살아날 때 받는 골드. 늦은 탄일수록 크다.
+static func arena_revive_gold(stage: int) -> int:
+	return ARENA_REVIVE_GOLD + ARENA_REVIVE_GOLD_STEP * maxi(1, stage)
+
+## 그 탄에 어떤 형이 섞이는가를 정하는 옛 탄 번호(Roster._kind_pool · theme_kinds 의 w).
+## 1탄은 떼거리만, 2탄에 쾌속, 3탄에 육중·주술, 4탄부터 면역 몸까지 전부 나온다.
+## 섞이는 종 수는 1~3탄 둘, 4~7탄 셋, 8탄부터 넷이다.
+static func arena_kind_wave(stage: int) -> int:
+	match maxi(1, stage):
+		1: return 1
+		2: return 3
+		3: return 4
+	return 6 if stage < 8 else LAST_WAVE
 
 ## 게임의 숫자가 **전부** 여기 있다. 순수 함수만 두고 화면·저장을 모른다.
 ##

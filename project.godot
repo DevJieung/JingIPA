@@ -30,10 +30,15 @@ config/name.ios="Stellar Defense"
 [autoload]
 
 Save="*res://core/save.gd"
+Store="*res://core/store.gd"
 I18n="*res://core/i18n.gd"
 Run="*res://core/run.gd"
 Sfx="*res://core/sound.gd"
 Arena="*res://core/arena_run.gd"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/GodotGooglePlayBilling/plugin.cfg")
 
 [display]
 

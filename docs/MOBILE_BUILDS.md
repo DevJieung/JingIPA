@@ -26,7 +26,9 @@ Actions 실행의 `stellardefense-apk-ipa` Artifact에 아래 파일이 함께 �
 
 Godot 4.7.1, JDK 17, Android SDK 36을 사용한다. Android 템플릿은 매 빌드에서
 공식 Godot 배포본으로 복원한다. 로컬 ARM 전용 Gradle/aapt2 경로는 커밋하지 않는다.
-앱은 광고 SDK와 네트워크 권한 없이 오프라인으로 실행한다.
+앱은 광고 SDK 없이 오프라인으로 실행한다. 결제 플러그인(Android: Play Billing, iOS: StoreKit 2)이
+들어 있어 Android 매니페스트에 `INTERNET` · `ACCESS_NETWORK_STATE` · `com.android.vending.BILLING`
+권한이 병합된다([STORE.md](STORE.md)). iOS 최소 버전은 15.0 이다.
 
 Linux에서 에셋을 임포트하고 게임 흐름·번역·저장 호환 검사를 실행한 다음 APK와
 Xcode 프로젝트를 내보낸다. macOS에서 그 Xcode 프로젝트를 빌드해 IPA로 묶는다.
@@ -64,7 +66,8 @@ Apple ID로 서명하여 설치한다. 이 파일은 App Store/TestFlight 업로
 ## 비공개 설정과 배포 검사
 
 광고 ID와 광고용 Secret은 사용하지 않는다. `tools/ci/check_no_ads.py`가 APK의
-광고 리소스·DEX 클래스·네트워크/광고 권한을 거부한다. `.env`는 생성 도구 전용이며
+광고 리소스·DEX 클래스·광고 권한을 거부하고, 결제에 필요한 세 권한 밖의 권한이 생기거나
+결제 권한이 빠져도 실패로 본다. `.env`는 생성 도구 전용이며
 APK 빌드는 읽거나 프로젝트 설정에 주입하지 않는다.
 
 생성 도구의 대용량 원본(`art/animation`, `art/concepts`, `art/audio_sources`,

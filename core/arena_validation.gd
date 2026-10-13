@@ -2,11 +2,13 @@ extends RefCounted
 class_name ArenaValidation
 
 ## Reject malformed saves before touching a running battlefield.
+## Version of the arena run snapshot (ArenaRun.snapshot writes it). 3 = stage chain.
+const SAVE_V := 3
 static func number(value: Variant, low: float = 0.0, high: float = INF) -> bool:
 	return (value is int or value is float) and is_finite(float(value)) and float(value) >= low and float(value) <= high
 
-static func point(value: Variant, legacy: bool = false) -> bool:
-	return vector(value) and (ArenaGeometry.LEGACY_RECT.grow(2).has_point(value) if legacy else ArenaGeometry.contains(value, -2))
+static func point(value: Variant) -> bool:
+	return vector(value) and ArenaGeometry.contains(value, -2)
 
 static func vector(value: Variant) -> bool:
 	return value is Vector2 and is_finite(value.x) and is_finite(value.y)
@@ -20,25 +22,44 @@ static func numbers(data: Dictionary, keys: Array, low: float = 0.0) -> bool:
 static func source(value: Variant, count: int) -> bool:
 	return value is int and value >= -1 and value < count
 
+## Runs saved before the stage chain (2026-10-13) cannot be continued: one battlefield
+## for the whole run and flat monster strength have no counterpart in the new rules.
+## Save keeps the lifetime records and drops only such a run (Save._load_checked).
+static func outdated(data: Dictionary) -> bool:
+	return data.get("mode") == "arena" and data.get("v") is int and int(data["v"]) < SAVE_V
+
+## Monster positions are checked against the saved battlefield's roads, so the layout
+## is switched for the check and put back afterwards.
 static func valid(data: Dictionary) -> bool:
-	if data.get("mode") != "arena" or data.get("v") not in [1, 2] or data.get("wave") != 1:
+	var layout := ArenaGeometry.layout()
+	var result := _valid(data)
+	ArenaGeometry.use_layout(layout)
+	return result
+
+static func _valid(data: Dictionary) -> bool:
+	if data.get("mode") != "arena" or data.get("v") != SAVE_V:
 		return false
-	var legacy: bool = data["v"] == 1
-	for key in ["seed", "rng", "phase", "theme_index", "selected", "gold", "lives", "kills", "best_tier", "summon_count"]:
+	for key in ["seed", "rng", "phase", "theme_index", "selected", "gold", "lives", "kills", "best_tier", "summon_count", "stage", "wave"]:
 		if not data.get(key) is int:
 			return false
-	if data["phase"] not in [1, 2, 3, 6] or data.get("modal") not in ["theme", "rite", "shop", "bench", ""]:
+	if data["stage"] < 1 or data["stage"] > Balance.ARENA_STAGES or data["wave"] != data["stage"]:
 		return false
-	if data["modal"] != "rite" and data["phase"] != {"theme":1, "shop":3, "bench":6, "":2}[data["modal"]]:
+	if not data.get("themes") is Array or data["themes"].size() != Balance.ARENA_STAGES:
+		return false
+	for index in data["themes"]:
+		if not index is int or index < 0 or index >= Roster.THEMES.size():
+			return false
+	if data["phase"] not in [1, 2, 3, 6] or data.get("modal") not in ["stage", "rite", "shop", "bench", ""]:
+		return false
+	if data["modal"] != "rite" and data["phase"] != {"stage":1, "shop":3, "bench":6, "":2}[data["modal"]]:
 		return false
 	if data["gold"] < 0 or data["kills"] < 0 or data["summon_count"] < 0 or data["lives"] < 1 or data["lives"] > Balance.MAX_LIVES:
 		return false
 	if data["best_tier"] < -1 or data["best_tier"] > Balance.TIER_MAX:
 		return false
-	if data["theme_index"] < -1 or data["theme_index"] >= Roster.THEMES.size():
+	if data["theme_index"] != data["themes"][data["stage"] - 1]:
 		return false
-	if (data["modal"] == "theme") != (data["theme_index"] == -1):
-		return false
+	ArenaGeometry.use_layout(ArenaGeometry.layout_for_theme(data["theme_index"]))
 	var ids := {}
 	for group in ["heroes", "bench"]:
 		if not data.get(group) is Array or data[group].size() > (Balance.ARENA_HERO_LIMIT if group == "heroes" else Roster.UNITS.size()):
@@ -47,7 +68,7 @@ static func valid(data: Dictionary) -> bool:
 			if not hero is Dictionary or not hero.get("u") is String or Roster.unit_by_id(hero["u"]).is_empty() or ids.has(hero["u"]):
 				return false
 			ids[hero["u"]] = true
-			if not hero.get("t") is int or not hero.get("points") is int or not point(hero.get("p"), legacy):
+			if not hero.get("t") is int or not hero.get("points") is int or not point(hero.get("p")):
 				return false
 			var tier := int(hero["t"])
 			if tier < 0 or tier > Balance.TIER_MAX or hero["points"] < 0:
@@ -108,12 +129,26 @@ static func valid(data: Dictionary) -> bool:
 			return false
 	if not data.get("sim") is Dictionary:
 		return false
-	if data["modal"] == "theme":
-		return data["heroes"].is_empty() and data["bench"].is_empty() and data["sim"].is_empty()
-	var sim: Dictionary = data["sim"]
-	if sim.has("road_revision") and (not sim["road_revision"] is int or sim["road_revision"] < 1):
+	# The first battlefield card comes before the first rite: nobody has been summoned yet.
+	if data["summon_count"] == 0 and not (data["heroes"].is_empty() and data["bench"].is_empty()):
 		return false
-	var current_roads := not legacy and int(sim.get("road_revision", 1)) == ArenaGeometry.ROAD_REVISION
+	if data["modal"] == "" and data["heroes"].is_empty():
+		return false
+	var sim: Dictionary = data["sim"]
+	if not sim.get("road_revision") is int or sim["road_revision"] < 1:
+		return false
+	if sim.get("stage") != data["stage"]:
+		return false
+	# Revivals used: a count, or the flag of saves made while the blessing revived once.
+	if sim.has("revives"):
+		if not sim["revives"] is int or sim["revives"] < 0 or sim["revives"] > Balance.ARENA_REVIVE_USES:
+			return false
+	elif not sim.get("revived") is bool:
+		return false
+	var current_roads: bool = sim["road_revision"] == ArenaGeometry.ROAD_REVISION and sim.get("layout") == ArenaGeometry.layout()
+	for key in ["clear_t", "invuln_t"]:
+		if not number(sim.get(key), 0.0, 60.0):
+			return false
 	for key in ["elapsed", "crystal_hp", "shield", "shield_t", "spawn_t", "curse_t", "surge", "surge_t"]:
 		if not number(sim.get(key)):
 			return false
@@ -126,13 +161,11 @@ static func valid(data: Dictionary) -> bool:
 	for id in ["blast", "freeze", "ward"]:
 		if not number(sim["cooldowns"].get(id)):
 			return false
-	# Per-run skill uses and the boss gate warning arrived on 2026-10-12; older runs omit them.
-	if sim.has("uses"):
-		if not sim["uses"] is Dictionary: return false
-		for id in ["blast", "freeze", "ward"]:
-			if not sim["uses"].get(id) is int or sim["uses"][id] < 0: return false
-	if sim.has("boss_warned") and not sim["boss_warned"] is bool: return false
-	if sim.has("boss_lane") and (not sim["boss_lane"] is int or sim["boss_lane"] < -1 or sim["boss_lane"] >= ArenaGeometry.ROUTE_COUNT): return false
+	if not sim.get("uses") is Dictionary: return false
+	for id in ["blast", "freeze", "ward"]:
+		if not sim["uses"].get(id) is int or sim["uses"][id] < 0: return false
+	if not sim.get("boss_warned") is bool: return false
+	if not sim.get("boss_lane") is int or sim["boss_lane"] < -1 or sim["boss_lane"] >= ArenaGeometry.route_count(): return false
 	for key in ["monsters", "bullets", "zones", "pending", "heroes"]:
 		if not sim.get(key) is Array or sim[key].size() > 10000:
 			return false
@@ -151,7 +184,7 @@ static func valid(data: Dictionary) -> bool:
 		if hero.has("fx_d") and not vector(hero["fx_d"]):
 			return false
 	for mo in sim["monsters"]:
-		if not point(mo.get("pos"), legacy) or not mo.get("m") is Dictionary or not mo.get("path") is PackedVector2Array:
+		if not point(mo.get("pos")) or not mo.get("m") is Dictionary or not mo.get("path") is PackedVector2Array:
 			return false
 		if current_roads and not ArenaGeometry.on_road(mo["pos"]): return false
 		for key in ["hp", "max", "spd", "motion_t", "slow", "slow_t", "stun_t", "stun_cd", "push", "push_left", "push_t", "flash", "burn", "burn_t", "burn_em", "siege_t", "s", "off", "h"]:
@@ -166,7 +199,7 @@ static func valid(data: Dictionary) -> bool:
 		if not mo.get("spawn_id") is int or not mo.get("nav_v") is int or not mo.get("blocked") is bool:
 			return false
 		for at in mo["path"]:
-			if not point(at, legacy) or (current_roads and not ArenaGeometry.on_road(at)):
+			if not point(at) or (current_roads and not ArenaGeometry.on_road(at)):
 				return false
 	for bullet in sim["bullets"]:
 		if not vector(bullet.get("p")) or not vector(bullet.get("v")) or not bullet.get("c") is Color or not bullet.get("crit") is bool:

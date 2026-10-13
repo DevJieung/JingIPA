@@ -33,6 +33,38 @@ extends Harness
 ## Squad b: rhiannon(cast/elec chain) brian(rifle/elec beam) protea(bow/water ricochet)
 ##          conor(rifle/elec) pip(tool/none) finn(sword/elec)
 ## tools/3d/vfx_review.py runs both window sizes and assembles GIF / MP4 / contact sheets.
+##
+## Run-level moments (2026-10-13, --moments; tests/3d/moments_review.py drives it):
+##   first    a fresh run through the game's own flow: the first battlefield's card
+##            (first_card: the reveal waits at age 0), the first rite over it (first_rite)
+##            and the reveal running as the first battle starts (first_NNN)
+##   revive   the crystal breaks through the real _damage_crystal path with the Guardian's
+##            blessing in hand: revive_<NNN> at one 60 Hz tick per frame for the first 1.5 s
+##            (collapse, flash, shockwave, shards), then revive_tail at two ticks per frame
+##            until the aegis has run out; revive_defeat is the same blessing taken on the
+##            defeat screen (Arena.revive_from_defeat: the crystal is already gone), and
+##            resume a run restored inside the untouchable window (no event, only invuln_t)
+##   clear    the stage boss dies among its escort (real _hurt / _reap): the release, the
+##            mend and the scattering escort over the 1.8 s before the world is rebuilt
+##   stage    continues the same run: the paused first frame of the new battlefield under
+##            its card (stage_card), the same frame without the 2D overlay (stage_field),
+##            then the reveal after the card is confirmed. Leftovers are planted just
+##            before the change (a boss arrival, a ward dome, a blast with its queued
+##            light, hits): none of them may be in the paused picture
+##   scatter  a stage boss falls among a crowd spread along every road: each escort is
+##            followed through its halt, its run from the crystal and its end (scatter_NNN
+##            at every 60 Hz tick; the report lists a rectangle per followed body for the
+##            review strips). --scatter-as-kill strips the flag from the events, so the
+##            same crowd dies the ordinary way (scatterkill_NNN): the comparison
+##   final    stage 10: the four-second warning at the gate, the final boss arriving, then
+##            its fall (final_clear: the last clear, the gates sealed) and the still that
+##            the result panel freezes (final_result, final_rest_field). final_settle is
+##            the same victory after a hitch that leaves the effect clock behind
+## --moment revive|clear|stage|final|all, --next-theme N (the battlefield that opens after
+## the clear), --speed 1|2|3 (battle speed the moment is played at).
+## --film WxH draws the game into an off-screen viewport of that size (design canvas
+## 1280x800) and keeps the window tiny: the way to capture on a GPU display without
+## putting a full-size window on the desktop session. Without it the window is captured.
 
 const SQUADS := {
 	"a": ["echo", "kari", "brasa", "jokull", "triton", "limne"],
@@ -46,6 +78,8 @@ var _report: Dictionary = {"sequences": [], "events": {}}
 var _marker_seen := Color(1.0, 0.0, 1.0)
 var _alpha_leaks: PackedStringArray = []
 var _window_scale := Vector2.ZERO
+## Off-screen picture (--film WxH): the game is a child of this viewport instead of the window.
+var film: SubViewport
 
 func _ready() -> void:
 	if not require_no_save(): return
@@ -57,7 +91,11 @@ func _ready() -> void:
 	var squads := SQUADS.keys() if wanted == "all" else [wanted]
 	var theme := int(arg("--theme", "0"))
 	I18n.set_locale("ko")
+	if arg("--film", "") != "": _open_film(arg("--film", ""))
 	var special := false
+	if has_arg("--moments"):
+		special = true
+		await _moments(theme)
 	if has_arg("--dissolve-probe"):
 		special = true
 		await _dissolve_probe(theme)
@@ -78,7 +116,7 @@ func _ready() -> void:
 func _squad(squad: String, theme: int) -> void:
 	Arena.start_run(20261010 + squad.hash() % 1000)
 	main = load("res://game/main.gd").new()
-	add_child(main)
+	_host().add_child(main)
 	await frames(3)
 	main.show_arena()
 	screen = main.screen
@@ -88,6 +126,7 @@ func _squad(squad: String, theme: int) -> void:
 	Arena.close_modal()
 	# The 3D view attaches its world on the first paint.
 	await paint(screen)
+	_quiet()
 	_field(SQUADS[squad])
 	var world: StellarWorld = screen.view_3d.world
 	check(world.vfx != null and world.vfx.get_child_count() >= 6, squad + ": VFX pools are built once at start")
@@ -110,6 +149,7 @@ func _squad(squad: String, theme: int) -> void:
 		# Guardian skills, each through the actual simulator entry point.
 		for skill in ["blast", "freeze", "ward"]:
 			Arena.sim.skill_cooldowns[skill] = 0.0
+			_ensure_targets(6)
 			check(Arena.sim.cast_skill(skill), squad + ": skill casts " + skill)
 			for n in range(22):
 				for k in range(2): await _tick()
@@ -118,7 +158,8 @@ func _squad(squad: String, theme: int) -> void:
 			for k in range(12): await _tick()
 		# The blast once more at every tick: the fall, the impact and the ring reaching R.
 		Arena.sim.skill_cooldowns["blast"] = 0.0
-		check(Arena.sim.cast_skill("blast"), squad + ": blast casts again for the slow capture")
+		_ensure_targets(6)
+		check(Arena.sim.cast_skill("blast"), squad + ": blast casts again for the slow capture (%d monsters, %d casts left)" % [Arena.sim.monsters.size(), Arena.sim.skill_uses_left("blast")])
 		for n in range(18):
 			await _tick()
 			if n == 0: check(_live_skills(world) >= 1, squad + ": the blast occupies one Skills instance once drawn")
@@ -198,7 +239,7 @@ const MARKER := Color(1.0, 0.0, 1.0)
 func _open_arena(theme: int, seed_value: int) -> StellarWorld:
 	Arena.start_run(seed_value)
 	main = load("res://game/main.gd").new()
-	add_child(main)
+	_host().add_child(main)
 	await frames(3)
 	main.show_arena()
 	screen = main.screen
@@ -207,6 +248,7 @@ func _open_arena(theme: int, seed_value: int) -> StellarWorld:
 	Arena.confirm_summon()
 	Arena.close_modal()
 	await paint(screen)
+	_quiet()
 	Arena.heroes.clear()
 	Arena.bench.clear()
 	Arena.sim.refresh_heroes()
@@ -253,7 +295,7 @@ func _body_rect(at: Vector2, height: float, pad: float = 10.0) -> Rect2i:
 		view.project(at, height * 1.25 + 0.2)]
 	var rect := Rect2(points[0], Vector2.ZERO)
 	for point in points: rect = rect.expand(point)
-	var window := Rect2(Vector2.ZERO, Vector2(get_viewport().get_visible_rect().size))
+	var window := Rect2(Vector2.ZERO, Vector2(1280, 800) if film != null else Vector2(get_viewport().get_visible_rect().size))
 	return Rect2i(rect.grow(pad).intersection(window))
 
 ## A canvas rectangle in the pixels of a window screenshot. The scale is measured from an
@@ -262,7 +304,7 @@ func _to_window(rect: Rect2i) -> Rect2i:
 	if _window_scale == Vector2.ZERO:
 		var design := Vector2(float(ProjectSettings.get_setting("display/window/size/viewport_width")),
 			float(ProjectSettings.get_setting("display/window/size/viewport_height")))
-		_window_scale = Vector2(get_viewport().get_texture().get_image().get_size()) / design
+		_window_scale = Vector2(_frame_image().get_size()) / design
 		print("window pixels per canvas unit: ", _window_scale)
 	return Rect2i(Rect2(Vector2(rect.position) * _window_scale, Vector2(rect.size) * _window_scale).grow(1.0))
 
@@ -291,7 +333,7 @@ func _measure_marker(world: StellarWorld, at: Vector2) -> void:
 	screen.queue_redraw()
 	await frames(2)
 	await RenderingServer.frame_post_draw
-	var img := get_viewport().get_texture().get_image()
+	var img := _frame_image()
 	var px := _to_window(Rect2i(Vector2i(screen.view_3d.project(at, 0.0)), Vector2i.ONE)).position
 	_marker_seen = img.get_pixel(px.x, px.y)
 	for child in hidden: child.visible = true
@@ -750,9 +792,9 @@ func _field(ids: Array) -> void:
 	for n in range(26):
 		Arena.sim._spawn(pool[n % pool.size()])
 		var mo: Dictionary = Arena.sim.monsters[-1]
-		var lane := n % ArenaGeometry.ROUTE_COUNT
+		var lane := n % ArenaGeometry.route_count()
 		var path := ArenaGeometry.route_points(lane)
-		mo["pos"] = path[clampi(10 + (n / ArenaGeometry.ROUTE_COUNT) * 6, 0, path.size() - 1)]
+		mo["pos"] = path[clampi(10 + (n / ArenaGeometry.route_count()) * 6, 0, path.size() - 1)]
 		mo["route"] = lane
 		mo["hp"] = float(mo["hp"]) * 0.42
 		mo["max"] = mo["hp"]
@@ -763,11 +805,29 @@ func _field(ids: Array) -> void:
 	screen.view_3d._camera_initialized = true
 	screen.view_3d._apply_camera(Vector3.ZERO)
 
+## A skill needs something to hit: when the squad has cleared the roads (stage 1 monsters
+## are few and frail), stand a few sturdy ones on the lanes again.
+func _ensure_targets(count: int) -> void:
+	if Arena.sim.monsters.size() >= count: return
+	var pool := Roster.theme_pool(Arena.theme_for(1))
+	var lanes := ArenaGeometry.route_count()
+	for n in range(count):
+		Arena.sim._spawn(pool[n % pool.size()])
+		if not Arena.sim.events.is_empty() and String(Arena.sim.events[-1].get("t", "")) == "spawn": Arena.sim.events.pop_back()
+		var mo: Dictionary = Arena.sim.monsters[-1]
+		var path := ArenaGeometry.route_points(n % lanes)
+		mo["pos"] = path[clampi(int(path.size() * (0.55 + 0.06 * float(n / lanes))), 0, path.size() - 2)]
+		mo["route"] = n % lanes
+		mo["hp"] = float(mo["hp"]) * 6.0
+		mo["max"] = mo["hp"]
+	Arena.sim._nav_key = ""
+	Arena.sim._rebuild_navigation()
+
 ## One simulated tick rendered exactly once, like real play: the draw drains the
 ## simulator's events into the world and advances the effect clock by dt. Later
 ## redraws of the same tick (captures) are paused redraws (dt 0).
-func _tick() -> void:
-	screen._process(1.0 / 30.0)
+func _tick(dt: float = 1.0 / 30.0) -> void:
+	screen._process(dt)
 	screen.queue_redraw()
 	await frames(1)
 	screen._draw_dt = 0.0
@@ -789,7 +849,7 @@ func _visible_gate() -> Vector2:
 	var best := ArenaGeometry.route_points(0)[0]
 	var best_margin := -INF
 	var box: Rect2 = screen.view_3d._active_box()
-	for lane in range(ArenaGeometry.ROUTE_COUNT):
+	for lane in range(ArenaGeometry.route_count()):
 		var gate: Vector2 = ArenaGeometry.route_points(lane)[0]
 		var px: Vector2 = screen.view_3d.project(gate, 0.0)
 		var margin := minf(minf(px.x - box.position.x, box.end.x - px.x), minf(px.y - box.position.y, box.end.y - px.y))
@@ -797,6 +857,57 @@ func _visible_gate() -> Vector2:
 			best_margin = margin
 			best = gate
 	return best
+
+func _live_moments(world: StellarWorld) -> int:
+	var n := 0
+	for fx in world.effects:
+		if typeof(fx) == TYPE_DICTIONARY and String(fx.get("vfx", "")) == "moment": n += 1
+	return n
+
+## A live Moments sequence of `kind` (the kind rides in the instance's custom data).
+func _has_moment(world: StellarWorld, kind: int) -> bool:
+	for fx in world.effects:
+		if typeof(fx) == TYPE_DICTIONARY and String(fx.get("vfx", "")) == "moment" and int(round((fx["custom"] as Color).a)) == kind: return true
+	return false
+
+## Uniform scale of the live Moments sequence of `kind` (its basis carries 1 + a distance).
+func _moment_scale(world: StellarWorld, kind: int) -> float:
+	var moments: MultiMeshInstance3D = world.vfx.get_node("Moments")
+	for fx in world.effects:
+		if typeof(fx) == TYPE_DICTIONARY and String(fx.get("vfx", "")) == "moment" and int(round((fx["custom"] as Color).a)) == kind:
+			return moments.multimesh.get_instance_transform(int(fx["slot"])).basis.get_scale().x
+	return -1.0
+
+func _count_bursts(world: StellarWorld, kind: int) -> int:
+	var n := 0
+	for fx in world.effects:
+		if typeof(fx) == TYPE_DICTIONARY and String(fx.get("vfx", "")) == "burst" and int(round((fx["custom"] as Color).a)) == kind: n += 1
+	return n
+
+func _count_moments(world: StellarWorld, kind: int) -> int:
+	var n := 0
+	for fx in world.effects:
+		if typeof(fx) == TYPE_DICTIONARY and String(fx.get("vfx", "")) == "moment" and int(round((fx["custom"] as Color).a)) == kind: n += 1
+	return n
+
+## Live one-shot records of one pool ("burst", "beam", "slash", "skill", "moment").
+func _count_pool(world: StellarWorld, pool: String) -> int:
+	var n := 0
+	for fx in world.effects:
+		if typeof(fx) == TYPE_DICTIONARY and String(fx.get("vfx", "")) == pool: n += 1
+	return n
+
+func _visible_domes(world: StellarWorld) -> int:
+	var n := 0
+	for name in ["Dome0", "Dome1"]:
+		if (world.vfx.get_node(name) as MeshInstance3D).visible: n += 1
+	return n
+
+func _lit_pulses(world: StellarWorld) -> int:
+	var n := 0
+	for i in range(StellarVfx.MAX_LIGHTS):
+		if (world.vfx.get_node("Pulse" + str(i)) as OmniLight3D).visible: n += 1
+	return n
 
 func _live_skills(world: StellarWorld) -> int:
 	var n := 0
@@ -828,3 +939,730 @@ func _pause_freezes(world: StellarWorld) -> bool:
 	var before: float = vfx._clock
 	vfx.update(0.0)
 	return is_equal_approx(vfx._clock, before)
+
+# --------------------------------------------------------------------------- #
+# Off-screen picture (--film) and the run-level moments (--moments)
+# --------------------------------------------------------------------------- #
+## The node the game is added to: the film when there is one, this harness otherwise.
+func _host() -> Node:
+	return film if film != null else self
+
+## The picture a screenshot would show (the film's, or the window's).
+func _frame_image() -> Image:
+	return (film if film != null else get_viewport()).get_texture().get_image()
+
+## Screenshots come from the film when there is one (Harness.snap reads the window).
+func snap(path: String) -> Image:
+	await RenderingServer.frame_post_draw
+	var img := _frame_image()
+	img.save_png(path)
+	return img
+
+## Draw the game off-screen at `spec` (WxH) pixels on the 1280x800 design canvas, the
+## same stretch a window of that size gets, and shrink the window to a GL context holder.
+func _open_film(spec: String) -> void:
+	var parts := spec.split("x")
+	var design := Vector2i(int(ProjectSettings.get_setting("display/window/size/viewport_width")),
+		int(ProjectSettings.get_setting("display/window/size/viewport_height")))
+	film = SubViewport.new()
+	film.name = "Film"
+	film.size = Vector2i(int(parts[0]), int(parts[1])) if parts.size() == 2 else design
+	film.size_2d_override = design
+	film.size_2d_override_stretch = true
+	film.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	film.transparent_bg = false
+	# The root viewport takes these from project settings; a SubViewport does not.
+	film.canvas_item_default_texture_filter = int(ProjectSettings.get_setting("rendering/textures/canvas_textures/default_texture_filter", 1)) as Viewport.DefaultCanvasItemTextureFilter
+	film.set("oversampling_override", float(film.size.x) / float(design.x))
+	film.gui_disable_input = true
+	add_child(film)
+	get_window().size = Vector2i(96, 60)
+
+const MOMENT_SQUAD := ["echo", "kari", "brasa", "jokull", "triton", "limne"]
+
+## The real arena screen in battle on `theme` with six guardians around the crystal and
+## `count` monsters spread along every road of the battlefield's layout.
+func _open_battle(theme: int, seed_value: int, count: int = 22) -> StellarWorld:
+	Arena.start_run(seed_value)
+	main = load("res://game/main.gd").new()
+	_host().add_child(main)
+	await frames(3)
+	main.show_arena()
+	screen = main.screen
+	screen.set_process(false)
+	Arena.choose_theme(theme)
+	Arena.confirm_summon()
+	Arena.close_modal()
+	await paint(screen)
+	_quiet()
+	Arena.heroes.clear()
+	Arena.bench.clear()
+	for i in range(MOMENT_SQUAD.size()):
+		Arena.gain_hero(Roster.unit_by_id(String(MOMENT_SQUAD[i])), 4 + (i % 3) * 2)
+		Arena.heroes[i]["position"] = Balance.ARENA_CENTER + Vector2.from_angle(-PI * 0.5 + i * TAU / 6.0) * 178.0
+	Arena.sim.refresh_heroes()
+	for i in range(Arena.sim.heroes.size()): Arena.sim.heroes[i]["pos"] = Arena.heroes[i]["position"]
+	Arena.selected = -1
+	Arena.sim.monsters.clear()
+	_crowd(count)
+	screen.speed = clampf(arg_float("--speed", 1.0), 1.0, 3.0)
+	screen.view_3d._follow_offset = Vector3.ZERO
+	screen.view_3d._camera_initialized = true
+	screen.view_3d._apply_camera(Vector3.ZERO)
+	return screen.view_3d.world
+
+## A run's first battlefield is announced like every other (arena_stage), and that reveal
+## plays through the first seconds of battle. The scenes staged here stand for the
+## middle of a battle, long after it: release it. (--moment first films it.)
+func _quiet() -> void:
+	(screen.view_3d.world as StellarWorld).vfx._clear_field()
+
+## Monsters of the current battlefield spread from the gates to the plaza along every lane.
+func _crowd(count: int) -> void:
+	var pool := Roster.theme_pool(Arena.theme_for(1))
+	var lanes := ArenaGeometry.route_count()
+	for n in range(count):
+		Arena.sim._spawn(pool[n % pool.size()])
+		if not Arena.sim.events.is_empty() and String(Arena.sim.events[-1].get("t", "")) == "spawn": Arena.sim.events.pop_back()
+		var mo: Dictionary = Arena.sim.monsters[-1]
+		var lane := n % lanes
+		var path := ArenaGeometry.route_points(lane)
+		var along := 0.04 + 0.93 * (float(n / lanes) + 0.5 * float(lane) / float(lanes)) / maxf(1.0, ceilf(float(count) / float(lanes)))
+		mo["pos"] = path[clampi(int(along * float(path.size() - 1)), 0, path.size() - 2)]
+		mo["route"] = lane
+		mo["hp"] = float(mo["hp"]) * 30.0
+		mo["max"] = mo["hp"]
+		mo["vel"] = ArenaGeometry.road_direction(mo["pos"])
+	Arena.sim._nav_key = ""
+	Arena.sim._rebuild_navigation()
+
+## `count` frames of `ticks` steps of `dt` each, saved as <prefix>_NNN.png.
+func _roll(prefix: String, count: int, ticks: int, dt: float, first: int = 0) -> void:
+	for n in range(count):
+		for k in range(ticks): await _tick(dt)
+		screen.queue_redraw()
+		await frames(2)
+		await snap("%s/%s_%03d.png" % [out_dir, prefix, first + n])
+		if screen.view_3d.viewport.get_texture().get_image().detect_alpha() != Image.ALPHA_NONE: _alpha_leaks.append("%s_%03d" % [prefix, first + n])
+
+func _note_moment(prefix: String, count: int, ticks: int, dt: float, extra: Dictionary = {}) -> void:
+	var row := {"prefix": prefix, "frames": count, "ticks_per_frame": ticks, "tick": dt, "digits": 3,
+		"speed": screen.speed if screen != null else 1.0}
+	row.merge(extra)
+	_report["sequences"].append(row)
+
+## Where the canvas shows a logical ground point (design pixels), for the review crops.
+func _px(at: Vector2, height: float = 0.0) -> Array:
+	var p: Vector2 = screen.view_3d.project(at, height)
+	return [roundi(p.x), roundi(p.y)]
+
+func _moments(theme: int) -> void:
+	var only := arg("--moment", "all")
+	if only in ["all", "first"]: await _moment_first(theme)
+	if only in ["all", "revive"]:
+		await _moment_revive(theme)
+		await _moment_resume(theme)
+	if only in ["all", "clear", "stage"]: await _moment_clear_and_stage(theme, only != "stage")
+	if only in ["all", "scatter"]: await _moment_scatter(theme)
+	if only in ["all", "final"]: await _moment_final(theme)
+	check(_alpha_leaks.is_empty(), "moments: the 3D viewport keeps alpha 1 in every captured frame (%d leak, first %s)" % [_alpha_leaks.size(), ", ".join(_alpha_leaks.slice(0, 5))])
+	_alpha_leaks.clear()
+
+## A fresh run through the game's own flow. The first battlefield is announced like every
+## later one: its reveal waits at age 0 under the card and under the first rite, and runs
+## when the first battle starts.
+func _moment_first(theme: int) -> void:
+	Arena.start_run(20261019)
+	# The game draws the battlefield itself; put the field under test first and open it
+	# again as the run does (the card stays up: no tool shortcut past it).
+	Arena.stage_themes[0] = theme
+	Arena.sim = null
+	Arena._open_stage(1)
+	main = load("res://game/main.gd").new()
+	_host().add_child(main)
+	await frames(3)
+	main.show_arena()
+	screen = main.screen
+	screen.set_process(false)
+	screen.speed = clampf(arg_float("--speed", 1.0), 1.0, 3.0)
+	await paint(screen)
+	await paint(screen)
+	var world: StellarWorld = screen.view_3d.world
+	var vfx: StellarVfx = world.vfx
+	var gates := ArenaGeometry.route_count()
+	check(Arena.modal == "stage" and Arena.stage == 1 and Arena.theme_index == theme, "first: the run opens on its first battlefield's card")
+	check(_count_moments(world, StellarVfx.MomentKind.STAGE_SWEEP) == 1 and _count_moments(world, StellarVfx.MomentKind.GATE_BEACON) == gates and _live_moments(world) == 1 + gates,
+		"first: the first battlefield is revealed like every other (%d sequences, %d gates)" % [_live_moments(world), gates])
+	var oldest := 0.0
+	for fx in world.effects:
+		if typeof(fx) == TYPE_DICTIONARY and fx.has("vfx"): oldest = maxf(oldest, float(fx["age"]))
+	check(is_zero_approx(oldest), "first: the picture behind the first card is the reveal at age 0 (%.3f s)" % oldest)
+	await snap(out_dir + "/first_card.png")
+	vfx.get_viewport().get_texture().get_image().save_png(out_dir + "/first_field.png")
+	var clock: float = vfx._clock
+	# The card is confirmed: the run's first rite opens over the same paused field.
+	check(Arena.confirm_stage() and Arena.modal == "rite", "first: the first rite follows the card")
+	screen._track_modal()
+	for n in range(4): await paint(screen)
+	await snap(out_dir + "/first_rite.png")
+	check(not Arena.confirm_summon().is_empty(), "first: the rite summons the first guardian")
+	for n in range(3): await paint(screen)
+	check(is_equal_approx(vfx._clock, clock) and _live_moments(world) == 1 + gates, "first: the reveal waits through the card and the rite (%d sequences)" % _live_moments(world))
+	check(Arena.close_modal() and Arena.modal.is_empty(), "first: the first battle starts")
+	screen._track_modal()
+	var gate_px: Array = []
+	for lane in range(gates): gate_px.append(_px(ArenaGeometry.gate_point(lane, 20.0), 0.6))
+	var reveal := int(round(3.6 * 30.0 / screen.speed))
+	await _roll("first", reveal, 2, 1.0 / 60.0)
+	_note_moment("first", reveal, 2, 1.0 / 60.0, {"crystal": _px(Balance.ARENA_CENTER, 0.9), "gates": gate_px,
+		"stills": ["first_card", "first_field", "first_rite"], "layout": ArenaGeometry.layout(), "theme": theme})
+	for n in range(60): await _tick()
+	check(_live_moments(world) == 0 and not (vfx.get_node("Roads") as MeshInstance3D).visible, "first: the reveal is released when it has played")
+	await _close_arena()
+
+## The crystal's revival through the simulator's own path: a siege blow takes the last
+## health while the Guardian's blessing is still in hand. Then the same blessing bought on
+## the defeat screen (the crystal is already gone when it is taken back).
+func _moment_revive(theme: int) -> void:
+	var world := await _open_battle(theme, 20261013, 24)
+	var vfx: StellarVfx = world.vfx
+	# A few besiegers already at the altar: the wave has to be read against bodies next to it.
+	var pool := Roster.theme_pool(Arena.theme_for(1))
+	for n in range(4):
+		Arena.sim._spawn(pool[(n * 3) % pool.size()])
+		if String(Arena.sim.events[-1].get("t", "")) == "spawn": Arena.sim.events.pop_back()
+		var mo: Dictionary = Arena.sim.monsters[-1]
+		mo["pos"] = Balance.ARENA_CENTER + Vector2.from_angle(0.6 + n * 1.45) * (Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS - 1.0)
+		mo["hp"] = float(mo["hp"]) * 30.0
+		mo["max"] = mo["hp"]
+	for n in range(40): await _tick()
+	var pools_before := vfx.get_child_count()
+	var materials_before := _material_ids(vfx)
+	var moments: MultiMeshInstance3D = vfx.get_node("Moments")
+	var aegis: MeshInstance3D = vfx.get_node("Aegis")
+	check(not moments.visible and not aegis.visible, "revive: the Moments pool and the aegis are hidden while idle")
+	var crystal: Node3D = world.crystals[0]
+	var whole := crystal.scale
+	Arena.sim.crystal_hp = 40.0
+	check(Arena.revive_ready(), "revive: the blessing is in hand before the blow")
+	await _roll("revive", 4, 1, 1.0 / 60.0)
+	Arena.sim._damage_crystal(400.0, Balance.ARENA_CENTER)
+	check(Arena.sim.revives == 1 and Arena.sim.crystal_hp > 0.0, "revive: the simulator revived the crystal")
+	var sec: float = Balance.ARENA_REVIVE_INVULN
+	var step := 1.0 / 60.0 * screen.speed
+	# 1.5 s at every 60 Hz tick, then two ticks a frame until the aegis is gone.
+	var fine := int(round(1.5 / step))
+	var gone := false
+	var whole_again := -1.0
+	var mismatch := 0
+	for n in range(fine):
+		await _roll("revive", 1, 1, 1.0 / 60.0, 4 + n)
+		var age := float(n + 1) * step
+		if crystal.scale.y < 0.01 * whole.y: gone = true
+		if whole_again < 0.0 and gone and crystal.scale.is_equal_approx(whole): whole_again = age
+		if n == 0: check(moments.visible and _live_moments(world) == 1, "revive: the sequence occupies one Moments instance")
+		# The aegis is up exactly while the simulator keeps the crystal untouchable.
+		if age > StellarVfx.REVIVE_FLASH + 0.05 and aegis.visible != (Arena.sim.invuln_t > 0.0): mismatch += 1
+	check(gone, "revive: the crystal shatters before it reforms")
+	check(whole_again > 0.0 and whole_again <= StellarVfx.REVIVE_WHOLE + 0.2, "revive: the crystal is whole again %.2f s after the blow" % whole_again)
+	var rest := int(ceil((sec + 0.9 - 1.5) / (2.0 * step)))
+	for n in range(rest):
+		await _roll("revive_tail", 1, 2, 1.0 / 60.0, n)
+		if aegis.visible != (Arena.sim.invuln_t > 0.0): mismatch += 1
+	# The effect clock runs up to one tick ahead of the simulator's fixed steps.
+	check(mismatch <= 2, "revive: the aegis is visible exactly while the crystal cannot be hurt (%d frames differ)" % mismatch)
+	_note_moment("revive", 4 + fine, 1, 1.0 / 60.0, {"crystal": _px(Balance.ARENA_CENTER, 0.9), "event_frame": 4})
+	_note_moment("revive_tail", rest, 2, 1.0 / 60.0, {"crystal": _px(Balance.ARENA_CENTER, 0.9), "starts_at": 1.5 / screen.speed})
+	check(Arena.sim.invuln_t <= 0.0, "revive: the capture runs past the untouchable window")
+	check(not moments.visible and not aegis.visible and _live_moments(world) == 0, "revive: nothing of the moment is left once the aegis has run out")
+	check(crystal.scale.is_equal_approx(whole), "revive: the crystal keeps its own scale afterwards")
+	check(vfx.get_child_count() == pools_before, "revive: no VFX node is created by the moment")
+	check(_material_ids(vfx) == materials_before, "revive: no VFX material is created by the moment")
+	check(world.effects.size() <= 72, "revive: one-shot effects respect the shared 72 budget")
+	check(_pause_freezes(world), "revive: a paused battle (dt 0) does not advance the effect clock")
+	# The same blessing bought on the defeat screen: the run has ended, the crystal is gone.
+	# (All of the run's revivals spent stands in for a player who does not own it yet.)
+	Arena.sim.revives = Balance.ARENA_REVIVE_USES
+	Arena.sim.crystal_hp = 1.0
+	Arena.sim._damage_crystal(50.0, Balance.ARENA_CENTER)
+	check(not Arena.running and Arena.modal == "result", "revive: without the blessing the same blow ends the run")
+	screen._track_modal()
+	for n in range(3): await paint(screen)
+	check(not crystal.visible, "revive: the broken crystal is hidden on the defeat screen")
+	Arena.sim.revives = 0
+	check(Arena.revive_from_defeat(), "revive: the blessing takes the defeat back")
+	screen._track_modal()
+	var late := int(round(1.3 / step))
+	var seen_whole := false
+	for n in range(late):
+		await _roll("revive_defeat", 1, 1, 1.0 / 60.0, n)
+		if n < int(0.4 / step) and crystal.visible and crystal.scale.y > 0.5 * whole.y: seen_whole = true
+	check(not seen_whole, "revive: taken back from a defeat, the crystal does not pop in whole before it reforms")
+	check(crystal.scale.is_equal_approx(whole), "revive: the crystal is whole after the defeat was taken back")
+	_note_moment("revive_defeat", late, 1, 1.0 / 60.0, {"crystal": _px(Balance.ARENA_CENTER, 0.9)})
+	await _close_arena()
+
+## A run restored inside the revival's untouchable window: there is no arena_revive event,
+## only the simulator's remaining invuln_t. The rest of the aegis must be shown, without
+## the burst, and end with the window.
+func _moment_resume(theme: int) -> void:
+	var world := await _open_battle(theme, 20261016, 12)
+	var vfx: StellarVfx = world.vfx
+	for n in range(20): await _tick()
+	var aegis: MeshInstance3D = vfx.get_node("Aegis")
+	var crystal: Node3D = world.crystals[0]
+	var whole := crystal.scale
+	check(not aegis.visible, "resume: no aegis before the window")
+	Arena.sim.revives = 1
+	Arena.sim.invuln_t = 3.0
+	var bursts_before := _count_bursts(world, StellarVfx.Kind.SEAL)
+	await _roll("resume", 1, 1, 1.0 / 60.0)
+	check(aegis.visible and _has_moment(world, StellarVfx.MomentKind.REVIVE) and _live_moments(world) == 1,
+		"resume: the rest of the aegis is shown for a restored run (aegis %s, %d sequences)" % [aegis.visible, _live_moments(world)])
+	check(crystal.scale.is_equal_approx(whole), "resume: the crystal is not shattered again")
+	check(_count_bursts(world, StellarVfx.Kind.SEAL) == bursts_before and vfx._delayed.is_empty(), "resume: no burst, no seals")
+	var step := 1.0 / 60.0 * screen.speed
+	var count := int(ceil(3.4 / (4.0 * step)))
+	var mismatch := 0
+	for n in range(count):
+		await _roll("resume", 1, 4, 1.0 / 60.0, 1 + n)
+		if aegis.visible != (Arena.sim.invuln_t > 0.0): mismatch += 1
+	check(mismatch <= 1, "resume: the aegis ends with the simulator's window (%d frames differ)" % mismatch)
+	check(not aegis.visible and Arena.sim.invuln_t <= 0.0, "resume: the capture runs past the window")
+	_note_moment("resume", 1 + count, 4, 1.0 / 60.0, {"crystal": _px(Balance.ARENA_CENTER, 0.9)})
+	# The window also carries over a stage change. The change releases everything born on
+	# the old field; the aegis comes back from the simulator's state, where it stood.
+	Arena.sim.invuln_t = 3.0
+	for n in range(12): await _tick(1.0 / 60.0)
+	var left: float = Arena.sim.invuln_t
+	check(aegis.visible and left > 2.0, "resume: the aegis is up again before the stage change")
+	Arena.advance_stage()
+	check(Arena.modal == "stage", "resume: the next battlefield opened under its card")
+	screen._track_modal()
+	await _tick(1.0 / 60.0)
+	await paint(screen)
+	var revive_age := -1.0
+	for fx in world.effects:
+		if typeof(fx) == TYPE_DICTIONARY and String(fx.get("vfx", "")) == "moment" and int(round((fx["custom"] as Color).a)) == StellarVfx.MomentKind.REVIVE:
+			revive_age = float(fx["age"])
+	var expected: float = Balance.ARENA_REVIVE_INVULN - Arena.sim.invuln_t
+	check(aegis.visible and absf(revive_age - expected) < 0.06, "resume: across a stage change the aegis stands where the window stands (age %.2f s, window says %.2f s)" % [revive_age, expected])
+	check(_live_moments(world) == 2 + ArenaGeometry.route_count() and _count_bursts(world, StellarVfx.Kind.SEAL) == 0 and vfx._delayed.is_empty(),
+		"resume: under the new card there is the aegis and the reveal, no burst (%d sequences, %d gates)" % [_live_moments(world), ArenaGeometry.route_count()])
+	await snap(out_dir + "/resume_stage_card.png")
+	await _close_arena()
+
+## A stage boss dies among its escort, the world is rebuilt 1.8 s later and the next
+## battlefield opens under its card; then the card is confirmed and the reveal plays.
+func _moment_clear_and_stage(theme: int, keep_clear: bool) -> void:
+	var world := await _open_battle(theme, 20261014, 26)
+	var next_theme := int(arg("--next-theme", str((theme + 29) % Roster.THEMES.size())))
+	Arena.stage_themes[Arena.stage] = next_theme
+	Arena.sim.crystal_hp = Arena.sim.crystal_max * 0.55
+	# The boss half way down a road, inside the frame.
+	Arena.sim._spawn(Arena.boss_for(Arena.stage))
+	if String(Arena.sim.events[-1].get("t", "")) == "spawn": Arena.sim.events.pop_back()
+	var boss: Dictionary = Arena.sim.monsters[-1]
+	var path := ArenaGeometry.route_points(0)
+	boss["pos"] = path[int(path.size() * 0.72)]
+	boss["route"] = 0
+	# It must fall when the capture says so, not to the squad during the run-up
+	# (at 3x the run-up is four seconds of fighting).
+	boss["hp"] = 1.0e8
+	boss["max"] = 1.0e8
+	Arena.sim.boss_spawned = true
+	Arena.sim.boss_warned = true
+	Arena.sim._nav_key = ""
+	Arena.sim._rebuild_navigation()
+	for n in range(40): await _tick()
+	var boss_at: Vector2 = boss["pos"]
+	if keep_clear: await _roll("clear", 4, 1, 1.0 / 60.0)
+	Arena.sim._cache_positions()
+	check(Arena.sim.monsters.has(boss) and Arena.sim.clear_t <= 0.0, "clear: the boss is still standing when the capture kills it")
+	boss_at = boss["pos"]
+	Arena.sim._hurt(Arena.sim.monsters.find(boss), 1.0e9, false, -1, "none", false)
+	Arena.sim._reap()
+	check(Arena.sim.clear_t > 0.0 and Arena.sim.monsters.is_empty(), "clear: the stage is cleared and the escort removed")
+	var sec: float = Balance.ARENA_CLEAR_DELAY
+	var count := int(round((sec - 0.05) * 60.0 / screen.speed))
+	if keep_clear:
+		await _roll("clear", count, 1, 1.0 / 60.0, 4)
+		_note_moment("clear", 4 + count, 1, 1.0 / 60.0, {"crystal": _px(Balance.ARENA_CENTER, 0.9), "boss": _px(boss_at, 1.2), "event_frame": 4})
+	else:
+		await _tick(1.0 / 60.0)
+	# The release knows where the boss fell: its instance carries 1 + that distance, and
+	# what is left of the boss flows from there to the crystal.
+	var link := _moment_scale(world, StellarVfx.MomentKind.STAGE_CLEAR)
+	var boss_distance := StellarWorld.world(boss_at).distance_to(StellarWorld.world(Balance.ARENA_CENTER))
+	check(absf(link - 1.0 - boss_distance) < 0.2, "clear: the release is linked to where the boss fell (%.2f u from the crystal, instance carries %.2f)" % [boss_distance, link - 1.0])
+	# Leftovers that would outlive the change: a boss arrival (2.4 s), a ward dome, a
+	# blast whose big light is still queued, a few hits. The world is paused under the
+	# card, so anything still alive there would stay frozen on the new field.
+	var planted: Vector2 = Balance.ARENA_CENTER + Vector2(-170, 120)
+	world.vfx.arena_event({"t": "arena_boss", "p": planted})
+	world.vfx.arena_event({"t": "arena_ward", "p": Balance.ARENA_CENTER, "r": Balance.ALTAR_R})
+	world.vfx.arena_event({"t": "arena_blast", "p": Balance.ARENA_CENTER + Vector2(160, 130), "r": Balance.ARENA_BLAST_RADIUS})
+	for n in range(4): world.vfx.event({"t": "hit", "p": Balance.ARENA_CENTER + Vector2(-120 + n * 70, -150), "c": Color("#ffcc66"), "em": 1.0})
+	check(_live_skills(world) >= 2 and not world.vfx._delayed.is_empty() and _visible_domes(world) >= 1,
+		"stage: leftovers are planted before the change (%d skills, %d queued, %d domes)" % [_live_skills(world), world.vfx._delayed.size(), _visible_domes(world)])
+	# Run to the stage change: the card opens over the freshly built field.
+	var guard := 0
+	while Arena.modal != "stage" and guard < 240:
+		await _tick(1.0 / 60.0)
+		guard += 1
+	check(Arena.modal == "stage" and Arena.theme_index == next_theme, "stage: the next battlefield opened under its card")
+	# Everything born before the change is released in the frame the world is rebuilt in;
+	# what is live now is the reveal alone: one sweep and one beacon per gate.
+	check(_live_moments(world) == 1 + ArenaGeometry.route_count(), "stage: the clear is gone and the reveal is one sweep and a beacon per gate (%d sequences, %d gates)" % [_live_moments(world), ArenaGeometry.route_count()])
+	check(_live_skills(world) == 0 and _count_pool(world, "burst") == 0 and world.vfx._delayed.is_empty() and _visible_domes(world) == 0,
+		"stage: nothing of the previous field is left under the card (%d skills, %d bursts, %d queued, %d domes)" % [_live_skills(world), _count_pool(world, "burst"), world.vfx._delayed.size(), _visible_domes(world)])
+	check(_lit_pulses(world) <= 1, "stage: the only pulse light under the card is the reveal's own (%d lit)" % _lit_pulses(world))
+	check((world.vfx.get_node("Roads") as MeshInstance3D).visible, "stage: the road ribbons of the new layout are up")
+	await paint(screen)
+	await paint(screen)
+	await snap(out_dir + "/stage_card.png")
+	world.vfx.get_viewport().get_texture().get_image().save_png(out_dir + "/stage_field.png")
+	var gates: Array = []
+	for lane in range(ArenaGeometry.route_count()): gates.append(_px(ArenaGeometry.gate_point(lane, 20.0), 0.6))
+	# A paused redraw must not move the reveal, and its first frame is exactly age 0.
+	var clock: float = world.vfx._clock
+	var youngest := INF
+	for fx in world.effects:
+		if typeof(fx) == TYPE_DICTIONARY and String(fx.get("vfx", "")) == "moment": youngest = minf(youngest, float(fx["age"]))
+	check(is_zero_approx(youngest), "stage: the picture behind the card is the reveal at age 0 (%.3f s)" % youngest)
+	for n in range(6):
+		screen.queue_redraw()
+		await frames(1)
+	check(is_equal_approx(world.vfx._clock, clock), "stage: the reveal waits while the card is open")
+	check(Arena.confirm_stage(), "stage: the card is confirmed")
+	screen._track_modal()
+	var reveal := int(round(3.6 * 30.0 / screen.speed))
+	await _roll("stage", reveal, 2, 1.0 / 60.0)
+	_note_moment("stage", reveal, 2, 1.0 / 60.0, {"crystal": _px(Balance.ARENA_CENTER, 0.9), "gates": gates,
+		"stills": ["stage_card", "stage_field"], "layout": ArenaGeometry.layout(), "theme": next_theme})
+	for n in range(40): await _tick()
+	check(_live_moments(world) == 0 and not (world.vfx.get_node("Moments") as MultiMeshInstance3D).visible
+		and not (world.vfx.get_node("Roads") as MeshInstance3D).visible, "stage: the reveal is released when it has played")
+	check(world.effects.size() <= 72, "stage: one-shot effects respect the shared 72 budget")
+	await _close_arena()
+
+## A stage boss falls among a crowd spread along every road. The escort must leave, not
+## die: every body is followed through its halt, its run from the crystal and its end,
+## against the haze StellarVfx draws for it.
+func _moment_scatter(theme: int) -> void:
+	var as_kill := has_arg("--scatter-as-kill")
+	var prefix := "scatterkill" if as_kill else "scatter"
+	var world := await _open_battle(theme, 20261018, 30)
+	var vfx: StellarVfx = world.vfx
+	Arena.sim._spawn(Arena.boss_for(Arena.stage))
+	if String(Arena.sim.events[-1].get("t", "")) == "spawn": Arena.sim.events.pop_back()
+	var boss: Dictionary = Arena.sim.monsters[-1]
+	var path := ArenaGeometry.route_points(0)
+	boss["pos"] = path[int(path.size() * 0.5)]
+	boss["route"] = 0
+	boss["hp"] = 1.0e8
+	boss["max"] = 1.0e8
+	Arena.sim.boss_spawned = true
+	Arena.sim.boss_warned = true
+	Arena.sim._nav_key = ""
+	Arena.sim._rebuild_navigation()
+	for n in range(40): await _tick()
+	await _roll(prefix, 4, 1, 1.0 / 60.0)
+	check(Arena.sim.monsters.has(boss) and Arena.sim.clear_t <= 0.0, "scatter: the boss is still standing when the capture kills it")
+	# Everybody that is about to be sent away, where the simulator has it now.
+	var tracked: Dictionary = {}
+	for mo in Arena.sim.monsters:
+		if mo == boss: continue
+		var sid := int(mo.get("spawn_id", 0))
+		var node: Node3D = world.monster_nodes.get(sid)
+		if node == null or not node.has_method("motion_state"): continue
+		var at: Vector2 = BattleSim.mpos(mo)
+		tracked[sid] = {"at": at, "node": node, "id": String(mo["m"]["id"]), "wait": StellarVfx.scatter_delay(at),
+			"heading": StellarVfx.scatter_heading(at, sid), "gone": -1.0, "run": 0.0, "moved_early": 0.0, "bad": "",
+			"height": _body_height(node), "haze": -1.0}
+	var boss_sid := int(boss["spawn_id"])
+	var boss_node: Node3D = world.monster_nodes.get(boss_sid)
+	Arena.sim._cache_positions()
+	Arena.sim._hurt(Arena.sim.monsters.find(boss), 1.0e9, false, -1, "none", false)
+	Arena.sim._reap()
+	check(Arena.sim.clear_t > 0.0 and Arena.sim.monsters.is_empty(), "scatter: the stage is cleared and the escort removed")
+	var flagged := 0
+	for e in Arena.sim.events:
+		if String(e.get("t", "")) == "die" and bool(e.get("scatter", false)):
+			flagged += 1
+			if as_kill: e.erase("scatter")
+	check(flagged == tracked.size() and flagged >= 20, "scatter: every escort is sent away by a die event with scatter (%d events, %d bodies)" % [flagged, tracked.size()])
+	var step := 1.0 / 60.0 * screen.speed
+	var count := int(round(1.3 / step))
+	var seen_bursts: Dictionary = {}
+	var last_alive := 0.0
+	for n in range(count):
+		await _roll(prefix, 1, 1, 1.0 / 60.0, 4 + n)
+		var age := float(n + 1) * step
+		if n == 0:
+			check(is_instance_valid(boss_node) and String(boss_node.motion_state()["death"]) == "die", "scatter: the boss itself dies the ordinary death")
+		# The haze of each body, the first frame it exists.
+		for fx in world.effects:
+			if typeof(fx) != TYPE_DICTIONARY or String(fx.get("vfx", "")) != "burst": continue
+			if int(round((fx["custom"] as Color).a)) != StellarVfx.Kind.SCATTER: continue
+			var key := "%d:%d" % [int(fx["slot"]), int(fx["gen"])]
+			if seen_bursts.has(key): continue
+			var origin: Vector3 = (vfx.get_node("Bursts") as MultiMeshInstance3D).multimesh.get_instance_transform(int(fx["slot"])).origin
+			seen_bursts[key] = true
+			for sid in tracked:
+				var row: Dictionary = tracked[sid]
+				if float(row["haze"]) < 0.0 and StellarWorld.world(row["at"]).distance_to(origin) < 0.06:
+					row["haze"] = age - float(fx["age"])
+					break
+		if as_kill: continue
+		for sid in tracked:
+			var row: Dictionary = tracked[sid]
+			if float(row["gone"]) >= 0.0: continue
+			# The world frees a body when its presentation is over: look before touching it.
+			if not is_instance_valid(row["node"]) or not world.monster_nodes.has(sid):
+				row["gone"] = age
+				continue
+			var node: Node3D = row["node"]
+			last_alive = age
+			var state: Dictionary = node.motion_state()
+			var pivot: Transform3D = state["pivot"]
+			# Where the pivot stands along the body's own way out, in world units.
+			var away: Vector2 = row["heading"]
+			var offset: Vector3 = node.global_transform.basis * pivot.origin
+			var run := offset.dot(Vector3(away.x, 0.0, away.y))
+			if String(state["death"]) != "scatter": row["bad"] = "death kind " + String(state["death"])
+			if float(state["die"]) > 0.0: row["bad"] = "the Die clip is blended in"
+			if absf(pivot.basis.get_euler().x) > 0.30: row["bad"] = "it topples (pitch %.2f)" % pivot.basis.get_euler().x
+			if pivot.origin.y < -0.02: row["bad"] = "it sinks (%.2f)" % pivot.origin.y
+			if age < float(row["wait"]) - step * 0.5:
+				row["moved_early"] = maxf(float(row["moved_early"]), Vector2(offset.x, offset.z).length())
+				if float(state["dissolve"]) > 0.0: row["bad"] = "it thins before the wave arrives"
+			else:
+				if run < float(row["run"]) - 0.001: row["bad"] = "it comes back (%.2f after %.2f)" % [run, float(row["run"])]
+				row["run"] = maxf(float(row["run"]), run)
+	if not as_kill:
+		var bad := PackedStringArray()
+		var slowest := 0.0
+		var early := 0.0
+		var shortest_run := INF
+		var late := 0
+		var no_haze := 0
+		var haze_off := 0.0
+		for sid in tracked:
+			var row: Dictionary = tracked[sid]
+			if String(row["bad"]) != "": bad.append("%s: %s" % [row["id"], row["bad"]])
+			var gone := float(row["gone"])
+			if gone < 0.0: late += 1
+			slowest = maxf(slowest, gone)
+			early = maxf(early, float(row["moved_early"]))
+			shortest_run = minf(shortest_run, float(row["run"]))
+			var length := gone - float(row["wait"])
+			if gone >= 0.0 and (length < NativeMonsterModel.FLEE_SEC * 0.9 - step or length > NativeMonsterModel.FLEE_SEC * 1.1 + 2.0 * step):
+				bad.append("%s: left %.2f s after the wave (run length %.2f)" % [row["id"], length, NativeMonsterModel.FLEE_SEC])
+			if float(row["haze"]) < 0.0: no_haze += 1
+			else: haze_off = maxf(haze_off, absf(float(row["haze"]) - float(row["wait"])))
+		check(bad.is_empty(), "scatter: no body dies, topples, sinks, thins early or comes back (%d wrong, first: %s)" % [bad.size(), ", ".join(bad.slice(0, 4))])
+		check(late == 0 and slowest <= 1.2, "scatter: every body has left %.2f s after the boss fell (%d still there at 1.3 s; the world keeps bodies 1.6 s, the next field is built at %.1f s)" % [slowest, late, Balance.ARENA_CLEAR_DELAY])
+		check(early < 0.02, "scatter: a body stays where it is until the wave reaches it (largest early move %.3f u)" % early)
+		check(shortest_run > NativeMonsterModel.FLEE_DIST * 0.5, "scatter: every body runs away from the crystal (shortest run seen %.2f u of %.2f)" % [shortest_run, NativeMonsterModel.FLEE_DIST])
+		check(no_haze == 0 and haze_off <= step * 2.0 + 0.001, "scatter: each body's haze is born when its run starts (%d without haze, largest offset %.3f s)" % [no_haze, haze_off])
+		# The boss itself may still be falling (a golem king topples for 1.45 s).
+		var held := 0
+		for sid in world._dying:
+			if int(sid) != boss_sid: held += 1
+		check(held == 0, "scatter: the world holds no escort back (%d retained)" % held)
+	# A few bodies to look at closely: spread from the first the wave reaches to the last.
+	var order: Array = tracked.keys()
+	order.sort_custom(func(a, b) -> bool: return float(tracked[a]["wait"]) < float(tracked[b]["wait"]))
+	var bodies: Array = []
+	var box: Rect2 = screen.view_3d._active_box().grow(-30)
+	var used: Array[Rect2] = []
+	# Walk the list in strides so the picks cover near, middle and far bodies.
+	var visit: Array = []
+	for stride in [5, 3, 2, 1]:
+		for pick in range(0, order.size(), stride):
+			if not visit.has(order[pick]): visit.append(order[pick])
+	for sid in visit:
+		if bodies.size() >= 8: break
+		var row: Dictionary = tracked[sid]
+		var at: Vector2 = row["at"]
+		var out: Vector2 = at + Vector2(row["heading"]) * NativeMonsterModel.FLEE_DIST * 1.25 * StellarWorld.UNIT
+		var tall: float = row["height"]
+		var rect := Rect2(screen.view_3d.project(at, 0.0), Vector2.ZERO)
+		for point in [screen.view_3d.project(out, 0.0), screen.view_3d.project(at, tall * 1.3 + 0.5), screen.view_3d.project(out, tall + 0.7),
+				screen.view_3d.project(at + Vector2(-40, 0), 0.0), screen.view_3d.project(at + Vector2(40, 0), 0.0), screen.view_3d.project(at + Vector2(0, 40), 0.0)]:
+			rect = rect.expand(point)
+		rect = rect.grow(12)
+		if not box.encloses(rect): continue
+		var crowded := false
+		for other in used: crowded = crowded or other.grow(-10).intersects(rect)
+		if crowded: continue
+		used.append(rect)
+		bodies.append({"label": row["id"], "rect": _rect_row(Rect2i(rect)), "wait": snappedf(float(row["wait"]), 0.001)})
+	bodies.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["wait"]) < float(b["wait"]))
+	_note_moment(prefix, 4 + count, 1, 1.0 / 60.0, {"crystal": _px(Balance.ARENA_CENTER, 0.9), "event_frame": 4, "bodies": bodies,
+		"crowd": tracked.size()})
+	await _close_arena()
+
+## Stage 10: the warning at a gate inside the frame, then the final boss.
+func _moment_final(theme: int) -> void:
+	var world := await _open_battle(theme, 20261015, 18)
+	Arena.stage = Balance.ARENA_STAGES
+	Arena.wave = Arena.stage
+	Arena.sim.stage = Arena.stage
+	Arena.sim.wave = Arena.stage
+	check(Arena.sim.final_stage(), "final: the simulator is on the last stage")
+	for n in range(30): await _tick()
+	var lane := 0
+	var best := -INF
+	var box: Rect2 = screen.view_3d._active_box()
+	for i in range(ArenaGeometry.route_count()):
+		var px: Vector2 = screen.view_3d.project(ArenaGeometry.gate_point(i, 10.0), 0.0)
+		var margin := minf(minf(px.x - box.position.x, box.end.x - px.x), minf(px.y - box.position.y - 60.0, box.end.y - px.y))
+		if margin > best:
+			best = margin
+			lane = i
+	# The simulator's own warning, on the chosen gate; its boss then uses that gate.
+	var warning: float = Balance.ARENA_BOSS_WARNING
+	Arena.sim.elapsed = Balance.ARENA_BOSS_AT - warning
+	Arena.sim.boss_warned = true
+	Arena.sim.boss_lane = lane
+	Arena.sim.events.append({"t": "arena_boss_warning", "p": Arena.sim.boss_gate(), "sec": warning, "lane": lane})
+	var gate := _px(Arena.sim.boss_gate(), 1.2)
+	var warn := int(round((warning - 0.05) * 30.0 / screen.speed))
+	await _roll("final_warn", 1, 2, 1.0 / 60.0)
+	# The warning event carries no `final`: the effect reads the last stage from the simulator.
+	check(_has_moment(world, StellarVfx.MomentKind.FINAL_WARNING) and _live_skills(world) >= 1, "final: the warning adds the dark sun to the gate's own gather")
+	await _roll("final_warn", warn - 1, 2, 1.0 / 60.0, 1)
+	_note_moment("final_warn", warn, 2, 1.0 / 60.0, {"gate": gate})
+	var guard := 0
+	while not Arena.sim.boss_spawned and guard < 30:
+		await _tick(1.0 / 60.0)
+		guard += 1
+	check(Arena.sim.boss_spawned and guard > 0, "final: the boss stepped in after the warning")
+	check(_has_moment(world, StellarVfx.MomentKind.FINAL_BURST) and _live_skills(world) >= 1, "final: the arrival adds the dark sun's burst to the gate's own (%d + %d sequences)" % [_live_skills(world), _live_moments(world)])
+	var fine := int(round(1.4 * 60.0 / screen.speed))
+	await _roll("final_burst", fine, 1, 1.0 / 60.0)
+	var rest := int(round(2.6 * 30.0 / screen.speed))
+	await _roll("final_tail", rest, 2, 1.0 / 60.0)
+	_note_moment("final_burst", fine, 1, 1.0 / 60.0, {"gate": gate})
+	_note_moment("final_tail", rest, 2, 1.0 / 60.0, {"gate": gate, "starts_at": 1.4})
+	# The last boss falls: the same clear beat with `final`, then the run ends in victory
+	# and the result panel freezes the picture.
+	var vfx: StellarVfx = world.vfx
+	var boss: Dictionary = {}
+	for mo in Arena.sim.monsters:
+		if String(mo["kind"]) == "boss": boss = mo
+	check(not boss.is_empty(), "final: the last boss is on the field")
+	if boss.is_empty():
+		await _close_arena()
+		return
+	Arena.sim.crystal_hp = Arena.sim.crystal_max * 0.6
+	var boss_px := _px(boss["pos"], 1.2)
+	await _roll("final_clear", 4, 1, 1.0 / 60.0)
+	Arena.sim._cache_positions()
+	Arena.sim._hurt(Arena.sim.monsters.find(boss), 1.0e12, false, -1, "none", false)
+	Arena.sim._reap()
+	check(Arena.sim.clear_t > 0.0 and Arena.running, "final: the last boss gets the clear beat before the run ends")
+	var sec: float = Balance.ARENA_CLEAR_DELAY
+	var count := int(round((sec - 0.05) * 60.0 / screen.speed))
+	await _roll("final_clear", 1, 1, 1.0 / 60.0, 4)
+	var gates := ArenaGeometry.route_count()
+	check(_has_moment(world, StellarVfx.MomentKind.STAGE_CLEAR) and _count_moments(world, StellarVfx.MomentKind.GATE_SEAL) == gates,
+		"final: the last clear seals every gate (%d seals, %d gates)" % [_count_moments(world, StellarVfx.MomentKind.GATE_SEAL), gates])
+	await _roll("final_clear", count - 1, 1, 1.0 / 60.0, 5)
+	_note_moment("final_clear", 4 + count, 1, 1.0 / 60.0, {"crystal": _px(Balance.ARENA_CENTER, 0.9), "boss": boss_px, "event_frame": 4})
+	var guard2 := 0
+	while Arena.modal != "result" and guard2 < 60:
+		await _tick(1.0 / 60.0)
+		guard2 += 1
+	check(Arena.modal == "result" and Arena.sim.won, "final: the run ends in victory when the beat is over")
+	screen._track_modal()
+	await paint(screen)
+	await paint(screen)
+	await snap(out_dir + "/final_result.png")
+	vfx.get_viewport().get_texture().get_image().save_png(out_dir + "/final_rest_field.png")
+	# The frozen picture is the last clear at rest and nothing else.
+	var youngest := INF
+	var held := 0
+	for fx in world.effects:
+		if typeof(fx) != TYPE_DICTIONARY or not fx.has("vfx"): continue
+		if bool(fx.get("rest", false)):
+			held += 1
+			youngest = minf(youngest, float(fx["age"]))
+	check(held == 1 + gates and _live_moments(world) == held, "final: the still is the last clear and its gate seals (%d held of %d live sequences)" % [held, _live_moments(world)])
+	check(youngest >= StellarVfx.FINAL_REST, "final: every held sequence is at rest when the panel freezes it (youngest %.2f s, rest from %.2f)" % [youngest, StellarVfx.FINAL_REST])
+	check(_live_skills(world) == 0 and _count_pool(world, "burst") == 0 and vfx._delayed.is_empty() and _visible_domes(world) == 0,
+		"final: nothing else is left under the result panel (%d skills, %d bursts, %d queued)" % [_live_skills(world), _count_pool(world, "burst"), vfx._delayed.size()])
+	var clock: float = vfx._clock
+	for n in range(6):
+		screen.queue_redraw()
+		await frames(1)
+	check(is_equal_approx(vfx._clock, clock), "final: the still does not move under the result panel")
+	# "Try again" on the same screen: nothing of the won run is left, and the new run's
+	# first battlefield waits under its card with its own reveal at age 0.
+	Arena.start_run(20261099)
+	screen._track_modal()
+	await paint(screen)
+	await paint(screen)
+	var retry_gates := ArenaGeometry.route_count()
+	var oldest := 0.0
+	for fx in world.effects:
+		if typeof(fx) == TYPE_DICTIONARY and fx.has("vfx"): oldest = maxf(oldest, float(fx["age"]))
+	check(Arena.modal == "stage" and _live_moments(world) == 1 + retry_gates and _count_moments(world, StellarVfx.MomentKind.STAGE_SWEEP) == 1
+		and _count_moments(world, StellarVfx.MomentKind.GATE_BEACON) == retry_gates,
+		"final: after a retry the first card shows the new field's reveal (%d sequences, %d gates)" % [_live_moments(world), retry_gates])
+	check(is_zero_approx(oldest) and _live_skills(world) == 0 and _count_pool(world, "burst") == 0 and _lit_pulses(world) <= 1 and vfx._delayed.is_empty()
+		and not (vfx.get_node("Aegis") as MeshInstance3D).visible,
+		"final: nothing of the won run is left under it (oldest effect %.3f s, %d skills, %d bursts, %d lights)" % [oldest, _live_skills(world), _count_pool(world, "burst"), _lit_pulses(world)])
+	await snap(out_dir + "/final_retry_card.png")
+	await _close_arena()
+	await _moment_final_hitch(theme)
+
+## The same victory after a hitch: the simulator runs through the whole clear beat while
+## nothing is drawn (the effect clock stands still), then one frame is drawn. The frozen
+## picture must still be the last clear at rest.
+func _moment_final_hitch(theme: int) -> void:
+	var world := await _open_battle(theme, 20261017, 10)
+	var vfx: StellarVfx = world.vfx
+	Arena.stage = Balance.ARENA_STAGES
+	Arena.wave = Arena.stage
+	Arena.sim.stage = Arena.stage
+	Arena.sim.wave = Arena.stage
+	Arena.sim._spawn(Arena.boss_for(Arena.stage))
+	if String(Arena.sim.events[-1].get("t", "")) == "spawn": Arena.sim.events.pop_back()
+	var boss: Dictionary = Arena.sim.monsters[-1]
+	var path := ArenaGeometry.route_points(0)
+	boss["pos"] = path[int(path.size() * 0.6)]
+	boss["hp"] = 1.0e8
+	boss["max"] = 1.0e8
+	Arena.sim.boss_spawned = true
+	Arena.sim.boss_warned = true
+	Arena.sim._nav_key = ""
+	Arena.sim._rebuild_navigation()
+	for n in range(20): await _tick()
+	# A boss arrival that is still burning when the run ends.
+	vfx.arena_event({"t": "arena_boss", "p": boss["pos"], "final": true})
+	Arena.sim._cache_positions()
+	Arena.sim._hurt(Arena.sim.monsters.find(boss), 1.0e12, false, -1, "none", false)
+	Arena.sim._reap()
+	await _tick(1.0 / 60.0)
+	check(_has_moment(world, StellarVfx.MomentKind.STAGE_CLEAR), "hitch: the last clear has begun")
+	# Two seconds of simulation with no frame drawn.
+	for n in range(12): Arena.sim.step(0.2)
+	check(Arena.sim.won and Arena.modal == "result", "hitch: the run ended while nothing was drawn")
+	screen._track_modal()
+	await paint(screen)
+	await paint(screen)
+	var youngest := INF
+	var held := 0
+	for fx in world.effects:
+		if typeof(fx) == TYPE_DICTIONARY and bool(fx.get("rest", false)):
+			held += 1
+			youngest = minf(youngest, float(fx["age"]))
+	check(held == 1 + ArenaGeometry.route_count() and youngest >= StellarVfx.FINAL_REST and _live_moments(world) == held,
+		"hitch: the frozen picture is still the last clear at rest (%d held, youngest %.2f s, %d live)" % [held, youngest, _live_moments(world)])
+	check(_live_skills(world) == 0 and _count_pool(world, "burst") == 0 and vfx._delayed.is_empty(), "hitch: the boss arrival and every burst are gone under the result panel")
+	check(_lit_pulses(world) == 1, "hitch: the still keeps its one light (%d lit)" % _lit_pulses(world))
+	await snap(out_dir + "/final_settle.png")
+	await _close_arena()

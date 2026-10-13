@@ -6,9 +6,17 @@ render_mode unshaded, blend_mix, depth_draw_never, cull_disabled, skip_vertex_tr
 // Same instance contract as vfx_burst.gdshader (COLOR.a = body scale: puffs lift and clear a
 // larger body, the scorch stays on the ground). Parts (UV2.x): 4 puff billboard, 6 ground scorch.
 // Kinds without a row (16..20, blade contacts among them) draw nothing in this layer.
+// Kind 21 (seal) leaves a pool of gold under the monster the revival's wave stopped.
+// Kind 22 (scatter) is the haze a fleeing body thins into. -Z is the way the body runs
+// (StellarVfx.scatter_heading); the puffs follow it for the 0.5 s of its run
+// (NativeMonsterModel.FLEE_SEC / FLEE_DIST / FLEE_EASE: the same bolt, 1 - (1 - u)^1.8)
+// but stay behind it, a trail between the body and the crystal, and thicken only as the
+// body thins: the body is seen to run before the haze is all that is left.
 uniform sampler2D sprites : source_color, filter_linear_mipmap, repeat_disable;
 uniform float vfx_time = 0.0;
 uniform float vfx_epoch = 0.0;
+// 1 on bright snow/ice fields (only the scatter haze reads it: pale haze is lost on snow).
+uniform float vfx_wash = 0.0;
 
 const float BODY_CLEAR = 1.9;
 
@@ -30,6 +38,7 @@ float kind_lift(int k, float size) {
 	if (k == 12) return 0.5;
 	if (k == 13) return 0.4;
 	if (k == 14) return 0.6;
+	if (k == 22) return 0.5;
 	return 0.0;
 }
 
@@ -44,14 +53,16 @@ vec4 puff_params(int k, float size) {
 	if (k == 12) return vec4(0.70, 2.20, 1.00, 0.40);
 	if (k == 13) return vec4(1.10, 3.40, 1.20, 0.26);
 	if (k == 15) return vec4(0.12, 0.42, 0.52, 0.26);
+	if (k == 22) return vec4(0.55, 1.75, 0.95, 1.15);
 	return vec4(0.0, 0.0, 0.1, 0.0);
 }
 
-// radius, duration, darkness (1 dark, 0 bright frost), unused
+// radius, duration, tone (1 dark soot, 0 bright frost, 2 gold pool), unused
 vec4 scorch_params(int k, float size) {
 	if (k == 11) return vec4(size * 0.9, 1.00, 1.0, 0.0);
 	if (k == 12) return vec4(size * 0.80, 1.25, 1.0, 0.0);
 	if (k == 13) return vec4(size * 0.55, 1.35, 0.0, 0.0);
+	if (k == 21) return vec4(0.72, 0.80, 2.0, 0.0);
 	return vec4(0.0, 0.1, 1.0, 0.0);
 }
 
@@ -86,6 +97,11 @@ void vertex() {
 		float s = mix(pp.x, pp.y, ease_out3(f)) * (0.85 + 0.3 * h);
 		vec3 drift = (kind == 15 ? fwd * 0.42 : fwd * 0.08) * f + up * (0.25 + 0.2 * h) * f;
 		if (kind == 13 || kind == 7) drift = up * 0.12 * f;
+		if (kind == 22) {
+			float run = clamp(f / 0.53, 0.0, 1.0);
+			drift = fwd * (1.50 * (0.48 + 0.36 * h) * (1.0 - pow(1.0 - run, 1.8)) + 0.30 * ease_out(clamp((f - 0.53) / 0.47, 0.0, 1.0)))
+				+ up * (0.20 + 0.30 * h) * f;
+		}
 		vec2 r = rot2(c, h * 6.283 + f * (h - 0.5) * 2.0);
 		world = origin + up * lift + drift + (cam_right * r.x + cam_up * r.y) * s - cam_fwd * (0.12 + (body - 1.0) * BODY_CLEAR);
 		// Smoke colour (linear values; ACES + sRGB output lifts midtones, so these read as
@@ -102,8 +118,11 @@ void vertex() {
 		if (kind == 13) base = mist;
 		if (kind == 3) base = mix(dust, COLOR.rgb * 0.35, 0.3);
 		if (kind == 15) base = vec3(0.26, 0.28, 0.32);
+		if (kind == 22) base = mix(mix(vec3(0.62, 0.70, 0.82), COLOR.rgb * 0.6, 0.3), mix(vec3(0.20, 0.32, 0.55), COLOR.rgb * 0.4, 0.3), vfx_wash);
 		col = base;
 		alpha = pp.w * pow(1.0 - f, 1.3) * smoothstep(0.0, 0.08, f);
+		// The scatter haze thickens while the body thins (it is not a puff of impact smoke).
+		if (kind == 22) alpha = pp.w * smoothstep(0.08, 0.50, f) * pow(1.0 - f, 1.0);
 		v_cell = 4.0;
 	} else {
 		vec4 sp = scorch_params(kind, size);
@@ -112,6 +131,11 @@ void vertex() {
 		world = origin + up * 0.06 + mx * c.x * 2.0 * rr + fwd * c.y * 2.0 * rr;
 		col = sp.z > 0.5 ? vec3(0.07, 0.055, 0.045) : vec3(0.60, 0.80, 1.0);
 		alpha = (sp.z > 0.5 ? 0.30 : 0.40) * pow(1.0 - f, 0.9) * (sp.x > 0.001 ? 1.0 : 0.0);
+		if (sp.z > 1.5) {
+			// Seal: a pool of the blessing's gold under the monster it stopped.
+			col = vec3(0.85, 0.48, 0.08);
+			alpha = 0.62 * pow(1.0 - f, 1.2) * smoothstep(0.0, 0.08, f);
+		}
 		v_edge = 1.0;
 		v_cell = -1.0;
 	}

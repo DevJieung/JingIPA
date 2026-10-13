@@ -17,6 +17,14 @@ var skill_uses := {"blast": 0, "freeze": 0, "ward": 0}
 var boss_warned := false
 var boss_lane := -1
 var _forced_lane := -1
+## The run is a chain of stages; each is one battlefield with its own boss.
+var stage := 1
+## Counts down after a stage boss falls; the next battlefield opens when it reaches 0.
+var clear_t := 0.0
+## Guardian's blessing: one crystal revival per run, then a short untouchable window.
+## Revivals of the Guardian's blessing used in this run (of Balance.ARENA_REVIVE_USES).
+var revives := 0
+var invuln_t := 0.0
 var _nav := AStarGrid2D.new()
 var _road_nav := AStarGrid2D.new()
 var _road_cells: Array[Vector2i] = []
@@ -29,28 +37,68 @@ var _accumulator := 0.0
 var _save_t := 0.0
 var _spawn_pool: Array = []
 var _pool_period := -1
+## Static road mask per layout (1 = open cell), shared by every simulator: the roads of
+## a layout never change, and building the mask is the costly part of opening a stage.
+static var _mask_cache: Dictionary = {}
 
 func setup(run_state, wave_no: int = 1, seed_value: int = 0) -> void:
 	super.setup(run_state, wave_no, seed_value)
 	crystal_max = Balance.ARENA_CRYSTAL_HP
 	crystal_hp = crystal_max
+	won = false
+	revives = 0
+	invuln_t = 0.0
+	_serial = 0
+	_accumulator = 0.0
+	_save_t = 0.0
+	for id in skill_cooldowns:
+		skill_cooldowns[id] = 0.0
+		skill_uses[id] = 0
+	_enter_stage(wave_no)
+
+## Open the next battlefield of the same run. The crystal, the skill casts already
+## spent, kills and the guardians carry over; everything on the road is cleared.
+## ArenaGeometry must already hold the new battlefield's layout.
+func begin_stage(number: int) -> void:
+	monsters.clear()
+	bullets.clear()
+	zones.clear()
+	_pending.clear()
+	events.clear()
+	curse_t = 0.0
+	surge = 0.0
+	surge_t = 0.0
+	elapsed = 0.0
+	done = false
+	_enter_stage(number)
+	refresh_heroes()
+	announce_stage()
+
+## Tell the view that this stage's battlefield has just been built: it stages the reveal,
+## which waits under the battlefield card and runs when the battle starts.
+func announce_stage() -> void:
+	events.append({"t": "arena_stage", "stage": stage, "p": Balance.ARENA_CENTER})
+
+func _enter_stage(number: int) -> void:
+	stage = clampi(number, 1, Balance.ARENA_STAGES)
+	wave = stage
+	_rank = int(run.theme_rank(stage)) if run != null and run.has_method("theme_rank") else 1
 	boss_spawned = false
 	boss_alive = false
 	boss_warned = false
 	boss_lane = -1
 	_forced_lane = -1
-	won = false
+	clear_t = 0.0
 	shield = 0.0
 	shield_t = 0.0
-	_serial = 0
-	_accumulator = 0.0
-	_save_t = 0.0
 	_pool_period = -1
 	_spawn_pool.clear()
 	_spawn_t = Balance.ARENA_SPAWN_INITIAL
-	for id in skill_cooldowns:
-		skill_cooldowns[id] = 0.0
-		skill_uses[id] = 0
+	_build_navigation()
+
+func _build_navigation() -> void:
+	_nav = AStarGrid2D.new()
+	_road_nav = AStarGrid2D.new()
 	_nav.region = Rect2i(Vector2i.ZERO, Vector2i(ceili(ArenaGeometry.MAP_RECT.size.x / Balance.ARENA_NAV_CELL), ceili(ArenaGeometry.MAP_RECT.size.y / Balance.ARENA_NAV_CELL)))
 	_nav.cell_size = ArenaGeometry.MAP_RECT.size / Vector2(_nav.region.size)
 	_nav.offset = ArenaGeometry.MAP_RECT.position + _nav.cell_size * 0.5
@@ -61,22 +109,70 @@ func setup(run_state, wave_no: int = 1, seed_value: int = 0) -> void:
 	_road_nav.offset = _nav.offset
 	_road_nav.diagonal_mode = _nav.diagonal_mode
 	_road_nav.update()
+	var mask := _road_mask()
 	_road_cells.clear()
 	for y in range(_nav.region.size.y):
 		for x in range(_nav.region.size.x):
 			var cell := Vector2i(x, y)
-			# Reserve a little clearance so grid edges cannot cut across the inside
-			# of a curved road (a 14 unit diagonal on the tightest 75 unit bend dips
-			# 0.33). The static mask is computed once, not every frame. Together with
-			# the guardian radius below this leaves a 15 unit lane beside a hero standing
-			# on the centreline; one cell wide lanes pinch shut on diagonal roads.
-			var road := ArenaGeometry.on_road(_nav.get_point_position(cell), Balance.ARENA_MONSTER_RADIUS + 1)
+			var road := mask[y * _nav.region.size.x + x] == 1
 			_nav.set_point_solid(cell, not road)
 			_road_nav.set_point_solid(cell, not road)
 			if road: _road_cells.append(cell)
 	_guarded_cells.clear()
 	_nav_key = ""
+	_nav_version += 1
 	_rebuild_navigation()
+
+## Open cells of the current layout's roads.
+func _road_mask() -> PackedByteArray:
+	var key := "%s|%d" % [ArenaGeometry.layout(), ArenaGeometry.ROAD_REVISION]
+	if _mask_cache.has(key): return _mask_cache[key]
+	var size := _nav.region.size
+	var mask := PackedByteArray()
+	mask.resize(size.x * size.y)
+	# A cell is open when its centre is inside the road with a little clearance to
+	# spare, so grid edges cannot cut across the inside of a curved road (a 14 unit
+	# diagonal on the tightest 75 unit bend dips 0.33). Together with the guardian
+	# radius this leaves a 15 unit lane beside a hero standing on the centreline; one
+	# cell wide lanes pinch shut on diagonal roads.
+	var shallow := {}
+	var reach := Balance.ARENA_MONSTER_RADIUS + _nav.cell_size.length() + 0.1
+	for y in range(size.y):
+		for x in range(size.x):
+			var at := _nav.get_point_position(Vector2i(x, y))
+			if not ArenaGeometry.on_road(at, Balance.ARENA_MONSTER_RADIUS + 1): continue
+			mask[y * size.x + x] = 1
+			# Deep cells keep every step to a neighbour inside the road; only cells near
+			# a kerb can be part of a notch (below).
+			if ArenaGeometry.on_road(at, reach): continue
+			var depth := 0
+			for margin in [14.0, 17.0, 20.0]:
+				if ArenaGeometry.on_road(at, margin): depth += 1
+			shallow[Vector2i(x, y)] = depth
+	# Where two road shapes meet at an angle (an arm running into the plaza, a feeder
+	# into an arm) the kerbs leave a notch thinner than a cell: both neighbours are
+	# open, yet the straight step between their centres leaves the road, and a monster
+	# sent across it would turn back at the notch for ever. Close the shallower cell
+	# of every such pair so that each grid step is a walk the movement rules accept.
+	for cell in shallow:
+		if mask[cell.y * size.x + cell.x] == 0: continue
+		for step in [Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(1, -1)]:
+			var other: Vector2i = cell + step
+			if not shallow.has(other) or mask[other.y * size.x + other.x] == 0: continue
+			var from := _nav.get_point_position(cell)
+			var to := _nav.get_point_position(other)
+			var samples := ceili(from.distance_to(to) / 1.5)
+			var inside := true
+			for i in range(1, samples):
+				if not ArenaGeometry.on_road(from.lerp(to, float(i) / samples), Balance.ARENA_MONSTER_RADIUS):
+					inside = false
+					break
+			if inside: continue
+			var shut: Vector2i = cell if int(shallow[cell]) <= int(shallow[other]) else other
+			mask[shut.y * size.x + shut.x] = 0
+			if shut == cell: break
+	_mask_cache[key] = mask
+	return mask
 
 func projectile_bounds() -> Rect2:
 	return ArenaGeometry.MAP_RECT.grow(80)
@@ -119,29 +215,39 @@ func refresh_heroes() -> void:
 					item[key] = index
 	_nav_key = ""
 
+## How far the whole run has come (0 at the first spawn, 1 at the last boss). The
+## crowd and the spawn pace climb along it, stage after stage.
+func run_progress() -> float:
+	return clampf((float(stage - 1) + clampf(elapsed / Balance.ARENA_BOSS_AT, 0.0, 1.0)) / float(Balance.ARENA_STAGES), 0.0, 1.0)
+
 func population_limit() -> int:
-	var progress_value := clampf(elapsed / Balance.ARENA_BOSS_AT, 0.0, 1.0)
-	return roundi(lerpf(Balance.ARENA_POPULATION_START, Balance.ARENA_POPULATION_MAX, progress_value))
+	return roundi(lerpf(Balance.ARENA_POPULATION_START, Balance.ARENA_POPULATION_MAX, run_progress()))
 
 func spawn_interval() -> float:
-	return lerpf(Balance.ARENA_SPAWN_INITIAL, Balance.ARENA_SPAWN_MIN, clampf(elapsed / Balance.ARENA_BOSS_AT, 0.0, 1.0))
+	return lerpf(Balance.ARENA_SPAWN_INITIAL, Balance.ARENA_SPAWN_MIN, run_progress())
+
+func final_stage() -> bool:
+	return stage >= Balance.ARENA_STAGES
 
 func _spawn(monster: Dictionary) -> void:
 	super._spawn(monster)
 	var mo: Dictionary = monsters[-1]
-	var lane := _forced_lane if _forced_lane >= 0 else _rng.randi_range(0, ArenaGeometry.ROUTE_COUNT - 1)
-	var path := ArenaGeometry.route_points(lane)
-	var radial := (path[0] - Balance.ARENA_CENTER).normalized()
-	var entrance := Balance.ARENA_CENTER + radial * (ArenaGeometry.RADIUS - Balance.ARENA_MONSTER_RADIUS)
+	var lane := _forced_lane if _forced_lane >= 0 else _rng.randi_range(0, ArenaGeometry.route_count() - 1)
+	var entrance := ArenaGeometry.gate_point(lane, Balance.ARENA_MONSTER_RADIUS)
+	var radial := (entrance - Balance.ARENA_CENTER).normalized()
 	var point := ArenaGeometry.clamp_point(entrance + Vector2(-radial.y, radial.x) * float(mo["off"]), Balance.ARENA_MONSTER_RADIUS)
 	_serial += 1
 	mo.merge({"pos": point, "vel": Vector2.ZERO, "blocked": false, "spawn_id": _serial,
 		"path": PackedVector2Array(), "nav_v": -1, "siege_t": 0.0})
 	mo["route"] = lane
-	mo["hp"] = float(mo["hp"]) * Balance.ARENA_HP_SCALE
-	mo["max"] = mo["hp"]
-	if String(mo["kind"]) == "boss":
+	# Strength and bounty follow the stage, not the legacy wave table.
+	var kind := String(mo["kind"])
+	mo["hp"] = Balance.arena_hp(stage, _rank) * float(Balance.MKIND[kind]["hp"])
+	mo["gold"] = Balance.arena_kill_gold(stage, kind)
+	if kind == "boss":
 		boss_alive = true
+		mo["hp"] = Balance.arena_boss_hp(stage, _rank)
+	mo["max"] = mo["hp"]
 	events[-1]["p"] = point
 	events[-1]["sid"] = _serial
 
@@ -149,7 +255,8 @@ func step(dt: float) -> void:
 	if done or not run.running or not String(run.modal).is_empty() or dt <= 0.0:
 		return
 	_accumulator += minf(dt, 0.25)
-	while _accumulator >= 1.0 / 60.0 and not done:
+	# A stage change opens the next battlefield's card: stop ticking under it.
+	while _accumulator >= 1.0 / 60.0 and not done and String(run.modal).is_empty():
 		_tick(1.0 / 60.0)
 		_accumulator -= 1.0 / 60.0
 	if _save_t >= 5.0 and run.running:
@@ -167,27 +274,45 @@ func _tick(dt: float) -> void:
 	shield_t = maxf(0.0, shield_t - dt)
 	if shield_t == 0.0:
 		shield = 0.0
+	invuln_t = maxf(0.0, invuln_t - dt)
+	if clear_t > 0.0:
+		# The stage boss is down: let the last shots and effects play, then move on.
+		clear_t = maxf(0.0, clear_t - dt)
+		_cache_positions()
+		_move_bullets(dt)
+		_step_zones(dt)
+		_reap()
+		_save_t += dt
+		if clear_t == 0.0 and run.running:
+			if final_stage():
+				won = true
+				done = true
+				run.end_run(true)
+			else:
+				run.advance_stage()
+		return
 	if not boss_spawned and not boss_warned and elapsed >= Balance.ARENA_BOSS_AT - Balance.ARENA_BOSS_WARNING:
 		# The gate is decided now so the warning can point at it; the boss then uses it.
 		boss_warned = true
-		boss_lane = _rng.randi_range(0, ArenaGeometry.ROUTE_COUNT - 1)
-		events.append({"t": "arena_boss_warning", "p": boss_gate(), "sec": Balance.ARENA_BOSS_WARNING, "lane": boss_lane})
+		boss_lane = _rng.randi_range(0, ArenaGeometry.route_count() - 1)
+		events.append({"t": "arena_boss_warning", "p": boss_gate(), "sec": Balance.ARENA_BOSS_WARNING, "lane": boss_lane, "final": final_stage()})
 	if not boss_spawned and elapsed >= Balance.ARENA_BOSS_AT:
 		boss_spawned = true
 		boss_warned = true
-		if boss_lane < 0: boss_lane = _rng.randi_range(0, ArenaGeometry.ROUTE_COUNT - 1)
+		if boss_lane < 0: boss_lane = _rng.randi_range(0, ArenaGeometry.route_count() - 1)
 		_forced_lane = boss_lane
-		_spawn(run.boss_for(1))
+		_spawn(run.boss_for(stage))
 		_forced_lane = -1
-		events.append({"t": "arena_boss", "p": mpos(monsters[-1]), "sid": int(monsters[-1]["spawn_id"]), "lane": boss_lane})
+		events.append({"t": "arena_boss", "p": mpos(monsters[-1]), "sid": int(monsters[-1]["spawn_id"]), "lane": boss_lane, "final": final_stage()})
 	elif not boss_spawned:
 		_spawn_t -= dt
 		if _spawn_t <= 0.0:
 			if monsters.size() < population_limit():
-				var period := int(elapsed / Balance.SPAWN_WINDOW)
+				# Two assaults per stage, each with its own mix of the battlefield's monsters.
+				var period := int(elapsed / (Balance.ARENA_BOSS_AT * 0.5))
 				if period != _pool_period or _spawn_pool.is_empty():
 					_pool_period = period
-					_spawn_pool = run.spawns_for(period + 1)
+					_spawn_pool = run.stage_spawns(stage, period)
 				if not _spawn_pool.is_empty():
 					_spawn(_spawn_pool[_rng.randi_range(0, _spawn_pool.size() - 1)])
 			_spawn_t = spawn_interval()
@@ -422,6 +547,8 @@ func _push(mi: int) -> void:
 	events.append({"t": "push", "p": mpos(mo), "h": float(mo["h"]), "sid": int(mo.get("spawn_id", 0))})
 
 func _damage_crystal(damage: float, at: Vector2) -> void:
+	if invuln_t > 0.0 or clear_t > 0.0:
+		return
 	if run.has("bulwark") and _rng.randf() < Balance.PASSIVE_BULWARK_P:
 		events.append({"t": "block", "p": at, "h": 35.0})
 		return
@@ -431,8 +558,35 @@ func _damage_crystal(damage: float, at: Vector2) -> void:
 	run.lives = ceili(crystal_hp / crystal_max * Balance.MAX_LIVES)
 	events.append({"t": "arena_crystal_hit", "p": Balance.ARENA_CENTER, "n": damage - absorbed})
 	if crystal_hp <= 0.0:
+		if run.has_method("revive_ready") and run.revive_ready():
+			revive()
+			return
 		done = true
 		run.end_run(false)
+
+## Revivals the Guardian's blessing can still give in this run.
+func revives_left() -> int:
+	return maxi(0, Balance.ARENA_REVIVE_USES - revives)
+
+## Guardian's blessing: the broken crystal reforms, up to ARENA_REVIVE_USES times per
+## run. It comes back at ARENA_REVIVE_HP of its maximum, cannot be hurt for
+## ARENA_REVIVE_INVULN seconds, its shockwave stops every monster on the field for
+## ARENA_REVIVE_STUN seconds, and the run is handed arena_revive_gold() to rebuild with.
+func revive() -> void:
+	revives += 1
+	done = false
+	crystal_hp = crystal_max * Balance.ARENA_REVIVE_HP
+	run.lives = ceili(crystal_hp / crystal_max * Balance.MAX_LIVES)
+	invuln_t = Balance.ARENA_REVIVE_INVULN
+	for mo in monsters:
+		if float(mo["hp"]) <= 0.0: continue
+		mo["stun_t"] = maxf(float(mo["stun_t"]), Balance.ARENA_REVIVE_STUN)
+		mo["siege_t"] = 0.0
+	var purse := Balance.arena_revive_gold(stage)
+	run.add_gold(purse)
+	events.append({"t": "arena_revive", "p": Balance.ARENA_CENTER, "r": ArenaGeometry.RADIUS,
+		"sec": Balance.ARENA_REVIVE_INVULN, "stun": Balance.ARENA_REVIVE_STUN,
+		"gold": purse, "left": revives_left()})
 
 func _reap() -> void:
 	var boss_dead := false
@@ -440,17 +594,32 @@ func _reap() -> void:
 		if String(mo["kind"]) == "boss" and float(mo["hp"]) <= 0.0:
 			boss_dead = true
 	super._reap()
-	if boss_dead and run.running:
-		boss_alive = false
-		won = true
-		done = true
-		run.end_run(true)
+	if not boss_dead or not run.running or clear_t > 0.0:
+		return
+	boss_alive = false
+	# The stage is won: its escort scatters without bounty and the crystal mends a little.
+	# The last boss gets the same beat, so its fall is seen before the run ends in victory.
+	for mo in monsters:
+		events.append({"t": "die", "p": mpos(mo), "c": Color(String(mo["m"]["color"])),
+			"h": float(mo["h"]), "gold": 0, "sid": int(mo.get("spawn_id", 0)), "scatter": true})
+	monsters.clear()
+	_pending.clear()
+	for bullet in bullets:
+		bullet["tgt"] = -1
+		bullet["hit"] = []
+	_cache_positions()
+	var mended := minf(crystal_max - crystal_hp, crystal_max * Balance.ARENA_STAGE_HEAL)
+	crystal_hp += mended
+	run.lives = ceili(crystal_hp / crystal_max * Balance.MAX_LIVES)
+	clear_t = Balance.ARENA_CLEAR_DELAY
+	events.append({"t": "arena_stage_clear", "p": Balance.ARENA_CENTER, "stage": stage,
+		"heal": mended, "sec": Balance.ARENA_CLEAR_DELAY, "final": final_stage()})
+	run.stage_cleared(stage)
 
 ## Logical point where the boss will step onto the field (the chosen gate), or INF before it is known.
 func boss_gate() -> Vector2:
 	if boss_lane < 0: return Vector2.INF
-	var radial := (ArenaGeometry.route_points(boss_lane)[0] - Balance.ARENA_CENTER).normalized()
-	return Balance.ARENA_CENTER + radial * (ArenaGeometry.RADIUS - Balance.ARENA_MONSTER_RADIUS)
+	return ArenaGeometry.gate_point(boss_lane, Balance.ARENA_MONSTER_RADIUS)
 
 func skill_max_uses(id: String) -> int:
 	match id:
@@ -472,7 +641,7 @@ func skill_max_cooldown(id: String) -> float:
 func cast_skill(id: String) -> bool:
 	if done or not run.running or not String(run.modal).is_empty() or not skill_cooldowns.has(id) or float(skill_cooldowns[id]) > 0.0:
 		return false
-	if skill_uses_left(id) <= 0:
+	if clear_t > 0.0 or skill_uses_left(id) <= 0:
 		return false
 	_cache_positions()
 	if id != "ward" and _mp.is_empty():
@@ -506,7 +675,8 @@ func snapshot_arena() -> Dictionary:
 		state.erase("h")
 		state.erase("st")
 		runtime.append(state)
-	return {"road_revision": ArenaGeometry.ROAD_REVISION,
+	return {"road_revision": ArenaGeometry.ROAD_REVISION, "layout": ArenaGeometry.layout(),
+		"stage": stage, "clear_t": clear_t, "revives": revives, "invuln_t": invuln_t,
 		"elapsed": elapsed, "boss_spawned": boss_spawned, "boss_alive": boss_alive, "crystal_hp": crystal_hp,
 		"shield": shield, "shield_t": shield_t, "cooldowns": skill_cooldowns.duplicate(), "uses": skill_uses.duplicate(),
 		"boss_warned": boss_warned, "boss_lane": boss_lane, "spawn_t": _spawn_t,
@@ -517,6 +687,10 @@ func snapshot_arena() -> Dictionary:
 		"pending": _pending.duplicate(true), "heroes": runtime}
 
 func restore_arena(data: Dictionary, migrate_roads: bool = false) -> void:
+	clear_t = float(data.get("clear_t", 0.0))
+	# Saves made while the blessing was a single revival carry a flag instead of a count.
+	revives = clampi(int(data.get("revives", 1 if bool(data.get("revived", false)) else 0)), 0, Balance.ARENA_REVIVE_USES)
+	invuln_t = float(data.get("invuln_t", 0.0))
 	elapsed = float(data["elapsed"])
 	boss_spawned = bool(data["boss_spawned"])
 	boss_alive = bool(data["boss_alive"])

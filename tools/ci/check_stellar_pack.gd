@@ -2,12 +2,24 @@ extends SceneTree
 
 
 func _initialize() -> void:
-	for module in ["core/arena_run", "core/arena_validation", "game/arena_sim", "game/arena_screen", "game/3d/arena_view", "game/3d/arena_world"]:
+	for module in ["core/arena_run", "core/arena_validation", "game/arena_sim", "game/arena_screen", "game/3d/arena_view", "game/3d/arena_world",
+			"game/3d/arena_biome", "game/3d/arena_land", "game/3d/arena_scenery",
+			"core/store", "core/store/play", "core/store/apple", "core/store/steam", "game/store_view"]:
 		if not ResourceLoader.exists("res://%s.gd" % module):
 			_fail("Missing packaged continuous battle module: " + module)
 			return
+	# Stage chain (2026-10-13): battlefield land and scenery, and the run-level moments.
+	for shader in ["art/models/arena_terrain", "art/models/arena_liquid", "art/models/arena_scenery", "art/models/arena_haze",
+			"art/vfx/vfx_moment", "art/vfx/vfx_moment_mix", "art/vfx/vfx_aegis", "art/vfx/vfx_aegis_base",
+			"art/vfx/vfx_road", "art/vfx/vfx_road_base"]:
+		if not ResourceLoader.exists("res://%s.gdshader" % shader, "Shader"):
+			_fail("Missing packaged battlefield shader: " + shader)
+			return
+	if not ResourceLoader.exists("res://art/models/terrain_noise.png"):
+		_fail("Missing packaged terrain pattern texture")
+		return
 	var balance: Script = load("res://core/balance.gd")
-	if balance.ARENA_HERO_LIMIT != 6 or balance.ARENA_BOSS_AT != 1080.0:
+	if balance.ARENA_HERO_LIMIT != 6 or balance.ARENA_BOSS_AT != 108.0 or balance.ARENA_STAGES != 10:
 		_fail("Packaged continuous battle balance differs from approved data")
 		return
 	var catalog: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://core/locales/ui.json"))
@@ -15,7 +27,8 @@ func _initialize() -> void:
 		_fail("Missing packaged UI translations")
 		return
 	for locale in ["ko", "en"]:
-		for key in ["arena.title", "arena.rules.control", "arena.rules.growth", "arena.rules.boss"]:
+		for key in ["arena.title", "arena.rules.control", "arena.rules.growth", "arena.rules.boss",
+				"arena.stage_n", "arena.final_clear", "store.title", "store.guardian.name"]:
 			if not catalog.get(locale, {}).get(key):
 				_fail("Missing packaged continuous battle translation: %s/%s" % [locale, key])
 				return

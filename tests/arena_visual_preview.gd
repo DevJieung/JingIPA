@@ -4,11 +4,19 @@ var out_dir := "build/arena-visual/1280x800"
 var screen: ArenaScreen
 var main: Node2D
 var _audit_count := 0
+## Off-screen picture (`--film 1280x800`). With it the window only lends its GL context
+## (the GPU display of the login session), the game draws into this viewport and every
+## capture reads it. Without it the game draws into the window as before (Xvfb).
+var film: SubViewport
 
 func _ready() -> void:
 	if not require_no_save(): return
 	out_dir = arg("--out", out_dir)
 	DirAccess.make_dir_recursive_absolute(out_dir)
+	_open_film()
+	if has_arg("--biome-only"):
+		await _biome_only()
+		return
 	if has_arg("--spiral-only"):
 		await _spiral_only()
 		return
@@ -43,16 +51,15 @@ func _ready() -> void:
 		I18n.set_locale(locale)
 		Arena.start_run(20261009)
 		main = load("res://game/main.gd").new()
-		add_child(main)
+		_mount(main)
 		await frames(3)
 		main.show_arena()
 		screen = main.screen
 		screen.set_process(false)
-		await _capture(locale + "_themes")
-		check(tap(screen, "theme:next"), "theme paging responds to touch")
-		await _capture(locale + "_themes_next")
-		screen._action("theme:0")
-		check(tap(screen, "theme:start"), "selected theme starts free ritual")
+		# A run opens on the battlefield card of its first stage (no chooser since 2026-10-13).
+		check(Arena.modal == "stage", "run opens on the stage 1 battlefield card")
+		await _capture(locale + "_stage_card")
+		check(tap(screen, "stage:start"), "battlefield card starts the free ritual")
 		screen._rite_age = 9
 		await _capture(locale + "_rite_free")
 		check(tap(screen, "rite:confirm"), "ritual accepts first hero")
@@ -187,7 +194,7 @@ func _ready() -> void:
 	I18n.set_locale("ko")
 	var report := {"checks": checks, "failures": failures, "text_boxes": _audit_count,
 		"native_assets_replaced": false, "device_fps_measured": false,
-		"layout_resolution": get_viewport().get_visible_rect().size, "window_resolution": DisplayServer.window_get_size()}
+		"layout_resolution": _picture().get_visible_rect().size, "window_resolution": film.size if film != null else DisplayServer.window_get_size()}
 	var file := FileAccess.open(out_dir + "/report.json", FileAccess.WRITE)
 	file.store_string(JSON.stringify(report, "  ") + "\n")
 	file = null
@@ -202,7 +209,7 @@ func _motion_only() -> void:
 		I18n.set_locale(locale)
 		Arena.start_run(20261010)
 		main = load("res://game/main.gd").new()
-		add_child(main)
+		_mount(main)
 		await frames(3)
 		main.show_arena()
 		screen = main.screen
@@ -224,8 +231,8 @@ func _motion_only() -> void:
 		for n in range(14):
 			Arena.sim._spawn(pool[n % pool.size()])
 			var mo: Dictionary = Arena.sim.monsters[-1]
-			var lane := n % ArenaGeometry.ROUTE_COUNT
-			mo["pos"] = ArenaGeometry.route_points(lane)[22 + (n / ArenaGeometry.ROUTE_COUNT) * 4]
+			var lane := n % ArenaGeometry.route_count()
+			mo["pos"] = ArenaGeometry.route_points(lane)[22 + (n / ArenaGeometry.route_count()) * 4]
 			mo["route"] = lane
 			mo["hp"] = float(mo["max"]) * (0.08 if n < 6 else 0.6)
 			mo["vel"] = ArenaGeometry.road_direction(mo["pos"])
@@ -276,7 +283,7 @@ func _spiral_only() -> void:
 		I18n.set_locale(locale)
 		Arena.start_run(20261012)
 		main = load("res://game/main.gd").new()
-		add_child(main)
+		_mount(main)
 		await frames(3)
 		main.show_arena()
 		screen = main.screen
@@ -372,7 +379,7 @@ func _road_only() -> void:
 		I18n.set_locale(locale)
 		Arena.start_run(20261010)
 		main = load("res://game/main.gd").new()
-		add_child(main)
+		_mount(main)
 		await frames(3)
 		main.show_arena()
 		screen = main.screen
@@ -385,14 +392,14 @@ func _road_only() -> void:
 		Arena.heroes.clear()
 		Arena.bench.clear()
 		var ids := ["echo", "brasa", "limne", "dummy"]
-		for lane in range(ArenaGeometry.ROUTE_COUNT):
+		for lane in range(ArenaGeometry.route_count()):
 			Arena.gain_hero(Roster.unit_by_id(ids[lane]), 3)
 			Arena.heroes[lane]["position"] = ArenaGeometry.route_points(lane)[18]
 		Arena.sim.refresh_heroes()
 		Arena.sim.monsters.clear()
 		Arena.selected = -1
 		var pool := Roster.theme_pool(Arena.theme_for(1))
-		for lane in range(ArenaGeometry.ROUTE_COUNT):
+		for lane in range(ArenaGeometry.route_count()):
 			Arena.sim._spawn(pool[0])
 			var monster: Dictionary = Arena.sim.monsters[-1]
 			monster["pos"] = ArenaGeometry.route_points(lane)[14]
@@ -410,18 +417,18 @@ func _road_only() -> void:
 			for tick in range(18):
 				Arena.sim._move_monsters(1.0 / 60)
 				Arena.sim.elapsed += 1.0 / 60
-				for lane in range(ArenaGeometry.ROUTE_COUNT):
+				for lane in range(ArenaGeometry.route_count()):
 					var monster: Dictionary = Arena.sim.monsters[lane]
 					closest[lane] = minf(closest[lane], Vector2(monster["pos"]).distance_to(Arena.sim.heroes[lane]["pos"]))
 					if monster["blocked"]: blocked[lane] += 1
 			await _capture(locale + "_road_pass_%02d" % n)
 			var frame := {"locale": locale, "frame": n, "monsters": []}
-			for lane in range(ArenaGeometry.ROUTE_COUNT):
+			for lane in range(ArenaGeometry.route_count()):
 				var at: Vector2 = Arena.sim.monsters[lane]["pos"]
 				check(ArenaGeometry.on_road(at, Balance.ARENA_MONSTER_RADIUS), "bypassing monster stays on visible road lane " + str(lane))
 				frame["monsters"].append({"lane": lane, "x": at.x, "y": at.y})
 			trajectories.append(frame)
-		for lane in range(ArenaGeometry.ROUTE_COUNT):
+		for lane in range(ArenaGeometry.route_count()):
 			var path := ArenaGeometry.route_points(lane)
 			var progress := _road_progress(Arena.sim.monsters[lane]["pos"], path)
 			var hero_progress := _road_progress(Arena.sim.heroes[lane]["pos"], path)
@@ -430,7 +437,7 @@ func _road_only() -> void:
 			check(blocked[lane] == 0, "central guardian never stops the monster lane " + str(lane))
 		# Real hero-follow views include the road entrances, boundary stones and lamps.
 		Arena.selected = 0
-		for lane in range(ArenaGeometry.ROUTE_COUNT):
+		for lane in range(ArenaGeometry.route_count()):
 			Arena.sim.heroes[0]["pos"] = ArenaGeometry.route_points(lane)[1]
 			screen.view_3d._camera_initialized = false
 			await _capture(locale + "_road_entry_%02d" % lane)
@@ -464,7 +471,7 @@ func _hud_only() -> void:
 		I18n.set_locale(locale)
 		Arena.start_run(20261009)
 		main = load("res://game/main.gd").new()
-		add_child(main)
+		_mount(main)
 		await frames(3)
 		main.show_arena()
 		screen = main.screen
@@ -559,7 +566,7 @@ func _circle_only() -> void:
 		I18n.set_locale(locale)
 		Arena.start_run(20261009)
 		main = load("res://game/main.gd").new()
-		add_child(main)
+		_mount(main)
 		await frames(3)
 		main.show_arena()
 		screen = main.screen
@@ -575,7 +582,7 @@ func _circle_only() -> void:
 		Arena.gold = 99999
 		Arena.sim.monsters.clear()
 		var pool := Roster.theme_pool(Arena.theme_for(1))
-		for lane in range(ArenaGeometry.ROUTE_COUNT):
+		for lane in range(ArenaGeometry.route_count()):
 			for sample in [4, 14, 24]:
 				Arena.sim._spawn(pool[(lane + sample) % pool.size()])
 				var monster: Dictionary = Arena.sim.monsters[-1]
@@ -656,7 +663,7 @@ func _look_only() -> void:
 		I18n.set_locale(locale)
 		Arena.start_run(20261009)
 		main = load("res://game/main.gd").new()
-		add_child(main)
+		_mount(main)
 		await frames(3)
 		main.show_arena()
 		screen = main.screen
@@ -756,7 +763,7 @@ func _style_only() -> void:
 		I18n.set_locale(locale)
 		Arena.start_run(20261009)
 		main = load("res://game/main.gd").new()
-		add_child(main)
+		_mount(main)
 		await frames(3)
 		Save.cur_run = {}
 		await _capture_canvas(main.screen, locale + "_title")
@@ -778,7 +785,7 @@ func _style_only() -> void:
 		main.show_arena()
 		screen = main.screen
 		screen.set_process(false)
-		await _capture(locale + "_themes")
+		await _capture(locale + "_stage_card")
 		Arena.choose_theme(0)
 		screen._track_modal()
 		screen._rite_age = 9
@@ -824,7 +831,7 @@ func _help_only() -> void:
 		I18n.set_locale(locale)
 		Arena.start_run(20261009)
 		main = load("res://game/main.gd").new()
-		add_child(main)
+		_mount(main)
 		await frames(3)
 		main.show_arena()
 		screen = main.screen
@@ -856,7 +863,7 @@ func _polish_only() -> void:
 		I18n.set_locale(locale)
 		Arena.start_run(20261009)
 		main = load("res://game/main.gd").new()
-		add_child(main)
+		_mount(main)
 		await frames(3)
 		main.show_arena()
 		screen = main.screen
@@ -914,7 +921,7 @@ func _rite_only() -> void:
 		I18n.set_locale(locale)
 		Arena.start_run(20261009)
 		main = load("res://game/main.gd").new()
-		add_child(main)
+		_mount(main)
 		await frames(3)
 		main.show_arena()
 		screen = main.screen
@@ -951,8 +958,8 @@ func _rite_only() -> void:
 		_window_touch(Vector2(123, 676), true)
 		var drag := InputEventScreenDrag.new()
 		drag.index = 7
-		drag.position = get_viewport().get_final_transform() * Vector2(169, 676)
-		get_viewport().push_input(drag, false)
+		drag.position = _picture().get_final_transform() * Vector2(169, 676)
+		_picture().push_input(drag, false)
 		screen._process(1.0 / 30)
 		_window_touch(Vector2(123, 676), false)
 		check(Vector2(Arena.sim.heroes[5]["pos"]).distance_to(old_position) > 0.1, "window pixel joystick touch moves the selected hero")
@@ -966,6 +973,506 @@ func _rite_only() -> void:
 	file = null
 	finish("Arena ritual presentation")
 
+# --------------------------------------------------------------------------- #
+# Battlefield biomes (2026-10-13): fields by biome and rank, the five road shapes,
+# gate / junction close-ups, a stage switch and the cost of a rebuild
+# --------------------------------------------------------------------------- #
+## Five biomes at rank 1 / 3 / 5 (the default "fields" set of the review).
+const BIOME_FIELDS := ["calm_lake", "tidal_flats", "maelstrom_sea",
+	"kiln_yard", "sulfur_springs", "volcano_crater",
+	"spring_grove", "misty_cedar", "worldtree_roots",
+	"gravel_hills", "broken_wall", "rift_chasm",
+	"first_snow_hills", "drift_ice_sea", "polar_night"]
+const REVIEW_SEED := 20261013
+
+func _theme_index(id: String) -> int:
+	for i in range(Roster.THEMES.size()):
+		if String(Roster.THEMES[i]["id"]) == id: return i
+	printerr("!! unknown theme " + id)
+	return 0
+
+func _biome_only() -> void:
+	I18n.set_locale(arg("--locale", "ko"))
+	# Pictures only: a music stream that is still fading when the tool quits is reported
+	# as a leak at exit.
+	Save.music = false
+	Save.sfx = false
+	var sets := arg("--sets", "fields,shapes,detail,switch,timing").split(",", false)
+	var report := {"fields": {}, "shapes": {}, "detail": [], "switch": {}, "timing": {}}
+	Arena.start_run(REVIEW_SEED)
+	main = load("res://game/main.gd").new()
+	_mount(main)
+	await frames(3)
+	main.show_arena()
+	if not (main.screen is ArenaScreen):
+		# A game script failed to compile (someone is mid-edit): stop instead of hanging.
+		printerr("!! the arena screen did not open; see the script errors above")
+		get_tree().quit(1)
+		return
+	screen = main.screen
+	screen.set_process(false)
+	if "fields" in sets:
+		var wanted := arg("--themes", "")
+		var ids: Array = Array(wanted.split(",", false)) if not wanted.is_empty() and wanted != "all" else BIOME_FIELDS.duplicate()
+		if wanted == "all":
+			ids.clear()
+			for theme in Roster.THEMES: ids.append(String(theme["id"]))
+		for id in ids:
+			var index := _theme_index(String(id))
+			await _enter_field(index)
+			report["fields"][id] = await _field_shots(String(id))
+	if "shapes" in sets:
+		# The five road shapes on one battlefield, each at a turn that shows a south gate.
+		var index := _theme_index(arg("--shape-theme", "misty_cedar"))
+		var id := String(Roster.THEMES[index]["id"])
+		var home := ArenaGeometry.layout_for_theme(index)
+		for shape in ArenaGeometry.SHAPE_ORDER:
+			var key := "%s:%d:0" % [shape, 1 if shape == "blades" else 2]
+			await _enter_field(index, key)
+			report["shapes"][shape] = await _field_shots("shape_%s_%s" % [id, shape])
+		ArenaGeometry.use_layout(home)
+	if "detail" in sets:
+		for id in arg("--detail-themes", "calm_lake,volcano_crater,misty_cedar,rift_chasm,polar_night").split(",", false):
+			var index := _theme_index(id)
+			for shape in ArenaGeometry.SHAPE_ORDER:
+				await _enter_field(index, "%s:%d:%d" % [shape, (index + ArenaGeometry.SHAPE_ORDER.find(shape) * 3) % 8, index % 2], false)
+				report["detail"].append_array(await _detail_shots("%s_%s" % [id, shape]))
+			ArenaGeometry.use_layout(ArenaGeometry.layout_for_theme(index))
+	if "switch" in sets:
+		report["switch"] = await _stage_switch(arg("--switch-from", "spring_grove"), arg("--switch-to", "volcano_crater"))
+	if "timing" in sets:
+		report["timing"] = await _build_timing()
+	if "vfx" in sets:
+		# Battle effects over the ground of a field: a volley and the three common skills.
+		for id in arg("--vfx-themes", "first_snow_hills,quarry_pit,kiln_yard,deep_trench").split(",", false):
+			await _enter_field(_theme_index(id))
+			_review_crowd()
+			for n in range(24):
+				screen._process(1.0 / 30)
+				screen.queue_redraw()
+				await frames(1)
+			await _capture("vfx_%s_volley" % id)
+			for skill in ["blast", "freeze", "ward"]:
+				Arena.sim.skill_cooldowns[skill] = 0.0
+				await paint(screen)
+				check(tap(screen, "skill:" + skill), "skill %s cast on %s" % [skill, id])
+				for n in range(4):
+					for tick in range(9):
+						screen._process(1.0 / 30)
+						screen.queue_redraw()
+						await frames(1)
+					await _capture("vfx_%s_%s_%d" % [id, skill, n])
+	if "props" in sets:
+		await _props_sheet()
+	if "probe" in sets:
+		await _tint_probe()
+	report["checks"] = checks
+	report["failures"] = failures
+	report["picture"] = [_picture().get_visible_rect().size.x, _picture().get_visible_rect().size.y]
+	var file := FileAccess.open(out_dir + "/biome-report.json", FileAccess.WRITE)
+	file.store_string(JSON.stringify(report, "  ") + "\n")
+	file = null
+	finish("Battlefield biomes")
+
+## Start a run on `index` (tool API: no chooser exists) and stand a review squad on it.
+## `layout` previews another road shape on the same battlefield.
+func _enter_field(index: int, layout: String = "", crowd: bool = true) -> void:
+	Arena.start_run(REVIEW_SEED)
+	# A restarted run counts its monsters from one again; the world keys bodies by that
+	# number, so bodies of the previous field must not be taken for the new ones.
+	var live: ArenaWorld = screen.view_3d.world as ArenaWorld
+	if live != null:
+		for node in live.monster_nodes.values(): node.free()
+		live.monster_nodes.clear()
+		live._dying.clear()
+	check(Arena.choose_theme(index), "tool API puts the battlefield on stage 1")
+	Arena.confirm_summon()
+	Arena.close_modal()
+	if not layout.is_empty() and ArenaGeometry.use_layout(layout):
+		Arena.sim._build_navigation()
+	_review_squad()
+	screen.speed = 1.0
+	screen.view_3d._follow_offset = Vector3.ZERO
+	screen.view_3d._camera_initialized = false
+	screen._track_modal()
+	if crowd: await paint(screen)
+
+func _open_ground(angle: float, radius: float) -> Vector2:
+	for step in range(24):
+		var at := Balance.ARENA_CENTER + Vector2.from_angle(angle + step * 0.13) * radius
+		if not ArenaGeometry.on_road(at, -Balance.ARENA_HERO_RADIUS): return at
+	return Balance.ARENA_CENTER + Vector2.from_angle(angle) * radius
+
+## Six mixed guardians: three by the altar, three out on the open ground.
+func _review_squad() -> void:
+	Arena.heroes.clear()
+	Arena.bench.clear()
+	var ids := ["limne", "brasa", "echo", "pip", "morrigan", "dummy"]
+	for i in range(Balance.ARENA_HERO_LIMIT):
+		Arena.gain_hero(Roster.unit_by_id(ids[i]), (i + 1) % 10)
+		Arena.heroes[i]["position"] = _open_ground(-PI * 0.5 + i * TAU / 6, 150.0 if i % 2 == 0 else 345.0)
+	Arena.sim.refresh_heroes()
+	Arena.selected = 1
+	Arena.gold = 480
+	Arena.sim.monsters.clear()
+	Arena.sim.bullets.clear()
+	Arena.sim.events.clear()
+	Arena.sim.crystal_hp = Arena.sim.crystal_max * 0.8
+	Arena.sim._spawn_t = 1.0e9
+
+## The stage's own monster mix spread along every road from the gate to the plaza.
+func _review_crowd() -> void:
+	var spawns: Array = Arena.stage_spawns(Arena.stage, 0)
+	var lanes := ArenaGeometry.route_count()
+	var per_lane := maxi(5, 24 / lanes)
+	var n := 0
+	for lane in range(lanes):
+		var path := ArenaGeometry.route_points(lane)
+		for k in range(per_lane):
+			Arena.sim._spawn(spawns[(n * 7) % spawns.size()])
+			var mo: Dictionary = Arena.sim.monsters[-1]
+			var at := clampi(int(path.size() * (0.012 + 0.88 * pow(float(k) / per_lane, 1.2))), 0, path.size() - 3)
+			mo["pos"] = path[at]
+			mo["route"] = lane
+			mo["max"] = float(mo["max"]) * 40.0
+			mo["hp"] = float(mo["max"]) * (0.4 + 0.55 * fposmod(n * 0.37, 1.0))
+			mo["vel"] = (path[at + 1] - path[at]).normalized()
+			n += 1
+	Arena.sim.events.clear()
+	Arena.sim._rebuild_navigation()
+	Arena.sim._cache_positions()
+
+func _world_image() -> Image:
+	await RenderingServer.frame_post_draw
+	return screen.view_3d.viewport.get_texture().get_image()
+
+## Three pictures of one field: the empty ground (gates before the first monster), the
+## live battle as the player sees it, and the same moment without the HUD. Returns where
+## every actor stands in the HUD-less picture so contrast can be measured on it.
+func _field_shots(label: String) -> Dictionary:
+	await paint(screen)
+	(await _world_image()).save_png(out_dir + "/empty_" + label + ".png")
+	# Where the bare floor and the bare road are in that picture (for lightness sampling):
+	# points well away from any road edge and from the guardians standing on the field.
+	var floor_points: Array = []
+	var road_points: Array = []
+	var view: ArenaWorld = screen.view_3d.world
+	for n in range(160):
+		var at := Balance.ARENA_CENTER + Vector2.from_angle(n * 2.399963) * (130.0 + sqrt((n + 0.5) / 160.0) * (ArenaGeometry.RADIUS - 200.0))
+		if ArenaGeometry.on_road(at, -26.0): continue
+		var clear := true
+		for hero in Arena.sim.heroes:
+			if Vector2(hero["pos"]).distance_to(at) < 70.0: clear = false
+		if not clear: continue
+		var pixel := view.screen(at, 0.0)
+		floor_points.append([pixel.x, pixel.y])
+	for polyline in ArenaGeometry.road_polylines():
+		for i in range(6, polyline.size() - 6, 5):
+			var clear := true
+			for hero in Arena.sim.heroes:
+				if Vector2(hero["pos"]).distance_to(polyline[i]) < 80.0: clear = false
+			if not clear: continue
+			var pixel := view.screen(polyline[i], 0.0)
+			road_points.append([pixel.x, pixel.y])
+	_review_crowd()
+	# Nine tenths of a second of real battle, drawn every tick like the game does, so
+	# bodies finish stepping in and the guardians are mid-volley.
+	for n in range(27):
+		screen._process(1.0 / 30)
+		screen.queue_redraw()
+		await frames(1)
+	await _capture("screen_" + label)
+	(await _world_image()).save_png(out_dir + "/world_" + label + ".png")
+	var world: ArenaWorld = screen.view_3d.world
+	var actors: Array = []
+	for i in range(Arena.sim.heroes.size()):
+		var at: Vector2 = Arena.sim.heroes[i]["pos"]
+		var foot := world.screen(at, 0.05)
+		var head := world.screen(at, 1.9)
+		actors.append({"kind": "hero", "id": String(Arena.sim.heroes[i]["h"]["unit"]["id"]), "foot": [foot.x, foot.y], "head": [head.x, head.y]})
+	for mo in Arena.sim.monsters:
+		var at: Vector2 = mo["pos"]
+		var foot := world.screen(at, 0.05)
+		var head := world.screen(at, screen._monster_top(mo))
+		actors.append({"kind": "monster", "id": String(mo["m"]["id"]), "body": String(mo["m"]["body"]), "foot": [foot.x, foot.y], "head": [head.x, head.y]})
+	var theme: Dictionary = Arena.theme_for(1)
+	var baked: Dictionary = load("res://game/3d/arena_biome.gd").FLOOR_L
+	return {"theme": String(theme["id"]), "body": String(theme["main_body"]), "rank": int(theme["rank"]),
+		"layout": ArenaGeometry.layout(), "gates": ArenaGeometry.route_count(), "actors": actors,
+		"baked_floor_l": float(baked.get(String(theme["id"]), -1.0)), "wash": float(world.ground_wash),
+		"floor_points": floor_points, "road_points": road_points}
+
+func _closeup(focus: Vector2, size: float, name: String) -> void:
+	var world: ArenaWorld = screen.view_3d.world
+	var target := StellarWorld.world(focus)
+	world.camera.size = size
+	world.camera.position = target + Vector3(-3.0, 19.0, 23.0)
+	world.camera.look_at(target + Vector3(0, 0.4, 0), Vector3.UP)
+	await frames(2)
+	(await _world_image()).save_png(out_dir + "/" + name + ".png")
+
+## Close views of what a full-field picture cannot settle: the plaza junction, every
+## gate and every feeder T-join of the current layout.
+func _detail_shots(label: String) -> Array:
+	var made: Array = []
+	await paint(screen)
+	await _closeup(Balance.ARENA_CENTER, 11.0, "detail_%s_plaza" % label)
+	made.append("detail_%s_plaza" % label)
+	for lane in range(ArenaGeometry.route_count()):
+		await _closeup(ArenaGeometry.gate_point(lane, 70.0), 10.0, "detail_%s_gate%d" % [label, lane])
+		made.append("detail_%s_gate%d" % [label, lane])
+	var roads := ArenaGeometry.road_polylines()
+	var joins := 0
+	for i in range(roads.size()):
+		if ArenaGeometry.road_layer(i) != 1: continue
+		await _closeup(roads[i][-1], 9.0, "detail_%s_join%d" % [label, joins])
+		made.append("detail_%s_join%d" % [label, joins])
+		joins += 1
+	return made
+
+## One real stage change: the boss of stage 1 falls, the clear delay runs, the next
+## battlefield opens under its card, the card is confirmed and the first monsters of
+## stage 2 come through the new gates.
+func _stage_switch(from_id: String, to_id: String) -> Dictionary:
+	await _enter_field(_theme_index(from_id))
+	Arena.stage_themes[1] = _theme_index(to_id)
+	_review_crowd()
+	Arena.sim._spawn(Arena.boss_for(1))
+	var boss: Dictionary = Arena.sim.monsters[-1]
+	var path := ArenaGeometry.route_points(0)
+	boss["pos"] = path[int(path.size() * 0.42)]
+	boss["route"] = 0
+	boss["vel"] = Vector2.ZERO
+	Arena.sim.boss_spawned = true
+	Arena.sim.boss_warned = true
+	Arena.sim.elapsed = Balance.ARENA_BOSS_AT + 6.0
+	Arena.sim._spawn_t = 1.0e9
+	Arena.sim._rebuild_navigation()
+	Arena.sim._cache_positions()
+	var frame := 0
+	var card_frames := 0
+	var after := 0
+	var marks := {}
+	while frame < 150 and after < 46:
+		if frame == 10:
+			boss["hp"] = 0.0
+			marks["boss_down"] = frame
+		var before_stage := Arena.stage
+		# Fifteen pictures a second up to the card, then two simulated ticks a picture
+		# so the first assault of the new stage fits in the sequence.
+		for tick in range(2 if Arena.stage > 1 and Arena.modal.is_empty() else 1): screen._process(1.0 / 15)
+		if Arena.stage != before_stage: marks["new_field"] = frame
+		if Arena.modal == "stage" and Arena.stage > 1:
+			card_frames += 1
+			if card_frames == 18:
+				await paint(screen)
+				check(tap(screen, "stage:start"), "stage card confirms into the new battlefield")
+				marks["card_closed"] = frame
+				Arena.sim._spawn_t = 0.6
+		elif Arena.stage > 1: after += 1
+		await _capture("switch_%03d" % frame)
+		frame += 1
+	check(Arena.stage == 2 and String(Arena.theme_for(1)["id"]) == to_id, "stage switch reached the next battlefield")
+	check(screen.view_3d.world.theme_id == to_id, "world rebuilt for the next battlefield")
+	return {"from": from_id, "to": to_id, "frames": frame, "marks": marks}
+
+## Authoring aid: does an instance tint reach the scenery shader as it was passed?
+func _tint_probe() -> void:
+	var viewport := SubViewport.new()
+	viewport.size = Vector2i(256, 128)
+	viewport.own_world_3d = true
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(viewport)
+	var holder := Node3D.new()
+	viewport.add_child(holder)
+	var camera := Camera3D.new()
+	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+	camera.size = 4.0
+	camera.keep_aspect = Camera3D.KEEP_WIDTH
+	camera.position = Vector3(0, 10, 0)
+	camera.rotation = Vector3(-PI / 2, 0, 0)
+	holder.add_child(camera)
+	var environment := WorldEnvironment.new()
+	environment.environment = Environment.new()
+	environment.environment.background_mode = Environment.BG_COLOR
+	environment.environment.background_color = Color.BLACK
+	environment.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	environment.environment.ambient_light_color = Color.WHITE
+	environment.environment.ambient_light_energy = 1.0
+	environment.environment.tonemap_mode = Environment.TONE_MAPPER_LINEAR
+	holder.add_child(environment)
+	var scn = load("res://game/3d/arena_scenery.gd").new()
+	var tints := [Color("#3f8068"), Color("#808080"), Color("#ffffff"), Color("#ff0000")]
+	for i in range(4):
+		scn.part("box", Vector3(-1.5 + i, 0, -0.5), Vector3(0.8, 0.2, 0.8), tints[i])
+		var plain := StellarModels.part(holder, "box", Vector3(-1.5 + i, 0, 0.5), Vector3(0.8, 0.2, 0.8), tints[i])
+		plain.material_override = plain.material_override.duplicate()
+		(plain.material_override as StandardMaterial3D).shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
+	# A plain mesh with a vertex colour (the kerbs), and a template part that shows the
+	# instance's second tint (a tree trunk seen from above is too thin: use a mushroom stem).
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for corner in [Vector3(-0.4, 0, -0.1), Vector3(0.4, 0, -0.1), Vector3(0.4, 0, 0.1), Vector3(-0.4, 0, -0.1), Vector3(0.4, 0, 0.1), Vector3(-0.4, 0, 0.1)]:
+		tool.set_normal(Vector3.UP)
+		tool.set_color(Color("#808080"))
+		tool.set_uv(Vector2(1, 0))
+		tool.set_uv2(Vector2(0, 0))
+		tool.add_vertex(corner + Vector3(-0.5, 0.3, 0.0))
+	var strip := MeshInstance3D.new()
+	strip.mesh = tool.commit()
+	strip.material_override = scn.material
+	holder.add_child(strip)
+	scn.stand("mush0", Vector3(0.5, 0.2, 0.0), Vector3(0.1, 0.4, 0.1), 0.0, Color("#000000"), Color("#808080"))
+	scn.stand("column", Vector3(0.5, 0.0, 0.0), Vector3(1.6, 0.2, 0.3), 0.0, Color("#000000"), Color("#808080"))
+	scn.commit(holder)
+	await frames(4)
+	await RenderingServer.frame_post_draw
+	var image := viewport.get_texture().get_image()
+	var vertex_pixel := image.get_pixel(96, 64)
+	print("vertex colour 808080 -> %d %d %d" % [vertex_pixel.r8, vertex_pixel.g8, vertex_pixel.b8])
+	for x in range(150, 175, 4):
+		var second_pixel := image.get_pixel(x, 64)
+		print("second tint 808080 at x %d -> %d %d %d" % [x, second_pixel.r8, second_pixel.g8, second_pixel.b8])
+	for i in range(4):
+		var pixel := image.get_pixel(32 + i * 64, 32)
+		var reference := image.get_pixel(32 + i * 64, 96)
+		print("tint %s -> scenery %d %d %d   standard material %d %d %d" % [tints[i].to_html(false), pixel.r8, pixel.g8, pixel.b8, reference.r8, reference.g8, reference.b8])
+	image.save_png(out_dir + "/tint_probe.png")
+	viewport.queue_free()
+
+## Every scenery template side by side under the arena lights (authoring aid).
+func _props_sheet() -> void:
+	var scenery_script: GDScript = load("res://game/3d/arena_scenery.gd")
+	await paint(screen)
+	var world: ArenaWorld = screen.view_3d.world
+	for child in world.terrain.get_children():
+		if child is Node3D and not child is Light3D: child.visible = false
+	world.actors.visible = false
+	if is_instance_valid(world.weather): world.weather.visible = false
+	var stage := Node3D.new()
+	world.add_child(stage)
+	var floor := MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(80, 80)
+	floor.mesh = plane
+	floor.material_override = StellarModels.material(Color("#3d4a4c"))
+	stage.add_child(floor)
+	var scn = scenery_script.new()
+	var kinds := ["rock0", "rock1", "rock2", "rock3", "spire0", "spire1", "spire2", "column", "hoodoo0", "hoodoo1",
+		"fir0", "fir1", "fir2", "tree0", "tree1", "tree2", "dead0", "dead1", "mush0", "mush1",
+		"tuft", "reed", "bamboo", "slab0", "slab1", "slab2", "pad", "crystal0", "crystal1", "dome",
+		"arch", "pyramid", "box", "stone", "cylinder", "cone", "pentagon", "sphere", "ring"]
+	var tints := {"fir": [Color("#3f8068"), Color("#6a5340")], "tree": [Color("#4f8a3f"), Color("#5a4636")],
+		"mush": [Color("#c9584f"), Color("#e6dcc2")], "bamboo": [Color("#7fa35a"), Color("#4f8a3f")],
+		"reed": [Color("#8a9a55"), Color("#6b4a2e")], "tuft": [Color("#5f9a4a"), Color("#5f9a4a")],
+		"crystal": [Color("#9b7bea"), Color("#9b7bea")], "spire": [Color("#a8d8ee"), Color("#a8d8ee")],
+		"dead": [Color("#3a3230"), Color("#3a3230")], "pad": [Color("#4f9a5a"), Color("#4f9a5a")]}
+	for i in range(kinds.size()):
+		var kind: String = kinds[i]
+		var base := kind.rstrip("0123456789")
+		var pair: Array = tints.get(base, [Color("#8a8f94"), Color("#8a8f94")])
+		if kind in ["rock0", "rock1", "rock2", "rock3"]:
+			var grey: Color = [Color("#404040"), Color("#808080"), Color("#b4b4b4"), Color("#ffffff")][int(kind.substr(4))]
+			pair = [grey, grey]
+		var at := Vector3((i % 10 - 4.5) * 2.5, 0.0, (i / 10 - 1.5) * 3.2)
+		var size := Vector3(1.6, 1.6, 1.6)
+		if base in ["fir", "tree", "dead", "bamboo", "spire", "hoodoo", "column"]: size = Vector3(1.6, 2.4, 1.6)
+		if base in ["slab"]: size = Vector3(1.6, 0.25, 1.6)
+		var lift := 0.8 if base in ["box", "stone", "cylinder", "cone", "pentagon", "sphere"] else 0.05 if base == "ring" else 0.0
+		scn.stand(kind, at + Vector3(0, lift, 0), size, 0.4, pair[0], pair[1], 0.7 if base in ["crystal", "mush"] else 0.0, 0.05)
+	scn.material.set_shader_parameter("wind", 1.0)
+	scn.commit(stage)
+	for row in range(2):
+		await _closeup(Balance.ARENA_CENTER + Vector2(0, (row - 0.5) * 6.4) * StellarWorld.UNIT, 26.0, "props_%d" % row)
+	scn.material.set_shader_parameter("cover_amount", 1.0)
+	await _closeup(Balance.ARENA_CENTER + Vector2(0, -3.2) * StellarWorld.UNIT, 26.0, "props_snow")
+	stage.queue_free()
+
+func _mesh_triangles(mesh: Mesh) -> int:
+	var total := 0
+	for surface in range(mesh.get_surface_count()):
+		var arrays: Array = mesh.surface_get_arrays(surface)
+		var indices = arrays[Mesh.ARRAY_INDEX]
+		total += (indices.size() if indices != null and indices.size() > 0 else arrays[Mesh.ARRAY_VERTEX].size()) / 3
+	return total
+
+## How long a stage switch spends rebuilding the map on this machine, and what the
+## built field costs to draw.
+func _build_timing() -> Dictionary:
+	await paint(screen)
+	var world: ArenaWorld = screen.view_3d.world
+	var rid := screen.view_3d.viewport.get_viewport_rid()
+	RenderingServer.viewport_set_measure_render_time(rid, true)
+	var out := {}
+	var home := ArenaGeometry.layout()
+	# The default fifteen, the fields named by --themes, or every field with --themes all.
+	var wanted := arg("--themes", "")
+	var ids: Array = BIOME_FIELDS.duplicate()
+	if wanted == "all":
+		ids.clear()
+		for theme in Roster.THEMES: ids.append(String(theme["id"]))
+	elif not wanted.is_empty():
+		ids = Array(wanted.split(",", false))
+	for id in ids:
+		var index := _theme_index(id)
+		# The same battle on every field: six guardians and the review crowd.
+		await _enter_field(index)
+		_review_crowd()
+		for n in range(6):
+			screen._process(1.0 / 30)
+			screen.queue_redraw()
+			await frames(1)
+		var samples: Array = []
+		for n in range(4):
+			world._map_key = ""
+			var started := Time.get_ticks_usec()
+			world.build_map(Roster.THEMES[index])
+			samples.append(float(Time.get_ticks_usec() - started) / 1000.0)
+			await frames(3)
+		await paint(screen)
+		await frames(6)
+		var gpu := 0.0
+		var cpu := 0.0
+		for n in range(12):
+			await frames(1)
+			gpu += RenderingServer.viewport_get_measured_render_time_gpu(rid) / 12.0
+			cpu += RenderingServer.viewport_get_measured_render_time_cpu(rid) / 12.0
+		var nodes := 0
+		var triangles := 0
+		for mesh in world.terrain.find_children("*", "MeshInstance3D", true, false):
+			nodes += 1
+			triangles += _mesh_triangles(mesh.mesh)
+		# Instanced scenery: every instance draws its template.
+		var instances := 0
+		for group in world.terrain.find_children("*", "MultiMeshInstance3D", true, false):
+			nodes += 1
+			instances += group.multimesh.instance_count
+			triangles += group.multimesh.instance_count * _mesh_triangles(group.multimesh.mesh)
+		var frame_primitives := RenderingServer.viewport_get_render_info(rid, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE, RenderingServer.VIEWPORT_RENDER_INFO_PRIMITIVES_IN_FRAME)
+		var frame_draws := RenderingServer.viewport_get_render_info(rid, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME)
+		# What the map alone costs a frame: the same counters with every actor hidden.
+		world.actors.visible = false
+		world.projectiles.visible = false
+		await frames(4)
+		var map_primitives := RenderingServer.viewport_get_render_info(rid, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE, RenderingServer.VIEWPORT_RENDER_INFO_PRIMITIVES_IN_FRAME)
+		var map_draws := RenderingServer.viewport_get_render_info(rid, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_VISIBLE, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME)
+		var map_gpu := 0.0
+		for n in range(12):
+			await frames(1)
+			map_gpu += RenderingServer.viewport_get_measured_render_time_gpu(rid) / 12.0
+		world.actors.visible = true
+		world.projectiles.visible = true
+		samples.sort()
+		out[id] = {"build_ms_first": samples[-1], "build_ms": samples[0], "build_ms_median": samples[1],
+			"terrain_meshes": nodes, "terrain_triangles": triangles, "scenery_instances": instances,
+			"map_primitives": map_primitives, "map_draw_calls": map_draws, "map_gpu_ms": map_gpu,
+			"frame_primitives": frame_primitives, "frame_draw_calls": frame_draws,
+			"shadow_draw_calls": RenderingServer.viewport_get_render_info(rid, RenderingServer.VIEWPORT_RENDER_INFO_TYPE_SHADOW, RenderingServer.VIEWPORT_RENDER_INFO_DRAW_CALLS_IN_FRAME),
+			"gpu_ms": gpu, "cpu_ms": cpu, "lights": world.terrain.find_children("*", "OmniLight3D", true, false).size()}
+		print("build %s: %.1f ms (first %.1f), %d triangles in %d meshes" % [id, samples[0], samples[-1], triangles, nodes])
+	ArenaGeometry.use_layout(home)
+	return out
+
 func _drag(logical: Vector2, pointer: int = 0) -> void:
 	var drag := InputEventScreenDrag.new()
 	drag.index = pointer
@@ -975,9 +1482,43 @@ func _drag(logical: Vector2, pointer: int = 0) -> void:
 func _window_touch(logical: Vector2, pressed: bool) -> void:
 	var event := InputEventScreenTouch.new()
 	event.index = 7
-	event.position = get_viewport().get_final_transform() * logical
+	event.position = _picture().get_final_transform() * logical
 	event.pressed = pressed
-	get_viewport().push_input(event, false)
+	_picture().push_input(event, false)
+
+# --------------------------------------------------------------------------- #
+# Picture: the window, or an off-screen viewport of the review size
+# --------------------------------------------------------------------------- #
+func _open_film() -> void:
+	var spec := arg("--film", "")
+	if spec.is_empty(): return
+	var size := Vector2i(int(spec.get_slice("x", 0)), int(spec.get_slice("x", 1)))
+	get_window().size = Vector2i(96, 60)
+	film = SubViewport.new()
+	film.name = "Film"
+	film.size = size
+	# The game lays out on the 1280x800 design canvas; a smaller picture scales it the
+	# way the window's canvas_items stretch does.
+	film.size_2d_override = Vector2i(1280, 800)
+	film.size_2d_override_stretch = true
+	film.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	film.transparent_bg = false
+	film.canvas_item_default_texture_filter = int(ProjectSettings.get_setting("rendering/textures/canvas_textures/default_texture_filter", 1)) as Viewport.DefaultCanvasItemTextureFilter
+	film.set("oversampling_override", float(size.x) / 1280.0)
+	add_child(film)
+
+func _picture() -> Viewport:
+	return film if film != null else get_viewport()
+
+func _mount(node: Node) -> void:
+	if film != null: film.add_child(node)
+	else: add_child(node)
+
+func snap(path: String) -> Image:
+	await RenderingServer.frame_post_draw
+	var image := _picture().get_texture().get_image()
+	image.save_png(path)
+	return image
 
 func _prepare_field() -> void:
 	Arena.heroes.clear()
@@ -993,7 +1534,7 @@ func _prepare_field() -> void:
 	for n in range(22):
 		Arena.sim._spawn(pool[n % pool.size()])
 		var mo: Dictionary = Arena.sim.monsters[-1]
-		mo["pos"] = ArenaGeometry.route_points(n % ArenaGeometry.ROUTE_COUNT)[6 + (n / ArenaGeometry.ROUTE_COUNT) * 5]
+		mo["pos"] = ArenaGeometry.route_points(n % ArenaGeometry.route_count())[6 + (n / ArenaGeometry.route_count()) * 5]
 		mo["hp"] *= 0.7
 		mo["vel"] = ArenaGeometry.road_direction(mo["pos"])
 	Arena.sim.monsters[0]["blocked"] = true
@@ -1024,11 +1565,7 @@ func _capture_canvas(canvas: CanvasItem, name: String) -> void:
 		var shown: Array[String] = []
 		for item in Look.text_audit:
 			shown.append(String(item["text"]))
-		if Arena.modal == "theme":
-			for index in range(canvas._theme_page * 12, mini(Roster.THEMES.size(), canvas._theme_page * 12 + 12)):
-				check(I18n.t(String(Roster.THEMES[index]["ko"])) in shown, "localized theme name is actually rendered: " + String(Roster.THEMES[index]["id"]))
-		else:
-			var theme: Dictionary = Roster.THEMES[clampi(Arena.theme_index, 0, Roster.THEMES.size() - 1)]
-			check(I18n.t(String(theme["ko"])) in shown, "current battlefield name is rendered in the HUD")
+		var theme: Dictionary = Roster.THEMES[clampi(Arena.theme_index, 0, Roster.THEMES.size() - 1)]
+		check(I18n.t(String(theme["ko"])) in shown, "current battlefield name is rendered in the HUD")
 	Look.text_audit_enabled = false
 	await snap(out_dir + "/" + name + ".png")

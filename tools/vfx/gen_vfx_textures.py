@@ -15,7 +15,9 @@ Outputs (deterministic, no external art):
     0 star sigil (lock-on)  1 light pillar      2 ground cracks      3 crack glow (blurred)
     4 comet tail            5 eight-ray flare   6 debris chunk       7 fog wisp
     8 boss rune circle      9 thorn portal ring 10 ground glow disc  11 star streak
-   12..15 reserved (transparent)
+   12 guardian crest (wreath)  13 reserved (transparent)  14 eclipse corona  15 glory rays
+  Cells 12, 14 and 15 belong to the run-level moments (vfx_moment*.gdshader: crystal
+  revival, stage clear, final boss).
 
 Sprites are white with alpha; shaders tint them. The cell layout is read by
 art/vfx/*.gdshader (`cell()`); keep indices stable when adding sprites.
@@ -519,6 +521,88 @@ def star_streak():
     return np.clip(core + glow + head, 0, 1)
 
 
+def guardian_crest():
+    """Ground crest of the Guardian's blessing: a laurel wreath between two rings around a
+    four-point star. Bold strokes: it is read at about 150 px across, squashed by the camera."""
+    u, v = grid()
+    r = np.sqrt(u * u + v * v)
+    a = np.zeros((CELL, CELL), np.float32)
+    a = np.maximum(a, np.exp(-((r - 0.945) / 0.026) ** 2))
+    a = np.maximum(a, np.exp(-((r - 0.60) / 0.018) ** 2) * 0.85)
+    # Wreath: sixteen leaves leaning the same way round the ring.
+    leaves = 16
+    for k in range(leaves):
+        th = (k + 0.5) * 2 * math.pi / leaves
+        cx, cy = math.cos(th) * 0.775, math.sin(th) * 0.775
+        lean = th + math.pi / 2 - 0.62          # tangent, tipped outward
+        ax, ay = math.cos(lean), math.sin(lean)
+        du, dv = u - cx, v - cy
+        along = du * ax + dv * ay
+        across = -du * ay + dv * ax
+        # A leaf: pointed at both ends, fuller toward its base.
+        half = 0.050 * np.clip(1.0 - (along / 0.135) ** 2, 0, 1) ** 0.75
+        leaf = (1.0 - smooth(half * 0.55, half + 0.006, np.abs(across))) * (np.abs(along) < 0.135)
+        a = np.maximum(a, leaf * 0.95)
+    # Four-point star: long rays on the axes, a short kite between them.
+    ang = np.arctan2(v, u)
+    for turn, reach, width, amp in ((0.0, 0.56, 0.115, 1.0), (math.pi / 4, 0.30, 0.10, 0.8)):
+        for k in range(4):
+            th = turn + k * math.pi / 2
+            d = np.abs(((ang - th) + math.pi) % (2 * math.pi) - math.pi)
+            ray = (r < reach) & (d < width * np.clip(1.0 - r / reach, 0, 1) / np.maximum(r, 0.04))
+            a = np.maximum(a, ray.astype(np.float32) * amp)
+    a = np.maximum(a, np.exp(-(r / 0.085) ** 2))
+    img = Image.fromarray((np.clip(a, 0, 1) * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.9))
+    soft = np.asarray(img).astype(np.float32) / 255.0
+    return np.clip(soft * 1.08, 0, 1) * (r < 0.995)
+
+
+def eclipse_corona():
+    """Corona of a dark sun: a thin bright limb at r 0.5 and uneven streamers outside it.
+    The cell is empty inside the limb; the mix layer paints the black disc there."""
+    u, v = grid()
+    r = np.sqrt(u * u + v * v) + 1e-6
+    ang = np.arctan2(v, u)
+    rng = np.random.default_rng(1414)
+    limb = np.exp(-((r - 0.505) / 0.022) ** 2)
+    out = np.clip((r - 0.50) / 0.48, 0, 1)
+    halo = np.exp(-out / 0.30) * (r >= 0.50) * 0.55
+    streamers = np.zeros_like(r)
+    for k in range(11):
+        th = k * 2 * math.pi / 11 + rng.uniform(-0.2, 0.2)
+        d = np.abs(((ang - th) + math.pi) % (2 * math.pi) - math.pi)
+        reach = rng.uniform(0.55, 1.0)
+        width = rng.uniform(0.05, 0.11)
+        lobe = np.exp(-(d / (width * (1.0 - 0.55 * out) + 0.012)) ** 2) * np.clip(1.0 - out / reach, 0, 1) ** 1.4
+        streamers = np.maximum(streamers, lobe * rng.uniform(0.7, 1.0))
+    streamers *= (r >= 0.49)
+    a = limb + halo + streamers * 0.95
+    return np.clip(a, 0, 1) * (r > 0.468) * (1.0 - smooth(0.93, 1.0, r))
+
+
+def glory_rays():
+    """A fan of soft rays rising from a point low in the cell (a blessing's light).
+    The rays start at v = -0.80 so the foot glow fades out inside the cell on every side."""
+    u, v = grid()
+    rng = np.random.default_rng(1515)
+    ox, oy = 0.0, -0.80
+    du, dv = u - ox, v - oy
+    dist = np.sqrt(du * du + dv * dv) + 1e-6
+    th = np.arctan2(du, dv)                 # 0 straight up, +/- to the sides
+    rays = np.zeros_like(dist)
+    for k in range(9):
+        centre = (k - 4) * 0.21 + rng.uniform(-0.05, 0.05)
+        width = rng.uniform(0.035, 0.085)
+        reach = rng.uniform(1.15, 1.72)
+        lobe = np.exp(-((th - centre) / width) ** 2) * np.clip(1.0 - dist / reach, 0, 1) ** 1.2
+        rays = np.maximum(rays, lobe * rng.uniform(0.6, 1.0))
+    veil = np.exp(-(th / 0.75) ** 2) * np.clip(1.0 - dist / 1.4, 0, 1) ** 1.6 * 0.30
+    foot = np.exp(-(dist / 0.15) ** 2) * 0.8
+    a = (rays + veil) * smooth(0.0, 0.16, dist) * smooth(-0.10, 0.04, dv) + foot
+    edge = 1.0 - smooth(0.86, 1.0, np.maximum(np.abs(u), np.abs(v)))
+    return np.clip(a, 0, 1) * edge
+
+
 def empty_cell():
     return np.zeros((CELL, CELL), np.float32)
 
@@ -526,7 +610,7 @@ def empty_cell():
 SKILL_SPRITES = [star_sigil, light_pillar, ground_cracks, crack_glow,
                  comet_tail, flare8, debris_chunk, fog_wisp,
                  boss_rune, thorn_ring, glow_disc, star_streak,
-                 empty_cell, empty_cell, empty_cell, empty_cell]
+                 guardian_crest, empty_cell, eclipse_corona, glory_rays]
 
 
 SPRITES = [soft_glow, lambda: star(4, 14.0, 0.16), lambda: star(6, 30.0, 0.10), soft_ring,

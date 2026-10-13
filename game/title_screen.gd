@@ -6,6 +6,7 @@ class_name TitleScreen
 var main = null
 var ui := Ui.new()
 var collection := CollectionView.new()
+var store := StoreView.new()
 var t: float = 0.0
 ## 타이틀 한가운데의 의식판 — 이 게임이 무슨 게임인지 한눈에 보이게.
 const EMBLEM := Vector2(640, 466)
@@ -27,6 +28,8 @@ func _process(dt: float) -> void:
 
 
 func _input(e: InputEvent) -> void:
+	if store.input(e, ui):
+		return
 	if collection.input(e, ui):
 		return
 	if not (e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT):
@@ -36,6 +39,9 @@ func _input(e: InputEvent) -> void:
 	var id := ui.hit(e.position)
 	if id == "collection":
 		collection.opened = true
+		Sfx.play("button")
+	elif id == "store:open":
+		store.open()
 		Sfx.play("button")
 	elif id == "resume":
 		# 하다 만 판을 이어 한다. 되돌릴 수 없으면(옛 저장·깨진 저장) 조용히 새 판이다.
@@ -93,12 +99,15 @@ func _draw() -> void:
 		RiteBoard.draw_star(self, star, RiteBoard.look_of(ring, orbit[ring]), 0.84, t, clampf(1.0 - wave * 6.0, 0.0, 1.0))
 
 	# 도감이 열렸을 때 제목 장식이 모달 위로 나오지 않게 한다.
-	_wordmark.visible = not collection.opened
+	_wordmark.visible = not collection.opened and not store.opened
 	_wordmark.queue_redraw()
 
 	# 최고 등급은 여태 뽑은 가장 높은 별이다(Save.best_tier). 별 배지와 숫자를 나란히 적는다.
 	var records := [
-		[Arena.label("arena.completed"), "%d" % Save.clears, Look.CRYSTAL],
+		# The first record is how far the stage chain has been walked; a finished run
+		# (all stages) shows as the count of completed defenses instead.
+		[Arena.label("arena.completed"), "%d" % Save.clears, Look.CRYSTAL] if Save.clears > 0
+			else [Arena.label("arena.best_stage"), Arena.label("arena.stage_n") % Save.best_stage if Save.best_stage > 0 else "-", Look.CRYSTAL],
 		["최고 등급", Look.star_label(Save.best_tier) if Save.best_tier >= 0 else "-", Look.GOLD],
 		["만난 영웅", "%d / %d" % [Save.seen_count(), Roster.UNITS.size()], Look.GREEN],
 	]
@@ -107,7 +116,13 @@ func _draw() -> void:
 		var rect := Rect2(208 + index * 294, 536, 276, 88)
 		Look.material_panel(self, rect, Look.PANEL, record[2])
 		Look.text_center(self, rect.position + Vector2(138, 22), record[0], 20, Look.INK_DIM)
-		if index == 1 and Save.best_tier >= 0:
+		if index == 0:
+			# The stage record sits over the run's ten steps: how far of how far.
+			Look.text_center_fit(self, rect.position + Vector2(138, 53), record[1], 29, record[2], 238, 20)
+			var reached := Balance.ARENA_STAGES if Save.clears > 0 else Save.best_stage
+			Look.draw_stage_track(self, Rect2(rect.position.x + 38, rect.position.y + 73, 200, 6), reached, Balance.ARENA_STAGES,
+				Balance.ARENA_STAGES if Save.clears > 0 else maxi(0, reached - 1))
+		elif index == 1 and Save.best_tier >= 0:
 			Look.draw_rarity(self, rect.position + Vector2(90, 60), Save.best_tier, 8.0)
 			Look.text_box(self, Rect2(rect.position.x + 150, rect.position.y + 43, 106, 36), record[1], 30, record[2])
 		else:
@@ -121,8 +136,10 @@ func _draw() -> void:
 	if Save.has_run():
 		var continue_label := "이어하기 — %d탄" % Save.run_wave()
 		if Save.cur_run.get("mode") == "arena":
-			var elapsed := maxi(0, int(Save.cur_run.get("sim", {}).get("elapsed", 0.0)))
-			continue_label = I18n.t("계속하기") + "  %02d:%02d" % [elapsed / 60, elapsed % 60]
+			# A run is a chain of stages and its clock restarts on every one of them, so
+			# the stage is what tells a saved run apart.
+			var saved_stage := clampi(int(Save.cur_run.get("stage", 1)), 1, Balance.ARENA_STAGES)
+			continue_label = I18n.t("계속하기") + "  ·  " + Arena.label("arena.stage_n") % saved_stage
 		ui.button(self, Rect2(cx - 170.0, 642.0, 340.0, 58.0),
 				continue_label, "resume", true, Look.CRYSTAL, 34)
 		ui.button(self, Rect2(cx - 120.0, 710.0, 240.0, 44.0), "새로 시작", "start", true,
@@ -133,7 +150,28 @@ func _draw() -> void:
 
 	Look.fill_round(self, Rect2(234, 765, 812, 30), 4, Color(Look.BG_DEEP, 0.85))
 	Look.text_box(self, Rect2(244, 766, 792, 27), "균열 군단이 생명 수정을 노린다. 별을 맞춰 수호자를 불러 마을을 지켜라!", 18, Look.CRYSTAL)
+	# The shop is one quiet button in the utility row (the mirror of menu / language at
+	# the top right), in the same secondary style: it never competes with "start".
+	if _shop_entry():
+		ui.button(self, Rect2(24, 24, 150, 48), Arena.label("store.title"), "store:open", true, Look.PANEL_EDGE, 20)
 	collection.draw(self, ui)
+	store.draw(self, ui, t)
+
+
+## Whether the title shows the shop button. Only builds with a shop behind them have it.
+## On the phone shops it is always there: "restore purchases" lives on that sheet and
+## must stay findable (App Store). On Steam it steps aside once every product is owned
+## (a paid copy owns them from the start): there is nothing to sell, and Steam needs no
+## restore. A test build keeps it while test purchases can still be reset.
+func _shop_entry() -> bool:
+	if not Store.has_shop():
+		return false
+	if Store.shop_name() != "steam" or store.opened or (Store.test_build() and not Save.iap_sandbox.is_empty()):
+		return true
+	for product in Store.PRODUCTS:
+		if not Store.owns(String(product["id"])):
+			return true
+	return false
 
 
 ## 배경과 의식판의 색은 건드리지 않는 별도 워드아트 캔버스.

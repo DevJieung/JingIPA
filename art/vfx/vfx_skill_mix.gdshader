@@ -6,11 +6,21 @@ render_mode unshaded, blend_mix, depth_draw_never, cull_disabled, skip_vertex_tr
 // scorch, the dark ring under the shock ring (what keeps the blast readable on bright snow
 // and ice, where additive gold alone washes out), smoke, flung debris and the gate's mist.
 // Parts (UV2.x): 20 cracks  21 dark ring  22 smoke x6  23 debris x10  24 mist x8
+//   25 sigil body  26 ground colour (both drawn first, bright fields only)
 // Colours are linear values: ACES + sRGB output lifts them, so 0.15..0.3 reads mid-tone.
+//
+// Body + light on bright fields (2026-10-13). Additive gold or crimson on a pale floor is
+// white: the lock-on sigil, the boss rune and the colour of the struck ground vanished on
+// the brightest battlefields. Where the floor is bright (vfx_wash = ArenaWorld.ground_wash,
+// 0 up to L* 57, 1 from L* 67) parts 25 and 26 paint those marks in saturated mid-tones
+// under the additive ones and the ring band takes the effect's colour. Everything added
+// here is scaled by vfx_wash: on a dark field (0) the quads collapse and the ring keeps
+// its old ink, so the picture there is exactly what it was.
 uniform sampler2D sprites : source_color, filter_linear_mipmap, repeat_disable;
 uniform sampler2D skill_sprites : source_color, filter_linear_mipmap, repeat_disable;
 uniform float vfx_time = 0.0;
 uniform float vfx_epoch = 0.0;
+uniform float vfx_wash = 0.0;
 
 const float HIT = 0.18;
 
@@ -90,8 +100,8 @@ void vertex() {
 				r = mix(0.15, R, ease_out3(f));
 				w = mix(0.48, 0.30, f) * 1.4;
 				float fade = 1.0 - clamp((t - 0.30) / 0.55, 0.0, 1.0);
-				a = 0.62 * pow(fade, 1.1);
-				col = vec3(0.30, 0.13, 0.03);
+				a = mix(0.62, 0.82, vfx_wash) * pow(fade, 1.1);
+				col = mix(vec3(0.30, 0.13, 0.03), vec3(0.80, 0.43, 0.07), vfx_wash);
 			}
 			rmax = R + 0.7;
 		} else if (kind == 1) {
@@ -105,9 +115,9 @@ void vertex() {
 			float f = clamp(age / 0.55, 0.0, 1.0);
 			r = mix(0.2, R * 2.8, ease_out3(f));
 			w = mix(0.75, 0.45, f) * 1.4;
-			a = 0.6 * pow(1.0 - clamp((age - 0.2) / 0.6, 0.0, 1.0), 1.1);
+			a = mix(0.6, 0.76, vfx_wash) * pow(1.0 - clamp((age - 0.2) / 0.6, 0.0, 1.0), 1.1);
 			fill = 0.35 * pow(1.0 - clamp(age / 0.5, 0.0, 1.0), 1.2);
-			col = vec3(0.16, 0.10, 0.12);
+			col = mix(vec3(0.16, 0.10, 0.12), vec3(0.50, 0.05, 0.11), vfx_wash);
 			rmax = R * 3.0 + 0.8;
 		}
 		world = origin + up * 0.075 + mx * c.x * 2.0 * rmax + fwd * c.y * 2.0 * rmax;
@@ -163,6 +173,60 @@ void vertex() {
 		if (a <= 0.0) world = origin;
 		alpha = a;
 		v_cell = 4.0;
+	} else if (part == 25) {
+		// Body of the ground sigil: the lock-on star of the blast, the rune circle of the
+		// boss gate. Same size, turn and envelope as the additive one that rides on it
+		// (vfx_skill.gdshader part 1).
+		float s = R;
+		float a = 0.0;
+		float rot = 0.0;
+		v_cell = 24.0;
+		if (kind == 0) {
+			float lock = clamp(age / HIT, 0.0, 1.0);
+			s = R * mix(1.35, 1.0, ease_out3(lock)) * 1.05;
+			rot = seed * 6.283 + age * 0.9;
+			float t = age - HIT;
+			a = t < 0.0 ? 0.9 * smoothstep(0.0, 0.05, age) : pow(1.0 - clamp(t / 0.60, 0.0, 1.0), 1.3);
+			col = vec3(0.80, 0.43, 0.07);
+			v_cell = 16.0;
+		} else if (kind == 1) {
+			float grow = ease_out3(clamp(age / 1.0, 0.0, 1.0));
+			s = R * mix(0.4, 1.05, grow);
+			rot = -age * (0.35 + 2.5 * pow(prog, 6.0));
+			a = (0.45 + 0.55 * pow(prog, 1.3)) * grow * live;
+			col = vec3(0.55, 0.04, 0.12);
+		} else {
+			float f = clamp(age / 0.6, 0.0, 1.0);
+			s = R * mix(1.05, 1.7, ease_out3(f));
+			rot = seed * 6.283 + age * 1.5;
+			a = pow(1.0 - f, 1.4);
+			col = vec3(0.55, 0.04, 0.12);
+		}
+		vec2 rr = rot2(c, rot);
+		world = origin + up * 0.095 + (mx * rr.x + fwd * rr.y) * 2.0 * s * 1.02;
+		alpha = a * 0.85 * vfx_wash;
+		if (alpha <= 0.0) world = origin;
+	} else if (part == 26) {
+		// Colour of the struck ground: gold inside the blast's radius, crimson where the
+		// boss arrives (the additive afterglow, part 9 there, is the light on it).
+		float s = R;
+		float a = 0.0;
+		if (kind == 0) {
+			float t = age - HIT;
+			if (t >= 0.0) {
+				s = R * 1.15;
+				a = 0.45 * pow(1.0 - clamp(t / 1.0, 0.0, 1.0), 1.3) * smoothstep(0.0, 0.05, t);
+				col = vec3(0.85, 0.50, 0.10);
+			}
+		} else if (kind == 2) {
+			s = R * 1.9;
+			a = 0.40 * pow(1.0 - clamp(age / 1.2, 0.0, 1.0), 1.3);
+			col = vec3(0.50, 0.05, 0.12);
+		}
+		world = origin + up * 0.072 + (mx * c.x + fwd * c.y) * 2.0 * s;
+		alpha = a * vfx_wash;
+		if (alpha <= 0.0) world = origin;
+		v_cell = 26.0;
 	} else if (part == 23) {
 		float h1 = hash11(seed * 7.3 + float(idx));
 		float h2 = hash11(seed * 11.9 + float(idx) * 1.3);

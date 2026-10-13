@@ -12,6 +12,8 @@ func _ready() -> void:
 	_check_boss()
 	_check_duration()
 	_check_shop()
+	_check_stage_chain()
+	_check_stage_strength()
 	Arena.running = false
 	finish("연속 수호전 규칙·저장")
 
@@ -37,7 +39,8 @@ func _monster(sim: ArenaSim, at: Vector2) -> Dictionary:
 
 func _check_summons() -> void:
 	Arena.start_run(700)
-	check(ArenaValidation.valid(Arena.snapshot()), "테마 선택 중 저장")
+	check(Arena.modal == "stage" and Arena.stage == 1 and Arena.theme_index >= 0 and Arena.sim != null, "새 판은 무작위 전장의 1탄 카드에서 시작")
+	check(ArenaValidation.valid(Arena.snapshot()), "전장 카드 중 저장")
 	var initial_gold: int = Arena.gold
 	Arena.choose_theme(0)
 	check(Arena.gold == initial_gold and Arena.heroes.is_empty(), "첫 의식 무료·확정 전 지급 없음")
@@ -207,6 +210,8 @@ func _check_crystal_and_skills() -> void:
 	check(sim.cast_skill("blast") and mo["hp"] < hp, "공격 스킬 자동 대상·피해")
 	sim._push(0)
 	check(mo["push_left"] > 0, "기존 물 특효 실제 좌표 밀림")
+	# Guardian's blessing would revive the crystal (tests/store_check); spend it here.
+	sim.revives = Balance.ARENA_REVIVE_USES
 	sim._damage_crystal(100000.0, Balance.ARENA_CENTER)
 	check(sim.done and not sim.won and Arena.modal == "result", "크리스탈 파괴 패배")
 
@@ -223,8 +228,9 @@ func _check_skill_limits() -> void:
 		check(sim.skill_uses_left(id) == 0 and not sim.cast_skill(id), id + " 횟수 소진 뒤에는 쿨타임이 끝나도 사용 불가")
 	var saved := Arena.snapshot()
 	check(ArenaValidation.valid(saved) and Arena.restore(saved) and Arena.sim.skill_uses_left("blast") == 0 and Arena.sim.skill_uses_left("ward") == 0, "횟수 소진 상태 저장·복구")
-	saved["sim"].erase("uses")
-	check(Arena.restore(saved) and Arena.sim.skill_uses_left("blast") == Balance.ARENA_BLAST_USES, "횟수 정보가 없는 이전 저장은 전부 남은 것으로 복구")
+	var bare := saved.duplicate(true)
+	bare["sim"].erase("uses")
+	check(not ArenaValidation.valid(bare), "횟수 정보가 빠진 저장 거부")
 	saved["sim"]["uses"] = {"blast": -1, "freeze": 0, "ward": 0}
 	check(not ArenaValidation.valid(saved), "음수 사용 횟수 저장 거부")
 	Arena.start_run(710)
@@ -303,10 +309,19 @@ func _check_serialized_save(state: Dictionary) -> void:
 	store.cur_run["gold"] += 1
 	store.save_file()
 	var broken := ConfigFile.new()
-	broken.set_value("cur", "state", {"mode":"arena", "v":1})
+	broken.set_value("cur", "state", {"mode":"arena", "v":ArenaValidation.SAVE_V})
 	broken.save(path)
 	reopened.load_file()
 	check(reopened.recovered_backup and not reopened.cur_run.is_empty() and Arena.restore(reopened.cur_run), "손상 새 모드 저장은 정상 백업으로 복구")
+	# A run saved under the pre-stage rules is dropped; lifetime records survive.
+	var outdated := ConfigFile.new()
+	for key in ["best_wave", "runs", "clears", "total_kills"]: outdated.set_value("run", key, 7)
+	outdated.set_value("run", "best_hand", 5)
+	outdated.set_value("cur", "state", {"mode":"arena", "v":2, "wave":1})
+	outdated.save(path)
+	if FileAccess.file_exists(path + ".bak"): DirAccess.remove_absolute(path + ".bak")
+	reopened.load_file()
+	check(reopened.cur_run.is_empty() and reopened.runs == 7 and reopened.best_tier == 5 and not reopened.recovered_backup, "탄 사슬 이전 판만 버리고 평생 기록 보존")
 	store.free()
 	reopened.free()
 	for suffix in ["", ".bak", ".tmp", ".bak.tmp"]:
@@ -327,7 +342,7 @@ func _check_boss() -> void:
 		if String(e.get("t", "")) == "arena_boss_warning":
 			warnings += 1
 			warned_at = e.get("p", Vector2.INF)
-	check(sim.boss_warned and not sim.boss_spawned and sim.boss_lane >= 0 and sim.boss_lane < ArenaGeometry.ROUTE_COUNT, "보스 출현 %.0f초 전 예고·입구 확정" % Balance.ARENA_BOSS_WARNING)
+	check(sim.boss_warned and not sim.boss_spawned and sim.boss_lane >= 0 and sim.boss_lane < ArenaGeometry.route_count(), "보스 출현 %.0f초 전 예고·입구 확정" % Balance.ARENA_BOSS_WARNING)
 	check(warnings == 1 and warned_at.is_finite() and warned_at == sim.boss_gate() and ArenaGeometry.on_road(warned_at, Balance.ARENA_MONSTER_RADIUS), "예고 이벤트 1회·예고 지점은 입구 도로 위")
 	var gate := sim.boss_gate()
 	var lane: int = sim.boss_lane
@@ -338,7 +353,7 @@ func _check_boss() -> void:
 	# Jump to the last tick before the boss so no regular enemy spawns in between.
 	sim.elapsed = Balance.ARENA_BOSS_AT - 0.02
 	_advance(sim, 0.1)
-	check(sim.boss_spawned and sim.boss_alive and sim.monsters.size() == 2, "18분 최종 보스 1회 등장·기존 적 유지")
+	check(sim.boss_spawned and sim.boss_alive and sim.monsters.size() == 2, "탄 보스 1회 등장·기존 적 유지")
 	var boss_at := Vector2.INF
 	for e in sim.events:
 		if String(e.get("t", "")) == "arena_boss": boss_at = e.get("p", Vector2.INF)
@@ -354,11 +369,11 @@ func _check_boss() -> void:
 		if String(mo["kind"]) == "boss": mo["hp"] = 0.0
 	sim._cache_positions()
 	sim._reap()
-	check(sim.done and sim.won and Arena.modal == "result" and sim.monsters.size() == 1, "일반 몬스터 남아도 최종 보스 처치 즉시 승리")
+	check(not sim.done and not sim.won and Arena.running and sim.clear_t > 0.0 and sim.monsters.is_empty(), "탄 보스 처치: 판은 이어지고 남은 적은 흩어짐")
 
 func _check_duration() -> void:
 	var sim := _battle(708)
-	# Keep enemies alive at the perimeter to exercise a whole 18-minute timer
+	# Keep enemies alive at the perimeter to exercise a whole stage timer
 	# and population curve without conflating this check with player strategy.
 	sim.heroes[0]["cool"] = 100000.0
 	var cap_observed := 0
@@ -370,7 +385,7 @@ func _check_duration() -> void:
 			Arena.open_modal("shop")
 			var elapsed_time: float = sim.elapsed
 			_advance(sim, 10.0)
-			check(sim.elapsed == elapsed_time and not sim.boss_spawned, "18분 실제 진행 중 메뉴의 10초를 전투 시간에서 제외")
+			check(sim.elapsed == elapsed_time and not sim.boss_spawned, "탄 진행 중 메뉴의 10초를 전투 시간에서 제외")
 			Arena.close_modal()
 			sim.heroes[0]["cool"] = 100000.0
 			paused = true
@@ -384,11 +399,11 @@ func _check_duration() -> void:
 				var distances := [absf(at.x - rect.position.x), absf(at.x - rect.end.x), absf(at.y - rect.position.y), absf(at.y - rect.end.y)]
 				sides[distances.find(distances.min())] = true
 			mo["spd"] = 0.0
-	check(not sim.boss_spawned and sim.elapsed >= Balance.ARENA_BOSS_AT - 1, "18분 누적 진행에서도 보스 조기 등장 없음")
-	check(safe_population and cap_observed == Balance.ARENA_POPULATION_MAX, "연속 진행의 실제 개체 수가 8명부터 최대 48명까지 증가")
+	check(not sim.boss_spawned and sim.elapsed >= Balance.ARENA_BOSS_AT - 1, "탄 시간 누적 진행에서도 보스 조기 등장 없음")
+	check(safe_population and cap_observed == sim.population_limit() and cap_observed > Balance.ARENA_POPULATION_START, "1탄의 실제 개체 수가 8명에서 그 탄의 한도까지 증가 (%d)" % cap_observed)
 	check(sides.size() == 4, "네 방향 모두 실제 랜덤 스폰")
 	_advance(sim, 1.0)
-	check(sim.boss_spawned and sim.boss_alive and not sim.done, "18분 누적 직후 최종 보스 등장")
+	check(sim.boss_spawned and sim.boss_alive and not sim.done, "탄 시간 누적 직후 보스 등장")
 	var serial: int = sim._serial
 	_advance(sim, 2.0)
 	check(sim._serial == serial and sim.monsters.size() <= Balance.ARENA_POPULATION_MAX + 1, "긴 실행 후에도 보스 이후 스폰·개체 한도 유지")
@@ -410,8 +425,185 @@ func _check_shop() -> void:
 		if int(passive.get("rank", 1)) < 3 and not Arena.owned_passives.has(passive["id"]):
 			Arena.owned_passives.append(passive["id"])
 	Arena.close_modal()
+	# Late in the run: the last stage, most of the way to its boss.
+	sim.stage = Balance.ARENA_STAGES
 	sim.elapsed = Balance.ARENA_BOSS_AT * 0.9
 	Arena.open_modal("shop")
 	check(not Arena.shop_offer.is_empty(), "후반부 상위 패시브 해금")
 	for id in Arena.shop_offer:
 		check(int(Balance.passive_by_id(id)["rank"]) == 3 and id != "echo", "후반부 실제 상위 패시브 진열: " + id)
+
+
+func _kill_boss(sim: ArenaSim) -> void:
+	sim.elapsed = Balance.ARENA_BOSS_AT - 0.02
+	_advance(sim, 0.1)
+	for mo in sim.monsters:
+		if String(mo["kind"]) == "boss": mo["hp"] = 0.0
+	sim._cache_positions()
+	sim._reap()
+
+## The run is a chain of battlefields: a boss per stage, a bounty and a mended crystal
+## between them, a new random field with its own roads each time, the last boss wins.
+func _check_stage_chain() -> void:
+	Arena.start_run(811)
+	var themes: Array = Arena.stage_themes.duplicate()
+	check(themes.size() == Balance.ARENA_STAGES, "판을 시작할 때 열 탄의 전장이 정해짐")
+	var visits := {}
+	var order_ok := true
+	var rank_ok := true
+	var early_ok := true
+	for n in range(themes.size()):
+		var theme: Dictionary = Roster.THEMES[themes[n]]
+		var body := String(theme["main_body"])
+		visits[body] = int(visits.get(body, 0)) + 1
+		if n > 0 and String(Roster.THEMES[themes[n - 1]]["main_body"]) == body: order_ok = false
+		if int(theme["rank"]) != clampi(ceili(float(n + 1) * 5.0 / float(Balance.ARENA_STAGES)), 1, 5): rank_ok = false
+		if n < 3 and not Balance.body_immune(body).is_empty(): early_ok = false
+	check(visits.size() == 5 and order_ok, "다섯 지형을 고루 돌고 같은 지형이 연달아 나오지 않음")
+	check(rank_ok, "뒤 탄일수록 험한 전장 (험지 등급 1에서 5까지)")
+	check(early_ok, "앞 세 탄에는 면역 몸의 지형이 걸리지 않음")
+	Arena.start_run(811)
+	check(Arena.stage_themes == themes, "같은 씨앗은 같은 전장 차례")
+	var opened := 0
+	for e in Arena.sim.events:
+		if String(e.get("t", "")) == "arena_stage" and int(e.get("stage", 0)) == 1: opened += 1
+	check(opened == 1, "판의 첫 전장도 새 전장 이벤트로 열림")
+	var different := 0
+	for seed_value in range(900, 920):
+		Arena.start_run(seed_value)
+		if Arena.stage_themes != themes: different += 1
+	check(different >= 19, "씨앗이 다르면 전장 차례도 달라짐")
+	Arena.start_run(812)
+	check(Arena.confirm_stage() and Arena.modal == "rite" and Arena.summon_count == 0, "1탄 카드 다음은 첫 무료 의식")
+	Arena.confirm_summon()
+	Arena.close_modal()
+	var sim: ArenaSim = Arena.sim
+	check(sim.stage == 1 and Arena.wave == 1 and ArenaGeometry.layout() == ArenaGeometry.layout_for_theme(Arena.theme_index), "전장마다 정해진 길 배치 사용")
+	sim.crystal_hp = sim.crystal_max * 0.5
+	sim.cast_skill("ward")
+	var uses_left := sim.skill_uses_left("ward")
+	var gold: int = Arena.gold
+	var kills: int = Arena.kills
+	var first_theme: int = Arena.theme_index
+	_monster(sim, ArenaGeometry.route_points(0)[8])
+	sim.events.clear()
+	_kill_boss(sim)
+	var cleared := false
+	var scattered := 0
+	for e in sim.events:
+		if String(e.get("t", "")) == "arena_stage_clear" and int(e.get("stage", 0)) == 1: cleared = true
+		if String(e.get("t", "")) == "die" and bool(e.get("scatter", false)): scattered += 1
+	check(cleared and scattered == 1 and sim.clear_t > 0.0, "탄 돌파 이벤트·남은 적 흩어짐")
+	check(Arena.gold >= gold + Balance.arena_stage_bonus(1), "탄 돌파 골드 지급")
+	check(is_equal_approx(sim.crystal_hp, sim.crystal_max * (0.5 + Balance.ARENA_STAGE_HEAL)), "탄 돌파 때 수정 일부 회복")
+	check(not sim.cast_skill("blast"), "돌파 연출 중 기술 사용 차단")
+	var during := Arena.snapshot()
+	check(ArenaValidation.valid(during) and Arena.restore(during) and Arena.sim.clear_t > 0.0 and Arena.stage == 1, "돌파 연출 중 저장·복구")
+	sim = Arena.sim
+	var hp_after: float = sim.crystal_hp
+	sim._damage_crystal(50.0, Balance.ARENA_CENTER)
+	check(sim.crystal_hp == hp_after, "돌파 연출 중에는 수정이 피해를 받지 않음")
+	_advance(sim, Balance.ARENA_CLEAR_DELAY + 0.2)
+	check(Arena.stage == 2 and Arena.modal == "stage" and Arena.running and sim.stage == 2, "연출 뒤 2탄의 전장 카드")
+	check(Arena.theme_index == Arena.stage_themes[1] and Arena.theme_index != first_theme and ArenaGeometry.layout() == ArenaGeometry.layout_for_theme(Arena.theme_index), "다음 탄은 다른 전장과 그 전장의 길")
+	check(sim.elapsed == 0.0 and sim.monsters.is_empty() and not sim.boss_spawned and not sim.boss_warned, "새 탄은 시간·적·보스가 처음부터")
+	check(sim.crystal_hp == hp_after and sim.skill_uses_left("ward") == uses_left and Arena.kills >= kills and Arena.heroes.size() == 1, "수정·기술 횟수·처치·영웅은 다음 탄으로 이어짐")
+	var staged := false
+	for e in sim.events:
+		if String(e.get("t", "")) == "arena_stage" and int(e.get("stage", 0)) == 2: staged = true
+	check(staged, "새 전장 이벤트")
+	var card := Arena.snapshot()
+	var elapsed_time: float = sim.elapsed
+	_advance(sim, 3.0)
+	check(sim.elapsed == elapsed_time, "전장 카드가 열려 있는 동안 전투 정지")
+	check(ArenaValidation.valid(card) and Arena.restore(card) and Arena.modal == "stage" and Arena.stage == 2, "전장 카드 중 저장·복구")
+	check(Arena.sim.events.is_empty(), "이어 한 판은 전장을 다시 공개하지 않음")
+	check(Arena.confirm_stage() and Arena.modal == "" and Arena.summon_count == 1, "2탄부터는 카드 뒤 바로 전투 (무료 의식은 첫 한 번)")
+	sim = Arena.sim
+	_advance(sim, 12.0)
+	check(sim.elapsed > 11.0 and not sim.monsters.is_empty(), "2탄 전투 진행·몬스터 출현")
+	for mo in sim.monsters:
+		if not ArenaGeometry.on_road(mo["pos"]): check(false, "2탄 몬스터가 새 길 위에 있음")
+	var mid := Arena.snapshot()
+	ArenaGeometry.use_layout("coil:0:0")
+	check(ArenaValidation.valid(mid) and ArenaGeometry.layout() == "coil:0:0", "저장 검사는 그 전장의 길로 보고 지금 배치를 건드리지 않음")
+	check(Arena.restore(mid) and Arena.stage == 2 and ArenaGeometry.layout() == ArenaGeometry.layout_for_theme(Arena.theme_index) and Arena.sim.monsters == mid["sim"]["monsters"], "2탄 전투 중 저장·복구가 길 배치까지 되돌림")
+	var wrong := mid.duplicate(true)
+	wrong["theme_index"] = (int(mid["theme_index"]) + 1) % Roster.THEMES.size()
+	check(not ArenaValidation.valid(wrong), "탄과 맞지 않는 전장 저장 거부")
+	wrong = mid.duplicate(true)
+	wrong["stage"] = Balance.ARENA_STAGES + 1
+	wrong["wave"] = wrong["stage"]
+	check(not ArenaValidation.valid(wrong), "없는 탄 저장 거부")
+	# Walk the rest of the chain: every boss opens the next stage, the last one wins.
+	var best_before: int = Save.best_stage
+	var clears: int = Save.clears
+	var guard := 0
+	while Arena.running and guard < 40:
+		guard += 1
+		if Arena.modal == "stage": Arena.confirm_stage()
+		sim = Arena.sim
+		if sim.final_stage(): break
+		_kill_boss(sim)
+		_advance(sim, Balance.ARENA_CLEAR_DELAY + 0.2)
+	# The last boss falls with the same beat as every other, and only then is the run won.
+	sim.events.clear()
+	sim.elapsed = Balance.ARENA_BOSS_AT - Balance.ARENA_BOSS_WARNING - 0.02
+	_advance(sim, 0.1)
+	var final_warning := false
+	for e in sim.events:
+		if String(e.get("t", "")) == "arena_boss_warning" and bool(e.get("final", false)): final_warning = true
+	check(final_warning, "마지막 보스 예고는 최종 표시를 실음")
+	_kill_boss(sim)
+	var final_clear := false
+	for e in sim.events:
+		if String(e.get("t", "")) == "arena_stage_clear" and bool(e.get("final", false)): final_clear = true
+	check(Arena.running and not sim.done and not sim.won and sim.clear_t > 0.0 and final_clear and sim.monsters.is_empty(), "마지막 보스도 쓰러지는 연출을 거친 뒤 승리")
+	var closing := Arena.snapshot()
+	check(ArenaValidation.valid(closing) and Arena.restore(closing) and Arena.running and Arena.sim.clear_t > 0.0, "마지막 돌파 연출 중 저장·복구")
+	_advance(Arena.sim, Balance.ARENA_CLEAR_DELAY + 0.2)
+	check(not Arena.running and Arena.stage == Balance.ARENA_STAGES and Arena.sim.won and Arena.modal == "result", "마지막 탄의 보스를 잡으면 승리")
+	check(Save.best_stage == Balance.ARENA_STAGES and Save.best_stage >= best_before and Save.clears == clears + 1, "최고 도달 탄·완료 횟수 기록")
+
+## Monsters grow with the stage: thicker, a richer bounty, more kinds and a denser crowd.
+func _check_stage_strength() -> void:
+	var hp_ok := true
+	var gold_ok := true
+	for stage in range(2, Balance.ARENA_STAGES + 1):
+		if Balance.arena_hp(stage, 1) <= Balance.arena_hp(stage - 1, 1) * 1.05: hp_ok = false
+		if Balance.arena_kill_gold(stage, "swarm") < Balance.arena_kill_gold(stage - 1, "swarm"): gold_ok = false
+	check(hp_ok and is_equal_approx(Balance.arena_hp(1, 1), Balance.wave_hp(1, 1) * Balance.ARENA_HP_SCALE), "몬스터 체력은 1탄이 예전 값이고 탄마다 오름")
+	check(gold_ok and Balance.arena_kill_gold(Balance.ARENA_STAGES, "swarm") > Balance.arena_kill_gold(1, "swarm"), "처치 골드도 탄을 따라 오름")
+	var sim := _battle(813)
+	sim.monsters.clear()
+	sim._spawn(Arena.stage_spawns(1, 0)[0])
+	var first: Dictionary = sim.monsters[0].duplicate(true)
+	var early_limit := sim.population_limit()
+	var early_gap := sim.spawn_interval()
+	var kinds_first := {}
+	for monster in Arena.stage_spawns(1, 0) + Arena.stage_spawns(1, 1): kinds_first[String(monster["kind"])] = true
+	check(kinds_first.keys() == ["swarm"], "1탄은 떼거리만 나옴")
+	# The same run, last stage.
+	Arena.stage = Balance.ARENA_STAGES
+	Arena.theme_index = Arena.stage_themes[Balance.ARENA_STAGES - 1]
+	ArenaGeometry.use_layout(ArenaGeometry.layout_for_theme(Arena.theme_index))
+	sim.begin_stage(Balance.ARENA_STAGES)
+	sim._spawn(Arena.stage_spawns(Balance.ARENA_STAGES, 0)[0])
+	var last: Dictionary = sim.monsters[0]
+	var ratio := (float(last["max"]) / float(Balance.MKIND[String(last["kind"])]["hp"])) / (float(first["max"]) / float(Balance.MKIND[String(first["kind"])]["hp"]))
+	check(ratio > pow(Balance.ARENA_STAGE_HP_GROW, Balance.ARENA_STAGES - 1) * 0.99, "마지막 탄 몬스터는 1탄보다 훨씬 두꺼움 (x%.1f)" % ratio)
+	check(int(last["gold"]) >= int(first["gold"]) and sim.population_limit() > early_limit and sim.spawn_interval() < early_gap, "마지막 탄은 더 붐비고 더 자주 나옴")
+	sim.elapsed = Balance.ARENA_BOSS_AT
+	check(sim.population_limit() == Balance.ARENA_POPULATION_MAX and is_equal_approx(sim.spawn_interval(), Balance.ARENA_SPAWN_MIN), "판의 끝에서 개체 수·출현 간격이 한계값")
+	var kinds_last := {}
+	for monster in Arena.stage_spawns(Balance.ARENA_STAGES, 0) + Arena.stage_spawns(Balance.ARENA_STAGES, 1): kinds_last[String(monster["id"])] = true
+	check(kinds_last.size() >= 4, "마지막 탄은 여러 종이 섞임 (%d종)" % kinds_last.size())
+	sim.monsters.clear()
+	sim.elapsed = Balance.ARENA_BOSS_AT - 0.02
+	_advance(sim, 0.1)
+	var boss: Dictionary = {}
+	for mo in sim.monsters:
+		if String(mo["kind"]) == "boss": boss = mo
+	check(not boss.is_empty() and is_equal_approx(float(boss["max"]), Balance.arena_boss_hp(Balance.ARENA_STAGES, Arena.theme_rank(1))) and Balance.arena_boss_hp(Balance.ARENA_STAGES, 5) > Balance.arena_boss_hp(Balance.ARENA_STAGES - 1, 5) * Balance.ARENA_STAGE_HP_GROW, "최종 보스는 탄 보스보다 두꺼움")
+	check(Balance.arena_boss_hp(1, 1) < Balance.arena_hp(1, 1) * float(Balance.MKIND["boss"]["hp"]) * 0.5, "1탄 보스는 영웅 두셋으로 잡을 수 있게 가벼움")
+	Arena.running = false

@@ -12,12 +12,36 @@ class_name NativeMonsterModel
 ## the dt the world passes to face_toward/advance_death or by motion_time
 ## differences, so a paused simulator (dt 0, unchanged clock) redraws the same
 ## pose and two instances fed the same inputs pose identically.
+##
+## Three ways to leave the field (visual_event): "die" (the authored Die clip, a topple
+## or sink by body shape, then the dissolve), "leak" (reached the crystal: shrinks away in
+## 0.4 s) and "die" with `scatter` (an escort whose stage boss fell: it is not killed, it
+## flees; see FLEE_SEC).
 const MANIFEST := "res://art/models/native_monsters.json"
 const FADE := 0.18          # idle/move/attack crossfade seconds
 const DEATH_FADE := 0.08
 const SPAWN_SEC := 0.45
 const ATTACK_SHIFT := 0.3   # Attack clip time = (siege phase - 0.3) mod 1 → strike at the wrap
 const EPS := 0.0005
+## Scatter: an escort removed when its stage boss falls. Seconds after the event:
+##   0 .. wait        halt: the simulator no longer moves the body, so the walk eases to
+##                    the idle pose; a small crouch as the victory wave comes close
+##   wait             the wave arrives (StellarVfx.scatter_delay: 0 at the crystal, 0.6 at
+##                    the rim) and the haze StellarVfx draws for this body is born
+##   wait .. +FLEE_SEC  flee: the body turns from the crystal (FLEE_TURN) and bolts
+##                    FLEE_DIST along StellarVfx.scatter_heading, most of it in the first
+##                    half while it is still solid (its MoveLoop driven by the ground it
+##                    covers), leaning in and lifting a little; it thins into that haze
+##                    over the second half
+## No Die clip, no topple, no sink. Longest case 0.6 + 0.54 s: inside the world's 1.6 s
+## retention and well before the next battlefield is built (Balance.ARENA_CLEAR_DELAY).
+const FLEE_SEC := 0.50
+const FLEE_DIST := 1.50     # world units covered while leaving
+const FLEE_EASE := 1.8      # travel = 1 - (1 - u)^FLEE_EASE: a bolt that runs out as it thins
+const FLEE_TURN := 0.14     # seconds to face the way out
+const FLEE_BRACE := 0.16    # seconds of crouch before the wave arrives
+const FLEE_LIFT := 0.28     # of the body height (capped at 1.2 u), reached as it is gone
+const FLEE_BLEND := 0.08    # idle -> run crossfade
 static var _manifest: Dictionary = {}
 
 var _skeleton: Skeleton3D
@@ -65,6 +89,15 @@ var _dying := false
 var _death_kind := ""
 var _death_t := 0.0
 var _dissolve := -1.0
+# Scatter (see FLEE_SEC): when the wave arrives, how long and how far this body runs,
+# which way (root-local unit vector and the turn that faces it) and the MoveLoop seconds
+# its run has added to the simulator's last clock.
+var _flee_wait := 0.0
+var _flee_len := FLEE_SEC
+var _flee_reach := FLEE_DIST
+var _flee_dir := Vector3(0,0,1)
+var _flee_yaw := 0.0
+var _flee_run := 0.0
 
 static func manifest() -> Dictionary:
 	if _manifest.is_empty() and FileAccess.file_exists(MANIFEST):
@@ -265,7 +298,8 @@ func visual_event(type: String, e: Dictionary) -> void:
 		"stun":
 			_daze = maxf(_daze,0.6)
 		"die":
-			_begin_death("die")
+			if bool(e.get("scatter",false)): _begin_scatter(e)
+			else: _begin_death("die")
 		"leak":
 			_begin_death("leak")
 		_:
@@ -276,8 +310,11 @@ func advance_death(dt: float) -> bool:
 	if not _bind() or not _dying: return true
 	if dt > 0.0:
 		_death_t += dt
-		_w_die = minf(1.0,_w_die+dt/DEATH_FADE)
-		_compose(_last_motion)
+		if _death_kind == "scatter":
+			_advance_scatter(dt)
+		else:
+			_w_die = minf(1.0,_w_die+dt/DEATH_FADE)
+			_compose(_last_motion)
 		_apply_skeleton()
 		_apply_pivot()
 		var q := _dissolve_amount()
@@ -286,11 +323,14 @@ func advance_death(dt: float) -> bool:
 			StellarShading.set_dissolve(self,q)
 	return _death_t >= _death_total()
 
-## Inspection hook for checks and previews (read only).
+## Inspection hook for checks and previews (read only). `death` is "", "die", "leak" or
+## "scatter"; `flee` is the run's progress 0..1 once the wave has arrived (-1 otherwise).
 func motion_state() -> Dictionary:
 	return {"idle": _w_idle, "move": _w_move, "attack": _w_attack, "die": _w_die, "spawn": _spawn_t,
 		"yaw": _yaw, "bank": _bank, "stand": _stand_t, "dying": _dying, "dissolve": _dissolve,
-		"flash": _flash, "daze": _daze, "stumble": _stumble, "pivot": _pivot.transform if _pivot != null else Transform3D.IDENTITY}
+		"flash": _flash, "daze": _daze, "stumble": _stumble, "pivot": _pivot.transform if _pivot != null else Transform3D.IDENTITY,
+		"death": _death_kind, "death_t": _death_t, "death_total": _death_total() if _dying else 0.0,
+		"flee_wait": _flee_wait, "flee": _flee_progress() if _death_kind == "scatter" else -1.0}
 
 # --------------------------------------------------------------------------- #
 # Pose composition
@@ -354,6 +394,7 @@ func _apply_pivot() -> void:
 	var origin := Vector3.ZERO
 	var scl := Vector3.ONE
 	var pitch := 0.0
+	var yaw := 0.0
 	var roll := _bank
 	if _spawn_t >= 0.0:
 		var u := clampf(_spawn_t/SPAWN_SEC,0.0,1.0)
@@ -389,6 +430,23 @@ func _apply_pivot() -> void:
 			var u := clampf(t/0.4,0.0,1.0)
 			scl *= Vector3.ONE*(1.0-0.8*u)
 			origin.y -= 0.6*_height*u*u
+		elif _death_kind == "scatter":
+			var since := t-_flee_wait
+			# Anticipation: a crouch and a lean back over the last FLEE_BRACE seconds
+			# before the wave arrives (none for a body the wave reaches at once),
+			# released as it bolts.
+			var brace := clampf(_flee_wait/FLEE_BRACE,0.0,1.0)*smoothstep(-FLEE_BRACE,0.0,since)*(1.0-smoothstep(0.0,0.07,since))
+			scl *= Vector3(1.0+0.09*brace,1.0-0.14*brace,1.0+0.09*brace)
+			pitch += 0.10*brace
+			if since > 0.0:
+				var u := _flee_progress()
+				# Snap: it springs up out of the crouch, turns and is off; then it thins.
+				var spring := sin(PI*clampf(since/0.22,0.0,1.0))
+				scl *= Vector3(1.0-0.06*spring,1.0+0.11*spring,1.0-0.06*spring)*(1.0-0.14*u*u)
+				yaw = _flee_yaw*(1.0-pow(1.0-clampf(since/FLEE_TURN,0.0,1.0),3.0))
+				pitch -= 0.24*smoothstep(0.0,0.25,u)
+				origin += _flee_dir*(_flee_travel(u)/maxf(absf(scale.x),0.01))
+				origin.y += FLEE_LIFT*minf(_height,1.2)*u*u
 		else:
 			match String(_motion.get("death","sink")):
 				"topple":
@@ -404,11 +462,12 @@ func _apply_pivot() -> void:
 					origin.y -= 1.1*_height*pow(_seg(t,0.55,1.10),2.0)
 				_:
 					origin.y -= 1.1*_height*pow(_seg(t,0.45,1.15),2.0)
-	var basis := Basis.from_scale(scl)*Basis.from_euler(Vector3(pitch,0.0,roll))
+	var basis := Basis.from_scale(scl)*Basis.from_euler(Vector3(pitch,yaw,roll))
 	_pivot.transform = _pivot_base*Transform3D(basis,origin)
 
 func _death_total() -> float:
 	if _death_kind == "leak": return 0.4
+	if _death_kind == "scatter": return _flee_wait+_flee_len
 	match String(_motion.get("death","sink")):
 		"topple", "topple_side": return 1.45
 		"topple_back": return 1.5
@@ -418,6 +477,13 @@ func _death_total() -> float:
 func _dissolve_amount() -> float:
 	var t := _death_t
 	if _death_kind == "leak": return clampf(t/0.4,0.0,1.0)
+	if _death_kind == "scatter":
+		# Whole until the wave arrives. From there the material layer's cold glow starts
+		# at once (it begins at 0.6 of its hold) and the body thins late in the run, so
+		# the run itself is seen: still 85% there half way, 40% at 0.7, gone by 0.95.
+		if t <= _flee_wait: return 0.0
+		var glow := StellarShading.DISSOLVE_HOLD*0.6
+		return glow+(1.0-glow)*pow(_flee_progress(),1.6)
 	match String(_motion.get("death","sink")):
 		"topple", "topple_side": return _seg(t,0.75,1.4)
 		"topple_back": return _seg(t,0.8,1.45)
@@ -437,6 +503,63 @@ func _begin_death(kind: String) -> void:
 		if group != null: group.visible = false
 	_dissolve = 0.0
 	StellarShading.set_dissolve(self,0.0)
+
+## An escort whose stage boss fell: it flees instead of dying (see FLEE_SEC). `e.p` is
+## where the simulator last had it, `e.sid` its spawn id (the same two values give
+## StellarVfx the haze's place, moment and heading, so body and haze leave together).
+func _begin_scatter(e: Dictionary) -> void:
+	if _dying: return
+	_begin_death("scatter")
+	var sid := int(e.get("sid",0))
+	var at: Vector2 = Balance.ARENA_CENTER
+	if e.get("p") is Vector2: at = e["p"]
+	elif is_inside_tree(): at = StellarWorld.logical(global_position)
+	_flee_wait = StellarVfx.scatter_delay(at)
+	var heading := StellarVfx.scatter_heading(at,sid)
+	# A crowd must not leave as one machine: length and reach vary a little by spawn id
+	# (no random numbers: a redraw or a second instance gives the same run).
+	_flee_len = FLEE_SEC*(0.92+0.16*fposmod(float(sid)*0.6180339+0.31,1.0))
+	_flee_reach = FLEE_DIST*(0.85+0.30*fposmod(float(sid)*0.7548777+0.63,1.0))
+	var away := Vector3(heading.x,0.0,heading.y)
+	if is_inside_tree(): away = global_transform.basis.inverse()*away
+	away.y = 0.0
+	_flee_dir = away.normalized() if away.length_squared() > 0.000001 else Vector3(0,0,1)
+	# The body faces -Z; this is the turn that points it along the way out.
+	_flee_yaw = atan2(-_flee_dir.x,-_flee_dir.z)
+	_flee_run = 0.0
+	# The last hit's flash and recoil belong to a fight that is over.
+	_hit_scale = 1.0
+	_recoil = Vector3.ZERO
+	if _flash > 0.0:
+		_flash = 0.0
+		StellarShading.set_hit_flash(self,0.0)
+
+## Fraction 0..1 of the run (0 until the wave arrives).
+func _flee_progress() -> float:
+	return clampf((_death_t-_flee_wait)/maxf(_flee_len,0.001),0.0,1.0)
+
+## World units covered at run fraction u: a bolt. Most of the ground is covered while
+## the body is still solid (71% by half way), and it runs out as the body thins, so the
+## haze it turns into is left where it was last seen.
+func _flee_travel(u: float) -> float:
+	return _flee_reach*(1.0-pow(1.0-clampf(u,0.0,1.0),FLEE_EASE))
+
+## One step of the scatter: blend weights and reaction layers move by dt, the pose is
+## the idle while it waits and the MoveLoop at the distance it has run once it flees.
+func _advance_scatter(dt: float) -> void:
+	var fleeing := _death_t >= _flee_wait
+	var k := dt/(FLEE_BLEND if fleeing else FADE)
+	_w_move = move_toward(_w_move,1.0 if fleeing else 0.0,k)
+	_w_idle = move_toward(_w_idle,0.0 if fleeing else 1.0,k)
+	_w_attack = move_toward(_w_attack,0.0,k)
+	_stand_t = fposmod(_stand_t+dt,float(_clips["IdleLoop"]["len"]))
+	_stumble = maxf(0.0,_stumble-dt/0.4)
+	_daze = move_toward(_daze,0.0,dt/0.25)
+	_bank = move_toward(_bank,0.0,dt*1.5)
+	# The simulator's walk clock is seconds at Balance.PATH_SPEED: the same ratio keeps
+	# the feet on the ground the pivot covers.
+	if fleeing: _flee_run = _flee_travel(_flee_progress())*StellarWorld.UNIT/Balance.PATH_SPEED
+	_compose(_last_motion+_flee_run)
 
 ## Unit direction (local space) pointing from a logical hit position to this body.
 func _away_from(p) -> Vector3:

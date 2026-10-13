@@ -13,7 +13,11 @@ func _ready() -> void:
 	var screen: ArenaScreen = main.screen
 	screen.set_process(false)
 	await paint(screen)
-	check(Arena.modal == "theme" and tap(screen, "theme:0") and tap(screen, "theme:start"), "테마 선택 버튼")
+	check(Arena.modal == "stage" and Arena.stage == 1 and Arena.theme_index >= 0, "새 판은 무작위 전장 카드로 시작 (전장 선택 없음)")
+	var has_choice := false
+	for zone in screen.ui.zones:
+		if String(zone["id"]).begins_with("theme:"): has_choice = true
+	check(not has_choice and tap(screen, "stage:start"), "전장 카드 확인 버튼")
 	screen._rite_age = 9.0
 	await paint(screen)
 	check(tap(screen, "rite:confirm"), "의식 확정 버튼")
@@ -50,6 +54,23 @@ func _ready() -> void:
 	screen._process(0.1)
 	check(Arena.sim.elapsed > before_speed + 0.15, "2배속이 실제 시뮬 시간을 두 배로 돌림")
 	check(tap(screen, "speed:1") and is_equal_approx(screen.speed, 1.0), "상단 배속 버튼 1배속 복귀")
+	# Stage boss down: the next random battlefield opens with its card, on screen.
+	var first_field: String = screen.view_3d.world.theme_id
+	var first_layout := ArenaGeometry.layout()
+	Arena.sim.elapsed = Balance.ARENA_BOSS_AT - 0.02
+	screen._process(0.05)
+	for mo in Arena.sim.monsters:
+		if String(mo["kind"]) == "boss": mo["hp"] = 0.0
+	Arena.sim._cache_positions()
+	Arena.sim._reap()
+	check(Arena.sim.clear_t > 0.0, "탄 보스 처치 뒤 돌파 연출")
+	for i in range(roundi((Balance.ARENA_CLEAR_DELAY + 0.3) * 30)): screen._process(1.0 / 30.0)
+	await paint(screen)
+	check(Arena.stage == 2 and Arena.modal == "stage" and screen.view_3d.world.theme_id == String(Arena.theme_for(1)["id"]) and screen.view_3d.world.theme_id != first_field,
+		"2탄 전장 카드와 새 전장의 3D 월드")
+	check(ArenaGeometry.layout() == ArenaGeometry.layout_for_theme(Arena.theme_index) and (ArenaGeometry.layout() != first_layout or Arena.theme_index >= 0), "새 전장의 길 배치")
+	check(tap(screen, "stage:start") and Arena.modal == "", "2탄 전장 카드 확인 뒤 바로 전투")
+	await paint(screen)
 	check(tap(screen, "bench"), "대기 편성 버튼")
 	await paint(screen)
 	check(tap(screen, "close"), "대기 편성 닫기 버튼")

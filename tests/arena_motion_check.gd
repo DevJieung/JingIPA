@@ -62,6 +62,7 @@ func _ready() -> void:
 	await _hero_plumbing()
 	await _monster_plumbing()
 	await _real_adapters_tolerate_hooks()
+	await _escort_scatters()
 	finish("World motion plumbing (locomotion, facing, flash, siege, death retention)")
 
 func _hero_plumbing() -> void:
@@ -190,5 +191,78 @@ func _real_adapters_tolerate_hooks() -> void:
 		if frame % 30 == 0:
 			check([sim.heroes, sim.monsters, sim.bullets, sim._rng.state] == snapshot, "live world sync preserves the simulator at frame %d" % frame)
 	check(world.hero_nodes.size() == 6, "six live heroes remain after ninety frames")
+	world.free()
+	await frames(1)
+
+## A stage boss falls: its escort is removed with `die` + `scatter`. Those bodies flee
+## (no Die clip, no topple) and are gone before the next battlefield is built, while the
+## boss itself dies the ordinary way. The look is reviewed on captures
+## (tests/3d/moments_review.py); this holds the contract in the headless run.
+func _escort_scatters() -> void:
+	Fixture.fresh(10132026)
+	Arena.start_run(10132026)
+	Arena.choose_theme(0)
+	Arena.confirm_summon()
+	Arena.close_modal()
+	var sim: ArenaSim = Arena.sim
+	# The guardian stands aside and cannot reach anything: only the staged kill matters.
+	Arena.heroes[0]["position"] = Balance.ARENA_CENTER + Vector2(0, -150)
+	sim.refresh_heroes()
+	sim.heroes[0]["range"] = 1.0
+	sim.monsters.clear()
+	var pool := Roster.theme_pool(Arena.theme_for(1))
+	for n in range(8):
+		sim._spawn(pool[n % pool.size()])
+		var lane := n % ArenaGeometry.route_count()
+		var route := ArenaGeometry.route_points(lane)
+		# From just inside the gate to deep in the spiral: near and far from the crystal.
+		sim.monsters[-1]["pos"] = route[mini(route.size() - 2, 6 + n * 11)]
+		sim.monsters[-1]["hp"] = 1.0e9
+	sim.elapsed = Balance.ARENA_BOSS_AT - 0.02
+	for n in range(6): sim.step(1.0 / 60.0)
+	var boss_sid := 0
+	for mo in sim.monsters:
+		if String(mo["kind"]) == "boss": boss_sid = int(mo["spawn_id"])
+	check(boss_sid > 0 and sim.monsters.size() == 9, "the stage boss joins its escort")
+	var world := ArenaWorld.new()
+	add_child(world)
+	await frames(1)
+	for e in sim.events: world.event(e)
+	sim.events.clear()
+	world.sync_battle(sim, sim.elapsed, 1, 1.0 / 30.0)
+	for mo in sim.monsters:
+		if String(mo["kind"]) == "boss": mo["hp"] = 0.0
+	sim._cache_positions()
+	sim._reap()
+	var escorts: Array[int] = []
+	for e in sim.events:
+		if String(e.get("t", "")) == "die" and bool(e.get("scatter", false)): escorts.append(int(e.get("sid", 0)))
+	check(sim.clear_t > 0.0 and escorts.size() == 8 and sim.monsters.is_empty(), "the escort is removed with scatter events")
+	for e in sim.events: world.event(e)
+	sim.events.clear()
+	var fled := 0
+	for sid in escorts:
+		var node: Node3D = world.monster_nodes.get(sid)
+		if node != null and node.has_method("motion_state") and String(node.call("motion_state")["death"]) == "scatter": fled += 1
+	check(fled == escorts.size(), "every escort body leaves by the scatter exit (%d of %d)" % [fled, escorts.size()])
+	var boss_node: Node3D = world.monster_nodes.get(boss_sid)
+	check(boss_node != null and String(boss_node.call("motion_state")["death"]) == "die", "the boss itself dies the ordinary way")
+	# Play the beat. No fleeing body ever blends its Die clip in, and all of them are
+	# gone before the next battlefield is built.
+	var die_weight := 0.0
+	var gone_at := -1.0
+	var age := 0.0
+	var step := 1.0 / 30.0
+	while age < Balance.ARENA_CLEAR_DELAY:
+		age += step
+		world.sync_battle(sim, sim.elapsed + age, 1, step)
+		var left := 0
+		for sid in escorts:
+			if not world.monster_nodes.has(sid): continue
+			left += 1
+			die_weight = maxf(die_weight, float(world.monster_nodes[sid].call("motion_state")["die"]))
+		if left == 0 and gone_at < 0.0: gone_at = age
+	check(die_weight == 0.0, "a fleeing body never plays its death clip")
+	check(gone_at > 0.3 and gone_at < Balance.ARENA_CLEAR_DELAY - 0.3, "the escort has left before the next battlefield is built (%.2f s)" % gone_at)
 	world.free()
 	await frames(1)
