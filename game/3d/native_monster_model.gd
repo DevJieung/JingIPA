@@ -43,6 +43,14 @@ const FLEE_BRACE := 0.16    # seconds of crouch before the wave arrives
 const FLEE_LIFT := 0.28     # of the body height (capped at 1.2 u), reached as it is gone
 const FLEE_BLEND := 0.08    # idle -> run crossfade
 static var _manifest: Dictionary = {}
+## Loaded creature scenes by id. A type stays loaded after its last instance dies:
+## until 2026-10-15 it was read back from storage on its next spawn, a 30-70 ms frame
+## on a phone-class core. keep_only() limits the set to the coming stage's creatures.
+static var _scenes: Dictionary = {}
+## Ids whose shared skin materials StellarShading.style() has tuned. The tuning lives
+## on the cached scene's own materials, so it runs once per load instead of once per
+## spawn (style() reads every surface's vertex arrays back to find vertex colours).
+static var _styled: Dictionary = {}
 
 var _skeleton: Skeleton3D
 var _player: AnimationPlayer
@@ -109,10 +117,30 @@ static func has_model(id: String) -> bool:
 	var data := manifest()
 	return id in data.get("ready_ids",[]) and data.get("monsters",{}).has(id) and ResourceLoader.exists(String(data["monsters"][id]["path"]))
 
-static func create(id: String) -> Node3D:
+## Loads the given creature types and releases every other cached type. The arena
+## calls it while a stage's battlefield card is up, so that stage's monsters and boss
+## are in memory before the first one spawns. Bodies still on the field keep their own
+## resources alive; a released type simply loads again if it is ever spawned.
+static func keep_only(ids: Array) -> void:
+	for id in _scenes.keys():
+		if not ids.has(id):
+			_scenes.erase(id)
+			_styled.erase(id)
+	for id in ids:
+		if has_model(String(id)): _scene(String(id))
+
+static func _scene(id: String) -> PackedScene:
+	if _scenes.has(id): return _scenes[id]
 	var row: Dictionary = manifest().get("monsters",{}).get(id,{})
 	if row.is_empty(): return null
 	var packed := load(String(row["path"])) as PackedScene
+	if packed != null: _scenes[id] = packed
+	return packed
+
+static func create(id: String) -> Node3D:
+	var row: Dictionary = manifest().get("monsters",{}).get(id,{})
+	if row.is_empty(): return null
+	var packed := _scene(id)
 	if packed == null: return null
 	var root := packed.instantiate() as Node3D
 	root.set_script(load("res://game/3d/native_monster_model.gd"))
@@ -122,7 +150,9 @@ static func create(id: String) -> Node3D:
 	root.set_meta("_stellar_shape",String(row.get("shape","biped")))
 	root.set_meta("_stellar_motion",row.get("motion",{}))
 	root.set_meta("model_source",String(row["path"]))
-	StellarShading.style(root,float(row.get("metallic",0.0)))
+	if not _styled.has(id):
+		StellarShading.style(root,float(row.get("metallic",0.0)))
+		_styled[id] = true
 	StellarShading.prepare_instance(root)
 	_setup_status(root,float(row.get("height",1.0)))
 	var player := _find_type(root,"AnimationPlayer") as AnimationPlayer

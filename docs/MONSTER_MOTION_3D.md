@@ -177,6 +177,12 @@ python3 tools/3d/native_monster_review.py --ids blaze_fox --display-base 170
   사망 중 상태 고리 3종은 숨기고 `animate_visual`은 무시한다. 모두 월드 상한 1.6s 안에 끝난다.
 - 리소스: 생성 뒤 노드·메시·재질을 만들지 않는다. 피벗은 GLB의 `CreatureRig` 노드다
   (루트 position/rotation.z는 월드가 쓴다).
+- 로드(2026-10-15): `NativeMonsterModel`이 종류별 PackedScene을 붙잡아 둔다. 전에는 한 종류의
+  마지막 몸이 사라지면 장면이 메모리에서 내려갔고, 다음 등장 때 저장소에서 다시 읽었다(폰급 코어에서
+  임프 30ms대, 보스 73ms 프레임). `StellarShading.style()`(공유 재질 조정, 정점 배열을 읽어 온다)은
+  로드당 한 번만 돈다. 아레나는 전장 카드가 열릴 때 `ArenaScreen._load_stage_monsters()`가 그 탄의 두
+  습격 몬스터와 보스로 `keep_only()`를 불러 미리 읽고 지난 탄 종류를 놓는다. 같은 측정에서 가장 무거운
+  등장 프레임은 13.9ms(평소 11~14ms)다.
 
 ## 검수
 

@@ -161,11 +161,26 @@ func _track_modal() -> void:
 		Sfx.play_music("ritual")
 	elif Arena.modal != previous:
 		Sfx.play_music("camp" if Arena.theme_index < 0 else "theme_" + String(Arena.theme_for(1)["id"]))
-		if Arena.modal == "stage": Sfx.play("theme")
+		if Arena.modal == "stage":
+			Sfx.play("theme")
+			_load_stage_monsters()
 	if Arena.modal == "bench" and previous != "bench":
 		_field_choice = clampi(Arena.selected, 0, maxi(0, Arena.heroes.size() - 1))
 		_bench_choice = -1
 		_bench_page = 0
+
+## While the battlefield card is up, load the stage's monsters (both assaults) and its
+## boss, and let the previous stage's types go. Without this the first spawn of a type,
+## and the boss entrance, read the model from storage in the middle of the fight.
+func _load_stage_monsters() -> void:
+	var preview := Arena.stage_preview(Arena.stage)
+	var ids: Array = []
+	for row in preview["rows"]:
+		for monster in row["monsters"]:
+			if not ids.has(String(monster["id"])): ids.append(String(monster["id"]))
+	var boss: Dictionary = preview.get("boss", {})
+	if not boss.is_empty() and not ids.has(String(boss["id"])): ids.append(String(boss["id"]))
+	NativeMonsterModel.keep_only(ids)
 
 func _start_spin(rings: Array) -> void:
 	_spin_rings = rings.duplicate()
