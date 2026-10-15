@@ -18,6 +18,36 @@
 - 런타임 GLB/provenance는 `art/models/monsters/<id>/`에 둔다.
   검수 완료 ID만 `art/models/native_monsters.json.ready_ids`에 연결한다.
 
+## 2026-10-15 현행 런타임 — 모바일 폴리곤·텍스처 예산
+
+아래 절의 삼각형 수(10k~178k)와 「실제 표면 보존 예외」는 **편집 원본** `monster-source/<id>/game.blend`의
+상태다. 출시 런타임 GLB는 사용자 요청("용량최적화, 특히 폴리")으로 줄였다.
+
+| 종류 | 상한 | 실제 삼각형 | albedo |
+| --- | --- | --- | --- |
+| swarm(Ember/Bramble/Pebble/Frost imp) | 4,000 | 3,000 | 256² |
+| DropSlime | 약 2,000 | 1,999 | 256² |
+| fast(Ray/Fox/Lynx/Skink/BlizzardWolf) | 4,000 | 3,600 | 256² |
+| caster(Jelly/Pyre/Spore/Idol/RimeWitch) | 4,000 | 3,600 | 512² |
+| tank(Wave/Magma/Elder/Stone/GlacierTitan) | 4,000 | 3,800 | 512² |
+| 보스(Leviathan/FlameDragon/TitanBloom/GlacierDragon) | 10,000 | 9,000 | 512² |
+| CrystalGolemKing | 10,000 | 7,794(보이는 면 전부) | 512² |
+
+- 25종 합계 1,808,163 → 112,776삼각형, imported 메시 63.03 → 4.51MB, 텍스처 33.45 → 1.38MB(lossy WebP 0.8).
+  예전에 표면 붕괴 때문에 원형 해상도를 남겼던 Pebble 174,565·BlizzardWolf 174,588·GlacierTitan 177,353·
+  RimeWitch 175,972·TitanBloom 139,999도 같은 예산에 들어왔다. 당시의 붕괴는 UV를 지키는 collapse가 겹판·핀치
+  정점에 막혀 생긴 것이고, 이번에는 바깥에서 보이는 면만 VTK로 줄여 xatlas에 새로 베이크했다.
+- EmberImp의 `EmberCrown` 발광 재질은 면 소속을 감소 중에 보간해 그대로 두 번째 surface로 남겼다.
+  리그·뼈·`IdleLoop`/`MoveLoop`/`Attack`/`Die` 클립 바이트·`height`·`motion` 값은 그대로이고 manifest의
+  `glb_sha256`만 바뀌었다. 근거는 각 `provenance.json`의 `mobile_lod`.
+- 계약 `native_monster_check` 1,239/0, `stellar_render_check` 2,628/0. 변형 진단에서 과신장 변은 Pebble 2→0,
+  RimeWitch 539→9, PyrePriest 2→2, 나머지 0 유지이고 클립 중 최저점 변화는 1cm 미만이다
+  (`build/character-3d/lod-2026-10-15/deformation/summary.json`).
+  Frost imp 눈구멍처럼 실제 개구부로 보이는 안쪽 벽은 원래의 어두운 색으로 남는다.
+- 고폴리 원본 백업 `build/character-3d/highpoly-2026-10-15/art-models/monsters/`(쓰이지 않던 유령 텍스처 포함),
+  저폴리 편집 원본 `monster-source/<id>/game-lod.blend`. `author_monster_motion.py`는 game-lod.blend가 있으면
+  새 클립을 저폴리 런타임 GLB에 접붙인다(55k 이상 원형을 다시 내보내지 않는다).
+
 ## 움직임과 엔진 계약
 
 `NativeMonsterModel`은 실제 Skeleton3D/AnimationPlayer의 `IdleLoop`/`MoveLoop`를 읽는다.

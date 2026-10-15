@@ -28,8 +28,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/rime_witch/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/rime_witch/game.blend",
-  "glb_sha256": "d6d537be41a15f0d8e655e3ac6fe3d4df618adfc32883bfe266aa848ed1938ca",
-  "glb_bytes": 11452480,
+  "glb_sha256": "6cf45faff31c948402c5f329596b24d88a0ae03693949e74922c94b0b68513bd",
+  "glb_bytes": 520464,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -104,5 +104,93 @@
     "tool": "tools/3d/author_monster_motion.py",
     "geometry_digest": "ad80787b789015772d46561d385e6c2ea1e5cdb0f11f93b804a1b65989fda182",
     "geometry_unchanged": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 3600,
+      "bake": 1024,
+      "texture": 512,
+      "monster_kind": "caster",
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 175972,
+      "vertices": 149381,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 11452480,
+      "sha256": "d6d537be41a15f0d8e655e3ac6fe3d4df618adfc32883bfe266aa848ed1938ca",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 3599,
+      "vertices": 3351,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 520464,
+      "sha256": "6cf45faff31c948402c5f329596b24d88a0ae03693949e74922c94b0b68513bd",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.00041934443288482726,
+      "p99": 0.003110362850129605,
+      "max": 0.00440998887643218
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 408625,
+      "missed_texels": 358,
+      "interior_fallback_texels": 128,
+      "miss_fraction": 0.0008761089018048333
+    },
+    "atlas": {
+      "charts": 237,
+      "utilization": 0.7589158415794373,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 1}"
+    },
+    "visible_faces": {
+      "removed_faces": 166289,
+      "kept_faces": 9683
+    },
+    "sole": {
+      "before": {
+        "floor": 0.0,
+        "band_vertices": 877,
+        "front": 0.12793491780757904,
+        "back": 0.3929738402366638
+      },
+      "after": {
+        "floor": 0.0,
+        "band_vertices": 27,
+        "front": 0.1336924433708191,
+        "back": 0.3909735381603241
+      }
+    },
+    "removed_extracted_textures": [
+      "rime_witch_rime_witch_Texture_b8e26958_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/monsters/rime_witch/rime_witch.glb",
+    "editable_lod_source": "build/character-3d/monster-source/rime_witch/game-lod.blend"
   }
 }

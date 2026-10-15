@@ -29,8 +29,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/phantom/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/phantom/game.blend",
   "height": 1.65,
-  "glb_bytes": 4947828,
-  "glb_sha256": "19fc9640ae91b6f01c3f8a2b0bfee8802956eae930da3c570f5c8629cd3cd397",
+  "glb_bytes": 773088,
+  "glb_sha256": "04fe1aa4a706123d58744864c9bf2d98a9d592dee5ebf32c02aa55c819b1d630",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -91,5 +91,92 @@
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/phantom/game.motion-v1.blend",
     "geometry_base_sha256": "5313a047c8b122c8ce68f42a57a440a11f355ba9d67359e52f0e0e6d3bcfb49e",
     "geometry_bytes_preserved": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 6000,
+      "bake": 1024,
+      "texture": 512,
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 54981,
+      "vertices": 55467,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 4947828,
+      "sha256": "19fc9640ae91b6f01c3f8a2b0bfee8802956eae930da3c570f5c8629cd3cd397",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 6000,
+      "vertices": 6180,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 773088,
+      "sha256": "04fe1aa4a706123d58744864c9bf2d98a9d592dee5ebf32c02aa55c819b1d630",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.0010304271709173918,
+      "p99": 0.004216623743996024,
+      "max": 0.007327403873205185
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 297658,
+      "missed_texels": 555,
+      "interior_fallback_texels": 212,
+      "miss_fraction": 0.0018645559669150501
+    },
+    "atlas": {
+      "charts": 572,
+      "utilization": 0.7535343766212463,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 0}"
+    },
+    "visible_faces": {
+      "removed_faces": 37601,
+      "kept_faces": 17399
+    },
+    "sole": {
+      "before": {
+        "floor": 6.405366730177775e-05,
+        "band_vertices": 154,
+        "front": -0.1836281567811966,
+        "back": 0.3061504364013672
+      },
+      "after": {
+        "floor": 0.00011426056880736724,
+        "band_vertices": 31,
+        "front": -0.18623553216457367,
+        "back": 0.3060213327407837
+      }
+    },
+    "removed_extracted_textures": [
+      "phantom_phantom_Texture_f06827d8_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/phantom/phantom.glb",
+    "editable_lod_source": "build/character-3d/source/phantom/game-lod.blend"
   }
 }

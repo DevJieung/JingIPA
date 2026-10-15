@@ -5,6 +5,46 @@
 역할 정의: [graphic_design_manager](../.codex/agents/graphic_design_manager.toml).
 분담 규칙: [AGENTS.md](../AGENTS.md).
 
+## 2026-10-15 모바일 용량 — 3D 모델 폴리곤·텍스처 예산 (현행 런타임)
+
+- 사용자 요청: "일단 용량최적화하자. 특히 폴리 최적화가 제일 필수적일듯". 판정은 실제 전장 캡처
+  (1280×800·1000×625)에서 전후 차이가 보이지 않는 것. 조형·정체성·리그·뼈/클립 이름과 길이·
+  `attack_release_time`·소켓·`height`·접지·`StellarShading` 계약은 그대로다(클립 바이트는 검수된
+  고폴리 GLB에서 그대로 옮겨 붙인다). 초상화·UI 아트는 손대지 않았다.
+- **확정 예산(상한 → 실제)**: 영웅 49명 ≤8k → 각 6,000삼각형·메시1·재질1(Brasa만 기존 반응로 렌즈
+  surface 2개). Limne ≤10k·≤4 surface → 9,400삼각형·3 surface(아틀라스 몸 1 + 갈색 홍채 2 —
+  `tests/limne_model_check`의 홍채 표면 계약). 몬스터 ≤4k → swarm 3,000(DropSlime 2,000)·fast/caster
+  3,600·tank 3,800, 보스 ≤10k → 9,000(CrystalGolemKing은 보이는 면이 7,794뿐). 알베도: 영웅·Limne·보스·
+  tank·caster 512², swarm·fast 256², `compress/mode=1`(lossy WebP) `lossy_quality=0.8`. 레거시 최대 확대의
+  1.5배 근접에서 무손실·lossy 0.7/0.85·ETC2가 구별되지 않았고(평균 차 0.4~1.0/255) 512²가 무손실 447KB →
+  lossy 83~119KB다.
+- **왜 단순 Decimate가 아닌가(실측)**: TRELLIS 재구성 표면은 한 장이 아니다. 면의 94~99%가 높이 1% 안쪽에
+  쌍둥이 면을 가진 얇은 겹판이고, DropSlime 단면은 보이는 바깥 판 / 약 1.7cm 벽 / 겹친 안쪽 공동 판이다. 안쪽
+  판의 텍스처는 생성기가 본 적 없는 어두운 잡음이다. 55k 게임 표면은 UV 섬 3,975~5,359개·이음 30%·핀치 정점
+  약 1,500개라 UV를 지키는 collapse는 6k에 못 간다(Blender 10.2k에서 멈춤). 그래서 **보이는 면만** 줄인다:
+  128방향 중 3방향 이상 바깥으로 빠지는 면만 남기고(틈으로만 보이는 안쪽 판은 제외, Frost imp 눈구멍 안처럼
+  실제 개구부로 보이는 벽은 유지) → VTK 쿼드릭 감소(스킨 가중치 보간) → xatlas 아틀라스 → 원래 색 EMIT 베이크
+  (보이는 면 우선·전체 판 대체) → 틈 채움 → 박스 축소. 예산 전부가 보이는 면에 쓰이고 안쪽 판의 어두운 얼룩이
+  묻지 않는다. 전체 판을 그대로 줄인 시제품은 Frost imp 얼굴에 검은 얼룩이 생겨 거절했다.
+- **GL Compatibility 정점색**: Godot 4.7 Compatibility는 COLOR_0을 sRGB 값처럼 보여 준다(정점색 0.667 →
+  화면 0.667, 같은 선형 알베도는 0.836, `vertex_color_is_srgb`와 무관 — 실측). Limne 피부(정점색)는 베이크에서
+  같은 디코드를 적용해 게임 화면의 갈색과 맞췄다(얼굴 평균 94,46,33 → 97,48,34).
+- **결과**: 삼각형 영웅 2,695,020 → 293,979, Limne 173,032 → 9,400(68 → 3 surface, 22 → 2 재질),
+  몬스터 1,808,163 → 112,776. `.godot/imported`의 모델 메시+텍스처 293.97MB → 23.53MB(−92%):
+  영웅 메시 96.21 → 12.78, 영웅 텍스처 88.43 → 4.42, 몬스터 메시 63.03 → 4.51, 몬스터 텍스처 33.45 →
+  1.38(쓰이지 않던 elder_treant·titan_bloom 유령 텍스처 2장 제거), Limne 12.86 → 0.44MB.
+- **검수**: 실제 전장 `tests/arena_visual_preview --motion-only --film` 두 해상도 48프레임(화면 평균 차
+  1.7~1.8/255, 3배 확대 크롭에서도 같은 그림). 75종 전수: 게임 배율 격자·3배·근접(대기/공격/보행/정면)·
+  샘플 7종 연속 72프레임·옛 BattleScreen 최대 확대(1.8). 계약 검사 6종 정상. 근접에서 보이는 차이는 Limne
+  머리 다발이 조금 매끈해진 것 정도다. 자료: `build/character-3d/lod-2026-10-15/`(`arena-compare/`,
+  `review/compare-1/` 의 `mosaic_*`·`pairs/`·`grid_*`·`seq_*`·`legacy_*`, `summary.json`, `deformation/`).
+- **도구·원본**: `tools/3d/optimize_native_lod.py`(+`lod_reduce_vtk.py`, TRELLIS venv의 VTK·xatlas) →
+  `publish_native_lod.py`(설치·기록·텍스처 설정) → `lod_review.py`(촬영·비교·변형 진단),
+  촬영 장면 `tests/3d/lod_roster_preview.tscn`. 고폴리 런타임 GLB·텍스처는
+  `build/character-3d/highpoly-2026-10-15/`(트레일러 근접 촬영용), 편집 가능한 저폴리 원본은 각
+  `game-lod.blend`. 클립 도구는 저폴리에 클립을 붙이도록 맞췄다(제작 기록 문서 참고).
+  실기기 FPS·발열은 측정하지 않았다.
+
 ## 2026-10-13 탄 사슬 — 전장 50곳 · 탄 전환 연출 · 전장 카드와 상점
 
 - 사용자 요청: 전장을 고르지 말고 로그라이크처럼 무작위로, 맵은 극적으로 다르게, 몬스터 진입 경로도

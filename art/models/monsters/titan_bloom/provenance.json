@@ -27,8 +27,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/titan_bloom/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/titan_bloom/game.blend",
-  "glb_sha256": "8b188c5f121b99bd43f8a79482b6833387d3ed822066ac6c5674437c06f05df0",
-  "glb_bytes": 12840532,
+  "glb_sha256": "22d5d80d654abfdacf11b467f19a1f132c2d6c4d745eccfc5654149a42e4c99a",
+  "glb_bytes": 853840,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "raw_gltf_triangles": 178603,
@@ -105,5 +105,94 @@
     "tool": "tools/3d/author_monster_motion.py",
     "geometry_digest": "a15c0dc4ebd5cc3a80213060b7bd8f5661c96d55a8f959ac41c124869a1e84ef",
     "geometry_unchanged": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 9000,
+      "bake": 1024,
+      "texture": 512,
+      "monster_kind": "boss",
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 139999,
+      "vertices": 178260,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 12840532,
+      "sha256": "8b188c5f121b99bd43f8a79482b6833387d3ed822066ac6c5674437c06f05df0",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 9000,
+      "vertices": 8053,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 853840,
+      "sha256": "22d5d80d654abfdacf11b467f19a1f132c2d6c4d745eccfc5654149a42e4c99a",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.0011487776646390557,
+      "p99": 0.004769990639761089,
+      "max": 0.008263115771114826
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 321434,
+      "missed_texels": 997,
+      "interior_fallback_texels": 978,
+      "miss_fraction": 0.00310172539308225
+    },
+    "atlas": {
+      "charts": 525,
+      "utilization": 0.765125036239624,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 1}"
+    },
+    "visible_faces": {
+      "removed_faces": 61961,
+      "kept_faces": 78038
+    },
+    "sole": {
+      "before": {
+        "floor": -0.003830373054370284,
+        "band_vertices": 73,
+        "front": 0.1708163172006607,
+        "back": 0.569327712059021
+      },
+      "after": {
+        "floor": -0.003830373054370284,
+        "band_vertices": 18,
+        "front": 0.21627674996852875,
+        "back": 0.5695284605026245
+      }
+    },
+    "removed_extracted_textures": [
+      "titan_bloom_titan_bloom_Texture_35508330_0.png",
+      "titan_bloom_titan_bloom_Texture_d1eb35ea_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/monsters/titan_bloom/titan_bloom.glb",
+    "editable_lod_source": "build/character-3d/monster-source/titan_bloom/game-lod.blend"
   }
 }

@@ -28,8 +28,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/blaze_fox/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/blaze_fox/game.blend",
-  "glb_sha256": "3158bd4b7cd2147d070863f146d81da13f61fedaa072835ea570259b331eefd4",
-  "glb_bytes": 3695888,
+  "glb_sha256": "5a546ed2331d47ffec25bdcb4efe996e22ff569a64ac6ac1cc5347832b8fdb5c",
+  "glb_bytes": 350736,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -108,5 +108,93 @@
     "tool": "tools/3d/author_monster_motion.py",
     "geometry_digest": "6d49cc9a6649843268395cbad5c9aaa56e399308046e08c877c273486c34c944",
     "geometry_unchanged": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 3600,
+      "bake": 512,
+      "texture": 256,
+      "monster_kind": "fast",
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 54979,
+      "vertices": 54601,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 3695888,
+      "sha256": "3158bd4b7cd2147d070863f146d81da13f61fedaa072835ea570259b331eefd4",
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 3598,
+      "vertices": 3683,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 350736,
+      "sha256": "5a546ed2331d47ffec25bdcb4efe996e22ff569a64ac6ac1cc5347832b8fdb5c",
+      "texture": 256,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.0,
+      "p99": 0.0038198404014110495,
+      "max": 0.005928677506744862
+    },
+    "bake": {
+      "size": 512,
+      "covered_texels": 82863,
+      "missed_texels": 248,
+      "interior_fallback_texels": 106,
+      "miss_fraction": 0.0029928918817807705
+    },
+    "atlas": {
+      "charts": 365,
+      "utilization": 0.7745727300643921,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 0}"
+    },
+    "visible_faces": {
+      "removed_faces": 48898,
+      "kept_faces": 6101
+    },
+    "sole": {
+      "before": {
+        "floor": -0.00045781192602589726,
+        "band_vertices": 691,
+        "front": -0.15746966004371643,
+        "back": 0.4187673330307007
+      },
+      "after": {
+        "floor": -0.000312038348056376,
+        "band_vertices": 48,
+        "front": -0.15462613105773926,
+        "back": 0.4187673330307007
+      }
+    },
+    "removed_extracted_textures": [
+      "blaze_fox_blaze_fox_Texture_72936fbc_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/monsters/blaze_fox/blaze_fox.glb",
+    "editable_lod_source": "build/character-3d/monster-source/blaze_fox/game-lod.blend"
   }
 }

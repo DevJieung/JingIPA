@@ -28,8 +28,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/candela/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/candela/game.blend",
   "height": 1.65,
-  "glb_bytes": 5035928,
-  "glb_sha256": "d686f32c7fe48ef7bfdc7ac034fba7c531d34e6236c8925e571aa42171037ca1",
+  "glb_bytes": 738612,
+  "glb_sha256": "80e4d89031de3152720c844accbca6410643b5430a97b2a6da046b67ccb632b4",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -90,5 +90,92 @@
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/candela/game.motion-v1.blend",
     "geometry_base_sha256": "4440eb6b9648cdda23a0676f3e1b1f140c648985962ad99e5a146cb9f6e1a2f5",
     "geometry_bytes_preserved": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 6000,
+      "bake": 1024,
+      "texture": 512,
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 54993,
+      "vertices": 56717,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 5035928,
+      "sha256": "d686f32c7fe48ef7bfdc7ac034fba7c531d34e6236c8925e571aa42171037ca1",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 6000,
+      "vertices": 6066,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 738612,
+      "sha256": "80e4d89031de3152720c844accbca6410643b5430a97b2a6da046b67ccb632b4",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.0009591907146386802,
+      "p99": 0.004322704300284388,
+      "max": 0.005461573135107756
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 314231,
+      "missed_texels": 780,
+      "interior_fallback_texels": 300,
+      "miss_fraction": 0.0024822503190328133
+    },
+    "atlas": {
+      "charts": 521,
+      "utilization": 0.7596654295921326,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 0}"
+    },
+    "visible_faces": {
+      "removed_faces": 39951,
+      "kept_faces": 15048
+    },
+    "sole": {
+      "before": {
+        "floor": 0.00010091642616316676,
+        "band_vertices": 198,
+        "front": -0.3444931209087372,
+        "back": 0.12999330461025238
+      },
+      "after": {
+        "floor": 0.00043877639109268785,
+        "band_vertices": 66,
+        "front": -0.3444931209087372,
+        "back": 0.1302875578403473
+      }
+    },
+    "removed_extracted_textures": [
+      "candela_candela_Texture_5afd337b_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/candela/candela.glb",
+    "editable_lod_source": "build/character-3d/source/candela/game-lod.blend"
   }
 }

@@ -30,8 +30,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/donn/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/donn/game.blend",
   "height": 1.7,
-  "glb_bytes": 5407672,
-  "glb_sha256": "21ac35a589e4eb77998982d90f94e739461028024ab19b4bed5535d8d9444080",
+  "glb_bytes": 859388,
+  "glb_sha256": "b03daceab4b3ae3e2df4a1bb0008374f37ad9a7082209a51d8bd890636e9cdb1",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -92,5 +92,92 @@
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/donn/game.motion-v1.blend",
     "geometry_base_sha256": "6b8a5b4324e18b36cade3114ee9a57bd7a4dc904b90f73f4c4b47c99e9846f73",
     "geometry_bytes_preserved": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 6000,
+      "bake": 1024,
+      "texture": 512,
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 54999,
+      "vertices": 60646,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 5407672,
+      "sha256": "21ac35a589e4eb77998982d90f94e739461028024ab19b4bed5535d8d9444080",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 6000,
+      "vertices": 7114,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 859388,
+      "sha256": "b03daceab4b3ae3e2df4a1bb0008374f37ad9a7082209a51d8bd890636e9cdb1",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.0015656854375265539,
+      "p99": 0.0060417154245078555,
+      "max": 0.010755267925560474
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 253150,
+      "missed_texels": 1086,
+      "interior_fallback_texels": 1055,
+      "miss_fraction": 0.0042899466719336365
+    },
+    "atlas": {
+      "charts": 879,
+      "utilization": 0.7485136389732361,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 0}"
+    },
+    "visible_faces": {
+      "removed_faces": 33155,
+      "kept_faces": 21845
+    },
+    "sole": {
+      "before": {
+        "floor": -0.0004008874821010977,
+        "band_vertices": 142,
+        "front": -0.0431920550763607,
+        "back": 0.46754276752471924
+      },
+      "after": {
+        "floor": -0.00028460027533583343,
+        "band_vertices": 29,
+        "front": -0.04174403101205826,
+        "back": 0.4656749665737152
+      }
+    },
+    "removed_extracted_textures": [
+      "donn_donn_Texture_5a1d568a_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/donn/donn.glb",
+    "editable_lod_source": "build/character-3d/source/donn/game-lod.blend"
   }
 }

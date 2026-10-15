@@ -195,6 +195,9 @@ python3 tools/3d/native_character_review.py --ids echo,kari --display-base 120
 - 런타임 GLB는 검수된 기존 GLB(`build/motion-overhaul/glb-base/<id>.glb`, git HEAD 사본)의
   메시·스킨·재질·텍스처 바이트를 그대로 두고 애니메이션 접근자만 새 export로 교체한다
   (`merge_animations`). 따라서 기하·UV·가중치·법선은 바이트 단위로 동일하다.
+  2026-10-15 모바일 예산 이후 이 기준 GLB는 저폴리 런타임 GLB(6,000삼각형·512² 아틀라스)이고 고폴리 원본은
+  `build/character-3d/highpoly-2026-10-15/glb-base/`에 있다. 클립은 이전과 같이 접붙고 저폴리 기하가 유지된다
+  ([NATIVE_HERO_PRODUCTION.md](NATIVE_HERO_PRODUCTION.md) 「2026-10-15 현행 런타임」).
 - `art/models/<id>/provenance.json`에 `motion`(버전 2, 도구, 클립 길이, stride, grip,
   이전 SHA, 기하 기준 SHA)과 새 `glb_sha256`·`clips`를 기록하고,
   `art/models/native_heroes.json`의 `glb_sha256`와 `motion{stride,grip,clips}`를 갱신한다.

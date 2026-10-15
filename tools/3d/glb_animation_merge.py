@@ -24,12 +24,25 @@ def _write_glb(gltf: dict, binary: bytes) -> bytes:
             + struct.pack('<II', len(binary), 0x004E4942) + binary)
 
 
-def merge_animations(base_payload: bytes, fresh_payload: bytes) -> bytes:
+def merge_animations(base_payload: bytes, fresh_payload: bytes, by_name: bool = False) -> bytes:
+    """`by_name` (2026-10-15 mobile LOD): the base may have a different node list (Limne's
+    joined surfaces); every animated node of `fresh` must exist in `base` under the same
+    name, and channels are re-targeted to those base nodes. Sampler bytes are unchanged."""
     base, base_bin = _read_glb(base_payload)
     fresh, fresh_bin = _read_glb(fresh_payload)
     base_names = [n.get('name') for n in base.get('nodes', [])]
     fresh_names = [n.get('name') for n in fresh.get('nodes', [])]
-    if base_names != fresh_names:
+    node_map = {i: i for i in range(len(fresh_names))}
+    if by_name:
+        index = {name: i for i, name in enumerate(base_names)}
+        if len(index) != len(base_names):
+            raise ValueError('duplicate node names in base; cannot re-target by name')
+        animated = {c['target']['node'] for a in fresh.get('animations', []) for c in a['channels'] if 'node' in c['target']}
+        missing = [fresh_names[i] for i in animated if fresh_names[i] not in index]
+        if missing:
+            raise ValueError('animated nodes missing from base: ' + ','.join(missing))
+        node_map = {i: index[fresh_names[i]] for i in animated}
+    elif base_names != fresh_names:
         raise ValueError('node layout changed; refusing to merge animations')
     # Accessors/buffer views used by anything except the old animations stay.
     used_accessors = set()
@@ -98,6 +111,7 @@ def merge_animations(base_payload: bytes, fresh_payload: bytes) -> bytes:
         channels = []
         for channel in anim['channels']:
             target = dict(channel['target'])
+            if 'node' in target: target['node'] = node_map[target['node']]
             channels.append({'sampler': channel['sampler'], 'target': target})
         animations.append({'name': anim['name'], 'samplers': samplers, 'channels': channels})
     base['bufferViews'] = views

@@ -28,8 +28,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/sigrid/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/sigrid/game.blend",
   "height": 1.7,
-  "glb_bytes": 5175388,
-  "glb_sha256": "4e70bf718435fe427ee3c696aabbc9a033a1cf9cdfc2bf1ac8e849e687bdbaba",
+  "glb_bytes": 802880,
+  "glb_sha256": "28754e625206596d520543941d6dc2da8ec6b67802f5ab12e8981522fed3a538",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -90,5 +90,92 @@
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/sigrid/game.motion-v1.blend",
     "geometry_base_sha256": "32fe3e8b5051d10ff61ddf3a2452ed411f83dc28deea4538f0c667ea481504fc",
     "geometry_bytes_preserved": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 6000,
+      "bake": 1024,
+      "texture": 512,
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 54999,
+      "vertices": 60500,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 5175388,
+      "sha256": "4e70bf718435fe427ee3c696aabbc9a033a1cf9cdfc2bf1ac8e849e687bdbaba",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 5999,
+      "vertices": 6808,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 802880,
+      "sha256": "28754e625206596d520543941d6dc2da8ec6b67802f5ab12e8981522fed3a538",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.0013791428646072745,
+      "p99": 0.00583996533881873,
+      "max": 0.009574046358466148
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 254710,
+      "missed_texels": 825,
+      "interior_fallback_texels": 539,
+      "miss_fraction": 0.003238977660869224
+    },
+    "atlas": {
+      "charts": 777,
+      "utilization": 0.7401601672172546,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 1}"
+    },
+    "visible_faces": {
+      "removed_faces": 35977,
+      "kept_faces": 19023
+    },
+    "sole": {
+      "before": {
+        "floor": -0.0005198150174692273,
+        "band_vertices": 594,
+        "front": 0.24854838848114014,
+        "back": 0.5943514108657837
+      },
+      "after": {
+        "floor": -0.0005198150174692273,
+        "band_vertices": 107,
+        "front": 0.24713370203971863,
+        "back": 0.5943514108657837
+      }
+    },
+    "removed_extracted_textures": [
+      "sigrid_sigrid_Texture_c7c99465_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/sigrid/sigrid.glb",
+    "editable_lod_source": "build/character-3d/source/sigrid/game-lod.blend"
   }
 }

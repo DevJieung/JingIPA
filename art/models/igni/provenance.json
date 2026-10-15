@@ -29,8 +29,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/igni/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/igni/game.blend",
   "height": 1.65,
-  "glb_bytes": 4902796,
-  "glb_sha256": "d820fdd46f1839f4134925d8fecee9f020d9d3f7091df61316a6d2cb6412612b",
+  "glb_bytes": 740676,
+  "glb_sha256": "ac0dfb5748dbfe78345e896e60c7fd51de5e75060e23934ab038d017c240d3f4",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -91,5 +91,92 @@
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/igni/game.motion-v1.blend",
     "geometry_base_sha256": "7005f28adca8c618d46c536062e26d96ccf8b25c6390d08dd2c912e2f8c6e84f",
     "geometry_bytes_preserved": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 6000,
+      "bake": 1024,
+      "texture": 512,
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 54978,
+      "vertices": 56347,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 4902796,
+      "sha256": "d820fdd46f1839f4134925d8fecee9f020d9d3f7091df61316a6d2cb6412612b",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 6000,
+      "vertices": 6299,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 740676,
+      "sha256": "ac0dfb5748dbfe78345e896e60c7fd51de5e75060e23934ab038d017c240d3f4",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.0011340704513713717,
+      "p99": 0.004469098784029483,
+      "max": 0.009183008223772049
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 276809,
+      "missed_texels": 587,
+      "interior_fallback_texels": 161,
+      "miss_fraction": 0.002120595789876774
+    },
+    "atlas": {
+      "charts": 633,
+      "utilization": 0.735821545124054,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 1}"
+    },
+    "visible_faces": {
+      "removed_faces": 34797,
+      "kept_faces": 20203
+    },
+    "sole": {
+      "before": {
+        "floor": -6.512519757961854e-05,
+        "band_vertices": 554,
+        "front": -0.2936982214450836,
+        "back": 0.21220575273036957
+      },
+      "after": {
+        "floor": -6.512519757961854e-05,
+        "band_vertices": 142,
+        "front": -0.2947726845741272,
+        "back": 0.21319177746772766
+      }
+    },
+    "removed_extracted_textures": [
+      "igni_igni_Texture_21e5003d_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/igni/igni.glb",
+    "editable_lod_source": "build/character-3d/source/igni/game-lod.blend"
   }
 }

@@ -29,8 +29,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/kari/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/kari/game.blend",
   "height": 1.65,
-  "glb_bytes": 5012960,
-  "glb_sha256": "0dce3b4477cc41fa138489837ac85c65fb461415e3d1e91437a04ba4790e7891",
+  "glb_bytes": 805620,
+  "glb_sha256": "20aef338d1f028f4d420ab57f00d9bda11ee0d840aca0e947f6947b2329bd06a",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -91,5 +91,92 @@
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/kari/game.motion-v1.blend",
     "geometry_base_sha256": "224492bc926c551ac640014b77a817270a4e3dc1655510d2c83ed06991df1f46",
     "geometry_bytes_preserved": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 6000,
+      "bake": 1024,
+      "texture": 512,
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 54987,
+      "vertices": 55585,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 5012960,
+      "sha256": "0dce3b4477cc41fa138489837ac85c65fb461415e3d1e91437a04ba4790e7891",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 5999,
+      "vertices": 6585,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 805620,
+      "sha256": "20aef338d1f028f4d420ab57f00d9bda11ee0d840aca0e947f6947b2329bd06a",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.0008991883951239288,
+      "p99": 0.004793995013460521,
+      "max": 0.007506676018238068
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 268078,
+      "missed_texels": 706,
+      "interior_fallback_texels": 345,
+      "miss_fraction": 0.0026335618737830034
+    },
+    "atlas": {
+      "charts": 674,
+      "utilization": 0.7380371689796448,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 2}"
+    },
+    "visible_faces": {
+      "removed_faces": 37521,
+      "kept_faces": 17478
+    },
+    "sole": {
+      "before": {
+        "floor": 2.291246892127674e-05,
+        "band_vertices": 430,
+        "front": -0.07819050550460815,
+        "back": 0.3218019902706146
+      },
+      "after": {
+        "floor": 2.291246892127674e-05,
+        "band_vertices": 119,
+        "front": -0.07975152879953384,
+        "back": 0.32124489545822144
+      }
+    },
+    "removed_extracted_textures": [
+      "kari_kari_Texture_ef014c4a_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/kari/kari.glb",
+    "editable_lod_source": "build/character-3d/source/kari/game-lod.blend"
   }
 }

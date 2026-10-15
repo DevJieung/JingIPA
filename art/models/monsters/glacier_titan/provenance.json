@@ -27,8 +27,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/glacier_titan/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/glacier_titan/game.blend",
-  "glb_sha256": "505cad9dfa77915de97cf5c90c3048c28f13db65b5b9a73a150282f71a9e2959",
-  "glb_bytes": 11068716,
+  "glb_sha256": "4cd3a51dc32aaeb70213a12703521967eee243763e967c7a7f9418203e73a42d",
+  "glb_bytes": 568692,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -103,5 +103,93 @@
     "tool": "tools/3d/author_monster_motion.py",
     "geometry_digest": "2e75bb91eb2fde1675daf3d8c3c69679a202ab2965699d6f5a5a9b9b06fac507",
     "geometry_unchanged": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 3800,
+      "bake": 1024,
+      "texture": 512,
+      "monster_kind": "tank",
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 177353,
+      "vertices": 139290,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 11068716,
+      "sha256": "505cad9dfa77915de97cf5c90c3048c28f13db65b5b9a73a150282f71a9e2959",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 3799,
+      "vertices": 3554,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 568692,
+      "sha256": "4cd3a51dc32aaeb70213a12703521967eee243763e967c7a7f9418203e73a42d",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.0009660419309511781,
+      "p99": 0.0035586111526936287,
+      "max": 0.006150858011096716
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 384971,
+      "missed_texels": 357,
+      "interior_fallback_texels": 185,
+      "miss_fraction": 0.0009273425790514091
+    },
+    "atlas": {
+      "charts": 242,
+      "utilization": 0.7183963060379028,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 0}"
+    },
+    "visible_faces": {
+      "removed_faces": 148584,
+      "kept_faces": 28769
+    },
+    "sole": {
+      "before": {
+        "floor": 0.0,
+        "band_vertices": 1876,
+        "front": -0.2404623031616211,
+        "back": 0.14410744607448578
+      },
+      "after": {
+        "floor": 0.00020915083587169647,
+        "band_vertices": 58,
+        "front": -0.23622435331344604,
+        "back": 0.13908204436302185
+      }
+    },
+    "removed_extracted_textures": [
+      "glacier_titan_glacier_titan_Texture_f2a62748_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/monsters/glacier_titan/glacier_titan.glb",
+    "editable_lod_source": "build/character-3d/monster-source/glacier_titan/game-lod.blend"
   }
 }

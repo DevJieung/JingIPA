@@ -29,8 +29,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/chispa/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/chispa/game.blend",
   "height": 1.65,
-  "glb_bytes": 4990116,
-  "glb_sha256": "e67682425ee89db112dc7fe545b3496b92af0e5979f08fd42939bbb0b2f683bb",
+  "glb_bytes": 763528,
+  "glb_sha256": "066ee75723c32a412e5ca86d330231b83e19408b3c5016afa49b19d82181bcf9",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -91,5 +91,92 @@
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/chispa/game.motion-v1.blend",
     "geometry_base_sha256": "214264ce512cb4e1044d10a375262358847f5e24635bd90fe4bb018f7e20a489",
     "geometry_bytes_preserved": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 6000,
+      "bake": 1024,
+      "texture": 512,
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 54993,
+      "vertices": 56996,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 4990116,
+      "sha256": "e67682425ee89db112dc7fe545b3496b92af0e5979f08fd42939bbb0b2f683bb",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 5999,
+      "vertices": 6516,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 763528,
+      "sha256": "066ee75723c32a412e5ca86d330231b83e19408b3c5016afa49b19d82181bcf9",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.0015470257494598627,
+      "p99": 0.004807885969057679,
+      "max": 0.008424327708780766
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 268452,
+      "missed_texels": 713,
+      "interior_fallback_texels": 544,
+      "miss_fraction": 0.002655968292283164
+    },
+    "atlas": {
+      "charts": 662,
+      "utilization": 0.7358624339103699,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 0}"
+    },
+    "visible_faces": {
+      "removed_faces": 30106,
+      "kept_faces": 24893
+    },
+    "sole": {
+      "before": {
+        "floor": -0.00020211213268339634,
+        "band_vertices": 1143,
+        "front": -0.19227924942970276,
+        "back": 0.22230805456638336
+      },
+      "after": {
+        "floor": 0.00010650272452039644,
+        "band_vertices": 89,
+        "front": -0.19206757843494415,
+        "back": 0.22216282784938812
+      }
+    },
+    "removed_extracted_textures": [
+      "chispa_chispa_Texture_be0b386f_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/chispa/chispa.glb",
+    "editable_lod_source": "build/character-3d/source/chispa/game-lod.blend"
   }
 }

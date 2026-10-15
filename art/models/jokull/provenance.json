@@ -29,8 +29,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/jokull/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/jokull/game.blend",
   "height": 1.7,
-  "glb_bytes": 4914136,
-  "glb_sha256": "1967a03f71dfaec61eeb7047cb9f19289ea56ba0cb886142d919120f715d8c00",
+  "glb_bytes": 768264,
+  "glb_sha256": "0a06f6056c72d648694771f20182c29fa21e6bdeeb330991d6d962c7337d44e1",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -91,5 +91,92 @@
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/jokull/game.motion-v1.blend",
     "geometry_base_sha256": "3b624378ff9b8c1555b9adb535ddd633f9acca5bda7286d7309985ec0b130441",
     "geometry_bytes_preserved": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 6000,
+      "bake": 1024,
+      "texture": 512,
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 54996,
+      "vertices": 52224,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 4914136,
+      "sha256": "1967a03f71dfaec61eeb7047cb9f19289ea56ba0cb886142d919120f715d8c00",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 6000,
+      "vertices": 5863,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 768264,
+      "sha256": "0a06f6056c72d648694771f20182c29fa21e6bdeeb330991d6d962c7337d44e1",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.0015060876030474901,
+      "p99": 0.004589790683239698,
+      "max": 0.007105476222932339
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 305024,
+      "missed_texels": 505,
+      "interior_fallback_texels": 242,
+      "miss_fraction": 0.0016556074276122535
+    },
+    "atlas": {
+      "charts": 442,
+      "utilization": 0.7341074347496033,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 0}"
+    },
+    "visible_faces": {
+      "removed_faces": 30241,
+      "kept_faces": 24759
+    },
+    "sole": {
+      "before": {
+        "floor": 1.32069826577208e-05,
+        "band_vertices": 320,
+        "front": -0.48160818219184875,
+        "back": 0.044773899018764496
+      },
+      "after": {
+        "floor": 6.442276207963005e-05,
+        "band_vertices": 46,
+        "front": -0.4815845191478729,
+        "back": 0.04543963447213173
+      }
+    },
+    "removed_extracted_textures": [
+      "jokull_jokull_Texture_33885dc3_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/jokull/jokull.glb",
+    "editable_lod_source": "build/character-3d/source/jokull/game-lod.blend"
   }
 }

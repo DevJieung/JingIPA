@@ -28,8 +28,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/volcan/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/volcan/game.blend",
   "height": 1.7,
-  "glb_bytes": 5224092,
-  "glb_sha256": "ddd552927e738483c82aac548fad7f7c296bac911f5bcd9bd4b79cf09aaee941",
+  "glb_bytes": 805872,
+  "glb_sha256": "7ceeac898db734f1284279c04706d736ee58f59157d4e380c805838b37b37528",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -90,5 +90,92 @@
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/volcan/game.motion-v1.blend",
     "geometry_base_sha256": "af31f09737b8fcb38f2f8b2846f846592fb2793d87c308950a6f543929ee3b0c",
     "geometry_bytes_preserved": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 6000,
+      "bake": 1024,
+      "texture": 512,
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 54998,
+      "vertices": 58338,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 5224092,
+      "sha256": "ddd552927e738483c82aac548fad7f7c296bac911f5bcd9bd4b79cf09aaee941",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 5999,
+      "vertices": 6690,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 805872,
+      "sha256": "7ceeac898db734f1284279c04706d736ee58f59157d4e380c805838b37b37528",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.0011069965548813343,
+      "p99": 0.005670322626829149,
+      "max": 0.00893955398350954
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 247510,
+      "missed_texels": 610,
+      "interior_fallback_texels": 550,
+      "miss_fraction": 0.002464546886994465
+    },
+    "atlas": {
+      "charts": 714,
+      "utilization": 0.7314478754997253,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 1}"
+    },
+    "visible_faces": {
+      "removed_faces": 38873,
+      "kept_faces": 16127
+    },
+    "sole": {
+      "before": {
+        "floor": -7.687231118325144e-05,
+        "band_vertices": 518,
+        "front": 0.11336915194988251,
+        "back": 0.5776963233947754
+      },
+      "after": {
+        "floor": -7.687231118325144e-05,
+        "band_vertices": 167,
+        "front": 0.11302600055932999,
+        "back": 0.5773442387580872
+      }
+    },
+    "removed_extracted_textures": [
+      "volcan_volcan_Texture_612c57c7_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/volcan/volcan.glb",
+    "editable_lod_source": "build/character-3d/source/volcan/game-lod.blend"
   }
 }

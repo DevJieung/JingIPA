@@ -29,8 +29,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/brigid/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/brigid/game.blend",
   "height": 1.65,
-  "glb_bytes": 4949088,
-  "glb_sha256": "b66b6a506f7f81b9e240e7bb020dbee9a88ba8801ac7bae5c595ce14c0fc62a1",
+  "glb_bytes": 771088,
+  "glb_sha256": "c09d861b4f5f7f2425d05828bf5e8f53c943227c74b3f12dc468821ccee0b9e3",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -91,5 +91,92 @@
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/brigid/game.motion-v1.blend",
     "geometry_base_sha256": "bd13adfc3082be2eb78eca197f335fd37de2e3bd6954de19b0225d1d30ca0bc9",
     "geometry_bytes_preserved": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 6000,
+      "bake": 1024,
+      "texture": 512,
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 54994,
+      "vertices": 55492,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 4949088,
+      "sha256": "b66b6a506f7f81b9e240e7bb020dbee9a88ba8801ac7bae5c595ce14c0fc62a1",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 5999,
+      "vertices": 6181,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 771088,
+      "sha256": "c09d861b4f5f7f2425d05828bf5e8f53c943227c74b3f12dc468821ccee0b9e3",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.0011589485802687705,
+      "p99": 0.004000274818390604,
+      "max": 0.006540706381201744
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 292154,
+      "missed_texels": 587,
+      "interior_fallback_texels": 273,
+      "miss_fraction": 0.0020092143184758725
+    },
+    "atlas": {
+      "charts": 561,
+      "utilization": 0.7487125396728516,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 0}"
+    },
+    "visible_faces": {
+      "removed_faces": 36076,
+      "kept_faces": 18924
+    },
+    "sole": {
+      "before": {
+        "floor": -3.505416680127382e-05,
+        "band_vertices": 173,
+        "front": -0.02452007494866848,
+        "back": 0.42755991220474243
+      },
+      "after": {
+        "floor": 5.73657380300574e-05,
+        "band_vertices": 35,
+        "front": -0.022929701954126358,
+        "back": 0.42931675910949707
+      }
+    },
+    "removed_extracted_textures": [
+      "brigid_brigid_Texture_d16a5e92_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/brigid/brigid.glb",
+    "editable_lod_source": "build/character-3d/source/brigid/game-lod.blend"
   }
 }

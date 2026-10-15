@@ -28,8 +28,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/pyre_priest/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/pyre_priest/game.blend",
-  "glb_sha256": "70e2be9f3d9223122cde158414c7f0a9dc541c8d1342ef8d7e65fc27dba2d4cc",
-  "glb_bytes": 4177344,
+  "glb_sha256": "a26ae59829e68e97a0d5f32c2b0abae15161197049f924b0f637314cc1301db1",
+  "glb_bytes": 554948,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -104,5 +104,93 @@
     "tool": "tools/3d/author_monster_motion.py",
     "geometry_digest": "c1c76ac8bda8bb74cb8e03191ba1e4de11368a08fba6850e6540d67963782339",
     "geometry_unchanged": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 3600,
+      "bake": 1024,
+      "texture": 512,
+      "monster_kind": "caster",
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 44994,
+      "vertices": 45520,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 4177344,
+      "sha256": "70e2be9f3d9223122cde158414c7f0a9dc541c8d1342ef8d7e65fc27dba2d4cc",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 3598,
+      "vertices": 3844,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 554948,
+      "sha256": "a26ae59829e68e97a0d5f32c2b0abae15161197049f924b0f637314cc1301db1",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.0004579818923957646,
+      "p99": 0.004766218531876799,
+      "max": 0.006740540266036987
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 342062,
+      "missed_texels": 731,
+      "interior_fallback_texels": 833,
+      "miss_fraction": 0.0021370394840701393
+    },
+    "atlas": {
+      "charts": 399,
+      "utilization": 0.7491860389709473,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 0}"
+    },
+    "visible_faces": {
+      "removed_faces": 36697,
+      "kept_faces": 8303
+    },
+    "sole": {
+      "before": {
+        "floor": -0.0005381143419072032,
+        "band_vertices": 247,
+        "front": -0.229018896818161,
+        "back": 0.14642298221588135
+      },
+      "after": {
+        "floor": -0.0005381143419072032,
+        "band_vertices": 27,
+        "front": -0.20383061468601227,
+        "back": 0.1471274048089981
+      }
+    },
+    "removed_extracted_textures": [
+      "pyre_priest_pyre_priest_Texture_d6b450aa_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/monsters/pyre_priest/pyre_priest.glb",
+    "editable_lod_source": "build/character-3d/monster-source/pyre_priest/game-lod.blend"
   }
 }

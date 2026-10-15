@@ -29,8 +29,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/nerea/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/nerea/game.blend",
   "height": 1.7,
-  "glb_bytes": 4923716,
-  "glb_sha256": "68100f04e54f1e1fc3498f3aecc8005d81028ae63bfecaa444a195573b912efc",
+  "glb_bytes": 783980,
+  "glb_sha256": "4e71fc73479a6cd82d52df1339bdf300130b97608b7ffc79ae3bcb55a27a8e6d",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -91,5 +91,92 @@
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/nerea/game.motion-v1.blend",
     "geometry_base_sha256": "ce8b7a457a9285cac748e7556515fd23e80598db1eeb4785f8ef1e8a4fc8a890",
     "geometry_bytes_preserved": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 6000,
+      "bake": 1024,
+      "texture": 512,
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 54997,
+      "vertices": 55311,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 4923716,
+      "sha256": "68100f04e54f1e1fc3498f3aecc8005d81028ae63bfecaa444a195573b912efc",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 6000,
+      "vertices": 6353,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 783980,
+      "sha256": "4e71fc73479a6cd82d52df1339bdf300130b97608b7ffc79ae3bcb55a27a8e6d",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.00040642524254508317,
+      "p99": 0.0040781740471720705,
+      "max": 0.00700475974008441
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 305439,
+      "missed_texels": 513,
+      "interior_fallback_texels": 140,
+      "miss_fraction": 0.0016795497628004283
+    },
+    "atlas": {
+      "charts": 624,
+      "utilization": 0.7656650543212891,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 0}"
+    },
+    "visible_faces": {
+      "removed_faces": 41598,
+      "kept_faces": 13401
+    },
+    "sole": {
+      "before": {
+        "floor": -1.464405249862466e-05,
+        "band_vertices": 114,
+        "front": -0.08730493485927582,
+        "back": 0.25708526372909546
+      },
+      "after": {
+        "floor": 5.524940206669271e-05,
+        "band_vertices": 34,
+        "front": -0.08648540079593658,
+        "back": 0.2566279172897339
+      }
+    },
+    "removed_extracted_textures": [
+      "nerea_nerea_Texture_95e4849c_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/nerea/nerea.glb",
+    "editable_lod_source": "build/character-3d/source/nerea/game-lod.blend"
   }
 }

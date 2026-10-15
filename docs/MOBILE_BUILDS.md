@@ -29,6 +29,8 @@ Godot 4.7.1, JDK 17, Android SDK 36을 사용한다. Android 템플릿은 매 �
 앱은 광고 SDK 없이 오프라인으로 실행한다. 결제 플러그인(Android: Play Billing, iOS: StoreKit 2)이
 들어 있어 Android 매니페스트에 `INTERNET` · `ACCESS_NETWORK_STATE` · `com.android.vending.BILLING`
 권한이 병합된다([STORE.md](STORE.md)). iOS 최소 버전은 15.0 이다.
+APK에는 `arm64-v8a` 엔진 라이브러리만 싣는다(2026-10-15). x86_64 라이브러리는 에뮬레이터·크롬북용으로
+APK를 82MB 불렸고 폰에서는 쓰이지 않는다.
 
 Linux에서 에셋을 임포트하고 게임 흐름·번역·저장 호환 검사를 실행한 다음 APK와
 Xcode 프로젝트를 내보낸다. macOS에서 그 Xcode 프로젝트를 빌드해 IPA로 묶는다.

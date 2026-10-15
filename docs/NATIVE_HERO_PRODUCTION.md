@@ -11,6 +11,31 @@
 iOS는 Xcode 프로젝트/PCK export·packed 모델 검사이며 Linux에서 서명 IPA를 만들지 않았다.
 기존 게임 데이터·피해·공격 시계·난수는 바꾸지 않는다. 2026-10-09 사용자가 몬스터25종도 명시적으로 포함했다. 영웅50+몬스터25 native 제작이 현재 범위다.
 
+## 2026-10-15 현행 런타임 — 모바일 폴리곤·텍스처 예산
+
+아래 절들의 55k 삼각형·1024 albedo·보존 UV는 **편집 원본** `source/<id>/game.blend`의 상태다. 출시 런타임
+`art/models/<id>/<id>.glb`는 사용자 요청("용량최적화, 특히 폴리")으로 줄인 모델이다.
+
+- 영웅 49명 각 6,000삼각형(Brasa 2 surface: 몸 + `NativeReactorAmber` 렌즈, 나머지 1 surface)·512² albedo
+  (`<id>_<id>_lod_albedo.png`, lossy WebP 0.8). 정점 약 5.9~8.5k, GLB 0.69~0.87MB, imported `.scn` 평균 약 0.26MB
+  (이전 1.96MB). Limne 9,400삼각형·3 surface(아틀라스 몸 + 갈색 홍채 2)·512².
+- 방법: 바깥에서 보이는 면만 남기고(겹판의 안쪽 판 제거) VTK 쿼드릭 감소 → xatlas → 원래 색 EMIT 베이크 →
+  검수된 고폴리 GLB의 클립 바이트를 그대로 접붙임. 리그·뼈 이름·클립·소켓·`height`·`ready`는 그대로이고
+  `native_heroes.json`의 `glb_sha256`만 새 파일로 바뀌었다. 모델별 근거는 `provenance.json`의 `mobile_lod`
+  (예산·전후 수치·표면 편차·베이크 통계·고폴리 백업 경로).
+- 보이는 표면까지의 편차 p99는 대부분 3.5~6.5mm, 최대 8.6mm(Snorri, 키 1.6~1.7m). Grey·Dummy는 보이는 면이
+  예산과 거의 같아 편차가 0.2mm 이하다. 바닥 높이 변화는 ±0.5mm 이내. 접지(`_measure_sole`)·보행은
+  `arena_pose_check` 350/0, 영웅 계약 `native_hero_check` 3,791/0로 확인했다.
+- 변형 진단(`check_native_deformation.py`, 같은 클립을 game.blend와 game-lod.blend에서): 짧은 변 과신장 수는
+  대부분 크게 줄었고(Pip 1,114→112, Jokull 1,317→64 — 숨은 안쪽 판이 사라짐) Brigid·Kari·Vidarr·Helga·Carmen·
+  Niamh는 4~25개 늘었다. 해당 영웅의 공격 해방 근접 캡처에서 새 늘어짐은 보이지 않았다(Helga 손목의 기존
+  번짐은 전후 동일). 자료 `build/character-3d/lod-2026-10-15/deformation/summary.json`.
+- 고폴리 런타임 GLB·추출 텍스처·`.import`·당시 manifest는 `build/character-3d/highpoly-2026-10-15/`
+  (SHA256SUMS 포함)에 있고, 편집 가능한 저폴리 결과는 `source/<id>/game-lod.blend`다.
+- 클립 재작성: `author_native_motion.py`는 `build/motion-overhaul/glb-base/<id>.glb`에 새 클립을 접붙이므로
+  이 기준 GLB를 저폴리 런타임으로 바꿨다. `finish_native_character.py`로 원시부터 다시 마감하면 55k가 되돌아오니
+  그 뒤 `optimize_native_lod.py`·`publish_native_lod.py`를 다시 돌린다.
+
 ## 원본과 제작물
 
 - `tools/3d/character_sources.json`: 49명의 실제 활성 sprite와 큰 원본 cell 추출 근거.

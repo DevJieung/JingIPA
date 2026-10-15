@@ -27,8 +27,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/stone_golem/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/stone_golem/game.blend",
-  "glb_sha256": "08bb540ebe1467c03aafc899335cd0a58a181f7dce49079df6838854b912b7a6",
-  "glb_bytes": 4486076,
+  "glb_sha256": "0f8d8f711a876b36702c0d3f1e20d0c5c4ed137da602f68e21fae2fe2a134cff",
+  "glb_bytes": 598184,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -103,5 +103,93 @@
     "tool": "tools/3d/author_monster_motion.py",
     "geometry_digest": "a1e1ac28aabb588b6e5dd4f50147d90c2f99b6a54e43637b7786fc4f2f4258c2",
     "geometry_unchanged": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 3800,
+      "bake": 1024,
+      "texture": 512,
+      "monster_kind": "tank",
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 45000,
+      "vertices": 47906,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 4486076,
+      "sha256": "08bb540ebe1467c03aafc899335cd0a58a181f7dce49079df6838854b912b7a6",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 3800,
+      "vertices": 3924,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 598184,
+      "sha256": "0f8d8f711a876b36702c0d3f1e20d0c5c4ed137da602f68e21fae2fe2a134cff",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.0015783372800797224,
+      "p99": 0.0050679365079849895,
+      "max": 0.006457417272031307
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 327830,
+      "missed_texels": 369,
+      "interior_fallback_texels": 906,
+      "miss_fraction": 0.0011255833816307232
+    },
+    "atlas": {
+      "charts": 330,
+      "utilization": 0.7095465660095215,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 0}"
+    },
+    "visible_faces": {
+      "removed_faces": 34192,
+      "kept_faces": 10808
+    },
+    "sole": {
+      "before": {
+        "floor": 4.6704830310773104e-05,
+        "band_vertices": 348,
+        "front": -0.23237594962120056,
+        "back": 0.20097127556800842
+      },
+      "after": {
+        "floor": 0.00014305634249467403,
+        "band_vertices": 57,
+        "front": -0.23690608143806458,
+        "back": 0.1902942955493927
+      }
+    },
+    "removed_extracted_textures": [
+      "stone_golem_stone_golem_Texture_5f6ffdf8_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/monsters/stone_golem/stone_golem.glb",
+    "editable_lod_source": "build/character-3d/monster-source/stone_golem/game-lod.blend"
   }
 }

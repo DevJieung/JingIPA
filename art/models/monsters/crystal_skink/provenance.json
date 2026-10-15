@@ -28,8 +28,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/crystal_skink/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/crystal_skink/game.blend",
-  "glb_sha256": "50227ac846c90e01cccf553fc14b3952243be101175fcce37bc60bdf7b54d19c",
-  "glb_bytes": 3965224,
+  "glb_sha256": "668e5fc88f000e6e028152d3c314555938c0eb75f84c88eb169a3ca80b0a26f9",
+  "glb_bytes": 385500,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -108,5 +108,93 @@
     "tool": "tools/3d/author_monster_motion.py",
     "geometry_digest": "d2cc5bd290bdca63145e9a91f34a1cd63331c7387dd2f658d4c7ce3ffa2aa80e",
     "geometry_unchanged": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 3600,
+      "bake": 512,
+      "texture": 256,
+      "monster_kind": "fast",
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 54996,
+      "vertices": 58425,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 3965224,
+      "sha256": "50227ac846c90e01cccf553fc14b3952243be101175fcce37bc60bdf7b54d19c",
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 3600,
+      "vertices": 3760,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 385500,
+      "sha256": "668e5fc88f000e6e028152d3c314555938c0eb75f84c88eb169a3ca80b0a26f9",
+      "texture": 256,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.0016242645215243101,
+      "p99": 0.00633899578358978,
+      "max": 0.008460061624646187
+    },
+    "bake": {
+      "size": 512,
+      "covered_texels": 76290,
+      "missed_texels": 338,
+      "interior_fallback_texels": 95,
+      "miss_fraction": 0.00443046270808756
+    },
+    "atlas": {
+      "charts": 362,
+      "utilization": 0.7493441104888916,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 5}"
+    },
+    "visible_faces": {
+      "removed_faces": 39674,
+      "kept_faces": 15325
+    },
+    "sole": {
+      "before": {
+        "floor": 0.0001369075325783342,
+        "band_vertices": 77,
+        "front": -0.2038857638835907,
+        "back": 0.5290621519088745
+      },
+      "after": {
+        "floor": 0.0001369075325783342,
+        "band_vertices": 23,
+        "front": -0.19570691883563995,
+        "back": 0.5310708284378052
+      }
+    },
+    "removed_extracted_textures": [
+      "crystal_skink_crystal_skink_Texture_7de0571b_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/monsters/crystal_skink/crystal_skink.glb",
+    "editable_lod_source": "build/character-3d/monster-source/crystal_skink/game-lod.blend"
   }
 }

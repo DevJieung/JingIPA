@@ -25,6 +25,7 @@ import bpy
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import monster_motion  # noqa: E402
+from glb_animation_merge import merge_animations  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 SPECS = ROOT / "tools/3d/native_monster_specs.json"
@@ -95,7 +96,14 @@ for cid in ids:
                               export_anim_single_armature=True, export_cameras=False, export_lights=False)
     payload = temp.read_bytes()
     dest = out / (cid + ".glb")
-    temp.replace(dest)
+    if (work / "game-lod.blend").exists() and dest.exists():
+        # 2026-10-15 mobile LOD: the shipped surface is the reduced one (game-lod.blend), so the
+        # new clips are grafted onto the runtime GLB instead of re-exporting the 55k+ source.
+        payload = merge_animations(dest.read_bytes(), payload)
+        temp.unlink()
+        dest.write_bytes(payload)
+    else:
+        temp.replace(dest)
     size = struct.unpack_from("<I", payload, 12)[0]
     gltf = json.loads(payload[20:20 + size])
     clips = [animation["name"] for animation in gltf.get("animations", [])]

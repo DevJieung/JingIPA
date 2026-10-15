@@ -191,7 +191,10 @@ from glb_animation_merge import merge_animations
 base_dir=OUT/'before-motion2';base_dir.mkdir(exist_ok=True)
 base_copy=base_dir/'limne.glb'
 if not base_copy.exists():base_copy.write_bytes(glb.read_bytes())
-merged=merge_animations(base_copy.read_bytes(),fresh_path.read_bytes())
+# Since the 2026-10-15 mobile LOD the base is the shipped 3-surface Limne (one atlas body and
+# the two irises), not the 63 authored meshes of limne_game.blend: clips are re-targeted by
+# bone name. The high-poly base is kept in build/character-3d/highpoly-2026-10-15/.
+merged=merge_animations(base_copy.read_bytes(),fresh_path.read_bytes(),by_name=True)
 fresh_path.unlink()
 glb.write_bytes(merged)
 record=json.loads((OUT/'before/provenance.json').read_text())

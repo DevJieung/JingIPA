@@ -25,8 +25,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/jelly_seer/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/jelly_seer/game.blend",
-  "glb_sha256": "4bf1008729558372e3c244441859200d292279364023d7eab9356c8dd2b0359b",
-  "glb_bytes": 4098396,
+  "glb_sha256": "b7c03a8bc3c387570a77a9419799b32472cc97dfacd4a0015c1b0957ad7c6b50",
+  "glb_bytes": 490116,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -92,5 +92,93 @@
     "tool": "tools/3d/author_monster_motion.py",
     "geometry_digest": "5e3547a9c1d8c7b32a831c55171670e1095150adb6a15730af4219b09a816983",
     "geometry_unchanged": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 3600,
+      "bake": 1024,
+      "texture": 512,
+      "monster_kind": "caster",
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 44998,
+      "vertices": 46673,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 4098396,
+      "sha256": "4bf1008729558372e3c244441859200d292279364023d7eab9356c8dd2b0359b",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 3599,
+      "vertices": 3533,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 490116,
+      "sha256": "b7c03a8bc3c387570a77a9419799b32472cc97dfacd4a0015c1b0957ad7c6b50",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.00019612954201875255,
+      "p99": 0.004569531660526991,
+      "max": 0.005532483104616404
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 370980,
+      "missed_texels": 656,
+      "interior_fallback_texels": 710,
+      "miss_fraction": 0.0017682893956547524
+    },
+    "atlas": {
+      "charts": 316,
+      "utilization": 0.757641613483429,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 1}"
+    },
+    "visible_faces": {
+      "removed_faces": 37892,
+      "kept_faces": 7107
+    },
+    "sole": {
+      "before": {
+        "floor": -0.0017108459724113345,
+        "band_vertices": 0,
+        "front": 0.0,
+        "back": 0.0
+      },
+      "after": {
+        "floor": -0.0017108459724113345,
+        "band_vertices": 0,
+        "front": 0.0,
+        "back": 0.0
+      }
+    },
+    "removed_extracted_textures": [
+      "jelly_seer_jelly_seer_Texture_0bdf1abb_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/monsters/jelly_seer/jelly_seer.glb",
+    "editable_lod_source": "build/character-3d/monster-source/jelly_seer/game-lod.blend"
   }
 }

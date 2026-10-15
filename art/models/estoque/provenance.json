@@ -29,8 +29,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/estoque/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/estoque/game.blend",
   "height": 1.65,
-  "glb_bytes": 4965112,
-  "glb_sha256": "4f27a2218d1db971eeb6c53552a2fdac2cbd177571c15e40aff543fa9de3aee7",
+  "glb_bytes": 726708,
+  "glb_sha256": "48005ffb393466e19a327eab1c0c0454af2958a3f776e7b06cf35089f63ae4b4",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -91,5 +91,92 @@
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/estoque/game.motion-v1.blend",
     "geometry_base_sha256": "a6413538ea2d8e3fcecfa5ec6fe6bbd99b544c392ff53c35587c78b733a16201",
     "geometry_bytes_preserved": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 6000,
+      "bake": 1024,
+      "texture": 512,
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 54994,
+      "vertices": 57594,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 4965112,
+      "sha256": "4f27a2218d1db971eeb6c53552a2fdac2cbd177571c15e40aff543fa9de3aee7",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 5999,
+      "vertices": 6287,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 726708,
+      "sha256": "48005ffb393466e19a327eab1c0c0454af2958a3f776e7b06cf35089f63ae4b4",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.001059702830389142,
+      "p99": 0.004833281626924872,
+      "max": 0.00713482266291976
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 284724,
+      "missed_texels": 752,
+      "interior_fallback_texels": 206,
+      "miss_fraction": 0.0026411542405979124
+    },
+    "atlas": {
+      "charts": 607,
+      "utilization": 0.7476032376289368,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 0}"
+    },
+    "visible_faces": {
+      "removed_faces": 39696,
+      "kept_faces": 15304
+    },
+    "sole": {
+      "before": {
+        "floor": 1.9679987417475786e-06,
+        "band_vertices": 135,
+        "front": -0.07934260368347168,
+        "back": 0.3171870708465576
+      },
+      "after": {
+        "floor": 0.00014405007823370397,
+        "band_vertices": 33,
+        "front": -0.07770512998104095,
+        "back": 0.3182700276374817
+      }
+    },
+    "removed_extracted_textures": [
+      "estoque_estoque_Texture_d5d7f56b_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/estoque/estoque.glb",
+    "editable_lod_source": "build/character-3d/source/estoque/game-lod.blend"
   }
 }

@@ -27,8 +27,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/bramble_imp/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/bramble_imp/game.blend",
-  "glb_sha256": "9e2359ae8d53063e8dd0426c931905bbc896d66e6e05c3b0718f8472ad6bd8ec",
-  "glb_bytes": 2469068,
+  "glb_sha256": "e8428b0c78f34258877d8488746db58fef6e2deaa2d1ec4d403f7159d6fb01a1",
+  "glb_bytes": 406488,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -103,5 +103,93 @@
     "tool": "tools/3d/author_monster_motion.py",
     "geometry_digest": "f833fe080840f2f068625f66915d6521de24c11aa7ed4a94087d823c67329875",
     "geometry_unchanged": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 3000,
+      "bake": 512,
+      "texture": 256,
+      "monster_kind": "swarm",
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 27997,
+      "vertices": 34582,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 2469068,
+      "sha256": "9e2359ae8d53063e8dd0426c931905bbc896d66e6e05c3b0718f8472ad6bd8ec",
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 3000,
+      "vertices": 4601,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 406488,
+      "sha256": "e8428b0c78f34258877d8488746db58fef6e2deaa2d1ec4d403f7159d6fb01a1",
+      "texture": 256,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.0004888197727268562,
+      "p99": 0.005644729272462435,
+      "max": 0.009957809932529926
+    },
+    "bake": {
+      "size": 512,
+      "covered_texels": 42973,
+      "missed_texels": 904,
+      "interior_fallback_texels": 344,
+      "miss_fraction": 0.021036464756940404
+    },
+    "atlas": {
+      "charts": 860,
+      "utilization": 0.7155820727348328,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 0}"
+    },
+    "visible_faces": {
+      "removed_faces": 18706,
+      "kept_faces": 9293
+    },
+    "sole": {
+      "before": {
+        "floor": -0.0005282749189063907,
+        "band_vertices": 98,
+        "front": -0.06386521458625793,
+        "back": 0.12918417155742645
+      },
+      "after": {
+        "floor": -0.00035114222555421293,
+        "band_vertices": 25,
+        "front": -0.06386521458625793,
+        "back": 0.09679166972637177
+      }
+    },
+    "removed_extracted_textures": [
+      "bramble_imp_bramble_imp_Texture_604b8a93_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/monsters/bramble_imp/bramble_imp.glb",
+    "editable_lod_source": "build/character-3d/monster-source/bramble_imp/game-lod.blend"
   }
 }

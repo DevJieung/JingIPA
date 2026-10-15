@@ -29,8 +29,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/saeta/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/saeta/game.blend",
   "height": 1.65,
-  "glb_bytes": 4971528,
-  "glb_sha256": "6d941ddcf38ffa12df7441190fe49c7cef87d596b161464133f075d54cf6ab2a",
+  "glb_bytes": 747040,
+  "glb_sha256": "8cbed6d251fa559add4dd66bc36c6d9ddf2c68fea509ca124b512da4612e31d1",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -91,5 +91,92 @@
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/saeta/game.motion-v1.blend",
     "geometry_base_sha256": "8d459d3aace5a7ee8bd0833a803b132521166d0fc3736f15a3edfcf1e96260a4",
     "geometry_bytes_preserved": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 6000,
+      "bake": 1024,
+      "texture": 512,
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 54957,
+      "vertices": 56236,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 4971528,
+      "sha256": "6d941ddcf38ffa12df7441190fe49c7cef87d596b161464133f075d54cf6ab2a",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 5999,
+      "vertices": 6541,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 747040,
+      "sha256": "8cbed6d251fa559add4dd66bc36c6d9ddf2c68fea509ca124b512da4612e31d1",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.0,
+      "p99": 0.004016218399628998,
+      "max": 0.005446772091090679
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 280183,
+      "missed_texels": 678,
+      "interior_fallback_texels": 172,
+      "miss_fraction": 0.0024198470285491983
+    },
+    "atlas": {
+      "charts": 704,
+      "utilization": 0.7559431791305542,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 0}"
+    },
+    "visible_faces": {
+      "removed_faces": 44274,
+      "kept_faces": 10726
+    },
+    "sole": {
+      "before": {
+        "floor": 0.0003098595479968935,
+        "band_vertices": 72,
+        "front": -0.14607076346874237,
+        "back": 0.24177402257919312
+      },
+      "after": {
+        "floor": 0.0006741292309015989,
+        "band_vertices": 34,
+        "front": -0.14607076346874237,
+        "back": 0.24177402257919312
+      }
+    },
+    "removed_extracted_textures": [
+      "saeta_saeta_Texture_2a16a3c9_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/saeta/saeta.glb",
+    "editable_lod_source": "build/character-3d/source/saeta/game-lod.blend"
   }
 }

@@ -28,8 +28,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/thalassa/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/thalassa/game.blend",
   "height": 1.65,
-  "glb_bytes": 5001836,
-  "glb_sha256": "4cd6dcce5c55753a30b03728f63612a63a56b2281f0a3836e4cce6d7284b35bf",
+  "glb_bytes": 735748,
+  "glb_sha256": "7f1134c8767e0abf434a977ea2c305ddfbe9e6d058cbc12b357cdc9d8387659b",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -90,5 +90,92 @@
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/thalassa/game.motion-v1.blend",
     "geometry_base_sha256": "3404e35337f0a5692c78a1b96b5a0e854bd13d4c7b6aa78fdb44c06b455df058",
     "geometry_bytes_preserved": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 6000,
+      "bake": 1024,
+      "texture": 512,
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 54996,
+      "vertices": 56113,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 5001836,
+      "sha256": "4cd6dcce5c55753a30b03728f63612a63a56b2281f0a3836e4cce6d7284b35bf",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 5999,
+      "vertices": 6062,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 735748,
+      "sha256": "7f1134c8767e0abf434a977ea2c305ddfbe9e6d058cbc12b357cdc9d8387659b",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.0011772526195272803,
+      "p99": 0.004401510930620142,
+      "max": 0.007697517052292824
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 315903,
+      "missed_texels": 555,
+      "interior_fallback_texels": 213,
+      "miss_fraction": 0.001756868405808112
+    },
+    "atlas": {
+      "charts": 520,
+      "utilization": 0.7538345456123352,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 0}"
+    },
+    "visible_faces": {
+      "removed_faces": 36928,
+      "kept_faces": 18071
+    },
+    "sole": {
+      "before": {
+        "floor": 1.3078301890345756e-05,
+        "band_vertices": 218,
+        "front": -0.07488667964935303,
+        "back": 0.2579459846019745
+      },
+      "after": {
+        "floor": 0.0002678435994312167,
+        "band_vertices": 46,
+        "front": -0.07740935683250427,
+        "back": 0.25814056396484375
+      }
+    },
+    "removed_extracted_textures": [
+      "thalassa_thalassa_Texture_65ce46fb_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/thalassa/thalassa.glb",
+    "editable_lod_source": "build/character-3d/source/thalassa/game-lod.blend"
   }
 }

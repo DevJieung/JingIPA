@@ -27,8 +27,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/elder_treant/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/elder_treant/game.blend",
-  "glb_sha256": "dd3e6adef0cc903404e3a699a95bd0f9707c743091cb7f6bf3434643611b27aa",
-  "glb_bytes": 4482312,
+  "glb_sha256": "57190e9e8d9cb6deb4ab646aa2e166800224c6bd7a38836673c7dc929a4ec808",
+  "glb_bytes": 605784,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -97,5 +97,94 @@
     "tool": "tools/3d/author_monster_motion.py",
     "geometry_digest": "e495669e04a87755430c9f9e4435fece0092c45c60b9fe063acb6a1e880bf9a5",
     "geometry_unchanged": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 3800,
+      "bake": 1024,
+      "texture": 512,
+      "monster_kind": "tank",
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 44999,
+      "vertices": 51589,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 4482312,
+      "sha256": "dd3e6adef0cc903404e3a699a95bd0f9707c743091cb7f6bf3434643611b27aa",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 3800,
+      "vertices": 4865,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 605784,
+      "sha256": "57190e9e8d9cb6deb4ab646aa2e166800224c6bd7a38836673c7dc929a4ec808",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.0006274257320910692,
+      "p99": 0.008086976204067483,
+      "max": 0.015020102262496948
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 264312,
+      "missed_texels": 655,
+      "interior_fallback_texels": 1891,
+      "miss_fraction": 0.0024781319047186656
+    },
+    "atlas": {
+      "charts": 764,
+      "utilization": 0.7285829186439514,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 0}"
+    },
+    "visible_faces": {
+      "removed_faces": 33318,
+      "kept_faces": 11682
+    },
+    "sole": {
+      "before": {
+        "floor": -0.0005981641006655991,
+        "band_vertices": 155,
+        "front": -0.23199042677879333,
+        "back": 0.3235037922859192
+      },
+      "after": {
+        "floor": -0.0005981641006655991,
+        "band_vertices": 45,
+        "front": -0.23043078184127808,
+        "back": 0.3235037922859192
+      }
+    },
+    "removed_extracted_textures": [
+      "elder_treant_elder_treant_Texture_5d59bf11_0.png",
+      "elder_treant_elder_treant_Texture_cc4168f0_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/monsters/elder_treant/elder_treant.glb",
+    "editable_lod_source": "build/character-3d/monster-source/elder_treant/game-lod.blend"
   }
 }

@@ -30,8 +30,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/conor/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/conor/game.blend",
   "height": 1.65,
-  "glb_bytes": 5090204,
-  "glb_sha256": "1a5e73ff45127b17ce3ff28fb0527f014805379ad892c68b11a5477c8b0bca42",
+  "glb_bytes": 774820,
+  "glb_sha256": "20180e73676773e692636b9d816ef96f2252109c23573763c99ffccd0b29859d",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -92,5 +92,92 @@
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/conor/game.motion-v1.blend",
     "geometry_base_sha256": "d0052adb91f4fe281973abbdd5962adac827e9fb99c30e57baf94f3419f915e6",
     "geometry_bytes_preserved": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 6000,
+      "bake": 1024,
+      "texture": 512,
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 54991,
+      "vertices": 58314,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 5090204,
+      "sha256": "1a5e73ff45127b17ce3ff28fb0527f014805379ad892c68b11a5477c8b0bca42",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 6000,
+      "vertices": 6518,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 774820,
+      "sha256": "20180e73676773e692636b9d816ef96f2252109c23573763c99ffccd0b29859d",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.00128081813454628,
+      "p99": 0.00516074618324637,
+      "max": 0.007817337289452553
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 277685,
+      "missed_texels": 635,
+      "interior_fallback_texels": 273,
+      "miss_fraction": 0.00228676377910222
+    },
+    "atlas": {
+      "charts": 678,
+      "utilization": 0.7430434823036194,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 2}"
+    },
+    "visible_faces": {
+      "removed_faces": 34672,
+      "kept_faces": 20327
+    },
+    "sole": {
+      "before": {
+        "floor": -0.00015019149577710778,
+        "band_vertices": 550,
+        "front": -0.2907654643058777,
+        "back": 0.13565225899219513
+      },
+      "after": {
+        "floor": -0.00015019149577710778,
+        "band_vertices": 132,
+        "front": -0.2940532863140106,
+        "back": 0.13599444925785065
+      }
+    },
+    "removed_extracted_textures": [
+      "conor_conor_Texture_e7828b22_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/conor/conor.glb",
+    "editable_lod_source": "build/character-3d/source/conor/game-lod.blend"
   }
 }

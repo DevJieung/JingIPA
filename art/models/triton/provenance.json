@@ -28,8 +28,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/triton/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/triton/game.blend",
   "height": 1.7,
-  "glb_bytes": 5157120,
-  "glb_sha256": "6fa26ad07c031ae42c19d33b15215c35f0fe0e9e0720bf24efa5cddfc4fe0616",
+  "glb_bytes": 794880,
+  "glb_sha256": "ded36908b1c9e3b5c8c9a21713deff61d2055ba6c32d32f708bde73cbb029ce2",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -90,5 +90,92 @@
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/triton/game.motion-v1.blend",
     "geometry_base_sha256": "e6169d9a4c327220baf54b0671d8fe85d845b31ae91c199f39382a06208fae17",
     "geometry_bytes_preserved": true
+  },
+  "mobile_lod": {
+    "date": "2026-10-15",
+    "request": "user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures",
+    "tool": "tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py",
+    "method": "visible sheet only (faces seen from >= 3 of 128 directions; the reconstruction's hidden inner sheets removed), VTK quadric decimation with skin weights interpolated along every collapse, xatlas atlas, Cycles EMIT bake of the exact source colour (visible faces first, all sheets as fallback), nearest-texel gutter fill, box downsample; clip bytes grafted unchanged from the reviewed high-poly GLB (rig, sockets, release timing, grounding unchanged)",
+    "budget": {
+      "triangles": 6000,
+      "bake": 1024,
+      "texture": 512,
+      "pitch": 0.0
+    },
+    "before": {
+      "triangles": 54993,
+      "vertices": 58551,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 5157120,
+      "sha256": "6fa26ad07c031ae42c19d33b15215c35f0fe0e9e0720bf24efa5cddfc4fe0616",
+      "texture": [
+        [
+          1024,
+          1024
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "0 (lossless)"
+      }
+    },
+    "after": {
+      "triangles": 5999,
+      "vertices": 6701,
+      "meshes": 1,
+      "surfaces": 1,
+      "materials": 1,
+      "images": 1,
+      "bytes": 794880,
+      "sha256": "ded36908b1c9e3b5c8c9a21713deff61d2055ba6c32d32f708bde73cbb029ce2",
+      "texture": 512,
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      }
+    },
+    "surface_deviation_m": {
+      "p50": 0.0010073768207803369,
+      "p99": 0.005841843318194151,
+      "max": 0.0080951526761055
+    },
+    "bake": {
+      "size": 1024,
+      "covered_texels": 281554,
+      "missed_texels": 756,
+      "interior_fallback_texels": 582,
+      "miss_fraction": 0.002685097707722142
+    },
+    "atlas": {
+      "charts": 753,
+      "utilization": 0.7597072124481201,
+      "skipped_faces": 0,
+      "reduce": "{'floor_lifted_vertices': 2}"
+    },
+    "visible_faces": {
+      "removed_faces": 39685,
+      "kept_faces": 15313
+    },
+    "sole": {
+      "before": {
+        "floor": -6.481403397629037e-05,
+        "band_vertices": 610,
+        "front": -0.12605908513069153,
+        "back": 0.44961225986480713
+      },
+      "after": {
+        "floor": -6.481403397629037e-05,
+        "band_vertices": 181,
+        "front": -0.12603719532489777,
+        "back": 0.4496139883995056
+      }
+    },
+    "removed_extracted_textures": [
+      "triton_triton_Texture_3b626b3c_0.png"
+    ],
+    "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/triton/triton.glb",
+    "editable_lod_source": "build/character-3d/source/triton/game-lod.blend"
   }
 }
