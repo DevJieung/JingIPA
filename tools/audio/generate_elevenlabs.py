@@ -21,6 +21,11 @@ ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / 'art/audio_sources/elevenlabs_v1'
 SCENE_MINOR_SOURCE = ROOT / 'art/audio_sources/elevenlabs_scene_minor_v2'
 CARD_PRESENCE_SOURCE = ROOT / 'art/audio_sources/elevenlabs_card_presence_v3'
+# Vorbis quality of shipped music. Lowered from 4 to 2 on 2026-10-15 to shrink the APK (the user
+# accepted a small quality loss; the ElevenLabs sources are 128 kbps MP3). battle and boss still
+# ship their q4 files: they predate the current loop processing, so re-running them here would
+# change their mastering, not just their bitrate.
+MUSIC_VORBIS_QUALITY = 2
 
 def source_for(ident, is_music):
     # Keep every previous arrangement intact when publishing a new scene track.
@@ -124,7 +129,7 @@ def process_audio(src, out, music):
         loop *= min(target_rms / rms, .65 / peak)
         pcm = out.with_suffix('.f32')
         pcm.write_bytes(loop.astype('<f4').tobytes())
-        ffmpeg(['-f','f32le','-ar','44100','-ac','2','-i',pcm,'-ar','44100','-c:a','libvorbis','-q:a','4',out])
+        ffmpeg(['-f','f32le','-ar','44100','-ac','2','-i',pcm,'-ar','44100','-c:a','libvorbis','-q:a',MUSIC_VORBIS_QUALITY,out])
         pcm.unlink()
     else:
         raw = subprocess.run(['ffmpeg','-v','error','-i',str(src),'-f','f32le','-ac','1','-ar','44100','pipe:1'], check=True, capture_output=True).stdout

@@ -11,7 +11,7 @@
 
 생성 원본과 전체 요청은 `art/audio_sources/elevenlabs_v1/`에 보존한다. `art/audio-manifest.json`에는 공급자, 모델, 프롬프트, 소스 및 출고 파일 SHA-256, 길이, peak/RMS, 루프 접점 검증값을 기록했다. 음악은 `music_v1`, 효과음은 `eleven_text_to_sound_v2`를 사용했다. API: [음악 생성](https://elevenlabs.io/docs/api-reference/music/compose), [효과음 생성](https://elevenlabs.io/docs/api-reference/text-to-sound-effects/convert).
 
-`tools/audio/generate_elevenlabs.py --install`은 `.env`의 `ELEVENLABS_API_KEY`를 직접 읽으며 키를 출력하지 않는다. 이미 성공한 원본은 재사용한다. 음악의 마지막 2초와 처음 2초를 겹쳐 이음부를 만들고, -20 LUFS로 정리한 Ogg Vorbis를 출고한다. 효과음은 시작·끝 무음을 정리한 44.1kHz WAV이며, 반복 빈도가 높은 타격·발사 소리는 별도의 낮은 peak로 맞춘다. 원본과 `.env`는 APK에서 제외한다.
+`tools/audio/generate_elevenlabs.py --install`은 `.env`의 `ELEVENLABS_API_KEY`를 직접 읽으며 키를 출력하지 않는다. 이미 성공한 원본은 재사용한다. 음악의 마지막 2초와 처음 2초를 겹쳐 이음부를 만들고, -20 LUFS로 정리한 Ogg Vorbis를 출고한다. 2026-10-15부터 음악은 APK 용량을 줄이려고 Vorbis 품질 2(`MUSIC_VORBIS_QUALITY`, 이전 4)로 인코딩한다. 원본이 128kbps MP3라 16kHz 대역은 그대로다. `battle`·`boss`는 현재 루프 처리보다 먼저 만들어진 품질 4 파일을 그대로 둔다(다시 돌리면 마스터링이 바뀐다). 효과음은 시작·끝 무음을 정리한 44.1kHz WAV이며, 반복 빈도가 높은 타격·발사 소리는 별도의 낮은 peak로 맞춘다. 원본과 `.env`는 APK에서 제외한다.
 
 `core/sound.gd`가 두 음악 플레이어로 1.2초 장면 전환을 처리한다. 동일 곡 재요청은 재시작하지 않는다. 메뉴의 효과음과 배경음악 설정은 별도로 저장되며, 광고 및 앱 백그라운드 진입 중 재생을 정지하고 복귀 시 이어간다. 소환 효과음은 `card_collect`, `summon_charge`, `summon_burst`, `fusion_charge`, `fusion_burst`다.
 

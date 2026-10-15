@@ -15,11 +15,11 @@
       "song_id": "N8tZTNX1XSITAoUvtsxA",
       "source_sha256": "47ecf42ce2577f293c0ef06cfe7b8ee1fb2c8d9a389a14177579ffee12b6571a",
       "path": "art/bgm/camp.ogg",
-      "sha256": "c6eee34ad505c291e414cb74d4bab43cf0a338e8c5d0d132f6d7f96d3d6172aa",
+      "sha256": "d996fc7ce9bc6f5882ab9d29761980ef4dfbd3271a8563f0bc9c9571920af643",
       "seconds": 58.029,
-      "peak": 0.5075,
-      "rms": 0.08,
-      "loop_seam": 0.0010663012508302927
+      "peak": 0.5255,
+      "rms": 0.0797,
+      "loop_seam": 0.004098418168723583
     },
     {
       "id": "ritual",
@@ -35,11 +35,11 @@
       "song_id": "nduS3xWVJag9IjvWtX66",
       "source_sha256": "9dfa95e9b74f27c4db0548d74901e1ada0827b76d40a9a4d6d7957934fce945c",
       "path": "art/bgm/ritual.ogg",
-      "sha256": "7c5f4b546b1c0e5af2836f93b1ac37c57a026eb5a8b233692315fc9df0634b73",
+      "sha256": "dbf6d5497a580a5ae7ae82a49d5b47918b74e001aea15a0dcd12ca8c4b2318a4",
       "seconds": 58.029,
-      "peak": 0.6568,
-      "rms": 0.103,
-      "loop_seam": 0.0020414036698639393
+      "peak": 0.6666,
+      "rms": 0.1025,
+      "loop_seam": 0.012086119502782822
     },
     {
       "id": "battle",
@@ -95,11 +95,11 @@
       "song_id": "69SxruzhZaOOczDdkV0x",
       "source_sha256": "599e0d3ce9bf51e5884b8898977be96709985826d027ed3ab6f9e6174ea8962f",
       "path": "art/bgm/theme_calm_lake.ogg",
-      "sha256": "d3deb7256a73bb9782e308a7f8bfbc35d3c4bf405270920859cfb9a8f55c4ab1",
+      "sha256": "8ab262c64c260d9b158c4627f464c379221b941972cb97fe20cf97cc34203b16",
       "seconds": 58.029,
-      "peak": 0.4941,
-      "rms": 0.0801,
-      "loop_seam": 0.0014094131765887141
+      "peak": 0.4877,
+      "rms": 0.0798,
+      "loop_seam": 0.0018691924633458257
     },
     {
       "id": "theme_reed_marsh",
@@ -115,11 +115,11 @@
       "song_id": "tDC0Yg4wOqXvp7L8ukaD",
       "source_sha256": "ff6afdc6609e38f377ddab2fd6203d4d89ac1d6d6bc95b879e331ced3b8f9062",
       "path": "art/bgm/theme_reed_marsh.ogg",
-      "sha256": "34fdedf21db0e5c94660585a4e22eb6c9dc8f85dec7282592fce698d023cf11c",
+      "sha256": "b0060ed47f9796d4bbffb5a89ce973194834a14d15e3af265e50249974d203c7",
       "seconds": 58.029,
-      "peak": 0.6599,
-      "rms": 0.0792,
-      "loop_seam": 0.0016186406137421727
+      "peak": 0.6625,
+      "rms": 0.0789,
+      "loop_seam": 0.0026134238578379154
     },
     {
       "id": "theme_aqueduct_ruin",
@@ -135,11 +135,11 @@
       "song_id": "8CzQzr3NFO6ycUSA7Zga",
       "source_sha256": "e614922e11012adefb99b95f3f35619fff07e6744f5c2814af8587d3e3b62ead",
       "path": "art/bgm/theme_aqueduct_ruin.ogg",
-      "sha256": "f303fb282ae7f352b3bf5648eef27aa9f2157f0b458f81fcee653a8b0ce368d2",
+      "sha256": "23ec1590a04023b8a2fcd82c8becaac890795aeffc68c335ff53c365090d4021",
       "seconds": 58.029,
-      "peak": 0.6158,
-      "rms": 0.0801,
-      "loop_seam": 0.0007771525415591896
+      "peak": 0.6307,
+      "rms": 0.0798,
+      "loop_seam": 0.0010502804070711136
     },
     {
       "id": "theme_falls_gorge",
@@ -155,11 +155,11 @@
       "song_id": "s6w9gp0C1Cl03x1Zc11U",
       "source_sha256": "1392238882ff34336c48efcd9a409ce8f255f4ce95275878f29dffb4edb04889",
       "path": "art/bgm/theme_falls_gorge.ogg",
-      "sha256": "b87fc25dbd7a0f8945074f1f6e6634bd2a3301a0fc74fbfa56fc419b8a237b96",
+      "sha256": "c4c9a9af78c1819441408ddb5ba60ff34e49b619a0e4ffb70804b1b8d64be27a",
       "seconds": 58.029,
-      "peak": 0.5542,
-      "rms": 0.0799,
-      "loop_seam": 0.0011710725957527757
+      "peak": 0.5847,
+      "rms": 0.0796,
+      "loop_seam": 0.0016951330471783876
     },
     {
       "id": "theme_tidal_flats",
@@ -175,11 +175,11 @@
       "song_id": "qHpHXjqyWabnGuwDclGa",
       "source_sha256": "3a337e886eddf2bd74b2b548b3f8cd20263dff96ddda4c68acf2fa6ccb0c8326",
       "path": "art/bgm/theme_tidal_flats.ogg",
-      "sha256": "995e0719494a1ca52ea0fd817318253696f7ab9c800c98afb691f7c0357009ba",
+      "sha256": "127234287fad451da2613400888727637b7d715427e16222fd84305726a497ff",
       "seconds": 58.029,
-      "peak": 0.5421,
-      "rms": 0.0801,
-      "loop_seam": 0.0030838055536150932
+      "peak": 0.5459,
+      "rms": 0.0798,
+      "loop_seam": 0.004799677059054375
     },
     {
       "id": "theme_glacier_lake",
@@ -195,11 +195,11 @@
       "song_id": "sPuphFCI17nynX2fELJs",
       "source_sha256": "885395a1a15252828f240c3eb4d331f4b0013e3d5b5a936b020d3de90417d5e9",
       "path": "art/bgm/theme_glacier_lake.ogg",
-      "sha256": "bea5616c01f466824f9f27b26b3b9d1aa2db947de5cd18bbe55be46191feb51c",
+      "sha256": "364747bb09fec3eb83587fee19eb868a7f68ab3eea32c8431fc98a51c312b2d3",
       "seconds": 58.029,
-      "peak": 0.4167,
-      "rms": 0.08,
-      "loop_seam": 0.003119765082374215
+      "peak": 0.4104,
+      "rms": 0.0796,
+      "loop_seam": 0.001988381380215287
     },
     {
       "id": "theme_sunken_fleet",
@@ -215,11 +215,11 @@
       "song_id": "9Ycd4ifDY0YvkOJOMDR2",
       "source_sha256": "d4ee4526d6f7b66d8d52846689d1a6a9bcab8ce9c80723ffba6f1c96b3844834",
       "path": "art/bgm/theme_sunken_fleet.ogg",
-      "sha256": "7dfdffd15708737ea6b69e03fdbd18cf5fd9e8e4c8f509d7e121a42a5cc8e3ac",
+      "sha256": "6ab0fb5dd60db7e2be606e50912204676f4d370a9480d957f8a070e0788a6907",
       "seconds": 58.029,
-      "peak": 0.5088,
-      "rms": 0.0799,
-      "loop_seam": 0.000620506179984659
+      "peak": 0.4849,
+      "rms": 0.0796,
+      "loop_seam": 0.0017958313692361116
     },
     {
       "id": "theme_geyser_mud",
@@ -235,11 +235,11 @@
       "song_id": "s1iI2cL3dal2jX3dERgE",
       "source_sha256": "a4de664814f2b5ec64d169cddc3289f7076dc4361d0be84fdcd99694f4cd6691",
       "path": "art/bgm/theme_geyser_mud.ogg",
-      "sha256": "997a8b0ef8a01fbb4e3968df7a9aa7a1e518591d6b8abfc86f4e51c99215b6b5",
+      "sha256": "7b08ce842ffdfaf68c3ed17080cb590c318a230c76a2ede5df288bb1f3864ba2",
       "seconds": 58.029,
-      "peak": 0.4541,
-      "rms": 0.0801,
-      "loop_seam": 0.0008683328633196652
+      "peak": 0.4863,
+      "rms": 0.0798,
+      "loop_seam": 0.0002488088794052601
     },
     {
       "id": "theme_deep_trench",
@@ -255,11 +255,11 @@
       "song_id": "L5pC51SmPQuUEE1Rb1iN",
       "source_sha256": "de34a44e68c4acb6e3aa2c79b91ec8888b9f157d0033b6ad7140722eb03fa2ff",
       "path": "art/bgm/theme_deep_trench.ogg",
-      "sha256": "540c6e1ed95ffe2f38f0ce5670ed9566aa61d373ffee89e9d2e2e3e437cf5ece",
+      "sha256": "897a3059dd0c970e1181c009a7f77a7c66998c15ff6aed41e71f85ed8d968755",
       "seconds": 58.029,
-      "peak": 0.5563,
-      "rms": 0.0799,
-      "loop_seam": 0.0023603197187185287
+      "peak": 0.5624,
+      "rms": 0.0796,
+      "loop_seam": 0.0028905838262289762
     },
     {
       "id": "theme_maelstrom_sea",
@@ -275,11 +275,11 @@
       "song_id": "n4j9oPvBHVL0utLipnrG",
       "source_sha256": "380b57c7b6f1378bdde5a7b5a9cb6b3644eb4467ee5ca7dc113ef6bfe2e2d6fd",
       "path": "art/bgm/theme_maelstrom_sea.ogg",
-      "sha256": "49e726d401f405e9c575a36fd0405a1417458ac0c5d38ca33c124c36b6e4c576",
+      "sha256": "a98c427acaa6a98c4067cca59f507394843fedab3b655561f60158515fe4e493",
       "seconds": 58.029,
-      "peak": 0.4639,
-      "rms": 0.0798,
-      "loop_seam": 0.001987662399187684
+      "peak": 0.478,
+      "rms": 0.0795,
+      "loop_seam": 0.0014638685388490558
     },
     {
       "id": "theme_kiln_yard",
@@ -295,11 +295,11 @@
       "song_id": "piWyr08179Y4KrSbb688",
       "source_sha256": "bd621434a2538d0f53cfadaa2aa696135d6b537f68fc8cca088f17cad2393654",
       "path": "art/bgm/theme_kiln_yard.ogg",
-      "sha256": "0e2e7cf6e83705d70bca5a114f46843070c75ba84180c78eb63c56fa7eb3d11f",
+      "sha256": "3e332c0cd82544be48ed07344bbc83e63f7b5262ce815dd7b10ba9d9ce53c57a",
       "seconds": 58.029,
-      "peak": 0.4201,
-      "rms": 0.0798,
-      "loop_seam": 0.0008282972848974168
+      "peak": 0.4244,
+      "rms": 0.0796,
+      "loop_seam": 0.003611210035160184
     },
     {
       "id": "theme_burn_field",
@@ -315,11 +315,11 @@
       "song_id": "JMuW4N6nff7VZvTh7jgw",
       "source_sha256": "32a5e13dba13bd3f41d826b6379fe51c32781cecc8a1f0a08b8e401aedeccf1c",
       "path": "art/bgm/theme_burn_field.ogg",
-      "sha256": "66649148cacad02f48d5a867b7b92be905518dbb08457392f8598e3a2d44c8f3",
+      "sha256": "22c3bfc5ece6ec2489f8617dc6dd2ed8b5eb2799e229e3e4f293b63666dcf9c3",
       "seconds": 58.029,
-      "peak": 0.6344,
-      "rms": 0.0798,
-      "loop_seam": 0.001370095182210207
+      "peak": 0.6463,
+      "rms": 0.0795,
+      "loop_seam": 0.002335623139515519
     },
     {
       "id": "theme_forge_canyon",
@@ -335,11 +335,11 @@
       "song_id": "xCBXBeAJH9ErQGabNzKa",
       "source_sha256": "9a42245b6825c2ae5be8c144a16326a8d6a3c4aa2fccfdf648e4e8bb2459ee4e",
       "path": "art/bgm/theme_forge_canyon.ogg",
-      "sha256": "c20cb5c02ff2d4fdbd87f2cdd97f8cd44026732ac94efe464a978113ab90cffc",
+      "sha256": "cdc754a9b418dc6cd913bd90cf77b5ac5ab4bbd50a415a00e861dc6c570a0b5e",
       "seconds": 58.029,
-      "peak": 0.5923,
-      "rms": 0.08,
-      "loop_seam": 0.00011997109686490148
+      "peak": 0.5978,
+      "rms": 0.0796,
+      "loop_seam": 0.00016263881116174161
     },
     {
       "id": "theme_burnt_forest",
@@ -355,11 +355,11 @@
       "song_id": "Y8YWKHexNBNPXzzRVOAD",
       "source_sha256": "09b95a2d663572c0c9c17850f5abe16e47362e8cc1d323196139827c600410a2",
       "path": "art/bgm/theme_burnt_forest.ogg",
-      "sha256": "4ef77e223d36deda90f8377bb808c4d329707608b262753301c161912f576db8",
+      "sha256": "711d67b1401f163534d5a32dd8761e86472337c3f9d0a46e6aa5904eec2bc637",
       "seconds": 58.029,
-      "peak": 0.446,
-      "rms": 0.08,
-      "loop_seam": 0.006085589062422514
+      "peak": 0.432,
+      "rms": 0.0796,
+      "loop_seam": 0.0028272110503166914
     },
     {
       "id": "theme_sulfur_springs",
@@ -375,11 +375,11 @@
       "song_id": "ESjo1VhyjdW81ZScGdBp",
       "source_sha256": "dba0b8bdf46c5112162ba9384b2e9c8ec3355c733f2115af96e52085261b6302",
       "path": "art/bgm/theme_sulfur_springs.ogg",
-      "sha256": "862d376f86d610116aeb8bd2f6efe0f44152356af8e23d080bdbf763d778d10e",
+      "sha256": "839dfcd022cbc204f817c092e1d275d88ace4139247c1f0d58bfa5332616408c",
       "seconds": 58.029,
-      "peak": 0.4602,
-      "rms": 0.0797,
-      "loop_seam": 0.0013889928814023733
+      "peak": 0.4815,
+      "rms": 0.0794,
+      "loop_seam": 0.002101271878927946
     },
     {
       "id": "theme_ash_city",
@@ -395,11 +395,11 @@
       "song_id": "EOq07V9PHUXixl9AuAAL",
       "source_sha256": "30eaec3751cc6388704032a4881cf345f743e8c54700f7bd1b38112e5bf3d266",
       "path": "art/bgm/theme_ash_city.ogg",
-      "sha256": "5805aac2055858384be79fb29c0ea52aeae6fef50275538e8b0a76a99b8cb836",
+      "sha256": "c2c129712338a830b4502722f5a8b42519e4bc53ca2df3a275f90778641804f8",
       "seconds": 58.029,
-      "peak": 0.5793,
-      "rms": 0.0798,
-      "loop_seam": 0.001121882232837379
+      "peak": 0.586,
+      "rms": 0.0795,
+      "loop_seam": 0.0005025265854783356
     },
     {
       "id": "theme_lava_river",
@@ -415,11 +415,11 @@
       "song_id": "WXDmtc4s9bcCSUM723vn",
       "source_sha256": "d7e922701f77c50e2e766e205512ad6e3e6a881404e6542848073934515aca44",
       "path": "art/bgm/theme_lava_river.ogg",
-      "sha256": "e1eea99cf74e6106e8e65f1612b25b5698d4191fa2f6e65b1334a58a6bce5fcf",
+      "sha256": "f9d88196249a6e45c7a3e6d33b78b9fa94d67be839ad9ef14e774db6dfda37e2",
       "seconds": 58.029,
-      "peak": 0.448,
-      "rms": 0.0796,
-      "loop_seam": 0.0010800668969750404
+      "peak": 0.4601,
+      "rms": 0.0793,
+      "loop_seam": 0.002066374057903886
     },
     {
       "id": "theme_obsidian_flats",
@@ -435,11 +435,11 @@
       "song_id": "dFq8yrnhNs52sGXYoYBx",
       "source_sha256": "32ba8f75c420776ee4522abd81bf397b512f88c163ab1594f256e72ee841941e",
       "path": "art/bgm/theme_obsidian_flats.ogg",
-      "sha256": "89780a98912c0eb0c1787a16a0242665cc77be8995eace98a3b956d9a8536820",
+      "sha256": "3591bf21661d2dd3c3b8763bd133ab901c13186bfdd0caee87b10e47a581a9a0",
       "seconds": 58.003,
-      "peak": 0.5253,
-      "rms": 0.0798,
-      "loop_seam": 0.0015444637974724174
+      "peak": 0.526,
+      "rms": 0.0796,
+      "loop_seam": 0.0010480937780812383
     },
     {
       "id": "theme_volcano_crater",
@@ -455,11 +455,11 @@
       "song_id": "2xqmv8FTuGZ4q6dSpm5m",
       "source_sha256": "9b6d03b8eb1a74b23f9210e38080729dc0b1025b323ec9ca1dfcd075ebc6b0e5",
       "path": "art/bgm/theme_volcano_crater.ogg",
-      "sha256": "8ca5083b1edc753412184c527cf1fe7b543c6f9ae7ab895d5b81396180d76c65",
+      "sha256": "c375e14d358e7258a1c7289a00841623dbfc71786658cc688e4ffa7a862a528a",
       "seconds": 58.029,
-      "peak": 0.5508,
-      "rms": 0.0793,
-      "loop_seam": 0.0009577799355611205
+      "peak": 0.5729,
+      "rms": 0.079,
+      "loop_seam": 0.0006827499601058662
     },
     {
       "id": "theme_ash_blizzard",
@@ -475,11 +475,11 @@
       "song_id": "xM0Nl0RGX1QMuNpsWEo3",
       "source_sha256": "e309fdc5f30e50ab07540a6cd7fab1aefc447e45a4f995a143fd13ddabaaa59c",
       "path": "art/bgm/theme_ash_blizzard.ogg",
-      "sha256": "c486a3d349bc9979d479537b64b586c60fb0fd3214cab3783ebccc109d5ceccf",
+      "sha256": "6797546986b75bd08eb7857796d184d2aff7d66902546b52a35a9dbe992c36c9",
       "seconds": 58.029,
-      "peak": 0.466,
-      "rms": 0.0796,
-      "loop_seam": 0.0017102517886087298
+      "peak": 0.4989,
+      "rms": 0.0793,
+      "loop_seam": 0.0015966476639732718
     },
     {
       "id": "theme_spring_grove",
@@ -495,11 +495,11 @@
       "song_id": "aAc5AgwFXpJSNrSpfKuC",
       "source_sha256": "5d027665bb137c3d2732fa835332a7b2960bd0356fc36d514166a7b22ae9c5d5",
       "path": "art/bgm/theme_spring_grove.ogg",
-      "sha256": "301d55af4412a2502ab9348147c3e1ff48af181d3c21218bfb16c379ac555850",
+      "sha256": "d372c613605db897222e79160787d71616ede2804287598a3dee14ab916a5d2d",
       "seconds": 58.029,
-      "peak": 0.346,
-      "rms": 0.08,
-      "loop_seam": 0.0003124500217381865
+      "peak": 0.3524,
+      "rms": 0.0797,
+      "loop_seam": 0.0011853784089908004
     },
     {
       "id": "theme_mushroom_hollow",
@@ -515,11 +515,11 @@
       "song_id": "7loyojKsME5poPfxjKS7",
       "source_sha256": "79522be45b45ce8f8dadde31070e23dd6455735dd9d151398a433f2109aa077c",
       "path": "art/bgm/theme_mushroom_hollow.ogg",
-      "sha256": "35d7354efc0ab1fb6f1a85de5ab02b5b1046c9d2fe99732205181aea188bd0c8",
+      "sha256": "fcbcbf0b503e728153637e75caed91936873879478a57909df79e1b73f94d5eb",
       "seconds": 58.029,
-      "peak": 0.5796,
-      "rms": 0.0799,
-      "loop_seam": 0.0011376600014045835
+      "peak": 0.5865,
+      "rms": 0.0797,
+      "loop_seam": 0.0027453971561044455
     },
     {
       "id": "theme_bamboo_grove",
@@ -535,11 +535,11 @@
       "song_id": "L1kFR2C8HQqREXik1Q62",
       "source_sha256": "e14361a3217b920b689f6c02998202b24f072ede70f323d47ff3dab7c0b20926",
       "path": "art/bgm/theme_bamboo_grove.ogg",
-      "sha256": "f47106203c39ccae868efd3ba361b56f43762f4d15e7bd4601f90c20d5d94718",
+      "sha256": "25bddf8e5fa11e0c153a7a0ee8b9c5e09011dd6e8c49f9974ec331345a7a46d7",
       "seconds": 58.029,
-      "peak": 0.5042,
-      "rms": 0.0803,
-      "loop_seam": 0.0032507716678082943
+      "peak": 0.5104,
+      "rms": 0.08,
+      "loop_seam": 0.003546131309121847
     },
     {
       "id": "theme_vine_ruins",
@@ -555,11 +555,11 @@
       "song_id": "zC73ypoQnf9N5Q0hpArn",
       "source_sha256": "fe4638103e93fb49b03e215d482a52edd66e31199cc881ab70d6abe4442c863d",
       "path": "art/bgm/theme_vine_ruins.ogg",
-      "sha256": "d719e94414422651935c2d10fbe6e54ee30b4f83e4ed2bae49fcd425e64fe493",
+      "sha256": "0142bb9faa9d893aa65fe69503b296b4463bb3d44e372e7f8d4a1913913d697e",
       "seconds": 58.029,
-      "peak": 0.6191,
-      "rms": 0.0801,
-      "loop_seam": 0.0002948407200165093
+      "peak": 0.6266,
+      "rms": 0.0798,
+      "loop_seam": 0.0008494263747707009
     },
     {
       "id": "theme_misty_cedar",
@@ -575,11 +575,11 @@
       "song_id": "ngBSZyYertXyNAiOkU62",
       "source_sha256": "3584f327ad87464079e93fc80f765572773ad0ba9feb9c7ec62a06927f825373",
       "path": "art/bgm/theme_misty_cedar.ogg",
-      "sha256": "98e1a346c1d266f9c10f37db99648dcb7f27e9c5623fdbbdf17b090d9d046488",
+      "sha256": "80a9d93f4583478994418c1a2cf5d53c6c841904a931e58b9124b5275654cd7c",
       "seconds": 58.029,
-      "peak": 0.64,
-      "rms": 0.0729,
-      "loop_seam": 0.00042139229481108487
+      "peak": 0.6357,
+      "rms": 0.0726,
+      "loop_seam": 0.0002718694740906358
     },
     {
       "id": "theme_thornbrake",
@@ -595,11 +595,11 @@
       "song_id": "Oc7M98kfN9nHBzkrpX10",
       "source_sha256": "349052b4769ba787431b832906d1533ba3701f2f3b09bfbea5eaf3923f6e854d",
       "path": "art/bgm/theme_thornbrake.ogg",
-      "sha256": "3cbe2fa932329d6551bfe52c7ec26326dadbe03601e365c988fc564c01ec8592",
+      "sha256": "e8ff6f9d91d3de8990912caf91243b8773e2b4aa1b2d91e2f44b85746941d2d4",
       "seconds": 58.029,
-      "peak": 0.6475,
-      "rms": 0.0736,
-      "loop_seam": 0.0002522626891732216
+      "peak": 0.6652,
+      "rms": 0.0733,
+      "loop_seam": 0.0004185271100141108
     },
     {
       "id": "theme_moss_bog",
@@ -615,11 +615,11 @@
       "song_id": "6HAWZUrf4OgpDkNrRefr",
       "source_sha256": "50cc83763f2e64d96b4c079ab03045b17af81f876a8c6b8ec65d06fe7e2d8642",
       "path": "art/bgm/theme_moss_bog.ogg",
-      "sha256": "d71bd379f2313edf3eaa58823fca19bff98926387887aac0f791fa84692eae72",
+      "sha256": "42774e1838caa58a1ca44e1f8da538314f1826ebe42eb64cea45bde32ac53b51",
       "seconds": 58.029,
-      "peak": 0.5898,
-      "rms": 0.08,
-      "loop_seam": 0.00014687505608890206
+      "peak": 0.5977,
+      "rms": 0.0797,
+      "loop_seam": 0.00034097034949809313
     },
     {
       "id": "theme_frost_pines",
@@ -635,11 +635,11 @@
       "song_id": "N3VC580e6Gj8frxKHzAC",
       "source_sha256": "b266e694ccf2cec7e2df1d8e4cb31344049bbc9c3e23d319c80770700a77bb83",
       "path": "art/bgm/theme_frost_pines.ogg",
-      "sha256": "ad274edcc5ba2f51ba44e95cb7fd74efde4aa60199c6d9defa9dacf9a44f3bd1",
+      "sha256": "aad688662929b5882ce9674463bb60c1c80fc6a3181dbe0caa31a295ba69a94f",
       "seconds": 58.029,
-      "peak": 0.6192,
-      "rms": 0.08,
-      "loop_seam": 0.0008114799857139587
+      "peak": 0.646,
+      "rms": 0.0796,
+      "loop_seam": 0.0012886624317616224
     },
     {
       "id": "theme_rotroot_hollow",
@@ -655,11 +655,11 @@
       "song_id": "9zP4MRUYNmwEWCW0WSBI",
       "source_sha256": "244bbf6066a10c746403d8da778d0aa03091991d99816bff748302a121930e07",
       "path": "art/bgm/theme_rotroot_hollow.ogg",
-      "sha256": "e53cfe0a0ca2c0ba036806c72bf9b42546f061f562e61b4d57252a80e120299c",
+      "sha256": "565c2145e99aa5eac5e2b84fd4f1bd439d5a64093d76c3d93067e61d0379573f",
       "seconds": 58.029,
-      "peak": 0.6526,
-      "rms": 0.0772,
-      "loop_seam": 0.00012419579434208572
+      "peak": 0.653,
+      "rms": 0.077,
+      "loop_seam": 0.00014787085819989443
     },
     {
       "id": "theme_worldtree_roots",
@@ -675,11 +675,11 @@
       "song_id": "frn1mrajaJvgouBLqnl6",
       "source_sha256": "b456b316472b4193c62cc6961483227e9c422649365e8e8219cdb636848a1d72",
       "path": "art/bgm/theme_worldtree_roots.ogg",
-      "sha256": "4484f69c5abc639e24ea366996b361201430f71eaacc5476d286ff87967a1db3",
+      "sha256": "7d42ecfe435ef7b6b4793c0663141f6838e68b9369e8d6cf1fc06a86439240aa",
       "seconds": 58.029,
-      "peak": 0.4997,
-      "rms": 0.0799,
-      "loop_seam": 0.0016399443848058581
+      "peak": 0.5095,
+      "rms": 0.0796,
+      "loop_seam": 0.005233484320342541
     },
     {
       "id": "theme_gravel_hills",
@@ -695,11 +695,11 @@
       "song_id": "t2f0vmIDRvv67645ZGrP",
       "source_sha256": "f4701b1fe978dbbeb2b0970ca7f7ed2d0e19fb4e5e212f2834af94598f8ddd86",
       "path": "art/bgm/theme_gravel_hills.ogg",
-      "sha256": "faf372c592d671e7eab2ede46298a23a3c3bf3206503788b93192a535a727ac0",
+      "sha256": "f4544d085a2ecc5e7e5cae92848d9a1efb2f448e0dca6ea448658b1815627922",
       "seconds": 58.029,
-      "peak": 0.4408,
-      "rms": 0.08,
-      "loop_seam": 0.0012931268429383636
+      "peak": 0.4425,
+      "rms": 0.0798,
+      "loop_seam": 0.0036051333881914616
     },
     {
       "id": "theme_stone_terraces",
@@ -715,11 +715,11 @@
       "song_id": "KdhSBRxdscv0NzjfkpcC",
       "source_sha256": "abd6b24b2077ac608018d32e9da6f1aa53c546d1e36cde80bb083e37faebde9e",
       "path": "art/bgm/theme_stone_terraces.ogg",
-      "sha256": "a97f3a7b5020cc9cb7ce1cf41ddc304aad145d4dfcdb5e7e08a32cfbb5f98e34",
+      "sha256": "67cd386da2db25d4b022ab12f588e9eebe98d35da67305baa28d7fbb10348445",
       "seconds": 58.029,
-      "peak": 0.49,
-      "rms": 0.0798,
-      "loop_seam": 0.0006832071812823415
+      "peak": 0.4902,
+      "rms": 0.0795,
+      "loop_seam": 0.0012146357912570238
     },
     {
       "id": "theme_quarry_pit",
@@ -735,11 +735,11 @@
       "song_id": "DKk1kSqh9FTeVUX33ind",
       "source_sha256": "20d66172ecac2b5deb66d67a4a04a5f5b793449a75c4981fb8bdbbb9790c770d",
       "path": "art/bgm/theme_quarry_pit.ogg",
-      "sha256": "c105dbb60cf0345043bde05a06c4d169d359b0b34f96d472feeabc866b823f93",
+      "sha256": "af47e4cf8ed92716ce7f832b5e8ee3bb2a19e83cb180e66b4b94c19436191c89",
       "seconds": 58.029,
-      "peak": 0.4988,
-      "rms": 0.0795,
-      "loop_seam": 0.00232145213522017
+      "peak": 0.5187,
+      "rms": 0.0792,
+      "loop_seam": 0.0036407713778316975
     },
     {
       "id": "theme_red_canyon",
@@ -755,11 +755,11 @@
       "song_id": "bpI8Vp4H4rabkkEd25cz",
       "source_sha256": "ab8efbaa32c5b05be7d857b35dc22ef53f6a470e36139bca9c67fabb9e76b119",
       "path": "art/bgm/theme_red_canyon.ogg",
-      "sha256": "12c29526f673855b9381f13b0b43b2d422ae3e6298046629f01b6ebeaa1521aa",
+      "sha256": "3c706c4a17152bb465a08f9f9a338d9dfe771fb5184e733499eed36cbf964a4a",
       "seconds": 58.029,
-      "peak": 0.6451,
-      "rms": 0.0798,
-      "loop_seam": 0.015696948394179344
+      "peak": 0.6656,
+      "rms": 0.0796,
+      "loop_seam": 0.002673863200470805
     },
     {
       "id": "theme_broken_wall",
@@ -775,11 +775,11 @@
       "song_id": "SZWxtBr54SgyRfcznGa7",
       "source_sha256": "e7586364bcb1dc302a060ddac531c4bc2faafd7d753f6ba605360576eeef9b4d",
       "path": "art/bgm/theme_broken_wall.ogg",
-      "sha256": "55fad4c638606dff7868eee32e632d6a2c18eb1501177a65fae3248eff2328fd",
+      "sha256": "71dec23fb24044a171850fa0609f255ebca8394522aacf70b69905e878bd2bba",
       "seconds": 58.029,
-      "peak": 0.6509,
-      "rms": 0.0738,
-      "loop_seam": 0.0009123546769842505
+      "peak": 0.642,
+      "rms": 0.0737,
+      "loop_seam": 0.0009577842429280281
     },
     {
       "id": "theme_crystal_cavern",
@@ -795,11 +795,11 @@
       "song_id": "zgTm9veaK4jsw0RlH4MJ",
       "source_sha256": "9b3611a9e6e908b2d76a71e3db018d2d69b154ac6e397ff0b20a05bd9916e12e",
       "path": "art/bgm/theme_crystal_cavern.ogg",
-      "sha256": "9b9e51d9d00faefe1257f02d94e17bf40ca538a55654fa9d71979cceb3d5bbfa",
+      "sha256": "c6eb75cfba73ae9c5bd4f289cd187e142186d634f2d530bc539a131bc545e55c",
       "seconds": 58.029,
-      "peak": 0.4524,
-      "rms": 0.0799,
-      "loop_seam": 0.002858406398445368
+      "peak": 0.4635,
+      "rms": 0.0797,
+      "loop_seam": 0.008540056645870209
     },
     {
       "id": "theme_desert_mesa",
@@ -815,11 +815,11 @@
       "song_id": "12S68NIFXZsyvJSpGRSx",
       "source_sha256": "0d49da571786600d63a28b8eb14e6a881067e77567dde429d2428260a146db5e",
       "path": "art/bgm/theme_desert_mesa.ogg",
-      "sha256": "fae9c79e412c7a3d3a7ea5cfdb1845d8e1be3f60902806c4820c482fc1287857",
+      "sha256": "b627755843cba5ddb9f361ee47d159d52920ce9a3d966eb17e0098e0adef065d",
       "seconds": 58.029,
-      "peak": 0.5611,
-      "rms": 0.0798,
-      "loop_seam": 0.0017382449004799128
+      "peak": 0.5687,
+      "rms": 0.0796,
+      "loop_seam": 0.0010665194131433964
     },
     {
       "id": "theme_iron_mine",
@@ -835,11 +835,11 @@
       "song_id": "fa9T34GpNQpvIcC31oh4",
       "source_sha256": "fb9be2cb572749fe03db2f837ddf83080134e25ecc676270d981a50c25715f8d",
       "path": "art/bgm/theme_iron_mine.ogg",
-      "sha256": "a3fe536e0fa1b5bfc31d243594a9602033628a8e4cb2db6a7dcef8292a1be813",
+      "sha256": "58ff3e58b1d1551fc7ec1a49196defb5880239cb0984c917365a75a498f9ef17",
       "seconds": 58.029,
-      "peak": 0.6167,
-      "rms": 0.0798,
-      "loop_seam": 0.0010148318251594901
+      "peak": 0.6184,
+      "rms": 0.0796,
+      "loop_seam": 0.0006106306100264192
     },
     {
       "id": "theme_peak_cliffs",
@@ -855,11 +855,11 @@
       "song_id": "V2beFt9mFOmt1i0Hdic9",
       "source_sha256": "66dc0bc9e519fdc058e6725670e25603c7f33a6ab2de678194e50a370c5c6a8f",
       "path": "art/bgm/theme_peak_cliffs.ogg",
-      "sha256": "95736f930a21d36dde3c1c93adb7cf4bdaa7b20cae8f90045b0d4d7a26fee7cf",
+      "sha256": "c82946424de351ba409a9d7ecdbf3ee44ca5d5cf9e121c66b7f6ab341322bd9a",
       "seconds": 58.029,
-      "peak": 0.544,
-      "rms": 0.0796,
-      "loop_seam": 0.0009872120572254062
+      "peak": 0.5532,
+      "rms": 0.0792,
+      "loop_seam": 0.0005577809643000364
     },
     {
       "id": "theme_rift_chasm",
@@ -875,11 +875,11 @@
       "song_id": "ODPyPxiQpfmTgL3akQU8",
       "source_sha256": "8e7d818418a1a296c0ed8bf877ed22ed482dc8a54cdc62620bb316d6c00a51f8",
       "path": "art/bgm/theme_rift_chasm.ogg",
-      "sha256": "7e9a9130b441c259aebd3a66505afe0714cc088a0715af575e1f0784f65e46f0",
+      "sha256": "487d301ae22d0928bc7d4abb02f4b9b29b5b22f660ab75d720beab340b862cbb",
       "seconds": 58.029,
-      "peak": 0.4587,
-      "rms": 0.0795,
-      "loop_seam": 0.0015000458806753159
+      "peak": 0.4618,
+      "rms": 0.0793,
+      "loop_seam": 0.0010657855309545994
     },
     {
       "id": "theme_first_snow_hills",
@@ -895,11 +895,11 @@
       "song_id": "VS393g5CRqtBhalODSgk",
       "source_sha256": "a1f0d606f18aeb70a7e3860a7bf21e93d683e0df7ae1582168a6330bb2531b04",
       "path": "art/bgm/theme_first_snow_hills.ogg",
-      "sha256": "82d70359ac5c115bfad247838c60c3dd1d13983120ed26540c69774dc94ae5f7",
+      "sha256": "b5122fa21c576d61657af9eb3bff2289b05fdf813cb7c157c081c00cbaf93cca",
       "seconds": 58.029,
-      "peak": 0.6348,
-      "rms": 0.0674,
-      "loop_seam": 0.00020295163267292082
+      "peak": 0.6493,
+      "rms": 0.0671,
+      "loop_seam": 0.0013685586163774133
     },
     {
       "id": "theme_frozen_pond",
@@ -915,11 +915,11 @@
       "song_id": "zKt7gZMVbH1SMDeEWAxQ",
       "source_sha256": "1cd671419627aee554412db45e369cb9851d2305daa988aa2402f232d56a512f",
       "path": "art/bgm/theme_frozen_pond.ogg",
-      "sha256": "86dcf803f0432e3b492aca41273db69aaecf361a9247accd5ab39e1dc0ad303d",
+      "sha256": "c659c90d7367f9925f9fdd0fe0872617378249ac0d5aab8d74f9a8fe3316ebdd",
       "seconds": 58.029,
-      "peak": 0.6414,
-      "rms": 0.0661,
-      "loop_seam": 0.00047225586604326963
+      "peak": 0.6566,
+      "rms": 0.0658,
+      "loop_seam": 0.0012466798070818186
     },
     {
       "id": "theme_snowed_village",
@@ -935,11 +935,11 @@
       "song_id": "ajyphS1OtSEQGJrPXtcb",
       "source_sha256": "88301028fa3233c43e85c31937d92b87ec5dd7e4872abe889847347108448bee",
       "path": "art/bgm/theme_snowed_village.ogg",
-      "sha256": "e34c70a79426b42e010cacb26fbc02dc9cbc12c5ad98e1e8bff0db1304a14eae",
+      "sha256": "f30c40c445c33f3c2baa2293e37ba47b037b325918416889e8802a6c3bc119c0",
       "seconds": 58.029,
-      "peak": 0.6315,
-      "rms": 0.0637,
-      "loop_seam": 0.00045630394015461206
+      "peak": 0.6387,
+      "rms": 0.0635,
+      "loop_seam": 0.0002592538367025554
     },
     {
       "id": "theme_frost_gorge",
@@ -955,11 +955,11 @@
       "song_id": "skfMqayN45I0Dn7VI075",
       "source_sha256": "337c4eb3b1889d5acda8d76b77502e562e93980f8bafd35404c71f9039f12e14",
       "path": "art/bgm/theme_frost_gorge.ogg",
-      "sha256": "e6d85d76368d89f850cebc6d92436d8764fec8a6ce9942cc22c3de7b0864fdc9",
+      "sha256": "cde239a2f2258a90f9344b6e9d81d292080553124efd34186a608e27f6d2918f",
       "seconds": 58.029,
-      "peak": 0.6621,
-      "rms": 0.0743,
-      "loop_seam": 0.0004129082371946424
+      "peak": 0.7044,
+      "rms": 0.0739,
+      "loop_seam": 0.000679182296153158
     },
     {
       "id": "theme_drift_ice_sea",
@@ -975,11 +975,11 @@
       "song_id": "OEbWmgRcv2vQbYjSZAfE",
       "source_sha256": "7a9898223481ebd0f888e73e24fc80038d5bfdbb37aab6676e2ff9e99df57b9c",
       "path": "art/bgm/theme_drift_ice_sea.ogg",
-      "sha256": "7883fa9e91ebd8aafda180acd00585ab372e4128fc93c9302990d8c7bd752bd7",
+      "sha256": "0057c8608a79f4a3fca7d4963f4e75ab01abbf12ae099df1609e765c9e194963",
       "seconds": 58.029,
-      "peak": 0.5357,
-      "rms": 0.0797,
-      "loop_seam": 0.0006540612666867673
+      "peak": 0.5391,
+      "rms": 0.0794,
+      "loop_seam": 0.006034700199961662
     },
     {
       "id": "theme_icicle_cave",
@@ -995,11 +995,11 @@
       "song_id": "cmQdriHpnHSYE6uZ8zkh",
       "source_sha256": "b162b2100fdef4b7ffbd9682eed6f10d8ff3e5291d607f44f35a84a59a4f5135",
       "path": "art/bgm/theme_icicle_cave.ogg",
-      "sha256": "4b150f65ebdb2efabc9eb524952a85b9077327692c4fe684995c967984d0d962",
+      "sha256": "c5db76ba57602ebbb26168c2959715535b86751eabf0043755f84dda06115250",
       "seconds": 58.029,
-      "peak": 0.643,
-      "rms": 0.0676,
-      "loop_seam": 0.00046695437049493194
+      "peak": 0.6505,
+      "rms": 0.0673,
+      "loop_seam": 0.001613272470422089
     },
     {
       "id": "theme_blizzard_plateau",
@@ -1015,11 +1015,11 @@
       "song_id": "816MjNokmWfOYWDPFZ8D",
       "source_sha256": "8294a87d3f0d8b1938b619f96a28f26f4bc095668334d19387b4bd84abff6fb4",
       "path": "art/bgm/theme_blizzard_plateau.ogg",
-      "sha256": "ca0a7062cc78f733648b61071425092acd50dd71c510f912da84fba09560d58c",
+      "sha256": "e38c89ef51cc08fd804ebafac38f07c3cc03cfc4de985bc4826808f57c96e0fb",
       "seconds": 58.029,
-      "peak": 0.4578,
-      "rms": 0.0798,
-      "loop_seam": 0.0026901306118816137
+      "peak": 0.4513,
+      "rms": 0.0796,
+      "loop_seam": 0.0033137358259409666
     },
     {
       "id": "theme_glacier_crevasse",
@@ -1035,11 +1035,11 @@
       "song_id": "If6VXMd5q0xE9nXsmieJ",
       "source_sha256": "67f72ebc530ab0340a40e9d7d79e9b8a08b2d9924f4b7b9ae28a7502b3d322ed",
       "path": "art/bgm/theme_glacier_crevasse.ogg",
-      "sha256": "306e63ad50d1e7d4bf2f2d2fd7c0e4725621e251bc6962d279c8c517b70426fa",
+      "sha256": "60d1b90c7b305f06b13dd8490969c75f5cdac3e20999b87480a0d7d229f8644d",
       "seconds": 58.029,
-      "peak": 0.4354,
-      "rms": 0.08,
-      "loop_seam": 0.0030901250429451466
+      "peak": 0.4455,
+      "rms": 0.0797,
+      "loop_seam": 0.005129680503159761
     },
     {
       "id": "theme_ice_spire_field",
@@ -1055,11 +1055,11 @@
       "song_id": "sd1iCMogYKDvewuLNELI",
       "source_sha256": "17aeab50431e3a6fe2821741c706b5b529ffe93086a2c0e618bdd0b5beb1df13",
       "path": "art/bgm/theme_ice_spire_field.ogg",
-      "sha256": "6be54807a220673003b95d649df4e87c42e87ab891fd71be5ebceaeea0e7ae08",
+      "sha256": "79a9afc3c03eeae03f8b4edfba546f07c79a85ca56e6b54d10fec5f96783edbb",
       "seconds": 58.029,
-      "peak": 0.5763,
-      "rms": 0.0798,
-      "loop_seam": 0.002261911053210497
+      "peak": 0.5506,
+      "rms": 0.0795,
+      "loop_seam": 0.0006938605802133679
     },
     {
       "id": "theme_polar_night",
@@ -1075,11 +1075,11 @@
       "song_id": "si0GgExFHwYxoapZiZUj",
       "source_sha256": "c264bfc052d3ab9740cc9746391ce57bd90b68b1505f511d615d5e308a265e41",
       "path": "art/bgm/theme_polar_night.ogg",
-      "sha256": "a02717efa30404bfda54504b530009b347f531dfb701a8d9be807259b3523324",
+      "sha256": "54734a8011dda33c13ed6bb8c9128a7358f0a537d7f9f549744dc5807535899f",
       "seconds": 58.029,
-      "peak": 0.4975,
-      "rms": 0.0801,
-      "loop_seam": 0.0019231074256822467
+      "peak": 0.4906,
+      "rms": 0.0798,
+      "loop_seam": 0.0021163595374673605
     },
     {
       "id": "shot_none",
