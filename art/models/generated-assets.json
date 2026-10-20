@@ -2313,23 +2313,32 @@
     },
     {
       "path": "art/ui/launcher_main.png",
-      "sha256": "894fce87881be73bb1daf1d0130206af85513b6b9368c92fe3b5e95550365a90"
+      "sha256": "150484a596c3d1f678ef7ca0a967760cf7c173cc262b92a1cd60383209f73e1a",
+      "superseded_sha256": "894fce87881be73bb1daf1d0130206af85513b6b9368c92fe3b5e95550365a90",
+      "note": "2026-10-19: replaced by the D4 painted icon (Krea 2 Turbo, guardian knight holding the Soul Stone); provenance in art/ui/launcher_manifest.json and art/generated-assets.json. The 2026-10-08 3D crystal capture (tests/3d/render_brand.tscn, sha 894fce87...) is retired - do not re-run it over these files."
     },
     {
       "path": "art/ui/launcher_adaptive.png",
-      "sha256": "2085b764857d810f578275513afdf585000a550baaa0d1d531253b6592ac730d"
+      "sha256": "338842999f1aee3edfd8ed8b2aba39a1d9a6a94c50166927559cb7eb6aacea20",
+      "superseded_sha256": "2085b764857d810f578275513afdf585000a550baaa0d1d531253b6592ac730d",
+      "note": "2026-10-19: replaced by the D4 painted icon (Krea 2 Turbo, guardian knight holding the Soul Stone); provenance in art/ui/launcher_manifest.json and art/generated-assets.json. The 2026-10-08 3D crystal capture (tests/3d/render_brand.tscn, sha 894fce87...) is retired - do not re-run it over these files."
     },
     {
       "path": "art/ui/launcher_monochrome.svg",
-      "sha256": "c17f05707eab77939f2a46c55600d50e96d02513cc233fc1cabc999659d690e4"
+      "sha256": "caf46a1a92a24fd3e7d121a0a832274b82722392ce24ce25bf492ddcc9fc6572",
+      "superseded_sha256": "c17f05707eab77939f2a46c55600d50e96d02513cc233fc1cabc999659d690e4",
+      "note": "2026-10-19: replaced by the D4 painted icon (Krea 2 Turbo, guardian knight holding the Soul Stone); provenance in art/ui/launcher_manifest.json and art/generated-assets.json. The 2026-10-08 3D crystal capture (tests/3d/render_brand.tscn, sha 894fce87...) is retired - do not re-run it over these files."
     },
     {
       "path": "art/ui/launcher_background.svg",
-      "sha256": "306a0c0f1a33f50616bcbe3de19046b3f1f1559b35c4849b899072900d646bd4"
+      "sha256": "9a3ac2de61ff1cf5ec21df2efea0a4fe989d7c902da67f1cf7ca4e2d5c511a84",
+      "superseded_sha256": "306a0c0f1a33f50616bcbe3de19046b3f1f1559b35c4849b899072900d646bd4",
+      "note": "2026-10-19: replaced by the D4 painted icon (Krea 2 Turbo, guardian knight holding the Soul Stone); provenance in art/ui/launcher_manifest.json and art/generated-assets.json. The 2026-10-08 3D crystal capture (tests/3d/render_brand.tscn, sha 894fce87...) is retired - do not re-run it over these files."
     },
     {
       "path": "art/ui/startup_logo.png",
-      "sha256": "894fce87881be73bb1daf1d0130206af85513b6b9368c92fe3b5e95550365a90"
+      "sha256": "894fce87881be73bb1daf1d0130206af85513b6b9368c92fe3b5e95550365a90",
+      "note": "Unused since 2026-10-19: the cold start shows the MindMorph logo art/ui/mindmorph_logo.png (vector master art/ui/mindmorph_logo.svg). Kept on disk on purpose (not deleted; still exported until someone removes it); tests/3d/render_brand.gd would rewrite it."
     },
     {
       "path": "art/ui/coin.png",

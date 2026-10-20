@@ -34,8 +34,8 @@ const WANT_MULT := {
 	"aqua":  {"water": 0.5, "fire": 0.5, "ice": 0.5, "elec": 2.0, "none": 1.0},
 	"flame": {"water": 2.0, "fire": 0.5, "ice": 0.5, "elec": 1.0, "none": 1.0},
 	"wood":  {"water": 0.5, "fire": 2.0, "ice": 2.0, "elec": 0.5, "none": 1.0},
-	"rock":  {"water": 2.0, "fire": 0.5, "ice": 2.0, "elec": 0.0, "none": 1.0},
-	"frost": {"water": 0.5, "fire": 2.0, "ice": 0.5, "elec": 1.0, "none": 1.0},
+	"rock":  {"water": 2.0, "fire": 1.0, "ice": 2.0, "elec": 0.0, "none": 1.0},  # 대지(2026-10-19 C안)
+	"frost": {"water": 1.0, "fire": 2.0, "ice": 0.5, "elec": 1.0, "none": 1.0},
 }
 
 var _fail := 0
@@ -85,17 +85,17 @@ class Tracer extends BattleSim:
 		ctx = old
 
 	func _splash(skip: int, at: Vector2, radius: float, dmg: float, src: int,
-			elem: String = "none") -> void:
+			elem: String = "none", air: bool = true) -> void:
 		var old := ctx
 		ctx = "광역"
-		super(skip, at, radius, dmg, src, elem)
+		super(skip, at, radius, dmg, src, elem, air)
 		ctx = old
 
 	func _chain(from_i: int, dmg: float, jumps: int, decay: float, hop: float,
-			seen: Array, col: Color, src: int, elem: String = "none", shot_src: int = -1) -> void:
+			seen: Array, col: Color, src: int, elem: String = "none", shot_src: int = -1, air: bool = true) -> void:
 		var old := ctx
 		ctx = "연쇄"
-		super(from_i, dmg, jumps, decay, hop, seen, col, src, elem, shot_src)
+		super(from_i, dmg, jumps, decay, hop, seen, col, src, elem, shot_src, air)
 		ctx = old
 
 	func _field_extras(mi: int, dmg: float) -> void:

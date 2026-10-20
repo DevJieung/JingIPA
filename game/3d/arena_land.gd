@@ -296,6 +296,10 @@ static func kerb_runs(points: PackedVector2Array, cap: bool) -> Array:
 ## Raised kerb along the border runs, as vertex-coloured geometry for the scenery
 ## material. `width` and `tall` in world units; stones alternate between the two tones.
 ## The kerb fades into the ground along the approach outside the rim.
+## A slab, not a line (2026-10-18): the outer face darkens toward its foot, a 45-degree
+## chamfer between the face and the top catches the key light (shade 0.98 against the
+## face's 0.74), and the top (0.92) carries the cover; the kerb is a lit edge, never the
+## brightest thing on the field. The dark groove on the ground outside the foot is kerb_skirt_mesh().
 static func kerb_mesh(runs: Array, width: float, tall: float, road_y: float, tone_a: Color, tone_b: Color,
 		stone: float, fade_length: float) -> ArrayMesh:
 	var surface := SurfaceTool.new()
@@ -303,6 +307,7 @@ static func kerb_mesh(runs: Array, width: float, tall: float, road_y: float, ton
 	# Vertex colours are linearised by the renderer: store them as they are.
 	var a := tone_a
 	var b := tone_b
+	var bevel := clampf(tall * 0.34, 0.02, 0.05)
 	for run in runs:
 		for n in range(run.size() - 1):
 			var s0: Array = run[n]
@@ -314,22 +319,83 @@ static func kerb_mesh(runs: Array, width: float, tall: float, road_y: float, ton
 				var out := Vector2(sample[1])
 				var edge := Vector2(sample[0])
 				var beyond := (edge - Balance.ARENA_CENTER).length() / UNIT - RADIUS
-				var top := road_y + tall * (1.0 - smoothstep(0.3, fade_length, beyond))
-				rows.append([_world(edge, road_y - 0.03), _world(edge, top), _world(edge - out * width * UNIT, top), _world(edge - out * width * UNIT, road_y),
-					Vector3(out.x, 0, out.y)])
-			var o: Vector3 = rows[0][4]
-			_kerb_quad(surface, rows[0][0], rows[1][0], rows[1][1], rows[0][1], o, color, 0.74, 0.0)
-			_kerb_quad(surface, rows[0][1], rows[1][1], rows[1][2], rows[0][2], Vector3.UP, color, 1.0, 0.6)
-			_kerb_quad(surface, rows[0][2], rows[1][2], rows[1][3], rows[0][3], -o, color, 0.82, 0.0)
+				var rise := 1.0 - smoothstep(0.3, fade_length, beyond)
+				var top := road_y + tall * rise
+				var cut := bevel * rise
+				rows.append([_world(edge, road_y - 0.03), _world(edge, top - cut), _world(edge - out * cut * UNIT, top),
+					_world(edge - out * width * UNIT, top), _world(edge - out * width * UNIT, road_y), Vector3(out.x, 0, out.y)])
+			var o: Vector3 = rows[0][5]
+			_kerb_quad(surface, rows[0][0], rows[1][0], rows[1][1], rows[0][1], o, color, 0.74, 0.0, 0.50)
+			_kerb_quad(surface, rows[0][1], rows[1][1], rows[1][2], rows[0][2], (o + Vector3.UP).normalized(), color, 0.98, 0.3)
+			_kerb_quad(surface, rows[0][2], rows[1][2], rows[1][3], rows[0][3], Vector3.UP, color, 0.92, 0.5)
+			_kerb_quad(surface, rows[0][3], rows[1][3], rows[1][4], rows[0][4], -o, color, 0.82, 0.0)
 	return surface.commit()
 
-static func _kerb_quad(surface: SurfaceTool, p0: Vector3, p1: Vector3, p2: Vector3, p3: Vector3, out: Vector3, color: Color, shade: float, cover: float) -> void:
+## `shade_low`, when given, is the shade of the first two corners (the lower edge of a
+## face), so a face can darken toward its foot.
+static func _kerb_quad(surface: SurfaceTool, p0: Vector3, p1: Vector3, p2: Vector3, p3: Vector3, out: Vector3, color: Color, shade: float, cover: float,
+		shade_low: float = -1.0) -> void:
 	var order := [0, 1, 2, 0, 2, 3]
 	if (p1 - p0).cross(p2 - p0).dot(out) > 0.0: order = [0, 2, 1, 0, 3, 2]
 	var corners: Array[Vector3] = [p0, p1, p2, p3]
 	for index in order:
 		surface.set_normal(out)
 		surface.set_color(color)
-		surface.set_uv(Vector2(shade, 0.0))
+		surface.set_uv(Vector2(shade_low if shade_low >= 0.0 and index < 2 else shade, 0.0))
 		surface.set_uv2(Vector2(0.0, cover))
 		surface.add_vertex(corners[index])
+
+## The dark groove on the ground outside the kerb's foot: a strip `reach` units wide
+## whose vertex alpha runs from `strength` at the foot to 0 at its outer edge, drawn with
+## the contact-pool shader (vertex colour = pool colour). It lies a hair under the road
+## level and fades with the kerb along the approach.
+static func kerb_skirt_mesh(runs: Array, reach: float, y: float, color: Color, strength: float, fade_length: float) -> ArrayMesh:
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var any := false
+	for run in runs:
+		for n in range(run.size() - 1):
+			var corners: Array[Vector3] = []
+			var alphas: Array[float] = []
+			for sample in [run[n], run[n + 1]]:
+				var out := Vector2(sample[1])
+				var edge := Vector2(sample[0])
+				var beyond := (edge - Balance.ARENA_CENTER).length() / UNIT - RADIUS
+				var rise := 1.0 - smoothstep(0.3, fade_length, beyond)
+				corners.append(_world(edge, y))
+				corners.append(_world(edge + out * reach * UNIT, y))
+				alphas.append(strength * rise)
+			if alphas[0] <= 0.001 and alphas[1] <= 0.001: continue
+			any = true
+			var points: Array[Vector3] = [corners[0], corners[2], corners[3], corners[1]]
+			var strengths: Array[float] = [alphas[0], alphas[1], 0.0, 0.0]
+			var order := [0, 1, 2, 0, 2, 3]
+			if (points[1] - points[0]).cross(points[2] - points[0]).y > 0.0: order = [0, 2, 1, 0, 3, 2]
+			for index in order:
+				surface.set_normal(Vector3.UP)
+				surface.set_color(Color(color.r, color.g, color.b, strengths[index]))
+				surface.set_uv(Vector2(0.5, 0.5))
+				surface.add_vertex(points[index])
+	return surface.commit() if any else null
+
+## A ring of the same groove around a disc (the plaza), from `radius` outward by `reach`.
+static func skirt_ring(radius: float, reach: float, y: float, color: Color, strength: float, segments: int = 72) -> ArrayMesh:
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in range(segments):
+		var a0 := TAU * float(i) / segments
+		var a1 := TAU * float(i + 1) / segments
+		var inner0 := Vector3(cos(a0) * radius, y, sin(a0) * radius)
+		var inner1 := Vector3(cos(a1) * radius, y, sin(a1) * radius)
+		var outer0 := Vector3(cos(a0) * (radius + reach), y, sin(a0) * (radius + reach))
+		var outer1 := Vector3(cos(a1) * (radius + reach), y, sin(a1) * (radius + reach))
+		var points: Array[Vector3] = [inner0, inner1, outer1, outer0]
+		var strengths: Array[float] = [strength, strength, 0.0, 0.0]
+		var order := [0, 1, 2, 0, 2, 3]
+		if (points[1] - points[0]).cross(points[2] - points[0]).y > 0.0: order = [0, 2, 1, 0, 3, 2]
+		for index in order:
+			surface.set_normal(Vector3.UP)
+			surface.set_color(Color(color.r, color.g, color.b, strengths[index]))
+			surface.set_uv(Vector2(0.5, 0.5))
+			surface.add_vertex(points[index])
+	return surface.commit()

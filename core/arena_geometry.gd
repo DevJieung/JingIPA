@@ -59,6 +59,9 @@ static var _grid_w := 0
 static var _grid: Array[PackedInt32Array] = []
 static var _seg_a := PackedVector2Array()
 static var _seg_b := PackedVector2Array()
+## The C++ road tests (StellarRoads of addons/stellar_native, docs/PERF_NATIVE.md) built
+## from the same roads, or null without the library: then the GDScript below answers.
+static var _native = null
 
 static func contains(point: Vector2, margin: float = 0.0) -> bool:
 	return point.is_finite() and point.distance_squared_to(Balance.ARENA_CENTER) <= pow(maxf(0.0, RADIUS - margin) + 0.001, 2)
@@ -246,6 +249,14 @@ static func _build() -> void:
 			for gy in range(clampi(floori(lo.y), 0, _grid_w - 1), clampi(floori(hi.y), 0, _grid_w - 1) + 1):
 				for gx in range(clampi(floori(lo.x), 0, _grid_w - 1), clampi(floori(hi.x), 0, _grid_w - 1) + 1):
 					_grid[gy * _grid_w + gx].append(index)
+	_native = Native.make("StellarRoads")
+	if _native != null:
+		_native.configure(Balance.ARENA_CENTER, RADIUS, PLAZA_RADIUS, ROAD_WIDTH, MAP_RECT, GRID, _roads)
+
+## The native road tests of the current layout, or null without the library.
+static func native():
+	_build()
+	return _native
 
 static func route_points(lane: int) -> PackedVector2Array:
 	_build()
@@ -257,6 +268,13 @@ static func road_polylines() -> Array[PackedVector2Array]:
 	return _roads
 
 static func on_road(point: Vector2, margin: float = 0.0) -> bool:
+	_build()
+	if _native != null: return _native.on_road(point, margin)
+	return on_road_script(point, margin)
+
+## The grid-indexed GDScript test: what on_road answers without the library, and the
+## reference the native kernel must match (on_road_exhaustive checks both).
+static func on_road_script(point: Vector2, margin: float = 0.0) -> bool:
 	if not contains(point, margin): return false
 	if point.distance_squared_to(Balance.ARENA_CENTER) <= pow(maxf(0, PLAZA_RADIUS - margin), 2): return true
 	_build()
@@ -290,6 +308,11 @@ static func on_road_exhaustive(point: Vector2, margin: float = 0.0) -> bool:
 
 static func nearest_road_point(point: Vector2) -> Vector2:
 	_build()
+	if _native != null: return _native.nearest_road_point(point)
+	return nearest_road_point_script(point)
+
+static func nearest_road_point_script(point: Vector2) -> Vector2:
+	_build()
 	var nearest := Balance.ARENA_CENTER
 	var distance := point.distance_squared_to(nearest)
 	for path in _roads:
@@ -301,6 +324,11 @@ static func nearest_road_point(point: Vector2) -> Vector2:
 	return nearest
 
 static func road_direction(point: Vector2) -> Vector2:
+	_build()
+	if _native != null: return _native.road_direction(point)
+	return road_direction_script(point)
+
+static func road_direction_script(point: Vector2) -> Vector2:
 	_build()
 	var distance := INF
 	var direction := (Balance.ARENA_CENTER - point).normalized()

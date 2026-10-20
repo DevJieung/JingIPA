@@ -7,6 +7,10 @@ render_mode unshaded, blend_mix, depth_draw_never, cull_disabled, fog_disabled, 
 // pale road (additive coral there is just white). Linear colour.
 // 1 on bright snow/ice fields: the body deepens there (see vfx_moment_mix.gdshader).
 uniform float vfx_wash = 0.0;
+// Linear body colour: coral for a battlefield or an ordinary wave, violet for an elite wave,
+// crimson for the boss wave (2026-10-19, StellarVfx._wave_roads).
+uniform vec3 body = vec3(0.85, 0.23, 0.09);
+uniform vec3 body_hot = vec3(1.0, 0.62, 0.36);
 
 varying float v_rad;
 varying float v_age;
@@ -18,7 +22,7 @@ void vertex() {
 
 void fragment() {
 	vec3 light = road_light(UV.y, UV.x * 2.0 - 1.0, v_rad, UV2.y, v_age);
-	vec3 rgb = mix(vec3(0.85, 0.23, 0.09), vec3(1.0, 0.62, 0.36), light.y);
+	vec3 rgb = mix(body, body_hot, light.y);
 	ALBEDO = mix(rgb, pow(rgb, vec3(1.5)), vfx_wash);
 	ALPHA = clamp(light.z, 0.0, 1.0) * 0.78;
 }

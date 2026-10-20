@@ -980,7 +980,8 @@
    "desc": "탁한 물이 굴러온다",
    "prompt": "a knee-high blob of deep blue-green water, its deep navy body sagging into a heavy teardrop shape held together by a thick black outline, two hollow black dot eyes sunk deep into the mass, clear ripples crossing its surface, and a steel-blue rim along its crown",
    "color": "#3FC8FF",
-   "holes": false
+   "holes": false,
+   "fly": false
   },
   {
    "id": "rapid_ray",
@@ -990,7 +991,8 @@
    "desc": "검은 물살을 가른다",
    "prompt": "a lean gliding manta ray shaped from bright storm-blue water, wide thin wing fins spread into a flat readable silhouette trailing bright spray, a long whipping tail, teal edges rimming the fins, and two hollow black eye holes set on its flat brow",
    "color": "#00C8C0",
-   "holes": false
+   "holes": false,
+   "fly": true
   },
   {
    "id": "wave_giant",
@@ -1000,7 +1002,8 @@
    "desc": "밤바다가 걸어온다",
    "prompt": "a heavy humanoid giant built from churning midnight blue seawater, broad slab shoulders spilling bright white-green foam, thick arms curling into breaking waves with gaps between the curls, two hollow black dots for eyes in a face, and teal accents along the wave crests",
    "color": "#2E86FF",
-   "holes": true
+   "holes": true,
+   "fly": false
   },
   {
    "id": "jelly_seer",
@@ -1010,7 +1013,8 @@
    "desc": "촉수로 저주를 흘린다",
    "prompt": "a drifting bell-shaped jellyfish sorcerer with a violet-blue dome, teal veins tracing its heavy hood, long ragged tentacles trailing beneath it in tangled coils, two hollow black dots for eyes on the bell, and a darkened orb cradled in its curled tendrils",
    "color": "#9C7BFF",
-   "holes": true
+   "holes": true,
+   "fly": true
   },
   {
    "id": "ember_imp",
@@ -1020,7 +1024,8 @@
    "desc": "재 속의 잔불 떼",
    "prompt": "a compact imp of glowing coals with a cracked crust body of warm pale ash, bright molten orange light pouring out of the cracks, stubby dark grey limbs, two hollow black dot eyes, and a bright ember tuft burning at the crown of its head with thin smoke curling off",
    "color": "#FFC24A",
-   "holes": false
+   "holes": false,
+   "fly": false
   },
   {
    "id": "blaze_fox",
@@ -1030,7 +1035,8 @@
    "desc": "그을린 꼬리를 끈다",
    "prompt": "a lean sprinting fox with a soot-darkened coat of rust and charcoal, a long ragged tail streaming ember-red fire behind it, scorched black paws, two hollow eye holes in a narrow muzzle, and thin grey smoke curling from its shoulders",
    "color": "#FF7A2E",
-   "holes": false
+   "holes": false,
+   "fly": false
   },
   {
    "id": "magma_brute",
@@ -1040,7 +1046,8 @@
    "desc": "갈라진 틈이 벌겋다",
    "prompt": "a massive four-legged beast sheathed in cracked warm grey stone with bright glowing molten orange seams pouring light between its plates, thick heavy legs, a broad low skull with blunt outward horns, two hollow black eye sockets, and smoke drifting off its hot back",
    "color": "#E8401A",
-   "holes": false
+   "holes": false,
+   "fly": false
   },
   {
    "id": "pyre_priest",
@@ -1050,7 +1057,8 @@
    "desc": "잿불을 던져 온다",
    "prompt": "a robed fire priest in deep oxblood and polished brass vestments, a horned skull mask shadowing its face, gripping a long staff crowned with a soot-blackened brazier of embers, ash drifting from one raised hand, and charcoal wrappings over its narrow shoulders",
    "color": "#FF6B4A",
-   "holes": true
+   "holes": true,
+   "fly": false
   },
   {
    "id": "bramble_imp",
@@ -1060,7 +1068,8 @@
    "desc": "가시덤불이 몰려온다",
    "prompt": "a knotted imp woven from thorny vines and dead leaves, a compact body of tangled twigs with open gaps between them, two hollow black eye holes peering from inside the bramble, short gnarled root legs, and a few ochre leaves caught in its matted growth",
    "color": "#6FD44F",
-   "holes": true
+   "holes": true,
+   "fly": false
   },
   {
    "id": "vine_lynx",
@@ -1070,7 +1079,8 @@
    "desc": "덩굴을 타고 달려든다",
    "prompt": "a lean prowling panther bound from green vines and strips of rough bark, a ruff of pointed leaves along its neck, long curved thorn claws, a lashing tail of braided creeper looping back on itself, and two hollow black eyes in a flat mossy face",
    "color": "#A6E03C",
-   "holes": true
+   "holes": true,
+   "fly": false
   },
   {
    "id": "elder_treant",
@@ -1080,7 +1090,8 @@
    "desc": "이끼 낀 늙은 나무",
    "prompt": "a towering treant with a thick gnarled trunk for a body, deeply cracked well-used bark, two heavy branch arms hanging low with open gaps under them, a dense crown of moss-green leaves, two hollow black eyes sunk in a knothole face, and mossy root feet",
    "color": "#5FA83C",
-   "holes": true
+   "holes": true,
+   "fly": false
   },
   {
    "id": "spore_cap",
@@ -1090,7 +1101,8 @@
    "desc": "포자를 흩뿌린다",
    "prompt": "a walking mushroom monster with a broad domed cap of deep maroon marked by pale ash spots, two hollow black dot eyes under the shadowed cap rim, a thick fibrous dun stalk for a body, stubby root feet, and spore dust sifting from its gills",
    "color": "#FF5C7A",
-   "holes": false
+   "holes": false,
+   "fly": false
   },
   {
    "id": "pebble_imp",
@@ -1100,7 +1112,8 @@
    "desc": "돌멩이가 떼로 굴러온다",
    "prompt": "a compact creature stacked from grey and dun river stones, a boulder head with two hollow black eye holes, blunt rock arms, cracked slabs across its chest, moss staining the seams between the stones, and gravel crumbling from its blocky feet",
    "color": "#A9B2B8",
-   "holes": false
+   "holes": false,
+   "fly": false
   },
   {
    "id": "crystal_skink",
@@ -1110,7 +1123,8 @@
    "desc": "수정 비늘로 재빠르다",
    "prompt": "a quick darting lizard armoured in jagged amber crystal shards, blunt stone claws, a ridge of citrine spines running down its back, a heavy tail of fused rock, well-used grey hide between the shards, and two hollow black eyes in a wedge-shaped skull",
    "color": "#F2B33A",
-   "holes": false
+   "holes": false,
+   "fly": false
   },
   {
    "id": "stone_golem",
@@ -1120,7 +1134,8 @@
    "desc": "느리지만 아주 튼튼하다",
    "prompt": "a bulky golem built from well-used dun sandstone slabs, blocky heavy fists hanging past its knees, no neck, a cracked boulder head with one hollow eye socket, ochre lichen in the deep seams, and grit falling from its scarred plates",
    "color": "#C89B5A",
-   "holes": true
+   "holes": true,
+   "fly": false
   },
   {
    "id": "runestone_idol",
@@ -1130,7 +1145,8 @@
    "desc": "돌기둥이 저주를 쏜다",
    "prompt": "a hovering carved stone idol shaped like a blunt totem pillar, an angular granite face with two hollow black eye holes, well-used rune grooves cut across its cracked surface and stained ochre, chipped edges along its flanks, and a chunk of raw crystal drifting above its flat crown",
    "color": "#BFD0DC",
-   "holes": false
+   "holes": false,
+   "fly": true
   },
   {
    "id": "frost_imp",
@@ -1140,7 +1156,8 @@
    "desc": "언 눈덩이가 굴러온다",
    "prompt": "a rounded imp packed from snow and grey-blue ice, two hollow black dot eyes, stubby icicle arms, a jagged frost shard jutting from the top of its head, a rime crust flaking off its shoulders, and dirt frozen into its lower half",
    "color": "#B7F0FF",
-   "holes": false
+   "holes": false,
+   "fly": false
   },
   {
    "id": "blizzard_wolf",
@@ -1150,7 +1167,8 @@
    "desc": "눈보라처럼 파고든다",
    "prompt": "a lean sprinting wolf with a frost-matted coat of slate and steel blue, long icicle fangs, a ridge of ice crystals along its spine, frozen tufts on its haunches, and two hollow black eyes above a narrow scarred muzzle",
    "color": "#C3CCFF",
-   "holes": false
+   "holes": false,
+   "fly": false
   },
   {
    "id": "glacier_titan",
@@ -1160,7 +1178,8 @@
    "desc": "잿빛 얼음의 거인",
    "prompt": "a hulking giant carved from clouded glacier ice, broad angular shoulders of thick frozen slabs, massive blunt fists, jagged icicles jutting from its back, deep fracture lines running through its grey-blue chest, and two black pits for eyes in a flat brow",
    "color": "#74DAF2",
-   "holes": true
+   "holes": true,
+   "fly": false
   },
   {
    "id": "rime_witch",
@@ -1170,7 +1189,8 @@
    "desc": "얼음 저주를 날린다",
    "prompt": "a gaunt ice witch in a long deep indigo robe trimmed with frosted crystal, a tall pointed shard crown set above a tall stiff crest of hair, gripping a crooked staff topped with a grey-blue gem, and rime dusting her narrow sleeves and collar",
    "color": "#8A9CFF",
-   "holes": true
+   "holes": true,
+   "fly": false
   },
   {
    "id": "abyss_leviathan",
@@ -1180,7 +1200,8 @@
    "desc": "심연에서 올라온 거수",
    "prompt": "a colossal serpentine sea leviathan rearing up, a massive fanged maw, broad ridged fins running along a coiling midnight blue body, thick polished scales darkened with grime, two black pits for eyes, and heavy torrents of water spilling from its jaws",
    "color": "#1F63E8",
-   "holes": true
+   "holes": true,
+   "fly": false
   },
   {
    "id": "flame_dragon",
@@ -1190,7 +1211,8 @@
    "desc": "불을 뿜는 거대한 용",
    "prompt": "a colossal dragon of scorched crimson and charcoal scale, vast leathery wings spread wide with torn membranes, a spiked pale ash crest down its neck, thick armoured belly plates, two black eye pits, and molten red seams deep inside its open jaws",
    "color": "#FF5A16",
-   "holes": true
+   "holes": true,
+   "fly": false
   },
   {
    "id": "titan_bloom",
@@ -1200,7 +1222,8 @@
    "desc": "아가리를 벌린 거대 꽃",
    "prompt": "a colossal carnivorous flower monster, an enormous petal maw of deep magenta lined with long fangs, three thick writhing vine necks tipped with snapping buds, a bulbous mossy base of rotting leaves, and huge clawed roots curling into the ground",
    "color": "#E64BD8",
-   "holes": true
+   "holes": true,
+   "fly": false
   },
   {
    "id": "crystal_golem_king",
@@ -1210,7 +1233,8 @@
    "desc": "산더미 같은 수정 거인",
    "prompt": "a titanic golem king assembled from massive well-used granite slabs, enormous violet crystal shards erupting from its shoulders and back, a broad crownlike stone head, two black eye pits, a deep purple core sunk in its cracked chest, and huge blocky fists",
    "color": "#B056F5",
-   "holes": false
+   "holes": false,
+   "fly": false
   },
   {
    "id": "glacier_dragon",
@@ -1220,7 +1244,8 @@
    "desc": "얼어붙은 거대한 용",
    "prompt": "a colossal ice dragon rearing up, vast frozen wings of grey-blue crystal, a long spined neck sheathed in cracked glacier armour, huge curved ice horns arching over its skull, two black eye pits, and freezing mist pouring in a plume from its open jaws",
    "color": "#59BFF0",
-   "holes": true
+   "holes": true,
+   "fly": false
   }
  ],
  "themes": [

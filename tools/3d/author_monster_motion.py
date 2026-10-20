@@ -35,6 +35,8 @@ LOCK = ROOT / "build/character-3d/monster-manifest.lock"
 parser = argparse.ArgumentParser()
 parser.add_argument("--ids", required=True, help="comma list or 'all'")
 parser.add_argument("--no-export", action="store_true", help="author clips and save the .blend only")
+parser.add_argument("--gait", default="v2", choices=list(monster_motion.GAIT_VERSIONS),
+                    help="gait version: v2 = today's numbers (default); v3 = MA1/MA2 walk weight and death keys (2026-10-18)")
 args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])
 
 
@@ -79,7 +81,9 @@ for cid in ids:
     objects = [o for o in bpy.context.scene.objects if o.type == "MESH"]
     before = geometry_digest(objects, rig)
     params = monster_motion.motion_params(spec)
-    meta = monster_motion.author_clips(rig, spec, height, params)
+    # The gait version is an authoring overlay; the specs keep the v2 parameters.
+    authoring = monster_motion.apply_gait(params, spec["shape"], args.gait)
+    meta = monster_motion.author_clips(rig, spec, height, authoring)
     after = geometry_digest(objects, rig)
     if before != after:
         raise SystemExit("Motion authoring changed geometry or weights for " + cid)
@@ -119,7 +123,7 @@ for cid in ids:
         "glb_bytes": len(payload),
         "game_source": str(blend),
         "motion": dict(meta, authored_at=time.strftime("%Y-%m-%dT%H:%M:%S"), tool="tools/3d/author_monster_motion.py",
-                       geometry_digest=after, geometry_unchanged=True),
+                       gait=args.gait, geometry_digest=after, geometry_unchanged=True),
     })
     provenance_path.write_text(json.dumps(provenance, indent=2) + "\n")
 

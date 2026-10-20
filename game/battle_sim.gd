@@ -71,6 +71,10 @@ var _path_len: float = 1.0
 var _rank: int = 1           ## 이 탄이 걸린 테마의 험한 정도(1~5)
 ## Run 오토로드 대신 아무 상태 덩어리나 받을 수 있게 해 둔다(검사기가 가짜 Run 을 넣는다).
 var run = null
+## 공중 규칙(2026-10-17): 공중 몬스터는 총·활만 맞힌다. **연속 수호전(ArenaSim)만 켠다** — 옛
+## 100탄 모드는 초소에 선 영웅이 길을 노리는 규칙이라 그대로 둔다(대공 영웅이 없는 탄이 새면
+## 그 모드의 자동 플레이가 통째로 바뀐다).
+var air_rules: bool = false
 var support_enabled: bool = false
 var support_pending: bool = false
 var support_used: bool = false
@@ -152,6 +156,8 @@ func setup(run_state, wave_no: int, seed_value: int = 0) -> void:
 			"crit": float(st["crit"]), "critx": float(st["critx"]),
 			# 공격 속성. 매 명중마다 Dictionary 를 뒤지지 않으려고 여기 꺼내 둔다.
 			"elem": String(st.get("elem", "none")),
+			# 대공 — 공중 몬스터를 겨눌 수 있는 무기인가(총·활). 아니면 땅 위의 것만 본다.
+			"air": bool(st.get("air", Balance.anti_air(u))),
 			"col": Color(String(u.get("color", "#ffffff"))),
 			"wind": float(u.get("wind", Balance.WIND_FALLBACK)),
 		})
@@ -245,6 +251,8 @@ func _spawn(m: Dictionary) -> void:
 		"h": float(m["h"]),
 		# 몸 속성 — 무엇에 약하고 무엇을 튕겨 내는가 (Balance.MBODY).
 		"body": String(m.get("body", "")),
+		# 공중 몬스터(2026-10-17) — 총·활만 맞히고 수호자의 몸에 막히지 않는다(Balance.flies).
+		"fly": Balance.flies(m),
 		"gold": Balance.kill_gold(wave, kind),
 		"crush": int(k.get("crush", 1)),
 	})
@@ -363,6 +371,7 @@ func refresh_heroes() -> void:
 		for key in ["atk", "rate", "range", "shots", "role", "elem", "crit", "critx"]:
 			sh[key] = st[key]
 		sh["speed"] = float(st.get("speed", Balance.ARENA_HERO_SPEED))
+		sh["air"] = bool(st.get("air", Balance.anti_air(u)))
 
 
 func _move_monsters(dt: float) -> void:
@@ -465,7 +474,7 @@ func _heroes_fire(dt: float) -> void:
 		he["cool"] = float(he["cool"]) - dt * rm
 		if float(he["cool"]) > 0.0:
 			continue
-		var tgt := _nearest_target(Vector2(he["pos"]), float(he["range"]))
+		var tgt := _nearest_target(Vector2(he["pos"]), float(he["range"]), bool(he.get("air", true)))
 		if tgt < 0:
 			he["cool"] = 0.0
 			continue
@@ -534,7 +543,7 @@ func _release(dt: float) -> void:
 		if hi < 0 or hi >= heroes.size():
 			continue
 		var he: Dictionary = heroes[hi]
-		var tgt := _nearest_target(Vector2(he["pos"]), float(he["range"]))
+		var tgt := _nearest_target(Vector2(he["pos"]), float(he["range"]), bool(he.get("air", true)))
 		if tgt < 0:
 			he["cool"] = 0.0
 			continue
@@ -565,8 +574,10 @@ func _shoot(hi: int, tgt: int, dmg: float, kind: String, crit: bool,
 		shots: int = 1) -> void:
 	var he: Dictionary = heroes[hi]
 	# 발사/시전 순간의 위치로 다시 확인한다. 준비 중 이동한 영웅도 예외가 없다.
-	if not _target_in_range(tgt, Vector2(he["pos"]), float(he["range"])):
+	# ★ 공중 몬스터는 대공 무기만 겨눈다 — 겨눈 뒤 목표가 바뀌어도 여기서 한 번 더 본다.
+	if not _target_in_range(tgt, Vector2(he["pos"]), float(he["range"])) or not _can_hit(hi, tgt):
 		return
+	var air := bool(he.get("air", true))
 	var col: Color = he["col"]
 	var spec: Dictionary = Balance.BULLET.get(kind, Balance.BULLET["shot"])
 	var elem: String = he["elem"]
@@ -586,20 +597,20 @@ func _shoot(hi: int, tgt: int, dmg: float, kind: String, crit: bool,
 	if kind == "beam":
 		# 앞선 적들에게 나누어 쏘고, 적보다 발 수가 많으면 남은 발도 다시 배분한다.
 		# 보스 하나만 남아도 x4의 네 발을 모두 맞혀야 겹침의 가치가 사라지지 않는다.
-		var tl := _nearest_targets(Vector2(he["pos"]), n, float(he["range"]))
+		var tl := _nearest_targets(Vector2(he["pos"]), n, float(he["range"]), air)
 		if tl.is_empty():
 			return
 		for shot in range(n):
 			var mi: int = int(tl[shot % tl.size()])
 			if float(monsters[mi]["hp"]) <= 0.0:
-				mi = _nearest_target(Vector2(he["pos"]), float(he["range"]))
+				mi = _nearest_target(Vector2(he["pos"]), float(he["range"]), air)
 			if mi < 0:
 				break
 			events.append({"t": "beam", "a": pos, "b": _mp[mi], "c": col, "big": true,
-				"el": elem, "src": hi})
+				"el": elem, "src": hi, "air": _flies(mi)})
 			var em: float = _hurt(mi, dmg, crit, hi, elem)
 			events.append({"t": "hit", "p": _mp[mi], "c": col, "kind": kind,
-				"crit": crit, "em": em, "el": elem, "n": dmg * em, "src": hi, "sid": _sid(mi)})
+				"crit": crit, "em": em, "el": elem, "n": dmg * em, "src": hi, "sid": _sid(mi), "air": _flies(mi)})
 			_on_hit_extras(mi, dmg, hi)
 		return
 
@@ -633,6 +644,11 @@ func _shoot(hi: int, tgt: int, dmg: float, kind: String, crit: bool,
 	var pierce: int = int(spec.get("pierce", 1))
 	if run.has("pierce"):
 		pierce += 1
+	pierce += int(_mod_add("pierce"))
+	# 「튕기는 별」 — 도탄 방식(bounce 가 있는 탄)만 더 튄다.
+	var bounce: int = int(spec.get("bounce", 0))
+	if bounce > 0:
+		bounce += int(_mod_add("bounce"))
 	var base: Vector2 = (_mp[tgt] - pos).normalized()
 	var side := Vector2(-base.y, base.x)
 	for i in range(n):
@@ -644,11 +660,13 @@ func _shoot(hi: int, tgt: int, dmg: float, kind: String, crit: bool,
 			"tgt": tgt, "dmg": dmg, "kind": kind, "spd": float(spec["speed"]),
 			"life": 2.6, "pierce": pierce, "hit": [], "c": col, "crit": crit, "src": hi,
 			"el": elem,
+			# ★ 대공 탄인가. 아니면 날아가다 공중 몬스터를 스쳐도 안 맞는다(_move_bullets).
+			"air": air,
 			# ★ **도탄**만 갖는 셋. 맞고 나서 몇 번 더 튈 수 있는가, 튈 때마다 세기가
 			#   얼마로 주는가, 얼마나 멀리까지 튈 수 있는가.
 			#   ☆ 겹쳐도 튀는 횟수는 **안 늘린다**. 늘리면 x5 도탄 여섯이 한 발에
 			#     서른 번씩 튀어 폰이 먼저 무너진다(STACK_SHOT_MAX 와 같은 까닭).
-			"bounce": int(spec.get("bounce", 0)),
+			"bounce": bounce,
 			"decay": float(spec.get("decay", 1.0)),
 			"hop": float(spec.get("hop", 0.0)),
 		})
@@ -666,12 +684,12 @@ func _strike(hi: int, tgt: int, dmg: float, kind: String, crit: bool, shots: int
 	if forward.length_squared() < 0.5:
 		forward = Vector2(float(he["face"]), 0.0)
 	var targets: Array = [tgt]
-	var pierce: int = int(spec.get("pierce", 1)) + (1 if run.has("pierce") else 0)
+	var pierce: int = int(spec.get("pierce", 1)) + (1 if run.has("pierce") else 0) + int(_mod_add("pierce"))
 	if pierce > 1:
 		var cos_half := cos(deg_to_rad(Balance.MELEE_ARC * 0.5))
 		var extra: Array = []
 		for j in range(_mp.size()):
-			if j == tgt or not _target_in_range(j, origin, reach):
+			if j == tgt or not _target_in_range(j, origin, reach) or not _can_hit(hi, j):
 				continue
 			var to: Vector2 = _mp[j] - origin
 			if to.length_squared() > 0.0001 and to.normalized().dot(forward) < cos_half:
@@ -739,8 +757,12 @@ func _move_bullets(dt: float) -> void:
 		#   관통탄이 같은 몬스터를 매 프레임 다시 때린다. 배열은 참조라 그냥 받아 쓴다.
 		var hitlist: Array = b["hit"]
 		var spent := false
+		var air: bool = bool(b.get("air", true))
 		for mi in range(_mp.size()):
 			if hitlist.has(mi):
+				continue
+			# 땅 위를 노리는 탄은 공중 몬스터를 스쳐 지나간다 — 맞히지도, 멈추지도 않는다.
+			if not air and _flies(mi):
 				continue
 			var hr: float = _mr[mi]
 			if p.distance_squared_to(_mp[mi]) > hr * hr:
@@ -757,7 +779,7 @@ func _move_bullets(dt: float) -> void:
 				var bounce: int = int(b.get("bounce", 0))
 				var nb := -1
 				if bounce > 0:
-					nb = _ric_target(p, hitlist, float(b.get("hop", 0.0)))
+					nb = _ric_target(p, hitlist, float(b.get("hop", 0.0)), air)
 				if nb >= 0:
 					b["bounce"] = bounce - 1
 					b["pierce"] = 1
@@ -775,7 +797,7 @@ func _move_bullets(dt: float) -> void:
 			else:
 				# ★ 뚫고 나갔으면 **다음 목표를 새로 고른다.** 안 고르면 방금 때린
 				#   놈을 계속 겨눈 채로 도는데, 그놈은 hit 목록에 있어 다시는 못 때린다.
-				b["tgt"] = _next_target(p, v, hitlist)
+				b["tgt"] = _next_target(p, v, hitlist, air)
 			break
 		if not spent:
 			keep.append(b)
@@ -785,14 +807,14 @@ func _move_bullets(dt: float) -> void:
 ## 뚫고 나간 탄이 이어서 노릴 놈. **앞쪽**에 있고 아직 안 때린 놈 중 가장 가까운 것.
 ##
 ## ★ 뒤쪽까지 보면 탄이 유턴한다 — 그러면 고친 뜻이 없다. 앞쪽 원뿔 안만 본다.
-func _next_target(p: Vector2, v: Vector2, hitlist: Array) -> int:
+func _next_target(p: Vector2, v: Vector2, hitlist: Array, air: bool = true) -> int:
 	var dir: Vector2 = v.normalized()
 	if dir == Vector2.ZERO:
 		return -1
 	var best := -1
 	var bd: float = RETARGET_R * RETARGET_R
 	for j in range(_mp.size()):
-		if hitlist.has(j):
+		if hitlist.has(j) or (not air and _flies(j)):
 			continue
 		var to: Vector2 = _mp[j] - p
 		var d2: float = to.length_squared()
@@ -814,13 +836,13 @@ func _next_target(p: Vector2, v: Vector2, hitlist: Array) -> int:
 ## ★ 이 함수는 `_rng` 를 쓴다. 그래서 도탄을 넣은 뒤로는 **씨앗을 박은 검사들의 값이
 ##   통째로 밀린다**(치명타·마비와 같은 난수를 나눠 쓰기 때문). 회귀로 읽지 말고
 ##   기준값을 다시 재라(CLAUDE.md 16).
-func _ric_target(p: Vector2, hitlist: Array, hop: float) -> int:
+func _ric_target(p: Vector2, hitlist: Array, hop: float, air: bool = true) -> int:
 	if hop <= 0.0:
 		return -1
 	var h2: float = hop * hop
 	var cand: Array = []
 	for j in range(_mp.size()):
-		if hitlist.has(j):
+		if hitlist.has(j) or (not air and _flies(j)):
 			continue
 		if p.distance_squared_to(_mp[j]) <= h2:
 			cand.append(j)
@@ -870,7 +892,8 @@ func _zone_hit(z: Dictionary) -> void:
 	var fem := 1.0
 	var cnt := 0
 	for j in range(_mp.size()):
-		if at.distance_squared_to(_mp[j]) > r2:
+		# 장판은 **땅에 깔린다** — 공중 몬스터는 그 위를 지난다(2026-10-17 사용자 규칙).
+		if _flies(j) or at.distance_squared_to(_mp[j]) > r2:
 			continue
 		var em: float = _hurt(j, dmg, false, src, elem)
 		cnt += 1
@@ -889,7 +912,7 @@ func _zone_hit(z: Dictionary) -> void:
 		"mp": _mp[first], "cnt": cnt})
 	# 연쇄 낙뢰는 대상마다 굴리면 초당 수십 번이 된다. 틱마다 한 번만 굴린다.
 	if run.has("bolt") and _rng.randf() < Balance.PASSIVE_BOLT_P:
-		_chain(first, dmg * 0.5, 2, 0.7, 150.0, [first], Look.BLUE, src, "elec")
+		_chain(first, dmg * 0.5, 2, 0.7, 150.0, [first], Look.BLUE, src, "elec", -1, false)
 
 
 ## 물 「특효」가 맞은 놈을 **뒤로 민다.** 걸은 거리를 되돌리는 것이다.
@@ -907,7 +930,7 @@ func _push(mi: int) -> void:
 	var used: float = float(mo.get("push", 0.0))
 	if used >= Balance.RIDER_PUSH_MAX:
 		return
-	var d: float = minf(Balance.RIDER_PUSH, Balance.RIDER_PUSH_MAX - used)
+	var d: float = minf(Balance.RIDER_PUSH * _mod("push_mult"), Balance.RIDER_PUSH_MAX - used)
 	var remaining: float = float(mo.get("push_left", 0.0))
 	# 아직 되돌리지 않은 거리도 빼야 입구 바깥으로 밀 힘을 쌓지 않는다.
 	d = minf(d, maxf(0.0, float(mo["s"]) - remaining))
@@ -942,6 +965,7 @@ func _impact(b: Dictionary, mi: int) -> void:
 	var src: int = int(b["src"])
 	var rad_mul: float = run.pas_mult("radius")
 	var elem := String(b.get("el", "none"))
+	var air: bool = bool(b.get("air", true))
 	var em: float = _hurt(mi, dmg, bool(b["crit"]), src, elem)
 	# ★ **한 대의 세기**를 그대로 흘린다(상성까지 곱한 값). 화면이 그 숫자를 띄우는데,
 	#   화면이 제 나름대로 다시 곱하면 표시와 전투가 언젠가 어긋난다.
@@ -950,13 +974,13 @@ func _impact(b: Dictionary, mi: int) -> void:
 	#   한 방이 화면에서 제일 약해 보인다. 「이 탄의 몇 할을 깎았나」는 정보판이 따로 센다.
 	events.append({"t": "hit", "p": b["p"], "c": b["c"], "kind": kind,
 		"crit": bool(b["crit"]), "em": em, "el": elem, "n": dmg * em, "src": src, "sid": _sid(mi),
-		"melee": bool(b.get("melee", false))})
+		"melee": bool(b.get("melee", false)), "air": _flies(mi)})
 
 	match kind:
 		"splash":
 			var at: Vector2 = _mp[mi] if mi < _mp.size() else Vector2(b["p"])
 			var rad: float = float(spec["radius"]) * rad_mul
-			_splash(mi, at, rad, dmg * float(spec["falloff"]), src, elem)
+			_splash(mi, at, rad, dmg * float(spec["falloff"]), src, elem, air)
 			# ★ 상성 배수를 같이 흘린다. 화면이 「약점이면 폭발도 크게」를 그리는 데 쓴다 —
 			#   여기서 안 보내면 화면이 제 나름대로 다시 곱하게 되고 언젠가 어긋난다.
 			# ★ **들어온 방향(d)** 도 같이 흘린다. 화면이 폭발을 그 쪽으로 쏠리게 그린다 —
@@ -969,7 +993,7 @@ func _impact(b: Dictionary, mi: int) -> void:
 			if run.has("chainmaster"):
 				jumps += Balance.PASSIVE_CHAIN_JUMPS
 			_chain(mi, dmg * float(spec["decay"]), jumps,
-					float(spec["decay"]), float(spec["hop"]), [mi], b["c"], src, elem, src)
+					float(spec["decay"]), float(spec["hop"]), [mi], b["c"], src, elem, src, air)
 	# ★ 예전에 여기 있던 "slow" · "burn" 갈래를 없앴다. 둔화·화상·마비는 이제 **방식이
 	#   아니라 속성**이 붙이고, 붙이는 곳은 _hurt() 한 군데뿐이다 (CLAUDE.md 5-1 과 같은 뜻).
 
@@ -979,7 +1003,7 @@ func _impact(b: Dictionary, mi: int) -> void:
 		var sat: Vector2 = _mp[mi] if mi < _mp.size() else Vector2(b["p"])
 		var srad: float = split * rad_mul
 		# 분열 조각은 **쏜 놈의 속성 그대로** 터진다. 패시브가 속성을 바꾸지는 않는다.
-		_splash(mi, sat, srad, dmg * 0.35, src, elem)
+		_splash(mi, sat, srad, dmg * 0.35, src, elem, air)
 		# ★ **분열 조각이라고 적어 둔다(split).** 이것은 방식과 상관없이 **모든 명중**마다
 		#   터지므로 초당 수십 번이고, 반경 44 는 화면 흔들림의 문턱을 넘는다 — 적어 두지
 		#   않으면 화면이 전투 내내 흔들린다. 여기서는 **적기만** 한다. 무엇을 덜 할지는
@@ -990,11 +1014,12 @@ func _impact(b: Dictionary, mi: int) -> void:
 
 
 ## 한 점 둘레를 함께 때린다. 광역탄과 분열 탄두가 같은 함수를 쓴다.
+## ★ `air` — 대공 공격의 폭발인가. 땅을 노린 폭발은 공중 몬스터를 덮지 않는다.
 func _splash(skip: int, at: Vector2, radius: float, dmg: float, src: int,
-		elem: String = "none") -> void:
+		elem: String = "none", air: bool = true) -> void:
 	var r2: float = radius * radius
 	for j in range(_mp.size()):
-		if j == skip:
+		if j == skip or (not air and _flies(j)):
 			continue
 		if at.distance_squared_to(_mp[j]) <= r2:
 			_hurt(j, dmg, false, src, elem)
@@ -1010,7 +1035,7 @@ func _on_hit_extras(mi: int, dmg: float, src: int) -> void:
 	#   불 마법사가 지른 낙뢰가 불이 되면 상점 설명과 화면이 어긋난다.
 	if run.has("bolt") and _rng.randf() < Balance.PASSIVE_BOLT_P:
 		var bj: int = 2 + (Balance.PASSIVE_CHAIN_JUMPS if run.has("chainmaster") else 0)
-		_chain(mi, dmg * 0.5, bj, 0.7, 150.0, [mi], Look.BLUE, src, "elec")
+		_chain(mi, dmg * 0.5, bj, 0.7, 150.0, [mi], Look.BLUE, src, "elec", -1, _hero_air(src))
 
 
 ## 화상·서리처럼 **대상에게 남는** 효과만. 장판은 이쪽만 쓴다(연쇄는 따로 굴린다).
@@ -1025,15 +1050,16 @@ func _field_extras(mi: int, dmg: float) -> void:
 		_slow(mi, ws, maxf(0.5, run.pas_best("slow_sec")))
 
 
+## ★ `air` — 대공 공격에서 튄 연쇄인가. 아니면 공중 몬스터로는 뛰지 않는다.
 func _chain(from_i: int, dmg: float, jumps: int, decay: float, hop: float,
-		seen: Array, col: Color, src: int, elem: String = "none", shot_src: int = -1) -> void:
+		seen: Array, col: Color, src: int, elem: String = "none", shot_src: int = -1, air: bool = true) -> void:
 	if jumps <= 0 or from_i >= _mp.size():
 		return
 	var at: Vector2 = _mp[from_i]
 	var best := -1
 	var bd := hop * hop
 	for j in range(_mp.size()):
-		if seen.has(j):
+		if seen.has(j) or (not air and _flies(j)):
 			continue
 		var d := at.distance_squared_to(_mp[j])
 		if d < bd:
@@ -1047,7 +1073,7 @@ func _chain(from_i: int, dmg: float, jumps: int, decay: float, hop: float,
 	events.append({"t": "bolt", "a": at, "b": _mp[best], "c": col, "p": _mp[best],
 		"em": cem, "n": dmg * cem, "el": elem, "shot_src": shot_src, "sid": _sid(best)})
 	seen.append(best)
-	_chain(best, dmg * decay, jumps - 1, decay, hop, seen, col, src, elem, shot_src)
+	_chain(best, dmg * decay, jumps - 1, decay, hop, seen, col, src, elem, shot_src, air)
 
 
 ## 겹치지 않고 **센 쪽으로 덮어쓴다.** 곱해 버리면 둔화 둘만 겹쳐도 몬스터가 멈춘다.
@@ -1151,6 +1177,10 @@ func _hurt(mi: int, dmg: float, _crit: bool, _src: int, elem: String = "none",
 	if run.has("overkill") \
 			and float(mo["hp"]) <= float(mo["max"]) * Balance.PASSIVE_OVERKILL_AT:
 		dmg *= Balance.PASSIVE_OVERKILL
+	# 별자리 「대공 사격」·「격추」 — 공중 몬스터에게만. 쏜 영웅이 있을 때만 셈한다(공용 기술은 제외).
+	var airborne: bool = _flies(mi) and _src >= 0 and _src < heroes.size()
+	if airborne:
+		dmg *= _mod("air")
 	# ★ **남은 체력까지만 깎는다.** 예전에는 hp 가 음수로 내려가고 넘겨 죽인 몫이 그대로
 	#   「준 피해」에 쌓였다. 두 가지가 그래서 부풀었다:
 	#     1. 한 방에 열 배로 넘겨 죽인 영웅이 열 배로 일한 것처럼 보였다.
@@ -1196,6 +1226,8 @@ func _hurt(mi: int, dmg: float, _crit: bool, _src: int, elem: String = "none",
 		#   대신 쏘는 쪽의 치명타가 오른다 — Run.hero_stats).
 		if rmul > 1.0 and elem == "water":
 			_push(mi)
+	if airborne and _mod_add("air_slow") > 0.0:
+		_slow(mi, minf(0.80, _mod_add("air_slow")), 1.5)
 	return em
 
 
@@ -1235,14 +1267,16 @@ func _apply_rider(mi: int, elem: String, dmg: float, mult: float = 1.0) -> void:
 			# ★ 세기에 뚜껑을 씌운다. 1.0 이 되면 그것은 둔화가 아니라 **완전 정지**이고,
 			#   마비와 달리 재우는 시간이 없어서 얼음 특효 여섯이 길을 통째로 막는다
 			#   (CLAUDE.md 5-4-2 와 같은 까닭). 시간은 그대로 곱한다.
-			_slow(mi, minf(0.80, float(sp["amount"]) * mult), float(sp["sec"]) * mult)
+			# 별자리 「깊은 서리」가 세기와 시간을 함께 키운다(_mod 는 없으면 1.0).
+			var deep := _mod("slow_mult")
+			_slow(mi, minf(0.80, float(sp["amount"]) * mult * deep), float(sp["sec"]) * mult * deep)
 		"burn":
 			var bp: Dictionary = Balance.STATUS["burn"]
 			# ★ 상성은 이미 dmg 에 곱해져 있다. _burn() 이 또 곱하지 않게 "none" 으로 넘긴다 —
 			#   두 번 곱하면 약점 화상이 네 배가 된다.
-			_burn(mi, dmg * float(bp["amount"]) * mult, float(bp["sec"]) * mult, "none")
+			_burn(mi, dmg * float(bp["amount"]) * mult * _mod("burn_mult"), float(bp["sec"]) * mult, "none")
 		"stun":
-			_stun(mi, mult)
+			_stun(mi, mult * _mod("stun_mult"))
 
 
 ## 전기가 굴리는 마비. **확률**이고, 보스에게는 확률이 깎인다.
@@ -1281,11 +1315,39 @@ func _target_in_range(index: int, origin: Vector2, radius: float) -> bool:
 			and origin.distance_squared_to(_pos_of(index)) <= radius * radius
 
 
-func _nearest_target(origin: Vector2, radius: float = INF) -> int:
+## 그 몬스터가 공중에 떠 있는가(Roster 의 fly). 땅 위의 것만 겨누는 공격이 거르는 기준이다.
+## 공중 규칙이 꺼진 모드(옛 100탄)에서는 아무도 떠 있지 않은 것으로 친다.
+func _flies(index: int) -> bool:
+	return air_rules and index >= 0 and index < monsters.size() and bool(monsters[index].get("fly", false))
+
+
+## 그 영웅이 공중 몬스터를 겨눌 수 있는가(총·활 — Balance.ANTI_AIR_WEAPONS).
+func _hero_air(hi: int) -> bool:
+	return hi >= 0 and hi < heroes.size() and bool(heroes[hi].get("air", true))
+
+
+## ★ **대공 규칙 한 군데**(2026-10-17 사용자 규칙): 공중 몬스터는 총·활을 든 영웅만 맞힌다.
+##   검·채찍·장판은 땅 위의 것만. 겨눌 때·놓을 때·탄이 스칠 때·폭발이 덮을 때 전부 이것을 본다.
+func _can_hit(hi: int, mi: int) -> bool:
+	return not _flies(mi) or _hero_air(hi)
+
+
+## 별자리(Talents)의 곱하는 효과 — 투기장 판(ArenaRun.mod)만 갖는다. 옛 모드는 1.0 이다.
+func _mod(key: String) -> float:
+	return float(run.mod(key)) if run != null and run.has_method("mod") else 1.0
+
+
+## 별자리의 더하는 효과. 옛 모드는 0.0 이다.
+func _mod_add(key: String) -> float:
+	return float(run.mod_add(key)) if run != null and run.has_method("mod_add") else 0.0
+
+
+## `air` 가 거짓이면 공중 몬스터를 건너뛴다(땅 위만 노리는 영웅의 겨냥).
+func _nearest_target(origin: Vector2, radius: float = INF, air: bool = true) -> int:
 	var best := -1
 	var distance := INF
 	for i in range(monsters.size()):
-		if not _target_in_range(i, origin, radius):
+		if not _target_in_range(i, origin, radius) or (not air and _flies(i)):
 			continue
 		var candidate := origin.distance_squared_to(_pos_of(i))
 		if candidate < distance:
@@ -1294,10 +1356,10 @@ func _nearest_target(origin: Vector2, radius: float = INF) -> int:
 	return best
 
 
-func _nearest_targets(origin: Vector2, count: int, radius: float = INF) -> Array:
+func _nearest_targets(origin: Vector2, count: int, radius: float = INF, air: bool = true) -> Array:
 	var targets: Array = []
 	for i in range(monsters.size()):
-		if _target_in_range(i, origin, radius):
+		if _target_in_range(i, origin, radius) and (air or not _flies(i)):
 			targets.append(i)
 	targets.sort_custom(func(a, b):
 		return origin.distance_squared_to(_pos_of(a)) < origin.distance_squared_to(_pos_of(b)))
@@ -1377,7 +1439,7 @@ func _reap() -> void:
 		run.kills += 1
 		run.add_gold(g)
 		events.append({"t": "die", "p": dp, "c": Color(String(mo["m"]["color"])),
-			"h": float(mo["h"]), "gold": g, "sid": int(mo.get("spawn_id", 0))})
+			"h": float(mo["h"]), "gold": g, "sid": int(mo.get("spawn_id", 0)), "air": bool(mo.get("fly", false))})
 
 	for i in arrived:
 		var mo2: Dictionary = monsters[i]

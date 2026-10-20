@@ -28,7 +28,7 @@ const ARENA_BOSS_HP_EARLY := 0.30
 ## 「수호자의 가호」 — 한 판에 USES 번까지, 수정이 깨지는 순간 이 비율로 되살아난다.
 ## 되살아난 뒤 INVULN 초 동안 수정은 피해를 받지 않고 모든 몬스터가 STUN 초 멎는다.
 ## 되살아날 때마다 골드를 받는다: GOLD + GOLD_STEP x 탄(arena_revive_gold).
-const ARENA_REVIVE_USES := 3
+const ARENA_REVIVE_USES := 1
 const ARENA_REVIVE_HP := 0.5
 const ARENA_REVIVE_INVULN := 5.0
 const ARENA_REVIVE_STUN := 2.5
@@ -51,7 +51,7 @@ const ARENA_GROWTH_BASE := 8
 const ARENA_GROWTH_STEP := 2
 const ARENA_BLAST_COOLDOWN := 18.0
 const ARENA_BLAST_DAMAGE := 200.0
-const ARENA_BLAST_RADIUS := 110.0
+const ARENA_BLAST_RADIUS := 160.0
 const ARENA_FREEZE_COOLDOWN := 24.0
 const ARENA_FREEZE_SLOW := 0.65
 const ARENA_FREEZE_DURATION := 5.0
@@ -64,11 +64,246 @@ const ARENA_FREEZE_USES := 4
 const ARENA_WARD_USES := 3
 ## 보스 출현 몇 초 전에 입구를 예고하는가.
 const ARENA_BOSS_WARNING := 4.0
+## 2026-10-17 성장 개편: **골드는 별맞춤(영웅 뽑기)에만 쓴다.** 능력치·패시브는 몬스터를 잡아
+## 모은 경험치가 차면 올라오는 「별자리」(TALENTS) 노드 셋 중 하나를 골라 얻는다.
+## 레벨 L(0부터)에서 다음 레벨까지 필요한 경험치 = ARENA_XP_BASE + ARENA_XP_STEP x L.
+## 처치 경험치는 MKIND 의 xp 다(떼거리 1 · 보스 10). 한 판 완주에 스무 번 남짓 오르게 맞췄다.
+const ARENA_XP_BASE := 6
+const ARENA_XP_STEP := 2
+## 레벨업 때 내놓는 노드 수. 고를 노드가 하나도 안 남으면 대신 골드를 준다.
+const ARENA_TALENT_CHOICES := 3
+const ARENA_LEVELUP_GOLD := 40
+## 별맞춤 비용은 할 때마다 이만큼 오른다(골드가 뽑기에만 쓰이므로 값이 따라 오른다).
+const ARENA_SUMMON_COST_STEP := 6
 
-## 연속 수호전의 탄별 난이도. 1탄은 예전 투기장 값 그대로이고 탄마다 곱으로 오른다.
-## rank 는 그 탄이 걸린 전장의 험한 정도(1~5)다.
-static func arena_hp(stage: int, rank: int = 1) -> float:
-	return wave_hp(1, rank) * ARENA_HP_SCALE * pow(ARENA_STAGE_HP_GROW, float(maxi(1, stage) - 1))
+# --------------------------------------------------------------------------- #
+# 스테이지 사다리 · 웨이브 (2026-10-19 피드백 U3·O4·O5·O10 · PLAN M4·M5·M6·M11)
+# --------------------------------------------------------------------------- #
+# 한 스테이지는 새 파티로 처음부터 시작하는 10웨이브 판이다(5웨이브 정예, 10웨이브 보스). 웨이브는 그
+# 웨이브의 몬스터가 모두 쓰러져야 끝나고, 웨이브 사이의 정비 시간에만 상자를 열고 레벨업 노드를 고른다.
+# 아래 값은 첫 추정이다 — tests/arena_balance_check 로 다시 맞춘다. 10탄 연속 판의 값(ARENA_BOSS_AT ·
+# ARENA_STAGES · ARENA_STAGE_* · ARENA_SPAWN_* · ARENA_POPULATION_START)은 지우지 않고 더는 쓰지 않는다
+# (tools/ci/check_stellar_pack.gd 가 앞의 둘을 승인된 값으로 확인한다). docs/STAGE_LADDER_2026-10-19.md
+## 사다리의 스테이지 수. 깨면 다음 스테이지가 열린다. 열 스테이지가 한 챕터다.
+const ARENA_LADDER := 100
+## 한 스테이지의 웨이브 수. 마지막 웨이브는 보스와 호위가 나오는 보스 웨이브다.
+const ARENA_WAVES := 10
+## 이 웨이브마다(보스 웨이브는 빼고) 정예 하나가 섞인다.
+const ARENA_ELITE_EVERY := 5
+## 정비 시간(초). 첫 정비는 첫 상자를 고른 뒤 영웅을 세울 시간이고 뒤의 것은 웨이브 사이다.
+## 창(상자 · 레벨업)이 열린 동안은 흐르지 않고 「바로 시작」으로 끝낼 수 있다.
+const ARENA_PREP_FIRST := 6.0
+const ARENA_PREP_SEC := 6.0
+## 보스 웨이브 앞의 정비(초). 끝의 ARENA_BOSS_WARNING 초 동안 보스가 올 입구를 예고하므로 그보다 길다.
+const ARENA_PREP_BOSS := 8.0
+## 긴 길의 걸음 보정(2026-10-19 교차 점검 O4): 전장의 가장 긴 길이 이 길이(논리 단위)보다 길면 그 전장의
+## 몬스터는 그 비율만큼 빨리 걷는다(ArenaSim.pace). 웨이브마다 되풀이되는 걷는 시간이 코일(2979) · 나선 ·
+## 갈래(2305)에서 스테이지를 5~7분으로 늘리던 것을 이 길이의 길과 비슷하게 맞춘다. 0 이면 끈다. PATH_SPEED 는
+## 그대로다(옛 모드 · 걸음 시계가 그것을 쓴다).
+const ARENA_ROAD_PACE := 1600.0
+## 웨이브의 일반 몬스터 수 = SIZE + SIZE_STEP x (웨이브 - 1)을 반올림(1~9웨이브 4·5·5·6·6·7·8·8·9).
+const ARENA_WAVE_SIZE := 4
+const ARENA_WAVE_SIZE_STEP := 0.6
+## 웨이브 안에서 몬스터가 나오는 간격(초). 1웨이브 GAP 에서 마지막 웨이브 GAP_MIN 까지 고르게 준다.
+const ARENA_WAVE_GAP := 0.7
+const ARENA_WAVE_GAP_MIN := 0.35
+## 웨이브마다 몬스터 체력에 1웨이브 체력의 이 비율을 더한다(10웨이브 = 1 + 9 x STEP).
+const ARENA_WAVE_HP_STEP := 0.12
+## 사다리 경사(스테이지의 몬스터 체력 배수, arena_ladder_hp) = (스테이지 / FROM)^POW, FROM 까지는 1. 앞에서
+## 빨리 오르고 뒤로 갈수록 완만하다 — 스테이지마다 영웅이 처음부터 다시 모이고 한 스테이지의 골드 · 경험치가
+## 사다리 끝까지 같아서, 지수 곡선(옛 ARENA_LADDER_HP_GROW)은 앞 50 스테이지가 너무 쉽고 뒤 30 스테이지가
+## 절벽이었다(2026-10-19 LA4 봇 실측, docs/STAGE_LADDER_2026-10-19.md 「실측」).
+## ★ ARENA_STAGE_HP_GROW(1.42)는 파티가 열 탄 동안 이어지던 연속 판의 값이다.
+const ARENA_LADDER_HP_FROM := 8.0
+const ARENA_LADDER_HP_POW := 0.57
+## 정예 — 그 스테이지 주 속성의 육중형에 붙는 표식(PLAN M6). 체력 · 처치 골드 · 처치 경험치 배수.
+## 화면의 크기는 StellarModels.ELITE_SCALE 이 정한다.
+const ARENA_ELITE_HP := 2.5
+const ARENA_ELITE_GOLD := 5.0
+const ARENA_ELITE_XP := 5.0
+## 방어 성공(그 웨이브를 다 잡음) 골드 = BONUS + BONUS_STEP x 웨이브.
+const ARENA_WAVE_BONUS := 10
+const ARENA_WAVE_BONUS_STEP := 2
+## 방어 성공 때 수정 회복(최대치 대비). 별자리 「되살아나는 수정」(heal_stage)이 더한다.
+const ARENA_WAVE_HEAL := 0.03
+## 보스 웨이브에서 보스 뒤로 따라 나오는 호위의 수.
+const ARENA_BOSS_ESCORT := 6
+## 사다리 보스의 체력 = 그 웨이브의 일반 체력 x MKIND 보스 배수 x 이 값. 챕터 보스(10의 배수
+## 스테이지)는 ARENA_FINAL_BOSS_HP 를 더 곱한다.
+const ARENA_LADDER_BOSS_HP := 0.5
+## 일반 몬스터가 수호자에게 막힌 채 이만큼(초) 서 있으면 그 몸은 수호자를 지나간다(교착 방지, PLAN M5).
+## 보스 · 정예 · 공중 몬스터는 처음부터 막히지 않는다.
+const ARENA_BLOCK_BREAK := 10.0
+## 사다리의 처치 골드 밑값(MKIND 의 gold 에 곱한다)과 스테이지마다 더하는 값. 스테이지마다 새로
+## 시작하므로 평평하게 둔다.
+const ARENA_LADDER_GOLD := 3.0
+const ARENA_LADDER_GOLD_STEP := 0.0
+## 사다리의 처치 경험치 배수(MKIND 의 xp 에 곱한다)와 스테이지마다 더하는 값.
+const ARENA_LADDER_XP := 1.2
+const ARENA_LADDER_XP_STEP := 0.0
+## 종 해금: 이 웨이브부터 쾌속형, 이 웨이브부터 육중 · 주술형이 섞인다(모든 스테이지).
+const ARENA_FAST_WAVE := 3
+const ARENA_HEAVY_WAVE := 5
+## 이 스테이지부터 공중 몬스터가 나온다. 그 앞에서는 같은 몸의 떼거리로 바뀐다.
+const ARENA_FLY_STAGE := 2
+## 이 스테이지부터 면역 몸이 섞이고 웨이브마다 세 종이 섞인다. 사다리는 이보다 앞의 스테이지에
+## 면역 생태의 전장을 두지 않는다(STAGE 1~3, PLAN M11).
+const ARENA_IMMUNE_STAGE := 4
+## 이 스테이지부터 웨이브마다 네 종이 섞인다.
+const ARENA_MIX_STAGE := 41
+
+# --------------------------------------------------------------------------- #
+# 보석상자 (2026-10-19 피드백 F10 · U1 · U2 · M1 · M2 · D1, docs/JEWEL_BOX.md)
+# --------------------------------------------------------------------------- #
+# 투기장의 소환은 별맞춤 의식 대신 보석상자다(옛 100탄 모드의 의식 · RITE_* 는 그대로). 상자를 열면 등급
+# (1~5성)이 무작위로 정해지고 영웅 카드 ARENA_BOX_CARDS 장이 나온다 — 한 장은 상자 등급 이상이 보장되고
+# 나머지는 저마다 굴려 더 높을 수도 있다. 하나를 고른다. 첫 값은 의식의 확률표에서 옮겼다(LA4 가 다시 잰다).
+## 상자 하나에서 나오는 영웅 카드 수(겹치지 않는 영웅, 후보가 적으면 줄어든다).
+const ARENA_BOX_CARDS := 5
+## 스테이지 첫 상자(무료)의 최저 등급.
+const ARENA_BOX_FIRST_TIER := 2
+## 상자 등급 1~5성의 무게(열 때 굴린다). 의식의 무료 다시 돌리기 1번 분포(Rite.odds(2))에서 시작했다.
+const ARENA_BOX_P1 := 0.331
+const ARENA_BOX_P2 := 0.457
+const ARENA_BOX_P3 := 0.186
+const ARENA_BOX_P4 := 0.025
+const ARENA_BOX_P5 := 0.001
+## 보장 카드가 아닌 카드의 등급 1~5성 무게(카드마다 따로 굴린다). 의식의 한 번 굴림(Rite.odds(1))에서 시작했다.
+const ARENA_CARD_P1 := 0.575
+const ARENA_CARD_P2 := 0.354
+const ARENA_CARD_P3 := 0.066
+const ARENA_CARD_P4 := 0.004
+const ARENA_CARD_P5 := 0.0001
+## DLC(수호자의 가호) 소유자의 상자당 무료 다시 뽑기(기본은 FREE_REROLL). 별자리 보너스는 그 위에 더한다.
+## 무료를 다 쓰면 더 뽑을 수 없다 — 투기장에는 유료 다시 뽑기가 없다(PLAN M1).
+const ARENA_DLC_FREE_REROLL := 3
+## 대공 공정 규칙: 출전 · 대기 영웅에 대공(총 · 활)이 없고 이 스테이지의 남은 웨이브에 공중 몬스터가
+## 있으면, 상자 카드 중 이 수만큼은 대공 영웅이다(0 이면 규칙을 끈다).
+const ARENA_BOX_AIR_CARDS := 1
+
+# --------------------------------------------------------------------------- #
+# 공통 스킬의 골드 (2026-10-19 피드백 F5 · PLAN M7) · Hellbound (D3 · U4 · M10)
+# --------------------------------------------------------------------------- #
+## 공통 스킬을 쓸 때마다 드는 골드. 스테이지 경제가 사다리 끝까지 평평하므로(한 스테이지 약 450 G, 상자
+## 70~100 G) 고정값이다 — 폭발 둘이 상자 하나쯤. 스테이지당 사용 횟수와 쿨타임은 그대로다.
+const ARENA_BLAST_GOLD := 30
+const ARENA_FREEZE_GOLD := 40
+const ARENA_WARD_GOLD := 50
+## Hellbound: 도감의 영웅 최대 이만큼을 각자의 최고 등급으로 골라 끝없는 웨이브에 들어간다.
+const ARENA_HELL_SQUAD := 6
+## Hellbound 의 웨이브 w 는 사다리의 이 스테이지에서 시작해 웨이브마다 PER_WAVE 스테이지씩 세진다.
+## 웨이브 안의 경사(ARENA_WAVE_HP_STEP)는 열 웨이브마다 처음부터 다시 오른다(보스 웨이브가 마루).
+const ARENA_HELL_BASE_STAGE := 60
+const ARENA_HELL_STAGE_PER_WAVE := 2.0
+## Hellbound 몬스터 체력 배수 — 최고 등급의 영웅으로 시작하므로 사다리보다 두껍게 시작한다.
+const ARENA_HELL_HP := 3.0
+## Hellbound 의 웨이브마다 체력에 곱하는 값(웨이브 w 는 GROW^(w-1)). 끝없는 판에서는 상자 · 별자리가
+## 쌓여 파티가 계속 커지므로, 완만한 사다리 경사만으로는 끝이 나지 않는다(2026-10-19 LA4 실측).
+const ARENA_HELL_HP_GROW := 1.10
+
+## Hellbound 웨이브 w 에 해당하는 사다리 스테이지(체력의 사다리 경사에 쓴다).
+static func arena_hell_stage(wave: int) -> int:
+	return ARENA_HELL_BASE_STAGE + floori(float(maxi(1, wave) - 1) * ARENA_HELL_STAGE_PER_WAVE)
+
+## Hellbound 웨이브 w 의 웨이브 안 경사 자리(1~ARENA_WAVES, 열 웨이브마다 되풀이).
+static func arena_hell_ramp_wave(wave: int) -> int:
+	return (maxi(1, wave) - 1) % ARENA_WAVES + 1
+
+## Hellbound 웨이브 w 의 체력 배수(사다리 체력 위에): ARENA_HELL_HP x ARENA_HELL_HP_GROW^(w-1).
+static func arena_hell_hp(wave: int) -> float:
+	return ARENA_HELL_HP * pow(ARENA_HELL_HP_GROW, float(maxi(1, wave) - 1))
+
+## 상자 등급의 무게(1~5성 차례).
+static func arena_box_weights() -> Array:
+	return [ARENA_BOX_P1, ARENA_BOX_P2, ARENA_BOX_P3, ARENA_BOX_P4, ARENA_BOX_P5]
+
+## 보장 카드가 아닌 카드 등급의 무게(1~5성 차례).
+static func arena_card_weights() -> Array:
+	return [ARENA_CARD_P1, ARENA_CARD_P2, ARENA_CARD_P3, ARENA_CARD_P4, ARENA_CARD_P5]
+
+## L 레벨에서 다음 레벨까지 모아야 하는 경험치.
+static func arena_xp_needed(level: int) -> int:
+	return ARENA_XP_BASE + ARENA_XP_STEP * maxi(0, level)
+
+## 그 형(kind)을 잡으면 받는 경험치.
+static func arena_kill_xp(kind: String) -> float:
+	return float(MKIND.get(kind, MKIND["swarm"]).get("xp", 1.0))
+
+## 사다리 스테이지의 몬스터 한 마리 기준 체력(MKIND 의 hp 를 곱하기 전). rank 는 그 스테이지 전장의
+## 험한 정도(1~5), wave 는 웨이브 번호(1부터)다. STAGE 1 의 1웨이브는 예전 투기장 1탄 값 그대로다.
+## 2026-10-19: 연속 판의 ARENA_STAGE_HP_GROW 대신 사다리 경사와 웨이브 경사를 곱한다.
+static func arena_hp(stage: int, rank: int = 1, wave: int = 1) -> float:
+	var ramp := 1.0 + ARENA_WAVE_HP_STEP * float(maxi(1, wave) - 1)
+	return wave_hp(1, rank) * ARENA_HP_SCALE * arena_ladder_hp(stage) * ramp
+
+## 사다리 경사: STAGE ARENA_LADDER_HP_FROM 까지 1, 그 뒤로 (stage / FROM)^ARENA_LADDER_HP_POW.
+static func arena_ladder_hp(stage: int) -> float:
+	return maxf(1.0, pow(float(maxi(1, stage)) / ARENA_LADDER_HP_FROM, ARENA_LADDER_HP_POW))
+
+## 정예의 체력: 그 웨이브의 체력 x 형의 배수 x ARENA_ELITE_HP.
+static func arena_elite_hp(stage: int, rank: int, wave: int, kind: String = "tank") -> float:
+	return arena_hp(stage, rank, wave) * float(MKIND.get(kind, MKIND["tank"])["hp"]) * ARENA_ELITE_HP
+
+## 사다리 보스의 체력: 그 웨이브의 체력 x MKIND 보스 배수 x ARENA_LADDER_BOSS_HP. 챕터 보스(10의 배수
+## 스테이지, 최종 보스 연출)는 ARENA_FINAL_BOSS_HP 를 더 곱한다.
+static func arena_ladder_boss_hp(stage: int, rank: int = 1, wave: int = ARENA_WAVES, chapter: bool = false) -> float:
+	var hp := arena_hp(stage, rank, wave) * float(MKIND["boss"]["hp"]) * ARENA_LADDER_BOSS_HP
+	return hp * (ARENA_FINAL_BOSS_HP if chapter else 1.0)
+
+## 사다리의 처치 골드(배수 적용 전). 스테이지마다 새로 시작하므로 사다리 끝까지 거의 같다.
+static func arena_ladder_gold(stage: int, kind: String) -> int:
+	var base := ARENA_LADDER_GOLD + ARENA_LADDER_GOLD_STEP * float(maxi(1, stage) - 1)
+	return roundi(base * float(MKIND[kind]["gold"]))
+
+## 사다리의 처치 경험치(「통찰」 배수 전).
+static func arena_ladder_xp(stage: int, kind: String) -> float:
+	return arena_kill_xp(kind) * (ARENA_LADDER_XP + ARENA_LADDER_XP_STEP * float(maxi(1, stage) - 1))
+
+## 방어 성공 골드.
+static func arena_wave_bonus(_stage: int, wave: int) -> int:
+	return ARENA_WAVE_BONUS + ARENA_WAVE_BONUS_STEP * maxi(1, wave)
+
+## 웨이브 w 앞의 정비 시간: 첫 웨이브는 PREP_FIRST, 보스 웨이브는 PREP_BOSS, 그 밖은 PREP_SEC.
+static func arena_prep(wave: int, total: int = ARENA_WAVES) -> float:
+	if wave <= 1:
+		return ARENA_PREP_FIRST
+	return ARENA_PREP_BOSS if arena_boss_wave(wave, total) else ARENA_PREP_SEC
+
+## 보스 웨이브인가. total 은 그 판의 웨이브 수이고 0 이면 끝없는 모드(ARENA_WAVES 마다 보스)다.
+static func arena_boss_wave(wave: int, total: int = ARENA_WAVES) -> bool:
+	if total > 0:
+		return wave == total
+	return wave > 0 and wave % ARENA_WAVES == 0
+
+## 정예 웨이브인가(ARENA_ELITE_EVERY 의 배수, 보스 웨이브는 빼고).
+static func arena_elite_wave(wave: int, total: int = ARENA_WAVES) -> bool:
+	return wave > 0 and wave % ARENA_ELITE_EVERY == 0 and not arena_boss_wave(wave, total)
+
+## 웨이브의 일반 몬스터 수. 끝없는 모드에서 커져도 판 위 개체 상한(ARENA_POPULATION_MAX)을 넘지 않는다.
+static func arena_wave_size(_stage: int, wave: int) -> int:
+	return clampi(roundi(ARENA_WAVE_SIZE + ARENA_WAVE_SIZE_STEP * float(maxi(1, wave) - 1)), 1, ARENA_POPULATION_MAX - 2)
+
+## 그 웨이브의 출현 목록 길이: 보스 웨이브는 보스 + 호위, 정예 웨이브는 일반 + 정예 하나.
+## ArenaRun.wave_spawns 가 언제나 이 길이를 내고 저장 검사(ArenaValidation)가 이 값으로 본다.
+static func arena_wave_count(stage: int, wave: int, total: int = ARENA_WAVES) -> int:
+	if arena_boss_wave(wave, total):
+		return 1 + ARENA_BOSS_ESCORT
+	return arena_wave_size(stage, wave) + (1 if arena_elite_wave(wave, total) else 0)
+
+## 웨이브 안의 출현 간격(초). 끝없는 모드의 ARENA_WAVES 넘은 웨이브는 GAP_MIN 에 머문다.
+static func arena_wave_gap(_stage: int, wave: int) -> float:
+	var t := clampf(float(maxi(1, wave) - 1) / float(maxi(1, ARENA_WAVES - 1)), 0.0, 1.0)
+	return lerpf(ARENA_WAVE_GAP, ARENA_WAVE_GAP_MIN, t)
+
+## 그 웨이브에 나올 수 있는 형(kind): 처음에는 떼거리만, ARENA_FAST_WAVE 부터 쾌속,
+## ARENA_HEAVY_WAVE 부터 육중 · 주술.
+static func arena_wave_kinds(_stage: int, wave: int) -> Array:
+	var kinds: Array = ["swarm"]
+	if wave >= ARENA_FAST_WAVE:
+		kinds.append("fast")
+	if wave >= ARENA_HEAVY_WAVE:
+		kinds.append_array(["tank", "caster"])
+	return kinds
 
 ## 탄 보스의 체력. 일반 몬스터의 곡선에 보스 배수를 곱하되 앞 탄은 덜어 준다.
 static func arena_boss_hp(stage: int, rank: int = 1) -> float:
@@ -88,15 +323,16 @@ static func arena_stage_bonus(stage: int) -> int:
 static func arena_revive_gold(stage: int) -> int:
 	return ARENA_REVIVE_GOLD + ARENA_REVIVE_GOLD_STEP * maxi(1, stage)
 
-## 그 탄에 어떤 형이 섞이는가를 정하는 옛 탄 번호(Roster._kind_pool · theme_kinds 의 w).
-## 1탄은 떼거리만, 2탄에 쾌속, 3탄에 육중·주술, 4탄부터 면역 몸까지 전부 나온다.
-## 섞이는 종 수는 1~3탄 둘, 4~7탄 셋, 8탄부터 넷이다.
-static func arena_kind_wave(stage: int) -> int:
-	match maxi(1, stage):
-		1: return 1
-		2: return 3
-		3: return 4
-	return 6 if stage < 8 else LAST_WAVE
+## Roster.theme_spawns 에 넘기는 옛 탄 번호(Roster._kind_pool · theme_kinds 의 w). 사다리에서 이 번호는
+## 두 가지만 정한다: 면역 몸이 나올 수 있는가, 한 웨이브에 몇 종이 섞이는가. 웨이브 안에서 어떤 형이
+## 나오는가는 arena_wave_kinds 가 정한다(ArenaRun.wave_spawns 가 허용되지 않은 형을 같은 몸의 떼거리로 바꾼다).
+##   STAGE 1~3: 5 — 두 종, 면역 몸 없음.  STAGE ARENA_IMMUNE_STAGE~: 6 — 세 종, 면역 몸.
+##   STAGE ARENA_MIX_STAGE~ 와 끝없는 모드에서 ARENA_WAVES 를 넘은 웨이브: LAST_WAVE — 네 종.
+## ★ LAST_WAVE(100)는 옛 100탄 모드의 숫자다. 문구 때문에 바꾸지 마라(종 혼합이 함께 바뀐다).
+static func arena_kind_wave(stage: int, wave: int = 1) -> int:
+	if stage >= ARENA_MIX_STAGE or wave > ARENA_WAVES:
+		return LAST_WAVE
+	return 6 if stage >= ARENA_IMMUNE_STAGE else 5
 
 ## 게임의 숫자가 **전부** 여기 있다. 순수 함수만 두고 화면·저장을 모른다.
 ##
@@ -258,6 +494,18 @@ const MELEE_ARC := 110.0
 
 static func is_melee(unit: Dictionary) -> bool:
 	return String(unit.get("weapon", "")) in MELEE_WEAPONS
+
+## ★ **대공 무기** — 2026-10-17 사용자 규칙: 「총이나 활 쏘는 캐릭을 제외하고는 뚜벅이
+##   몬스터만 공격할 수 있다」. 공중 몬스터(Roster.MONSTERS 의 fly)는 총·활만 맞힌다.
+##   검·채찍·장판(덱)은 땅 위의 것만 겨눈다 — BattleSim._can_hit() 한 군데가 판정한다.
+const ANTI_AIR_WEAPONS := ["gun", "bow"]
+
+static func anti_air(unit: Dictionary) -> bool:
+	return String(unit.get("weapon", "")) in ANTI_AIR_WEAPONS
+
+## 그 몬스터(표의 한 줄)가 공중에 떠 있는가.
+static func flies(monster: Dictionary) -> bool:
+	return bool(monster.get("fly", false))
 
 ## 투기장에서 조이스틱으로 걷는 빠르기(logical/s). 캐릭터 표의 spd 배수(Roster.UNITS)를
 ## 기준 속도에 곱한다 — 센 일격·중화기는 느리고 가벼운 연사·검은 빠르다.
@@ -462,10 +710,12 @@ const ELEM_ORDER := ["none", "fire", "ice", "elec", "water"]
 ##   | aqua 물   | elec       | water fire ice   | —     |
 ##   | flame 불  | water      | fire ice         | —     |
 ##   | wood 나무 | fire ice   | water elec       |       |
-##   | rock 바위 | water ice  | fire             | elec  |
-##   | frost 얼음| fire       | water ice        | —     |
+##   | rock 대지 | water ice  | —                | elec  |
+##   | frost 얼음| fire       | ice              | —     |
 ##
-## 전기는 물 2배, 불 1배, 나무 0.5배, 바위 0배, 얼음 1배다.
+## 전기는 물 2배, 불 1배, 나무 0.5배, 대지 0배, 얼음 1배다.
+## 2026-10-19 사용자 결정(C안, 「포켓몬스터와 똑같이」): 바위 몸(id rock)을 포켓몬의 땅 타입 「대지」로 —
+##   전기 0배(면역) 유지, 불→대지 0.5→1, 물→얼음 0.5→1. 같은 속성끼리 0.5배는 포켓몬과 같아서 유지.
 ## 2026-09-14 사용자 요청으로 나무를 면역에서 저항으로 변경했다.
 ## 전기의 기본 화력·마비 확률과 다른 몸의 상성은 유지한다.
 ## 테마별 면역 몸의 합은 기존 상한을 유지하며 다음 탄 예고에서 상성을 확인할 수 있다.
@@ -478,8 +728,8 @@ const MBODY := {
 	"aqua":  {"ko": "물",   "color": "#3B8CFF", "weak": ["elec"],        "resist": ["water", "fire", "ice"], "immune": []},
 	"flame": {"ko": "불",   "color": "#FF6A2A", "weak": ["water"],       "resist": ["fire", "ice"],          "immune": []},
 	"wood":  {"ko": "나무", "color": "#5AD07A", "weak": ["fire", "ice"], "resist": ["water", "elec"],       "immune": []},
-	"rock":  {"ko": "바위", "color": "#C89B5A", "weak": ["water", "ice"],"resist": ["fire"],                 "immune": ["elec"]},
-	"frost": {"ko": "얼음", "color": "#7BDCFF", "weak": ["fire"],        "resist": ["water", "ice"],        "immune": []},
+	"rock":  {"ko": "대지", "color": "#C89B5A", "weak": ["water", "ice"],"resist": [],                 "immune": ["elec"]},
+	"frost": {"ko": "얼음", "color": "#7BDCFF", "weak": ["fire"],        "resist": ["ice"],        "immune": []},
 }
 ## 화면에 늘어놓을 때의 차례.
 const MBODY_ORDER := ["aqua", "flame", "wood", "rock", "frost"]
@@ -596,16 +846,16 @@ static func status_ko(s: String) -> String:
 ## ★ 그림 크기(h)는 여기 두지 않는다 — core/roster.gd 가 tools/gen_art.py 가 실제로
 ##   저장한 픽셀 높이를 들고 있고, 두 곳에 적으면 반드시 어긋난다.
 const MKIND := {
-	"swarm":  {"hp": 0.75, "spd": 1.00, "gold": 1.0, "crush": 1, "ko": "떼거리"},
-	"fast":   {"hp": 0.60, "spd": 1.70, "gold": 1.1, "crush": 1, "ko": "쾌속"},
-	"tank":   {"hp": 2.40, "spd": 0.80, "gold": 1.4, "crush": 1, "ko": "육중"},
-	"caster": {"hp": 1.00, "spd": 0.88, "gold": 1.2, "crush": 1, "ko": "주술"},
+	"swarm":  {"hp": 0.75, "spd": 1.00, "gold": 1.0, "xp": 1.0, "crush": 1, "ko": "떼거리"},
+	"fast":   {"hp": 0.60, "spd": 1.70, "gold": 1.1, "xp": 1.0, "crush": 1, "ko": "쾌속"},
+	"tank":   {"hp": 2.40, "spd": 0.80, "gold": 1.4, "xp": 2.0, "crush": 1, "ko": "육중"},
+	"caster": {"hp": 1.00, "spd": 0.88, "gold": 1.2, "xp": 1.5, "crush": 1, "ko": "주술"},
 	# ★ 보스는 체력을 14 → 18 로 올리고 부수는 크리스탈을 5 → 3 으로 내렸다.
 	#   까닭이 있다 — 크리스탈을 **상점에서 되살 수 있게** 되면서 5개는 너무 커졌다.
 	#   50탄에서 다섯 개면 되사는 데 2800골드인데 그 탄의 지갑이 600골드다. 그러면
 	#   보스 한 번에 판이 끝나는 「사고」가 되고, 사고는 난이도가 아니다.
 	#   셋이면 아프되 되살 수 있다 — 그 되사기가 곧 그 판의 긴장이다.
-	"boss":   {"hp": 18.0, "spd": 0.72, "gold": 12.0, "crush": 3, "ko": "보스"},
+	"boss":   {"hp": 18.0, "spd": 0.72, "gold": 12.0, "xp": 10.0, "crush": 3, "ko": "보스"},
 }
 ## 주술사가 거는 저주 — 영웅 전체의 공격속도를 이만큼 깎는다. 겹치지 않고 시간만 새로 찬다.
 const CURSE_RATE := 0.18
@@ -881,7 +1131,7 @@ const UPGRADES := [
 	{"id": "crit",   "ko": "치명타 확률", "desc": "치명타 발생 확률",        "show": "pct",   "base": 60,  "grow": 1.40, "cap": 15},
 	{"id": "critx",  "ko": "치명타 배율", "desc": "치명타 피해 배율",       "show": "x",     "base": 70,  "grow": 1.42, "cap": 20},
 	{"id": "gold",   "ko": "골드 획득량",   "desc": "몬스터 처치 골드",   "show": "mult",  "base": 55,  "grow": 1.45, "cap": 0},
-	{"id": "reroll", "ko": "무료 다시 돌리기",   "desc": "별맞춤 의식의 무료 횟수",        "show": "count", "base": 100, "grow": 1.65, "cap": 4},
+	{"id": "reroll", "ko": "무료 다시 뽑기",   "desc": "보석상자의 무료 다시 뽑기 횟수",        "show": "count", "base": 100, "grow": 1.65, "cap": 4},
 	# ★ 제한 시간이 없어졌으므로(크리스탈이 곧 목숨이다) 그 자리에 「길」을 산다.
 	#   몬스터가 느려지면 그만큼 오래 얻어맞는다 — 예전 「제한 시간 +2초」와 같은 자리다.
 	{"id": "mire",   "ko": "몬스터 이동속도",    "desc": "몬스터의 이동속도",         "show": "slow",  "base": 95,  "grow": 1.55, "cap": 5},
@@ -965,7 +1215,7 @@ const PASSIVES := [
 	{"id": "scope", "ko": "조준경", "desc": "치명타 확률 x0.10 추가", "cost": 270, "rank": 1, "icon": "eye", "tint": "#4AA3FF", "crit": 0.10},
 	{"id": "midas", "ko": "황금손", "desc": "처치 골드 x1.28", "cost": 263, "rank": 1, "icon": "coin", "tint": "#F6C445", "gold": 1.28},
 	{"id": "first", "ko": "첫 격돌", "desc": "라운드 첫 5초 공격력 x2.00", "cost": 285, "rank": 1, "icon": "flag", "tint": "#FF6A2A"},
-	{"id": "deal", "ko": "큰손", "desc": "무료 다시 돌리기 +2", "cost": 255, "rank": 1, "icon": "card", "tint": "#A56CF0"},
+	{"id": "deal", "ko": "큰손", "desc": "무료 다시 뽑기 +2", "cost": 255, "rank": 1, "icon": "card", "tint": "#A56CF0"},
 	{"id": "frost", "ko": "서리 부적", "desc": "명중 시 2초간 적 이동속도 x0.78", "cost": 293, "rank": 1, "icon": "snow", "tint": "#7BDCFF", "slow": 0.22, "slow_sec": 2.0},
 	# --- rank 2 : 중반부터 ---
 	{"id": "flame", "ko": "화염 부적", "desc": "모든 공격에 3초간 화상", "cost": 480, "rank": 2, "icon": "flame", "tint": "#FF6A2A"},
@@ -977,7 +1227,7 @@ const PASSIVES := [
 	{"id": "overkill", "ko": "마무리 일격", "desc": "체력 25% 미만인 적에게 피해 x1.90", "cost": 495, "rank": 2, "icon": "skull", "tint": "#A56CF0"},
 	{"id": "giantslay", "ko": "거인 사냥", "desc": "보스에게 피해 x1.70", "cost": 518, "rank": 2, "icon": "crown", "tint": "#FF7AC0"},
 	{"id": "surge", "ko": "과열", "desc": "처치 공속 x1.05~x1.45 · 0.05씩 누적 · 3초", "cost": 488, "rank": 2, "icon": "spark", "tint": "#FFD84D"},
-	{"id": "bulwark", "ko": "수정 방벽", "desc": "30% 확률로 크리스탈 피해 방어", "cost": 525, "rank": 2, "icon": "shield", "tint": "#5FE6FF"},
+	{"id": "bulwark", "ko": "굳건한 소울 스톤", "desc": "30% 확률로 소울 스톤 피해 방어", "cost": 525, "rank": 2, "icon": "shield", "tint": "#5FE6FF"},
 	# --- rank 3 : 후반부터 ---
 	{"id": "bolt", "ko": "연쇄 낙뢰", "desc": "명중 시 14% 확률로 연쇄 번개", "cost": 840, "rank": 3, "icon": "bolt", "tint": "#FFD84D"},
 	{"id": "chainmaster", "ko": "뇌격 증폭", "desc": "연쇄 횟수 +2", "cost": 870, "rank": 3, "icon": "chain", "tint": "#FFD84D"},
@@ -986,7 +1236,7 @@ const PASSIVES := [
 	{"id": "antibody", "ko": "상극 파훼", "desc": "저항 대상 피해 x0.50 > x0.80", "cost": 960, "rank": 3, "icon": "yin", "tint": "#5AD07A"},
 	{"id": "echo", "ko": "잔향", "desc": "중복 영웅 획득 시 합성 재료 1장 추가", "cost": 1050, "rank": 3, "icon": "echo", "tint": "#5FE6FF"},
 	{"id": "eye", "ko": "도박꾼의 눈", "desc": "18% 확률로 등급 +0.5성", "cost": 1020, "rank": 3, "icon": "dice", "tint": "#FF7AC0"},
-	{"id": "joker", "ko": "조커", "desc": "확정할 때 문 밖의 별 하나를 문 안으로", "cost": 1650, "rank": 3, "icon": "joker", "tint": "#FFF0B8"},
+	{"id": "joker", "ko": "조커", "desc": "고른 영웅 +1성 (최대 5성)", "cost": 1650, "rank": 3, "icon": "joker", "tint": "#FFF0B8"},
 ]
 
 static func passive_by_id(id: String) -> Dictionary:
@@ -1042,6 +1292,133 @@ const PASSIVE_WILDFIRE_R := 96.0
 const PASSIVE_WILDFIRE := 0.7
 ## 「큰손」 — 무료 다시 돌리기가 이만큼 는다.
 const PASSIVE_DEAL := 2
+
+# --------------------------------------------------------------------------- #
+# 별자리 — 레벨업 노드 (2026-10-17). **골드가 아니라 경험치로 얻는 성장이다.**
+# --------------------------------------------------------------------------- #
+## 사용자가 정한 것: 「골드로는 영웅 뽑기만 가능하고, 능력치는 몬스터를 잡은 경험치가
+## 가득 차면 노드 기반으로 자동으로 팝업 띄워서 능력치 선택하는 방식으로. 노드를 최대한
+## 풍부하게」. 노드는 여덟 별자리(TALENT_GROUPS)에 나뉘고, 레벨업마다 **열린 노드** 가운데
+## ARENA_TALENT_CHOICES 개를 내놓는다(core/talents.gd 의 Talents.roll_offer).
+##
+## 표의 뜻:
+##   group  별자리 id(TALENT_GROUPS)    tier  깊이(1 뿌리 · 2 · 3). 깊을수록 드물게 나온다
+##   req    먼저 가져야 하는 노드. 빈칸은 뿌리, 쉼표는 「전부」, `|` 는 「그중 하나」
+##   max    몇 번까지 고를 수 있는가(되풀이 노드는 2 이상)
+##   icon·tint  카드 문양·테두리색(Look.draw_passive_icon 의 도형 이름을 쓴다)
+## 그 밖의 키가 **효과**다 — 한 노드에 여럿을 적을 수 있다:
+##   lv_<능력치>  상점 능력치 단계를 그만큼 올린다(atk·rate·crit·critx·gold·mire·reroll, 상한은 UPGRADES 의 cap)
+##   grant_<패시브>  그 패시브(PASSIVES)를 켠다. 별자리로 얻은 패시브는 칸 제한 없이 전부 켜진다
+##   now_heal·now_gold·now_tier  고르는 순간 한 번 — 수정 회복(비율)·골드·출전 영웅 한 명 승급
+##   atk·rate·radius·gold·speed·xp·summon·crystal·ward·blast·blast_r·freeze·cooldown·curse·air·
+##   melee_range·slow_mult·burn_mult·stun_mult·push_mult·elem_<속성>·weapon_<무기>  **곱하는** 배수
+##   crit·critx·bounce·pierce·growth·heal_stage·uses_blast·uses_freeze·uses_ward·air_slow  **더하는** 값
+##   읽는 곳: Talents.effects() 가 모아 ArenaRun.mods 에 두고, CombatStats.hero(공격력·속성·무기·속도)
+##   와 ArenaRun.pas_mult/pas_add(패시브와 같은 열쇠) · ArenaSim(수정·기술·상태이상·대공)이 읽는다.
+## ★ desc 의 숫자는 그 노드 한 번의 몫이다. 되풀이 노드는 그만큼 겹친다.
+const TALENT_GROUPS := {
+	"fury":      {"ko": "분노",  "desc": "공격력",            "color": "#E2415A"},
+	"tempo":     {"ko": "질풍",  "desc": "공격속도 · 걸음",   "color": "#F6C445"},
+	"precision": {"ko": "정밀",  "desc": "치명타",            "color": "#5AD07A"},
+	"element":   {"ko": "원소",  "desc": "속성 · 상태이상",   "color": "#A56CF0"},
+	"arms":      {"ko": "병기",  "desc": "무기 · 탄 · 대공",  "color": "#FF9A3C"},
+	"guardian":  {"ko": "수호",  "desc": "소울 스톤",         "color": "#5FE6FF"},
+	"starlight": {"ko": "별빛",  "desc": "공용 기술",         "color": "#EDC879"},
+	"fortune":   {"ko": "운명",  "desc": "골드 · 보석상자 · 경험", "color": "#FF7AC0"},
+}
+const TALENT_GROUP_ORDER := ["fury", "tempo", "precision", "element", "arms", "guardian", "starlight", "fortune"]
+const TALENTS := [
+	# --- 분노: 공격력 ---
+	{"id": "fury_edge", "ko": "날선 손끝", "desc": "모든 영웅 공격력 x1.15", "group": "fury", "tier": 1, "req": "", "max": 3, "icon": "spike", "tint": "#E2415A", "lv_atk": 1},
+	{"id": "fury_heavy", "ko": "무거운 촉", "desc": "공격력 x1.30, 공격속도 x0.90", "group": "fury", "tier": 1, "req": "fury_edge", "max": 1, "icon": "spike", "tint": "#E2415A", "grant_heavytip": 1},
+	{"id": "fury_first", "ko": "첫 격돌", "desc": "웨이브 시작 5초 동안 공격력 x2.00", "group": "fury", "tier": 1, "req": "fury_edge", "max": 1, "icon": "flag", "tint": "#FF6A2A", "grant_first": 1},
+	{"id": "fury_blaze", "ko": "불타는 손끝", "desc": "모든 영웅 공격력 x1.32", "group": "fury", "tier": 2, "req": "fury_edge", "max": 2, "icon": "spike", "tint": "#E2415A", "lv_atk": 2},
+	{"id": "fury_over", "ko": "마무리 일격", "desc": "체력 25% 미만인 적에게 피해 x1.90", "group": "fury", "tier": 2, "req": "fury_blaze", "max": 1, "icon": "skull", "tint": "#A56CF0", "grant_overkill": 1},
+	{"id": "fury_giant", "ko": "거인 사냥", "desc": "보스에게 피해 x1.70", "group": "fury", "tier": 2, "req": "fury_blaze", "max": 1, "icon": "crown", "tint": "#FF7AC0", "grant_giantslay": 1},
+	{"id": "fury_wrath", "ko": "분노의 별", "desc": "모든 영웅 공격력 x1.25", "group": "fury", "tier": 3, "req": "fury_over|fury_giant", "max": 1, "icon": "rage", "tint": "#E2415A", "atk": 1.25},
+	# --- 질풍: 공격속도 · 걸음 ---
+	{"id": "tempo_quick", "ko": "빠른 손", "desc": "모든 영웅 공격속도 x1.05", "group": "tempo", "tier": 1, "req": "", "max": 4, "icon": "gear", "tint": "#F6C445", "lv_rate": 1},
+	{"id": "tempo_repeat", "ko": "연발 장치", "desc": "모든 영웅 공격속도 x1.20", "group": "tempo", "tier": 1, "req": "tempo_quick", "max": 1, "icon": "gear", "tint": "#F6C445", "grant_repeater": 1},
+	{"id": "tempo_feet", "ko": "신속한 발걸음", "desc": "영웅 이동속도 x1.15", "group": "tempo", "tier": 1, "req": "", "max": 2, "icon": "arrow", "tint": "#F6C445", "speed": 1.15},
+	{"id": "tempo_rush", "ko": "거센 손", "desc": "모든 영웅 공격속도 x1.10", "group": "tempo", "tier": 2, "req": "tempo_quick", "max": 2, "icon": "gear", "tint": "#F6C445", "lv_rate": 2},
+	{"id": "tempo_rage", "ko": "광폭화", "desc": "전투 시작 25초 후 공격속도 x1.55", "group": "tempo", "tier": 2, "req": "tempo_rush", "max": 1, "icon": "rage", "tint": "#E2415A", "grant_rage": 1},
+	{"id": "tempo_surge", "ko": "과열", "desc": "처치마다 공격속도 x1.05 누적 (최대 x1.45 · 3초)", "group": "tempo", "tier": 2, "req": "tempo_rush", "max": 1, "icon": "spark", "tint": "#FFD84D", "grant_surge": 1},
+	{"id": "tempo_storm", "ko": "폭풍의 별", "desc": "모든 영웅 공격속도 x1.12", "group": "tempo", "tier": 3, "req": "tempo_rage|tempo_surge", "max": 1, "icon": "spark", "tint": "#F6C445", "rate": 1.12},
+	# --- 정밀: 치명타 ---
+	{"id": "prec_aim", "ko": "날카로운 눈", "desc": "치명타 확률 x0.04 추가", "group": "precision", "tier": 1, "req": "", "max": 4, "icon": "eye", "tint": "#5AD07A", "lv_crit": 1},
+	{"id": "prec_scope", "ko": "조준경", "desc": "치명타 확률 x0.10 추가", "group": "precision", "tier": 1, "req": "prec_aim", "max": 1, "icon": "eye", "tint": "#4AA3FF", "grant_scope": 1},
+	{"id": "prec_edge", "ko": "예리한 촉", "desc": "치명타 배율 x0.50 추가", "group": "precision", "tier": 1, "req": "prec_aim", "max": 1, "icon": "blade", "tint": "#5AD07A", "grant_keenedge": 1},
+	{"id": "prec_deadly", "ko": "치명 배율", "desc": "치명타 배율 x0.40 추가", "group": "precision", "tier": 2, "req": "prec_aim", "max": 3, "icon": "blade", "tint": "#5AD07A", "lv_critx": 2},
+	{"id": "prec_heads", "ko": "처형인의 눈", "desc": "치명타 배율 x1.00 추가", "group": "precision", "tier": 2, "req": "prec_deadly", "max": 1, "icon": "blade", "tint": "#F6C445", "grant_headsman": 1},
+	{"id": "prec_hawk", "ko": "매의 별", "desc": "치명타 확률 x0.06 · 배율 x0.60 추가", "group": "precision", "tier": 3, "req": "prec_heads", "max": 1, "icon": "eye", "tint": "#5AD07A", "crit": 0.06, "critx": 0.6},
+	# --- 원소: 속성 · 상태이상 ---
+	{"id": "elem_fire", "ko": "불의 별", "desc": "불 속성 영웅 피해 x1.20", "group": "element", "tier": 1, "req": "", "max": 2, "icon": "flame", "tint": "#FF6A2A", "elem_fire": 1.2},
+	{"id": "elem_ice", "ko": "얼음의 별", "desc": "얼음 속성 영웅 피해 x1.20", "group": "element", "tier": 1, "req": "", "max": 2, "icon": "snow", "tint": "#7BDCFF", "elem_ice": 1.2},
+	{"id": "elem_elec", "ko": "번개의 별", "desc": "전기 속성 영웅 피해 x1.20", "group": "element", "tier": 1, "req": "", "max": 2, "icon": "bolt", "tint": "#FFD84D", "elem_elec": 1.2},
+	{"id": "elem_water", "ko": "물의 별", "desc": "물 속성 영웅 피해 x1.20", "group": "element", "tier": 1, "req": "", "max": 2, "icon": "arc", "tint": "#4AA3FF", "elem_water": 1.2},
+	{"id": "elem_none", "ko": "무색의 별", "desc": "무상성 영웅 피해 x1.20", "group": "element", "tier": 1, "req": "", "max": 2, "icon": "rune", "tint": "#B9CAD3", "elem_none": 1.2},
+	{"id": "st_frost", "ko": "서리 부적", "desc": "명중 시 2초간 적 이동속도 x0.78", "group": "element", "tier": 1, "req": "", "max": 1, "icon": "snow", "tint": "#7BDCFF", "grant_frost": 1},
+	{"id": "st_flame", "ko": "화염 부적", "desc": "모든 공격에 3초간 화상", "group": "element", "tier": 2, "req": "", "max": 1, "icon": "flame", "tint": "#FF6A2A", "grant_flame": 1},
+	{"id": "st_deepfrost", "ko": "깊은 서리", "desc": "둔화 세기·시간 x1.30", "group": "element", "tier": 2, "req": "elem_ice|st_frost", "max": 1, "icon": "snow", "tint": "#7BDCFF", "slow_mult": 1.3},
+	{"id": "st_inferno", "ko": "맹렬한 화상", "desc": "화상 피해 x1.40", "group": "element", "tier": 2, "req": "elem_fire|st_flame", "max": 1, "icon": "flame", "tint": "#FF6A2A", "burn_mult": 1.4},
+	{"id": "st_shock", "ko": "전격", "desc": "마비 확률 x1.40", "group": "element", "tier": 2, "req": "elem_elec", "max": 1, "icon": "bolt", "tint": "#FFD84D", "stun_mult": 1.4},
+	{"id": "st_tide", "ko": "밀물", "desc": "물 특효의 밀어내기 x1.50", "group": "element", "tier": 2, "req": "elem_water", "max": 1, "icon": "arc", "tint": "#4AA3FF", "push_mult": 1.5},
+	{"id": "st_bolt", "ko": "연쇄 낙뢰", "desc": "명중 시 14% 확률로 연쇄 번개", "group": "element", "tier": 2, "req": "elem_elec|st_shock", "max": 1, "icon": "bolt", "tint": "#FFD84D", "grant_bolt": 1},
+	{"id": "st_chain", "ko": "뇌격 증폭", "desc": "연쇄 횟수 +2", "group": "element", "tier": 3, "req": "st_bolt", "max": 1, "icon": "chain", "tint": "#FFD84D", "grant_chainmaster": 1},
+	{"id": "st_wild", "ko": "들불", "desc": "화상 상태의 적 처치 시 주변에 화상 전파", "group": "element", "tier": 3, "req": "st_inferno", "max": 1, "icon": "wildfire", "tint": "#FF6A2A", "grant_wildfire": 1},
+	{"id": "st_reson", "ko": "속성 공명", "desc": "동일 속성 2명 이상: 해당 속성 피해 x1.25", "group": "element", "tier": 2, "req": "elem_fire|elem_ice|elem_elec|elem_water|elem_none", "max": 1, "icon": "rune", "tint": "#A56CF0", "grant_resonance": 1},
+	{"id": "st_anti", "ko": "상극 파훼", "desc": "저항 대상 피해 x0.50 > x0.80", "group": "element", "tier": 3, "req": "st_reson", "max": 1, "icon": "yin", "tint": "#5AD07A", "grant_antibody": 1},
+	# --- 병기: 무기 · 탄 · 대공 ---
+	{"id": "arms_sword", "ko": "검술", "desc": "검 영웅 피해 x1.20", "group": "arms", "tier": 1, "req": "", "max": 2, "icon": "blade", "tint": "#FF9A3C", "weapon_sword": 1.2},
+	{"id": "arms_gun", "ko": "사격술", "desc": "총 영웅 피해 x1.15", "group": "arms", "tier": 1, "req": "", "max": 2, "icon": "burst", "tint": "#FF9A3C", "weapon_gun": 1.15},
+	{"id": "arms_bow", "ko": "궁술", "desc": "활 영웅 피해 x1.15", "group": "arms", "tier": 1, "req": "", "max": 2, "icon": "arrow", "tint": "#FF9A3C", "weapon_bow": 1.15},
+	{"id": "arms_whip", "ko": "채찍술", "desc": "채찍 영웅 피해 x1.15", "group": "arms", "tier": 1, "req": "", "max": 2, "icon": "chain", "tint": "#FF9A3C", "weapon_whip": 1.15},
+	{"id": "arms_deck", "ko": "비술", "desc": "광역(덱) 영웅 피해 x1.15", "group": "arms", "tier": 1, "req": "", "max": 2, "icon": "card", "tint": "#FF9A3C", "weapon_deck": 1.15},
+	{"id": "arms_reach", "ko": "검기", "desc": "검 사거리 x1.25", "group": "arms", "tier": 2, "req": "arms_sword", "max": 2, "icon": "blade", "tint": "#FF9A3C", "melee_range": 1.25},
+	{"id": "arms_pierce", "ko": "관통 촉", "desc": "모든 투사체 관통 +1", "group": "arms", "tier": 2, "req": "arms_gun|arms_bow", "max": 1, "icon": "arrow", "tint": "#5AD07A", "grant_pierce": 1},
+	{"id": "arms_split", "ko": "분열 탄두", "desc": "모든 투사체 명중 시 소형 폭발", "group": "arms", "tier": 2, "req": "arms_gun|arms_bow|arms_whip", "max": 1, "icon": "burst", "tint": "#FF9A3C", "grant_split": 1},
+	{"id": "arms_mortar", "ko": "공성 조준", "desc": "광역 반경 x1.50, 공격력 x1.10", "group": "arms", "tier": 2, "req": "arms_deck", "max": 1, "icon": "ring", "tint": "#FF9A3C", "grant_mortar": 1},
+	{"id": "arms_zone", "ko": "넓은 장판", "desc": "장판·광역 반경 x1.20", "group": "arms", "tier": 1, "req": "arms_deck", "max": 2, "icon": "ring", "tint": "#FF9A3C", "radius": 1.2},
+	{"id": "arms_bounce", "ko": "튕기는 별", "desc": "도탄 횟수 +1", "group": "arms", "tier": 2, "req": "arms_bow|arms_whip", "max": 2, "icon": "echo", "tint": "#5FE6FF", "bounce": 1},
+	{"id": "arms_air", "ko": "대공 사격", "desc": "총·활의 공중 몬스터 피해 x1.35", "group": "arms", "tier": 1, "req": "arms_gun|arms_bow", "max": 2, "icon": "arrow", "tint": "#5FE6FF", "air": 1.35},
+	{"id": "arms_down", "ko": "격추", "desc": "공중 몬스터 명중 시 1.5초간 이동속도 x0.70", "group": "arms", "tier": 2, "req": "arms_air", "max": 1, "icon": "arrow", "tint": "#5FE6FF", "air_slow": 0.3},
+	# --- 수호: 생명 수정 ---
+	{"id": "guard_hp", "ko": "단단한 소울 스톤", "desc": "소울 스톤 최대 체력 x1.15", "group": "guardian", "tier": 1, "req": "", "max": 3, "icon": "shield", "tint": "#5FE6FF", "crystal": 1.15},
+	{"id": "guard_mend", "ko": "되살아나는 소울 스톤", "desc": "웨이브 방어 성공 때 소울 스톤 회복 +2%", "group": "guardian", "tier": 1, "req": "", "max": 2, "icon": "ring", "tint": "#5FE6FF", "heal_stage": 0.02},
+	{"id": "guard_mire", "ko": "진창", "desc": "몬스터 이동속도 x0.95", "group": "guardian", "tier": 1, "req": "", "max": 5, "icon": "arc", "tint": "#5FE6FF", "lv_mire": 1},
+	{"id": "guard_bul", "ko": "굳건한 소울 스톤", "desc": "30% 확률로 소울 스톤 피해 방어", "group": "guardian", "tier": 2, "req": "guard_hp", "max": 1, "icon": "shield", "tint": "#5FE6FF", "grant_bulwark": 1},
+	{"id": "guard_calm", "ko": "주술 저항", "desc": "주술사 저주 시간 x0.50", "group": "guardian", "tier": 2, "req": "", "max": 1, "icon": "yin", "tint": "#A56CF0", "curse": 0.5},
+	{"id": "guard_now", "ko": "응급 처치", "desc": "지금 소울 스톤 체력 30% 회복", "group": "guardian", "tier": 1, "req": "", "max": 3, "icon": "shield", "tint": "#5AD07A", "now_heal": 0.3},
+	{"id": "guard_wall", "ko": "성벽의 별", "desc": "소울 스톤 최대 체력 x1.25 · 지금 25% 회복", "group": "guardian", "tier": 3, "req": "guard_bul", "max": 1, "icon": "shield", "tint": "#5FE6FF", "crystal": 1.25, "now_heal": 0.25},
+	# --- 별빛: 공용 기술 ---
+	{"id": "star_meteor", "ko": "큰 유성", "desc": "별빛 폭발 피해 x1.50", "group": "starlight", "tier": 1, "req": "", "max": 2, "icon": "burst", "tint": "#EDC879", "blast": 1.5},
+	{"id": "star_wide", "ko": "넓은 유성", "desc": "별빛 폭발 반경 x1.30", "group": "starlight", "tier": 2, "req": "star_meteor", "max": 1, "icon": "ring", "tint": "#EDC879", "blast_r": 1.3},
+	{"id": "star_frost", "ko": "긴 서리", "desc": "서리 파동 지속 x1.40", "group": "starlight", "tier": 1, "req": "", "max": 2, "icon": "snow", "tint": "#AEEAFF", "freeze": 1.4},
+	{"id": "star_ward", "ko": "두꺼운 방벽", "desc": "소울 방벽 흡수량 x1.50", "group": "starlight", "tier": 1, "req": "", "max": 2, "icon": "shield", "tint": "#6CE8FA", "ward": 1.5},
+	{"id": "star_quick", "ko": "빠른 별빛", "desc": "공용 기술 쿨타임 x0.80", "group": "starlight", "tier": 2, "req": "", "max": 2, "icon": "gear", "tint": "#EDC879", "cooldown": 0.8},
+	{"id": "star_more_blast", "ko": "유성 하나 더", "desc": "별빛 폭발 사용 횟수 +1", "group": "starlight", "tier": 1, "req": "", "max": 2, "icon": "burst", "tint": "#EDC879", "uses_blast": 1},
+	{"id": "star_more_freeze", "ko": "서리 하나 더", "desc": "서리 파동 사용 횟수 +1", "group": "starlight", "tier": 1, "req": "", "max": 2, "icon": "snow", "tint": "#AEEAFF", "uses_freeze": 1},
+	{"id": "star_more_ward", "ko": "방벽 하나 더", "desc": "소울 방벽 사용 횟수 +1", "group": "starlight", "tier": 1, "req": "", "max": 2, "icon": "shield", "tint": "#6CE8FA", "uses_ward": 1},
+	{"id": "star_bless", "ko": "별빛의 축복", "desc": "공용 기술 셋의 사용 횟수 +1", "group": "starlight", "tier": 3, "req": "star_quick", "max": 1, "icon": "rune", "tint": "#EDC879", "uses_blast": 1, "uses_freeze": 1, "uses_ward": 1},
+	# --- 운명: 골드 · 의식 · 경험 ---
+	{"id": "fate_gold", "ko": "금빛 손", "desc": "처치 골드 x1.12", "group": "fortune", "tier": 1, "req": "", "max": 3, "icon": "coin", "tint": "#F6C445", "lv_gold": 1},
+	{"id": "fate_midas", "ko": "황금손", "desc": "처치 골드 x1.28", "group": "fortune", "tier": 2, "req": "fate_gold", "max": 1, "icon": "coin", "tint": "#F6C445", "grant_midas": 1},
+	{"id": "fate_insight", "ko": "통찰", "desc": "경험치 획득 x1.20", "group": "fortune", "tier": 1, "req": "", "max": 2, "icon": "eye", "tint": "#FF7AC0", "xp": 1.2},
+	{"id": "fate_bond", "ko": "인연", "desc": "보석상자 값 x0.85", "group": "fortune", "tier": 1, "req": "", "max": 2, "icon": "card", "tint": "#FF7AC0", "summon": 0.85},
+	{"id": "fate_growth", "ko": "공명하는 별", "desc": "중복 영웅의 강화 포인트 +1", "group": "fortune", "tier": 2, "req": "fate_bond", "max": 2, "icon": "echo", "tint": "#FF7AC0", "growth": 1},
+	{"id": "fate_reroll", "ko": "한 번 더", "desc": "보석상자 무료 다시 뽑기 +1", "group": "fortune", "tier": 1, "req": "", "max": 2, "icon": "dice", "tint": "#FF7AC0", "lv_reroll": 1},
+	{"id": "fate_deal", "ko": "큰손", "desc": "무료 다시 뽑기 +2", "group": "fortune", "tier": 2, "req": "fate_reroll", "max": 1, "icon": "card", "tint": "#A56CF0", "grant_deal": 1},
+	{"id": "fate_eye", "ko": "도박꾼의 눈", "desc": "18% 확률로 등급 +0.5성", "group": "fortune", "tier": 2, "req": "fate_reroll", "max": 1, "icon": "dice", "tint": "#FF7AC0", "grant_eye": 1},
+	{"id": "fate_joker", "ko": "조커", "desc": "고른 영웅 +1성 (최대 5성)", "group": "fortune", "tier": 3, "req": "fate_eye|fate_deal", "max": 1, "icon": "joker", "tint": "#FFF0B8", "grant_joker": 1},
+	{"id": "fate_treasure", "ko": "보물", "desc": "지금 골드 +120", "group": "fortune", "tier": 1, "req": "", "max": 3, "icon": "coin", "tint": "#F6C445", "now_gold": 120},
+	{"id": "fate_ascend", "ko": "승급", "desc": "가장 낮은 등급의 출전 영웅 +0.5성", "group": "fortune", "tier": 3, "req": "", "max": 2, "icon": "crown", "tint": "#FF7AC0", "now_tier": 1},
+]
+
+static func talent_by_id(id: String) -> Dictionary:
+	for t in TALENTS:
+		if t["id"] == id:
+			return t
+	return {}
 
 const CRIT_BASE_MULT := 2.0
 

@@ -3,7 +3,9 @@ render_mode diffuse_burley;
 // Water, lava, sea ice or bog around an arena battlefield: one flat ring whose vertices
 // carry the depth of the ground beneath them (UV2.x, in world units), so the shore, the
 // shallows and the foam follow the generated land instead of a fixed circle.
-// Uniform driven like the other field shaders (game/3d/arena_biome.gd).
+// Uniform driven like the other field shaders (game/3d/arena_biome.gd). Calm by
+// default (2026-10-18): slow low ripples, a faint glitter and little shore foam, so
+// water is a quiet surface around the stage instead of a caustic carpet.
 uniform sampler2D noise_tex : repeat_enable, filter_linear_mipmap;
 uniform vec3 deep_color : source_color = vec3(0.02, 0.10, 0.16);
 uniform vec3 shallow_color : source_color = vec3(0.08, 0.34, 0.38);
@@ -13,15 +15,15 @@ uniform vec3 glow_color : source_color = vec3(0.0, 0.0, 0.0);
 uniform vec3 glint_color : source_color = vec3(0.75, 0.92, 1.0);
 uniform vec3 haze_color : source_color = vec3(0.04, 0.09, 0.13);
 // ripple scale, ripple speed, normal tilt, depth at which the water is fully "deep"
-uniform vec4 wave = vec4(0.16, 0.02, 0.5, 1.6);
+uniform vec4 wave = vec4(0.10, 0.012, 0.3, 1.6);
 // foam width at the shore, foam breakup, streak amount (current lines), streak scale
-uniform vec4 foam = vec4(0.22, 0.6, 0.0, 0.3);
+uniform vec4 foam = vec4(0.14, 0.6, 0.0, 0.3);
 // coverage (0 = none), scale, gap width, drift speed  (ice floes, lava crust, lily mats)
 uniform vec4 crust = vec4(0.0, 0.12, 0.10, 0.0);
 // arms, tightness, turn speed, strength  (maelstrom; 0 arms = off)
 uniform vec4 swirl = vec4(0.0, 2.2, 0.12, 0.0);
 // amount, sharpness, glow in gaps between crust, pulse
-uniform vec4 shine = vec4(0.5, 120.0, 0.0, 0.0);
+uniform vec4 shine = vec4(0.2, 120.0, 0.0, 0.0);
 // start distance from the centre, end distance, strength, roughness
 uniform vec4 haze = vec4(14.0, 30.0, 0.7, 0.34);
 uniform vec3 half_dir = vec3(0.20, 0.956, 0.217);
@@ -45,7 +47,7 @@ void fragment() {
 	float gust = smoothstep(0.40, 0.66, texture(noise_tex, p * 0.019 + vec2(t * 0.25, t * 0.1)).r);
 	float shallow = 1.0 - smoothstep(0.0, wave.w, depth + swell * 0.25);
 	vec3 albedo = mix(deep_color, shallow_color, shallow);
-	albedo *= 0.86 + swell * 0.18 + gust * 0.14;
+	albedo *= 0.93 + swell * 0.08 + gust * 0.06;
 	float whitewater = 0.0;
 	if (swirl.x > 0.0) {
 		// Spiral arms of foam winding into the centre: sample the ridge field in
@@ -84,7 +86,7 @@ void fragment() {
 	float far = smoothstep(haze.x, haze.y, length(world_pos.xz)) * haze.z;
 	ALBEDO = mix(albedo, haze_color, far);
 	ROUGHNESS = mix(haze.w, 0.9, max(plates, whitewater));
-	SPECULAR = 0.3;
+	SPECULAR = 0.2;
 	NORMAL = normalize(mat3(VIEW_MATRIX) * mix(facet, vec3(0.0, 1.0, 0.0), plates));
 	EMISSION = emission * (1.0 - far * 0.8);
 }

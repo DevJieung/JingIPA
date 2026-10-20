@@ -16,16 +16,16 @@ func _ready() -> void:
 	env.environment.background_color=Color(0,0,0,0)
 	env.environment.ambient_light_source=Environment.AMBIENT_SOURCE_COLOR
 	env.environment.ambient_light_color=Color("#c7d8e9")
-	env.environment.ambient_light_energy=0.70
+	env.environment.ambient_light_energy=0.45
 	stage.add_child(env)
 	var key := DirectionalLight3D.new()
 	key.rotation_degrees=Vector3(-35,145,0)
-	key.light_energy=1.50
+	key.light_energy=1.05
 	key.light_color=Color("#fff0d9")
 	stage.add_child(key)
 	var fill := DirectionalLight3D.new()
 	fill.rotation_degrees=Vector3(-20,-35,0)
-	fill.light_energy=0.45
+	fill.light_energy=0.35
 	fill.light_color=Color("#a5cdff")
 	stage.add_child(fill)
 	var camera := Camera3D.new()
@@ -104,6 +104,11 @@ func _corners(node: Node, points: Array[Vector3]) -> void:
 
 func _render_monster(stage: Node3D, viewport: SubViewport, camera: Camera3D, data: Dictionary) -> void:
 	var model := StellarModels.monster(data)
+	# Portraits frame the creature on the ground: a flyer's ride height and contact shadow
+	# are battle presentation (NativeMonsterModel.FLIGHT), not part of its portrait.
+	model.set_meta("_stellar_grounded", true)
+	var shadow := model.get_node_or_null("StellarContact")
+	if shadow != null: shadow.free()
 	stage.add_child(model)
 	camera.position=Vector3(1.7,1.65,-3.2)
 	camera.look_at(Vector3(0,0.97,0),Vector3.UP)

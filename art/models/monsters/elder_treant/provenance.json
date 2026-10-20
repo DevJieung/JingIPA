@@ -27,8 +27,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/elder_treant/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/elder_treant/game.blend",
-  "glb_sha256": "57190e9e8d9cb6deb4ab646aa2e166800224c6bd7a38836673c7dc929a4ec808",
-  "glb_bytes": 605784,
+  "glb_sha256": "0f305889e389907b15a8d257c9d08572bfbff24b6aeaa10445dff7cd7c5d118b",
+  "glb_bytes": 633292,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -186,5 +186,245 @@
     ],
     "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/monsters/elder_treant/elder_treant.glb",
     "editable_lod_source": "build/character-3d/monster-source/elder_treant/game-lod.blend"
+  },
+  "albedo_grade": {
+    "date": "2026-10-18",
+    "request": "user 2026-10-18: the characters read as a cheap AI-made 3D game; casual overhaul plan \"Lantern Stage\" WP-A \u2014 painted albedos that carry their own light, geometry untouched",
+    "tool": "tools/3d/optimize_native_lod.py --retexture + tools/3d/grade_native_albedo.py; records by tools/3d/publish_native_lod.py",
+    "method": "game-lod.blend opened as the bake target (geometry, UVs, weights, rig, clips, sockets and height untouched), game.blend surfaces appended as bake sources (visible faces first, all sheets as fallback), Cycles EMIT colour bake, AO bake of the reduced mesh alone and a height pass, then the painted grade inside the chart mask: de-speckle, chart-flatten (charts >= 48 texels), light posterise, levels, OKLab chroma with a skin cap, painted light from AO + height, cool shade, edge light, face paint-back; nearest fill, box downsample; clip bytes grafted from the shipped GLB",
+    "grade_version": "2026-10-18.6",
+    "parameters": {
+      "median": 3,
+      "bilateral_radius": 3,
+      "bilateral_sigma_s": 1.6,
+      "bilateral_sigma_r": 0.1,
+      "bilateral_passes": 2,
+      "seam_lambda": 0.3,
+      "seam_gain_min": 0.7,
+      "seam_gain_max": 1.4,
+      "seam_floor": 0.02,
+      "seam_chroma_sigma": 0.08,
+      "seam_small_chart": 96.0,
+      "seam_ratio_sigma": 0.6,
+      "flatten_min_width": 48,
+      "flatten_blur": 24,
+      "flatten_blend": 0.4,
+      "posterize_levels": 6,
+      "posterize_blend": 0.3,
+      "levels_lift": 0.06,
+      "levels_gain": 0.88,
+      "levels_gamma": 0.9,
+      "p10_floor": 0.17,
+      "p50_target": 0.42,
+      "p50_pull": 0.5,
+      "p50_gain_max": 1.5,
+      "dark_additive_lo": 0.04,
+      "dark_additive_hi": 0.16,
+      "lift_saturation_damp": 0.5,
+      "knee_start": 0.78,
+      "knee_slope": 0.45,
+      "knee_saturated_drop": 0.1,
+      "chroma_hero": 1.2,
+      "chroma_monster": 1.15,
+      "chroma_skin": 1.0,
+      "skin_s_cap": 0.5,
+      "s_cap": 0.86,
+      "ao_floor": 0.55,
+      "ao_gamma": 0.8,
+      "ao_smooth": 1.5,
+      "height_low": 0.82,
+      "height_high": 1.12,
+      "height_lo": 0.05,
+      "height_hi": 0.7,
+      "cool_shade": [
+        0.85,
+        0.9,
+        1.12
+      ],
+      "cool_amount": 0.5,
+      "edge_light": 0.06,
+      "edge_lo": 0.92,
+      "skin_hue": [
+        8.0,
+        38.0
+      ],
+      "skin_s": [
+        0.15,
+        0.6
+      ],
+      "skin_v": [
+        0.35,
+        0.98
+      ],
+      "skin_chart_fraction": 0.6,
+      "skin_chart_mixed": 0.3,
+      "skin_chart_s_median_max": 0.55,
+      "skin_chart_s_p90_max": 0.72,
+      "face_contrast": 1.3,
+      "face_dark_fraction": 0.04,
+      "face_dark_lstar": 15.0,
+      "face_blur": 4.0,
+      "face_mark_desaturate": 0.8,
+      "face_mark_lum": 0.35
+    },
+    "override": {},
+    "grade_info": {
+      "charts": 824,
+      "skin_charts_excluded": 8,
+      "seams": {
+        "pairs": 947,
+        "samples": 6367,
+        "gain_min": 0.851,
+        "gain_max": 1.193,
+        "gain_std": 0.039
+      },
+      "flattened_charts": 101,
+      "levels": {
+        "lum_mean_after_remap": 0.3175,
+        "p50_gain": 1.232,
+        "p10_before": 0.1563,
+        "p10_lift": 0.0137,
+        "remap": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.156,
+            0.17
+          ],
+          [
+            0.287,
+            0.353
+          ],
+          [
+            0.418,
+            0.418
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ]
+      },
+      "skin_texels": 543,
+      "ao_mean": 0.6858,
+      "ao_p10": 0.2687
+    },
+    "ao": {
+      "distance_m": 0.354,
+      "samples": 64,
+      "margin": 8
+    },
+    "head_start": 0.675,
+    "clip_donor": "art/models/monsters/elder_treant/elder_treant.glb",
+    "before": {
+      "glb_sha256": "57190e9e8d9cb6deb4ab646aa2e166800224c6bd7a38836673c7dc929a4ec808",
+      "glb_bytes": 605784,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "atlas_stats": {
+        "used_texels": 62023,
+        "charts": 779,
+        "mean_lstar": 25.21,
+        "lum_mean": 0.2318,
+        "lum_p10": 0.1064,
+        "lum_p50": 0.2266,
+        "lum_p90": 0.3616,
+        "lstar_p10": 10.17,
+        "near_black_fraction": 0.2659,
+        "sat_mean": 0.6776,
+        "sat_p90": 0.7647,
+        "micro_contrast_255": 5.11,
+        "laplacian_mean": 0.0188,
+        "dominant_hues": [
+          {
+            "hue_deg": 82.5,
+            "mass": 0.244
+          },
+          {
+            "hue_deg": 22.5,
+            "mass": 0.153
+          }
+        ],
+        "dominant_hue_count": 2,
+        "skin": {
+          "texels": 119,
+          "mean_lstar": 55.81,
+          "sat_mean": 0.5298,
+          "sat_p90": 0.6179,
+          "sat_max": 0.8191
+        }
+      }
+    },
+    "after": {
+      "glb_sha256": "0f305889e389907b15a8d257c9d08572bfbff24b6aeaa10445dff7cd7c5d118b",
+      "glb_bytes": 633292,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      },
+      "atlas_stats": {
+        "used_texels": 62023,
+        "charts": 779,
+        "mean_lstar": 34.11,
+        "lum_mean": 0.3058,
+        "lum_p10": 0.1527,
+        "lum_p50": 0.3085,
+        "lum_p90": 0.4213,
+        "lstar_p10": 16.71,
+        "near_black_fraction": 0.0966,
+        "sat_mean": 0.7821,
+        "sat_p90": 0.8689,
+        "micro_contrast_255": 4.28,
+        "laplacian_mean": 0.0118,
+        "dominant_hues": [
+          {
+            "hue_deg": 82.5,
+            "mass": 0.198
+          },
+          {
+            "hue_deg": 37.5,
+            "mass": 0.136
+          }
+        ],
+        "dominant_hue_count": 2,
+        "skin": {
+          "texels": 116,
+          "mean_lstar": 55.35,
+          "sat_mean": 0.4898,
+          "sat_p90": 0.5,
+          "sat_max": 0.5905
+        }
+      }
+    },
+    "geometry_sha256": "b38b50e08b7de396203340a46fc5e5d4933ba8084dcfd38e2a9951a7c38260a1",
+    "geometry_bytes_preserved": true,
+    "bake": {
+      "size": 1024,
+      "covered_texels": 264312,
+      "missed_texels": 655,
+      "interior_fallback_texels": 1891,
+      "miss_fraction": 0.0024781319047186656
+    },
+    "visible_faces": {
+      "removed_faces": 33318,
+      "kept_faces": 11682
+    },
+    "removed_extracted_textures": [
+      "elder_treant_elder_treant_lod_albedo.png"
+    ],
+    "editable_lod_source": "build/character-3d/monster-source/elder_treant/game-lod.blend",
+    "evidence": "build/character-3d/lod-2026-10-18/elder_treant"
   }
 }

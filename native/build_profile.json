@@ -1,0 +1,11 @@
+{
+	"enabled_classes": [
+		"RefCounted",
+		"AStarGrid2D",
+		"Animation",
+		"Skeleton3D",
+		"Engine",
+		"OS",
+		"SceneTree"
+	]
+}

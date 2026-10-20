@@ -1,0 +1,13 @@
+; stellar_native — C++ kernels behind ArenaGeometry, ArenaSim navigation and the monster
+; pose sampler (docs/PERF_NATIVE.md). Every caller keeps its GDScript path: a platform
+; without a library here (iOS, desktop Steam builds) runs the same game, only slower.
+; Binaries are built by tools/native/build.sh and are not committed.
+[configuration]
+entry_symbol = "stellar_native_init"
+compatibility_minimum = "4.7"
+reloadable = false
+
+[libraries]
+linux.x86_64 = "res://addons/stellar_native/bin/libstellar_native.linux.template_release.x86_64.so"
+linux.arm64 = "res://addons/stellar_native/bin/libstellar_native.linux.template_release.arm64.so"
+android.arm64 = "res://addons/stellar_native/bin/libstellar_native.android.template_release.arm64.so"

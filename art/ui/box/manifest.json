@@ -1,0 +1,113 @@
+{
+ "generator": "Blender 4.0.2 EEVEE, procedural models (tools/box/box_art.py), post: tools/box/build_box_art.py",
+ "why_not_image_gen": "2026-10-19: another project held 11.3 GB of the GPU; task rules say use a 3D render or code drawing instead",
+ "render_res": 1024,
+ "scale": 0.8,
+ "samples": 64,
+ "angles": [
+  0,
+  6,
+  18,
+  40,
+  70,
+  100,
+  118
+ ],
+ "tiers": {
+  "1": {
+   "files": [
+    "art/ui/box/tier1/body.png",
+    "art/ui/box/tier1/closed.png",
+    "art/ui/box/tier1/lid_000.png",
+    "art/ui/box/tier1/lid_006.png",
+    "art/ui/box/tier1/lid_018.png",
+    "art/ui/box/tier1/lid_040.png",
+    "art/ui/box/tier1/lid_070.png",
+    "art/ui/box/tier1/lid_100.png",
+    "art/ui/box/tier1/lid_118.png",
+    "art/ui/box/tier1/seam.png"
+   ],
+   "light": [
+    0.4793,
+    0.8714,
+    0.3916
+   ]
+  },
+  "2": {
+   "files": [
+    "art/ui/box/tier2/body.png",
+    "art/ui/box/tier2/closed.png",
+    "art/ui/box/tier2/lid_000.png",
+    "art/ui/box/tier2/lid_006.png",
+    "art/ui/box/tier2/lid_018.png",
+    "art/ui/box/tier2/lid_040.png",
+    "art/ui/box/tier2/lid_070.png",
+    "art/ui/box/tier2/lid_100.png",
+    "art/ui/box/tier2/lid_118.png",
+    "art/ui/box/tier2/seam.png"
+   ],
+   "light": [
+    0.3325,
+    0.552,
+    1.0
+   ]
+  },
+  "3": {
+   "files": [
+    "art/ui/box/tier3/body.png",
+    "art/ui/box/tier3/closed.png",
+    "art/ui/box/tier3/lid_000.png",
+    "art/ui/box/tier3/lid_006.png",
+    "art/ui/box/tier3/lid_018.png",
+    "art/ui/box/tier3/lid_040.png",
+    "art/ui/box/tier3/lid_070.png",
+    "art/ui/box/tier3/lid_100.png",
+    "art/ui/box/tier3/lid_118.png",
+    "art/ui/box/tier3/seam.png"
+   ],
+   "light": [
+    0.7605,
+    0.3515,
+    1.0
+   ]
+  },
+  "4": {
+   "files": [
+    "art/ui/box/tier4/body.png",
+    "art/ui/box/tier4/closed.png",
+    "art/ui/box/tier4/lid_000.png",
+    "art/ui/box/tier4/lid_006.png",
+    "art/ui/box/tier4/lid_018.png",
+    "art/ui/box/tier4/lid_040.png",
+    "art/ui/box/tier4/lid_070.png",
+    "art/ui/box/tier4/lid_100.png",
+    "art/ui/box/tier4/lid_118.png",
+    "art/ui/box/tier4/seam.png"
+   ],
+   "light": [
+    1.0,
+    0.5271,
+    0.1384
+   ]
+  },
+  "5": {
+   "files": [
+    "art/ui/box/tier5/body.png",
+    "art/ui/box/tier5/closed.png",
+    "art/ui/box/tier5/lid_000.png",
+    "art/ui/box/tier5/lid_006.png",
+    "art/ui/box/tier5/lid_018.png",
+    "art/ui/box/tier5/lid_040.png",
+    "art/ui/box/tier5/lid_070.png",
+    "art/ui/box/tier5/lid_100.png",
+    "art/ui/box/tier5/lid_118.png",
+    "art/ui/box/tier5/seam.png"
+   ],
+   "light": [
+    1.0,
+    0.7991,
+    0.4621
+   ]
+  }
+ }
+}

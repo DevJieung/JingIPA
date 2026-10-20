@@ -23,8 +23,18 @@ var _text_gap := 0.0
 var crystals: Array[Node3D] = []
 var hero_nodes: Dictionary = {}
 var _native_pending: Dictionary = {}
+## Hero bodies placed during battle that still owe their pop-in beat (2026-10-18),
+## keyed like `hero_nodes`; native bodies take it through `_native_pending` instead.
+var _spawn_due: Dictionary = {}
+## Damage numbers (2026-10-18 casual overhaul): only crits and weakness hits are drawn
+## unless Look.SHOW_ALL_DAMAGE; hits on one body within 0.25 s merge into one number; 8 live at most.
+const TEXT_MERGE_SEC := 0.25
+const TEXT_LIVE_MAX := 8
 var _native_direction: Dictionary = {}
 var monster_nodes: Dictionary = {}
+## Per monster node: its Burn, Frost and Stun marks, looked up once (sync_battle visits
+## every body every frame).
+var _monster_status: Dictionary = {}
 var effects: Array[Dictionary] = []
 var vfx: StellarVfx
 ## Per-hero locomotion input for this frame ({"v": Vector3 world units/s, "dt": float,
@@ -42,6 +52,20 @@ var _range := -1.0
 var _occupied := ""
 var _preview_at := Vector2.INF
 var _preview_valid := false
+## The five-star guardian a revival grants waits out of sight until its arrival beat
+## (2026-10-19, StellarVfx._update_arrivals): unit ids held, and the held bodies by key.
+var _held_units: Dictionary = {}
+var _held_nodes: Dictionary = {}
+## A held guardian whose model is not loaded yet (the revival's candidate was already in the
+## party, so the run granted another hero nobody could load ahead): its file is read on a
+## loader thread and the body is built when it is ready, still out of sight. unit id ->
+## {"path", "slot", "res"}.
+var _held_loading: Dictionary = {}
+## A boss or elite pushing through a guardian nudges its figure aside (StellarVfx
+## _sync_trample sets this frame's target per hero slot; it eases there and back). Visual only.
+var _shove: Dictionary = {}
+var _shove_target: Dictionary = {}
+const SHOVE_EASE := 14.0
 
 static func world(p: Vector2, height: float = 0.0) -> Vector3:
 	return Vector3((p.x - Balance.ARENA_CENTER.x) / UNIT, height, (p.y - Balance.ARENA_CENTER.y) / UNIT)
@@ -341,6 +365,7 @@ func sync_heroes(heroes: Array, time: float, battle: bool = false) -> void:
 	if not battle:
 		_native_pending.clear()
 		_native_direction.clear()
+		_spawn_due.clear()
 	for i in range(heroes.size()):
 		var data: Dictionary = heroes[i]
 		var hero: Dictionary = data["h"] if battle else data
@@ -349,7 +374,23 @@ func sync_heroes(heroes: Array, time: float, battle: bool = false) -> void:
 		var key := "%d:%s:%d"%[i,id,grade]
 		keep[key] = true
 		if not hero_nodes.has(key):
+			if battle and _held_units.has(id) and not _held_model_ready(hero["unit"], grade, id, i):
+				continue
 			var model := StellarModels.hero(hero["unit"],grade)
+			if _held_loading.has(id): _close_load(id)
+			# Battle figures stand 15 % taller than their cards (2026-10-18): the disc and the
+			# team ring below are children and scale with the root; the camera is unchanged.
+			if battle: model.scale = Vector3.ONE * StellarModels.HERO_SCALE
+			if battle and _held_units.has(id):
+				# A revival's guardian: hidden until its star lands (reveal_hero), which
+				# then gives it the drop-in.
+				model.visible = false
+				_held_nodes[key] = i
+			elif battle and not _slot_has_node(i):
+				# A hero placed mid-battle pops in; a rank-up on the same slot does not. The
+				# adapters take "spawn" after their first animate_visual has set the clock.
+				_spawn_due[key] = true
+				_native_pending[i] = [{"t": "spawn"}] + _native_pending.get(i, [])
 			# The contact shadow plane rides 0.02 above the soles so it stays above the plaza
 			# disc (0.046) while the root stands on the lower soil.
 			StellarModels.contact(model,Vector3(0,0.02,0),Vector2(0.96,0.68),0.40)
@@ -360,6 +401,13 @@ func sync_heroes(heroes: Array, time: float, battle: bool = false) -> void:
 		var node: Node3D = hero_nodes[key]
 		var p: Vector2 = data["pos"] if battle else Run.hero_position(hero)
 		node.position = world(p,hero_ground)
+		if battle and (_shove.has(i) or _shove_target.has(i)):
+			var step := float(_hero_motion.get(i, {}).get("dt", 0.0))
+			var offset: Vector3 = _shove.get(i, Vector3.ZERO)
+			offset = offset.lerp(_shove_target.get(i, Vector3.ZERO), 1.0 - exp(-SHOVE_EASE * step))
+			if offset.length_squared() < 0.00001 and not _shove_target.has(i): _shove.erase(i)
+			else: _shove[i] = offset
+			node.position += offset
 		var ft := float(data.get("fx_t",9))
 		var raw_wind := float(data.get("fx_w",0.35))
 		if node is NativeCharacterModel:
@@ -370,6 +418,7 @@ func sync_heroes(heroes: Array, time: float, battle: bool = false) -> void:
 				node.animate_visual(time+float(i)*0.31,ft,raw_wind,battle)
 				for pending in _native_pending[i]: node.visual_event(pending)
 				_native_pending.erase(i)
+				_spawn_due.erase(key)
 			var motion: Dictionary = _hero_motion.get(i,{}) if battle else {}
 			if node.has_method("set_locomotion"):
 				node.call("set_locomotion",motion.get("v",Vector3.ZERO),float(motion.get("dt",0.0)))
@@ -385,6 +434,9 @@ func sync_heroes(heroes: Array, time: float, battle: bool = false) -> void:
 		var wind := maxf(0.04,raw_wind)
 		if node is LimneModel:
 			node.animate_visual(time+float(i)*0.31,ft,wind,battle)
+			if _spawn_due.has(key):
+				_spawn_due.erase(key)
+				if node.has_method("visual_event"): node.call("visual_event", {"t": "spawn"})
 			continue
 		if node.has_method("animate_visual"):
 			# Any adapter that owns its own pose (duck-typed) receives the same clock.
@@ -404,6 +456,9 @@ func sync_heroes(heroes: Array, time: float, battle: bool = false) -> void:
 		if not keep.has(key):
 			hero_nodes[key].free()
 			hero_nodes.erase(key)
+			_spawn_due.erase(key)
+			_held_nodes.erase(key)
+	if battle: _shove_target.clear()
 	for source in _native_pending.keys():
 		if int(source)>=heroes.size(): _native_pending.erase(source)
 	for source in _native_direction.keys():
@@ -436,7 +491,10 @@ func _face(node: Node3D, direction: Vector2, smooth: bool, dt: float = 0.0) -> v
 		node.rotation.y = atan2(-direction.x, -direction.y)
 
 ## Presentation lookups for effect code: the live node of a simulation hero index
-## or of a monster spawn id (null when absent).
+## or of a monster spawn id (null when absent). A monster node's position is always the
+## simulator's ground point; a flyer carries its body up on its own pivot and publishes
+## that altitude (world units above the ground point, with its bob, fall and dive) as
+## the node meta NativeMonsterModel.FLY_META (`_stellar_fly_height`; 0.0 on walkers).
 func hero_node(index: int) -> Node3D:
 	var prefix := str(index) + ":"
 	for key in hero_nodes:
@@ -446,15 +504,133 @@ func hero_node(index: int) -> Node3D:
 func monster_node(sid: int) -> Node3D:
 	return monster_nodes.get(sid)
 
+## This frame's shove target for the guardian in slot `index` (world units, horizontal).
+func shove_hero(index: int, offset: Vector3) -> void:
+	var current: Vector3 = _shove_target.get(index, Vector3.ZERO)
+	if offset.length_squared() > current.length_squared(): _shove_target[index] = offset
+
+## A revival's guardian (unit id) is kept hidden from the moment its body appears until
+## reveal_hero (StellarVfx times it after the crystal has reformed). A guardian already
+## standing (everyone was here, so the revival raised one of them to the top grade) keeps
+## its body: the star lands on it and its new grade appears without a drop-in.
+func hold_hero(unit_id: String) -> void:
+	for key in hero_nodes:
+		if String(key).split(":")[1] == unit_id: return
+	_held_units[unit_id] = true
+
+## Whether a held guardian's model can be built this frame without reading storage on the
+## main thread: packed already, cached, built in code, or its threaded read has finished.
+func _held_model_ready(unit: Dictionary, grade: int, id: String, slot: int) -> bool:
+	if StellarModels.has_hero(unit, grade): return true
+	var path := StellarModels.hero_source(unit)
+	if path == "" or ResourceLoader.has_cached(path): return true
+	var entry: Dictionary = _held_loading.get(id, {})
+	if entry.is_empty():
+		if ResourceLoader.load_threaded_request(path) != OK: return true
+		_held_loading[id] = {"path": path, "slot": slot}
+		return false
+	entry["slot"] = slot
+	if entry.has("res"): return true
+	var status := ResourceLoader.load_threaded_get_status(path)
+	if status == ResourceLoader.THREAD_LOAD_IN_PROGRESS: return false
+	# Loaded (kept referenced until the body is built) or failed (built the plain way).
+	entry["res"] = ResourceLoader.load_threaded_get(path) if status == ResourceLoader.THREAD_LOAD_LOADED else null
+	return true
+
+## Finish a guardian's threaded read: its result (or the wait for it) is taken once.
+func _close_load(id: String) -> void:
+	var entry: Dictionary = _held_loading.get(id, {})
+	_held_loading.erase(id)
+	if entry.is_empty() or entry.has("res"): return
+	var path := String(entry["path"])
+	if ResourceLoader.load_threaded_get_status(path) != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
+		ResourceLoader.load_threaded_get(path)
+
+## Whether a guardian's model is still being read for its arrival (StellarVfx waits for it).
+func loading(unit_id: String) -> bool:
+	return _held_loading.has(unit_id)
+
+## Whether any guardian is held out of sight this frame (a body or a model still loading).
+func has_held() -> bool:
+	return not (_held_nodes.is_empty() and _held_loading.is_empty())
+
+## Show the held guardian with its drop-in and return its body (null when it has none on
+## the field yet; the hold then stays for the next try).
+func reveal_hero(unit_id: String) -> Node3D:
+	for key in _held_nodes.keys():
+		if String(key).split(":")[1] != unit_id: continue
+		var node: Node3D = hero_nodes.get(key)
+		var slot := int(_held_nodes[key])
+		_held_nodes.erase(key)
+		_held_units.erase(unit_id)
+		if node == null: continue
+		node.visible = true
+		if node is NativeCharacterModel: _native_pending[slot] = [{"t": "spawn"}] + _native_pending.get(slot, [])
+		else: _spawn_due[key] = true
+		return node
+	# Not held: the body was already there (or the hold came late); hand back what stands.
+	for key in hero_nodes.keys():
+		if String(key).split(":")[1] == unit_id:
+			_held_units.erase(unit_id)
+			return hero_nodes[key]
+	return null
+
+## The body of a guardian that is still held, or one already standing for that unit
+## (null when it has no body on the field yet). Nothing is shown here.
+func held_hero(unit_id: String) -> Node3D:
+	for key in hero_nodes.keys():
+		if String(key).split(":")[1] == unit_id: return hero_nodes[key]
+	return null
+
+## Hero slots whose body is held out of sight this frame, built or still loading (empty
+## almost always).
+func held_slots() -> Dictionary:
+	var slots: Dictionary = {}
+	for key in _held_nodes: slots[int(_held_nodes[key])] = true
+	for id in _held_loading: slots[int(_held_loading[id]["slot"])] = true
+	return slots
+
+## Give up waiting for one guardian (it went to the bench or never appeared).
+func release_hold(unit_id: String) -> void:
+	_held_units.erase(unit_id)
+	if _held_loading.has(unit_id): _close_load(unit_id)
+	for key in _held_nodes.keys():
+		if String(key).split(":")[1] == unit_id:
+			var node: Node3D = hero_nodes.get(key)
+			if node != null: node.visible = true
+			_held_nodes.erase(key)
+
+## Show every held guardian at once (a new battlefield, a new run).
+func release_holds() -> void:
+	for key in _held_nodes.keys():
+		var node: Node3D = hero_nodes.get(key)
+		if node != null: node.visible = true
+	_held_nodes.clear()
+	_held_units.clear()
+	for id in _held_loading.keys(): _close_load(id)
+
 ## Which way a monster should face; the arena overrides this with actual velocity.
 func _monster_heading(_mo: Dictionary, p: Vector2, ahead: Vector2) -> Vector2:
 	return ahead - p
+
+## The point a little further along the body's road, for _monster_heading. The arena,
+## whose heading is the simulator's velocity, overrides this: the legacy road lookup
+## is a sine and a cosine for every body every frame.
+func _monster_ahead(mo: Dictionary, _p: Vector2) -> Vector2:
+	return Balance.path_at(float(mo["s"])+4,float(mo["off"]),int(mo.get("route",0)))
 
 ## Stunned or blocked bodies stand; the simulator's clock still owns the pose.
 func _monster_moving(mo: Dictionary) -> bool:
 	if float(mo.get("stun_t", 0.0)) > 0.0: return false
 	if mo.has("vel"): return Vector2(mo["vel"]).length_squared() > 0.0001
 	return true
+
+## True while any body (any rank) stands in hero slot `slot`.
+func _slot_has_node(slot: int) -> bool:
+	var prefix := "%d:" % slot
+	for key in hero_nodes.keys():
+		if String(key).begins_with(prefix): return true
+	return false
 
 ## Arena crystal siege phase in [0,1) while the body stands at the altar, else -1.
 func _monster_siege(mo: Dictionary, p: Vector2) -> float:
@@ -489,15 +665,31 @@ func sync_battle(sim, time: float, lives: int, dt: float = 0.016) -> void:
 		keep[key] = true
 		if not monster_nodes.has(key):
 			var model := StellarModels.monster(mo["m"])
+			# An elite (2026-10-19) is dressed before it joins the actors, so its scale is
+			# measured with it (StellarVfx.fit_body).
+			if bool(mo.get("elite", false)): StellarModels.elite(model)
 			actors.add_child(model)
 			monster_nodes[key] = model
-			if model.has_method("visual_event"): model.call("visual_event", "spawn", {"p": BattleSim.mpos(mo)})
+			# The spawn id gives a flyer its own hover phase (NativeMonsterModel).
+			if model.has_method("visual_event"): model.call("visual_event", "spawn", {"p": BattleSim.mpos(mo), "sid": key})
 		var node: Node3D = monster_nodes[key]
 		var p := BattleSim.mpos(mo)
-		var ahead := Balance.path_at(float(mo["s"])+4,float(mo["off"]),int(mo.get("route",0)))
 		var native_monster := bool(node.get_meta("_stellar_native_monster", false))
-		_face(node, _monster_heading(mo, p, ahead), true, dt)
-		if native_monster:
+		var heading := _monster_heading(mo, p, _monster_ahead(mo, p))
+		# The shipped adapter takes its calls directly; any other body with the native
+		# contract (a check's stub) is reached through the generic lookups as before.
+		var adapter := node as NativeMonsterModel
+		if adapter != null:
+			if heading.length_squared() > 0.001: adapter.face_toward(heading, dt)
+			node.position = world(p,monster_ground)
+			# Only the legacy wobble below ever tilts a body: a write of the same zero would
+			# still dirty the whole body's transforms once more.
+			if node.rotation.z != 0.0: node.rotation.z = 0.0
+			adapter.set_hit_flash(float(mo.get("flash", 0.0)))
+			adapter.set_siege(_monster_siege(mo, p))
+			adapter.animate_visual(float(mo.get("motion_t",0.0))+float(mo.get("motion_phase",0.0)), _monster_moving(mo))
+		elif native_monster:
+			_face(node, heading, true, dt)
 			# The simulator's forward-only clock already includes pause, slow,
 			# stun and battle speed. Authored locomotion owns the body movement.
 			node.position = world(p,monster_ground)
@@ -506,13 +698,23 @@ func sync_battle(sim, time: float, lives: int, dt: float = 0.016) -> void:
 			if node.has_method("set_siege"): node.call("set_siege", _monster_siege(mo, p))
 			node.call("animate_visual", float(mo.get("motion_t",0.0))+float(mo.get("motion_phase",0.0)), _monster_moving(mo))
 		else:
+			_face(node, heading, true, dt)
 			node.position = world(p,monster_ground+sin(time*10+key)*0.035)
 			node.rotation.z = sin(time*10+key)*0.035
-		node.get_node("StellarBurn").visible=float(mo.get("burn_t",0))>0
-		node.get_node("StellarFrost").visible=float(mo.get("slow_t",0))>0
-		node.get_node("StellarStun").visible=float(mo.get("stun_t",0))>0
-		node.get_node("StellarBurn").scale=Vector3.ONE*(0.9+sin(time*18+key)*0.13)
-		node.get_node("StellarStun").rotation.y=time*5
+		var status: Array = _monster_status.get(key, [])
+		if status.is_empty() or not is_instance_valid(status[0]):
+			status = [node.get_node("StellarBurn"), node.get_node("StellarFrost"), node.get_node("StellarStun")]
+			_monster_status[key] = status
+		var burn: Node3D = status[0]
+		var frost: Node3D = status[1]
+		var stun: Node3D = status[2]
+		burn.visible=float(mo.get("burn_t",0))>0
+		frost.visible=float(mo.get("slow_t",0))>0
+		stun.visible=float(mo.get("stun_t",0))>0
+		# A hidden mark keeps its last transform: moving it every frame costs a server
+		# update per mark per body for nothing. It is placed the frame it shows.
+		if burn.visible: burn.scale=Vector3.ONE*(0.9+sin(time*18+key)*0.13)
+		if stun.visible: stun.rotation.y=time*5
 		if not native_monster and float(mo.get("stun_t",0))>0: node.rotation.z = sin(time*35+key)*0.025
 	for key in monster_nodes.keys():
 		if keep.has(key): continue
@@ -524,6 +726,7 @@ func sync_battle(sim, time: float, lives: int, dt: float = 0.016) -> void:
 			if age < 1.6 and not bool(node.call("advance_death", dt)): continue
 		node.free()
 		monster_nodes.erase(key)
+		_monster_status.erase(key)
 		_dying.erase(key)
 	vfx.sync(sim, time)
 	for i in range(crystals.size()): crystals[i].visible = i<lives
@@ -578,9 +781,24 @@ func set_placement_preview(at: Vector2, valid: bool) -> void:
 func event(e: Dictionary) -> void:
 	var type := String(e.get("t",""))
 	_native_event(e)
-	if type in ["hit","zone_tick"] and e.has("n") and _text_gap<=0 and texts.size()<24:
-		texts.append({"p":Vector2(e.get("mp",e.get("p",Vector2.ZERO))),"n":float(e["n"]),"color":Color("#ffd390") if bool(e.get("big",false)) else Color("#e5f4f6"),"age":0.0,"big":bool(e.get("big",false))})
-		_text_gap=0.07
+	# The simulator marks a critical hit with `crit` and a weakness hit with `em` > 1; `big`
+	# is the beam's flag. Any of them makes the number worth drawing.
+	var big := bool(e.get("big",false)) or bool(e.get("crit",false)) or float(e.get("em",1.0)) > 1.0
+	if type in ["hit","zone_tick"] and e.has("n") and (Look.SHOW_ALL_DAMAGE or big):
+		var target := int(e.get("sid", 0))
+		var merged := false
+		if target != 0:
+			for item in texts:
+				if int(item.get("sid",0)) == target and float(item["age"]) < TEXT_MERGE_SEC:
+					item["n"] = float(item["n"]) + float(e["n"])
+					item["big"] = bool(item["big"]) or big
+					if big: item["color"] = Color("#ffd390")
+					merged = true
+					break
+		if not merged and _text_gap<=0 and texts.size()<TEXT_LIVE_MAX:
+			texts.append({"p":Vector2(e.get("mp",e.get("p",Vector2.ZERO))),"n":float(e["n"]),"color":Color("#ffd390") if big else Color("#e5f4f6"),"age":0.0,"big":big,"sid":target})
+			_text_gap=0.07
+	if type == "arena_blast" and has_method("pulse_wind"): call("pulse_wind", 0.6)
 	var sid := int(e.get("sid", 0))
 	if sid != 0 and monster_nodes.has(sid):
 		var node: Node3D = monster_nodes[sid]

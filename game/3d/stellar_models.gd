@@ -22,8 +22,19 @@ static func material(color: Color, metal: float = 0.0, glow: float = 0.0) -> Sta
 		return _materials[key]
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = color
-	mat.metallic = metal
-	mat.roughness = 0.38 if metal > 0.2 else 0.78
+	# Painterly equipment (2026-10-18): wrapped diffuse, matte metal (capped at 0.3, a
+	# toon disc instead of a GGX sheen), the skins' rim and cool shade tint, so beads
+	# and weapons sit on the painted skins instead of reading as glued-on plastic.
+	mat.diffuse_mode = BaseMaterial3D.DIFFUSE_LAMBERT_WRAP
+	mat.metallic = minf(metal, 0.3)
+	mat.roughness = 0.60 if metal > 0.2 else 0.78
+	mat.specular_mode = BaseMaterial3D.SPECULAR_TOON if metal > 0.2 else BaseMaterial3D.SPECULAR_DISABLED
+	mat.metallic_specular = StellarShading.SKIN_SPECULAR
+	mat.rim_enabled = true
+	mat.rim = StellarShading.RIM
+	mat.rim_tint = StellarShading.RIM_TINT
+	mat.backlight_enabled = StellarShading.SHADE_TINT_ENABLED
+	mat.backlight = StellarShading.SHADE_TINT
 	if glow > 0:
 		mat.emission_enabled = true
 		mat.emission = color
@@ -119,18 +130,22 @@ static func _stone_face(surface: SurfaceTool, corners: Array, normal: Vector3) -
 			surface.set_uv(Vector2(point.x,point.z)+Vector2.ONE*0.5)
 			surface.add_vertex(point)
 
-static func contact(parent: Node3D, at: Vector3, size: Vector2, opacity: float = 0.4) -> MeshInstance3D:
+## Contact shadow disc on the ground under an actor. `soft` 0 is the dense disc of a
+## standing body; 1 the broad, light disc of a body that rides in the air (flyers).
+static func contact(parent: Node3D, at: Vector3, size: Vector2, opacity: float = 0.4, soft: float = 0.0) -> MeshInstance3D:
 	var plane := PlaneMesh.new()
 	plane.size = size
 	var node := MeshInstance3D.new()
 	node.mesh = plane
 	node.position = at
-	if not _contacts.has(opacity):
+	var key := "%.2f/%.2f" % [opacity, soft]
+	if not _contacts.has(key):
 		var mat := ShaderMaterial.new()
 		mat.shader = preload("res://art/models/contact_shadow.gdshader")
 		mat.set_shader_parameter("opacity",opacity)
-		_contacts[opacity] = mat
-	node.material_override = _contacts[opacity]
+		mat.set_shader_parameter("soft",soft)
+		_contacts[key] = mat
+	node.material_override = _contacts[key]
 	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(node)
 	return node
@@ -181,10 +196,30 @@ static func _ownership(root: Node, owner: Node) -> void:
 		child.owner = owner
 		_ownership(child, owner)
 
+## The rig cache key of a hero at a grade (hero() packs each model once per key).
+static func _rig_key(unit: Dictionary, grade: int) -> String:
+	return "%s:%d:%s" % [String(unit.get("base_id", unit.get("id", "limne"))), clampi(grade, 0, 9), str(unit.get("fusion_only", false))]
+
+## Whether hero(unit, grade) would only instantiate (its model is loaded and packed).
+static func has_hero(unit: Dictionary, grade: int) -> bool:
+	return _rigs.has(_rig_key(unit, grade))
+
+## The file hero(unit, …) reads a native character's model from ("" when it is built in
+## code). StellarWorld reads it on a loader thread for a revival's guardian (sync_heroes).
+static func hero_source(unit: Dictionary) -> String:
+	var id := String(unit.get("base_id", unit.get("id", "limne")))
+	if id == "limne" or not NativeCharacterModel.has_model(id): return ""
+	return String(NativeCharacterModel.manifest().get("heroes", {}).get(id, {}).get("path", ""))
+
+## Let a packed hero go (a revival candidate that never came, ArenaWorld._keep_revival):
+## bodies already built keep their own resources; hero() simply loads it again if asked.
+static func forget_hero(unit: Dictionary, grade: int) -> void:
+	_rigs.erase(_rig_key(unit, grade))
+
 static func hero(unit: Dictionary, grade: int) -> Node3D:
 	grade = clampi(grade, 0, 9)
 	var id := String(unit.get("base_id", unit.get("id", "limne")))
-	var key := "%s:%d:%s" % [id, grade, str(unit.get("fusion_only", false))]
+	var key := _rig_key(unit, grade)
 	if _rigs.has(key):
 		var cached: PackedScene = _rigs[key]
 		_rigs.erase(key)
@@ -200,6 +235,7 @@ static func hero(unit: Dictionary, grade: int) -> Node3D:
 		custom.get_node("Body").add_child(equipment)
 		_rank_details(equipment,Color("#148b96"),Color("#caa263") if grade < 6 else Color("#f2d297"),grade,0,bool(unit.get("fusion_only",false)))
 		compact(equipment)
+		StellarShading.outline(custom, StellarShading.OUTLINE_HERO_PX)
 		_ownership(custom,custom)
 		var scene := PackedScene.new()
 		scene.pack(custom)
@@ -221,6 +257,7 @@ static func hero(unit: Dictionary, grade: int) -> Node3D:
 				Color("#caa263") if grade < 6 else Color("#f2d297"), grade,
 				int(profile.get("index", 0)), bool(unit.get("fusion_only", false)))
 			compact(equipment)
+			StellarShading.outline(custom, StellarShading.OUTLINE_HERO_PX)
 			_ownership(custom, custom)
 			var scene := PackedScene.new()
 			scene.pack(custom)
@@ -442,12 +479,12 @@ static func _rank_details(body: Node3D, base: Color, gold: Color, grade: int, in
 	if grade >= 2:
 		for side in [-1,1]: part(body, "box", Vector3(side * 0.16, 0.25, -0.13), Vector3(0.19, 0.24, 0.065), Color("#bacdd4"), 0.5)
 	if grade >= 3:
-		for side in [-1,1]: part(body, "sphere", Vector3(side * 0.30, 1.10, 0), Vector3(0.39, 0.18, 0.35), gold, 0.65)
+		for side in [-1,1]: part(body, "sphere", Vector3(side * 0.30, 1.10, 0), Vector3(0.27, 0.13, 0.25), gold, 0.65)
 	if grade >= 4:
 		part(body, "box", Vector3(0, 0.78, 0.27), Vector3(0.70, 0.91, 0.06), base.darkened(0.26), 0, 0, Vector3(0.20, 0, 0))
 		for side in [-1,1]: link(body, Vector3(side * 0.33, 0.38, 0.33), Vector3(side * 0.33, 1.2, 0.19), 0.037, gold, 0.75)
 	if grade >= 5:
-		part(body, "ring", Vector3(0, 1.46, 0), Vector3(0.55, 0.17, 0.48), gold, 0.8)
+		part(body, "ring", Vector3(0, 1.46, 0), Vector3(0.39, 0.12, 0.34), gold, 0.8)
 		for n in range(3): part(body, "cone", Vector3((n - 1) * 0.13, 1.60, -0.10), Vector3(0.09, 0.23, 0.09), gold, 0.8)
 	if grade >= 6:
 		for side in [-1,1]: part(body, "sphere", Vector3(side * 0.39, 1.10, -0.13), Vector3(0.12, 0.15, 0.08), base.lightened(0.45), 0.2, 0.7)
@@ -468,6 +505,29 @@ static func _rank_details(body: Node3D, base: Color, gold: Color, grade: int, in
 ## world writes position/rotation on the root, so the root scale is never overwritten
 ## and every pivot reaction, status mark and death stays in proportion.
 const BOSS_SCALE := 2.0
+## Battle heroes stand 15 % taller than their authored GLB (2026-10-18: 48 -> 55 px at
+## CAMERA_SIZE 34, PLAN §7-2). The world applies it at battle creation
+## (stellar_world.gd), never hero(): portraits, the collection view and the camera checks
+## keep the authored size.
+const HERO_SCALE := 1.15
+## Elite monsters (2026-10-19, feedback O5, PLAN M6: an existing monster with `elite`): 35 %
+## larger, a violet line of light around the body and a slow violet sigil on the ground with
+## motes rising round it (StellarVfx.elite_aura). The world applies it before the body joins
+## the actors, so StellarVfx.fit_body measures the larger girth and the effects that land on
+## it lift with it. The wide HP bar is the HUD's.
+const ELITE_SCALE := 1.35
+const META_ELITE := "_stellar_elite"
+
+## Dress a live monster body as an elite (idempotent). Visual only.
+static func elite(root: Node3D) -> void:
+	if root == null or root.has_meta(META_ELITE): return
+	root.set_meta(META_ELITE, true)
+	root.scale *= ELITE_SCALE
+	StellarShading.outline_instance(root, StellarShading.OUTLINE_ELITE_PX, StellarShading.OUTLINE_ELITE_COLOR)
+	var aura := StellarVfx.elite_aura(float(root.get_meta("_stellar_height", 1.0)))
+	root.add_child(aura)
+	root.set_meta(StellarShading.META_AURA, aura)
+	if root.has_method("set_elite"): root.call("set_elite", true)
 
 static func monster(data: Dictionary) -> Node3D:
 	var id := String(data.get("id", "monster"))
@@ -475,10 +535,30 @@ static func monster(data: Dictionary) -> Node3D:
 		var native := NativeMonsterModel.create(id)
 		native.name = "StellarMonster_" + id
 		native.set_meta("identity", id)
-		if String(data.get("kind", "")) == "boss": native.scale = Vector3.ONE * BOSS_SCALE
+		native.set_meta(NativeMonsterModel.FLY_META, 0.0)
+		var height := float(native.get_meta("_stellar_height", 1.0))
+		var shadow: MeshInstance3D
+		if bool(data.get("fly", false)):
+			# A flyer (2026-10-17): the adapter carries the body up on its pivot
+			# (NativeMonsterModel.FLIGHT) and this disc stays on the ground under it, the
+			# strongest airborne cue. It rides 0.02 above the root like the hero disc.
+			native.set_meta("_stellar_fly", true)
+			var flight := NativeMonsterModel.flight(String(native.get_meta("_stellar_shape", "biped")))
+			shadow = contact(native, Vector3(0, 0.02, 0), flight["shadow"] * height, 0.34, 1.0)
+		else:
+			# A walker's dense contact disc (2026-10-18): the directional shadow now falls
+			# behind-right, so this is what keeps the feet on the ground. Bosses scale it
+			# x2 with their root; it fades with the dissolve (StellarShading).
+			shadow = contact(native, Vector3(0, 0.02, 0), Vector2(0.9, 0.7) * height, 0.45)
+		shadow.name = "StellarContact"
+		native.set_meta(StellarShading.META_CONTACT, shadow)
+		if String(data.get("kind", "")) == "boss":
+			native.scale = Vector3.ONE * BOSS_SCALE
+			StellarShading.outline(native, StellarShading.OUTLINE_BOSS_PX)
 		return native
 	var root := Node3D.new()
 	root.name = "StellarMonster_" + String(data.get("id", "monster"))
+	root.set_meta(NativeMonsterModel.FLY_META, 0.0)
 	var kind := String(data.get("kind", "swarm"))
 	var body := String(data.get("body", "rock"))
 	var color := Color(String(data.get("color", "#7286a2")))

@@ -18,6 +18,22 @@
 - 런타임 GLB/provenance는 `art/models/monsters/<id>/`에 둔다.
   검수 완료 ID만 `art/models/native_monsters.json.ready_ids`에 연결한다.
 
+## 2026-10-18 페인트된 스킨 — 알베도 재베이크(`--retexture`)
+
+몬스터 25종도 영웅과 같은 `tools/3d/optimize_native_lod.py --retexture` 단계를 거쳤다(절차·등급 전문은
+[NATIVE_HERO_PRODUCTION.md](NATIVE_HERO_PRODUCTION.md) 「2026-10-18 페인트된 스킨」). 몬스터만 다른 점:
+
+- AO 광선 길이 0.30H(영웅 0.25H), OKLab 크로마 ×1.15(영웅 ×1.20), 얼굴 되돌리기 없음(`grade_kind` monster).
+  swarm·fast의 256² 아틀라스도 512 베이크에서 같은 등급을 거친 뒤 박스 축소한다.
+- EmberImp의 `EmberCrown` 발광 슬롯은 베이크 대상 재질에 함께 들어갔다 나오며 그대로 두 번째 surface다.
+  Frost imp 눈구멍처럼 실제 개구부로 보이는 안쪽 벽은 전체 판 대체 EMIT가 그대로 어둡게 남기고, AO는 저폴리
+  메시 단독으로 굽기 때문에 겹판 안쪽으로 새지 않는다(근접 전후 시트로 확인).
+- 보스(FlameDragon 등)는 날개막처럼 큰 차트가 많아 이음새 평활화의 효과가 가장 크다 — 2026-10-15 아틀라스의
+  차트별 명암 모자이크가 사라지고 한 색의 막으로 읽힌다.
+- 지오메트리·리그·`IdleLoop`/`MoveLoop`/`Attack`/`Die` 클립 바이트·`height`·`motion` 값은 그대로이고(출시 GLB에
+  이미지만 끼워 넣음, `provenance.albedo_grade.geometry_bytes_preserved`), manifest `glb_sha256`만 바뀐다.
+  `author_monster_motion.py`는 이 게시 뒤에 돌린다. 몬스터 자세 C++ 샘플러(`native_parity_check`)와는 무관하다.
+
 ## 2026-10-15 현행 런타임 — 모바일 폴리곤·텍스처 예산
 
 아래 절의 삼각형 수(10k~178k)와 「실제 표면 보존 예외」는 **편집 원본** `monster-source/<id>/game.blend`의

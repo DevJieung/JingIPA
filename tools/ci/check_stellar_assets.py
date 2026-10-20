@@ -28,7 +28,11 @@ def main():
             source = f"assets/game/3d/{module}.gd"
             assert source in names or source + ".remap" in names, f"Missing 3D renderer: {module}"
         for module in ["core/arena_run", "core/arena_validation", "core/arena_geometry", "game/arena_sim", "game/arena_screen",
-                       "game/3d/arena_view", "game/3d/arena_world"]:
+                       "game/arena_hud", "game/arena_cards", "game/arena_box_view", "game/arena_talent_view",
+                       "game/arena_help", "game/3d/arena_view", "game/3d/arena_world",
+                       # 2026-10-19 feedback round
+                       "core/jewel_box", "game/box_ceremony", "game/constellation", "game/stage_select_view",
+                       "game/squad_view", "game/startup", "game/startup_splash", "game/startup_loading"]:
             source = f"assets/{module}.gd"
             assert source in names or source + ".remap" in names, f"Missing continuous battle module: {module}"
         check_imported_resource(archive, names, "assets/art/models/arena_ground.gdshader")

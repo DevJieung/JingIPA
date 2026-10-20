@@ -31,6 +31,11 @@ Godot 4.7.1, JDK 17, Android SDK 36을 사용한다. Android 템플릿은 매 �
 권한이 병합된다([STORE.md](STORE.md)). iOS 최소 버전은 15.0 이다.
 APK에는 `arm64-v8a` 엔진 라이브러리만 싣는다(2026-10-15). x86_64 라이브러리는 에뮬레이터·크롬북용으로
 APK를 82MB 불렸고 폰에서는 쓰이지 않는다.
+APK 는 C++ 커널 `libstellar_native.android.template_release.arm64.so` 도 싣는다
+([PERF_NATIVE.md](PERF_NATIVE.md)). `tools/ci/export.sh` 와 `tools/build_apk.sh` 가 익스포트 전에
+`tools/native/build.sh` 로 짓는다 — scons 와 위의 NDK 가 필요하고, godot-cpp 는 고정 커밋을 받아
+`build/native/` 에 둔다(CI 는 캐시). IPA 에는 아직 네이티브 라이브러리가 없다: iOS 익스포트가
+경고 한 줄을 내고 게임은 GDScript 판으로 돈다.
 
 Linux에서 에셋을 임포트하고 게임 흐름·번역·저장 호환 검사를 실행한 다음 APK와
 Xcode 프로젝트를 내보낸다. macOS에서 그 Xcode 프로젝트를 빌드해 IPA로 묶는다.

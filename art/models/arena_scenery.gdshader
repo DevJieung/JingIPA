@@ -1,6 +1,8 @@
 shader_type spatial;
-render_mode diffuse_burley, skip_vertex_transform;
+render_mode diffuse_lambert_wrap, skip_vertex_transform;
 // One material for every static prop of an arena battlefield (game/3d/arena_scenery.gd).
+// Wrapped lambert and almost no specular (2026-10-18): props read as two-value painted
+// blocks, a lit cap over a dark mass, instead of faceted plastic.
 // Props are MultiMesh instances of small shared templates, plus a few generated meshes.
 //   instance COLOR.rgb        main tint (linear)           1 - COLOR.a   glow amount
 //   INSTANCE_CUSTOM.rgb       second tint (trunk, stem)    INSTANCE_CUSTOM.a  sway amount; below 0 = never covered
@@ -40,6 +42,6 @@ void vertex() {
 void fragment() {
 	ALBEDO = mix(v_albedo, cover_color, clamp(v_cover, 0.0, 1.0) * (1.0 - v_glow));
 	ROUGHNESS = rough;
-	SPECULAR = 0.28;
+	SPECULAR = 0.10;
 	EMISSION = v_albedo * (v_glow * glow_scale + lift);
 }

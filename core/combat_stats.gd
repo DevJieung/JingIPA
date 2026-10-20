@@ -57,12 +57,16 @@ static func resonance(heroes: Array, passives: Array, elem: String) -> float:
 	return 1.0
 
 
-static func hero(h: Dictionary, levels: Dictionary, passives: Array, heroes: Array) -> Dictionary:
+## `mods` 는 별자리(Talents.effects)가 모은 지속 효과다 — 없으면 빈 사전(옛 모드 · 검사기).
+## 곱하는 열쇠(atk · rate · speed · elem_<속성> · weapon_<무기> · melee_range)와
+## 더하는 열쇠(crit · critx)를 여기서 같이 읽어, 전투와 영웅 정보가 같은 값을 본다.
+static func hero(h: Dictionary, levels: Dictionary, passives: Array, heroes: Array, mods: Dictionary = {}) -> Dictionary:
 	var u: Dictionary = h["unit"]
 	var t: int = int(h["tier"])
 	var prof: Dictionary = Balance.PROFILE[String(u.get("profile", "balance"))]
 	var bul: Dictionary = Balance.BULLET.get(String(u.get("bullet", "shot")), Balance.BULLET["shot"])
 	var el := String(u.get("elem", "none"))
+	var weapon := String(u.get("weapon", ""))
 	var role := String(u.get("role", "single"))
 	var rol: Dictionary = Balance.ROLE.get(role, Balance.ROLE["single"])
 	var atk: float = Balance.TIER_ATK[t] * float(prof["atk"]) * float(bul["dmg"]) \
@@ -70,21 +74,28 @@ static func hero(h: Dictionary, levels: Dictionary, passives: Array, heroes: Arr
 			* Balance.elem_dmg(el) * resonance(heroes, passives, el) \
 			* Balance.atk_mult(int(levels.get("atk", 0))) * passive_mult(passives, "atk")
 	atk *= float(h.get("awakening_mult", 1.0))
+	atk *= float(mods.get("atk", 1.0)) * float(mods.get("elem_" + el, 1.0)) * float(mods.get("weapon_" + weapon, 1.0))
 	var rate: float = Balance.TIER_RATE[t] * float(prof["rate"]) \
-			* Balance.rate_mult(int(levels.get("rate", 0))) * passive_mult(passives, "rate")
-	var crit: float = Balance.crit_chance(int(levels.get("crit", 0))) + passive_add(passives, "crit")
+			* Balance.rate_mult(int(levels.get("rate", 0))) * passive_mult(passives, "rate") * float(mods.get("rate", 1.0))
+	var crit: float = Balance.crit_chance(int(levels.get("crit", 0))) + passive_add(passives, "crit") + float(mods.get("crit", 0.0))
 	if role == "rider" and el == "none":
 		crit += Balance.RIDER_CRIT
+	var reach := Balance.attack_range(u, t)
+	if Balance.is_melee(u):
+		# 「검기」 — 근접 무기만 사거리가 는다. 탄 무기의 사거리는 없앤 개념 그대로 고정이다.
+		reach = clampf(roundf(reach * float(mods.get("melee_range", 1.0))), Balance.RANGE_MIN, Balance.RANGE_MAX)
 	return {
 		"atk": atk, "rate": rate,
-		"range": Balance.attack_range(u, t),
-		"speed": Balance.hero_speed(u),
+		"range": reach,
+		"speed": Balance.hero_speed(u) * float(mods.get("speed", 1.0)),
 		"shots": 1,
 		"bullet": String(u.get("bullet", "shot")),
 		"role": role,
 		"elem": el,
+		# 대공 — 공중 몬스터를 맞힐 수 있는 무기인가(Balance.ANTI_AIR_WEAPONS). 전투가 겨눌 때 본다.
+		"air": Balance.anti_air(u),
 		"crit": min(0.85, crit),
-		"critx": Balance.crit_mult(int(levels.get("critx", 0))) + passive_add(passives, "critx"),
+		"critx": Balance.crit_mult(int(levels.get("critx", 0))) + passive_add(passives, "critx") + float(mods.get("critx", 0.0)),
 	}
 
 

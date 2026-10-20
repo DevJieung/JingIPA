@@ -22,6 +22,27 @@ var _fade_rect: ColorRect = null
 ## 테마 판을 이미 보여 준 블록 번호. 열 탄마다 한 번만 뜨게 하는 표시다.
 var _theme_shown: int = -1
 var menu: MenuOverlay
+## The title's live arena field (F7, 2026-10-19). Main keeps ONE ArenaView for the whole
+## session — its SubViewport is Main's child — instead of every TitleScreen building a new 3D
+## world and render target in its first draw. StellarBackdrop.draw() finds it through the
+## screen's `main`. It renders only while a screen that draws it is up (_uses_backdrop);
+## under the arena it keeps its last picture, so a battle never renders two 3D worlds.
+## Null until first asked for (backdrop_view()).
+var backdrop: ArenaView = null
+## False while the cold-start loading cover (game/startup_loading.gd) still hides this Main
+## (F8): the title is built underneath, but input, the Android back button, the title music
+## and the frame budget wait for uncover() / reveal(). game/startup.gd sets it before
+## add_child; tests and tools that build Main directly keep true and get the title at once.
+var interactive := true
+var _waiting_music := ""
+## Battery saver (O8a/M13, 2026-10-19): the engine's frame cap follows what is on screen. A
+## live battle runs at the player's setting (Save.fps: 30 phone default, 60 desktop default);
+## every screen where nothing fights — title, menus, cards and other modals, the shop,
+## results — runs at IDLE_FPS. Headless runs and tests (STELLARDEFENSE_NO_SAVE=1) are never
+## capped (the project's run/max_fps stays) so the checks keep their speed. Polled every
+## frame in _process, so no screen has to remember to call it; set_fps() applies at once.
+const IDLE_FPS := 30
+var _budget_state := -1
 
 
 func _ready() -> void:
@@ -41,7 +62,10 @@ func _ready() -> void:
 	# 입력은 통과시킨다 — 전환 중 두 번 눌리는 것은 각 화면이 스스로 막는다.
 	_fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	cl.add_child(_fade_rect)
-	show_title()
+	# Under the boot loading cover the loader asks for the backdrop and the title itself,
+	# one step per frame, so its bar follows the work (game/startup_loading.gd).
+	if interactive:
+		show_title()
 	var menu_layer := CanvasLayer.new()
 	menu_layer.layer = 90
 	add_child(menu_layer)
@@ -56,6 +80,7 @@ func _update_window_title(_locale: String) -> void:
 
 
 func _process(dt: float) -> void:
+	refresh_render_budget()
 	if _fade_dir != 0.0:
 		_fade = clampf(_fade + _fade_dir * dt * 3.6, 0.0, 1.0)
 		if _fade_rect != null:
@@ -96,25 +121,119 @@ func _swap(s: Node2D) -> void:
 		s.name = sc.get_global_name()
 	add_child(s)
 	move_child(s, 0)
+	if backdrop != null:
+		backdrop.set_live(_uses_backdrop(s))
 	if s is ArenaScreen:
-		Sfx.play_music("camp" if Arena.theme_index < 0 else "ritual" if Arena.modal == "rite" else "theme_" + String(Arena.theme_for(1)["id"]))
+		_screen_music("camp" if Arena.theme_index < 0 else "ritual" if Arena.modal in ["rite", "box"] else "theme_" + String(Arena.theme_for(1)["id"]))
 	elif s is BattleScreen:
-		Sfx.play_music(Sfx.battle_music_id(Run.wave))
+		_screen_music(Sfx.battle_music_id(Run.wave))
 	elif s is ThemeScreen:
-		Sfx.play_music(Sfx.battle_music_id(Run.wave + 1))
+		_screen_music(Sfx.battle_music_id(Run.wave + 1))
 	elif s is DrawScreen:
-		Sfx.play_music("ritual")
+		_screen_music("ritual")
 	else:
-		Sfx.play_music("camp")
+		_screen_music("camp")
+
+
+## A screen's music starts at once, except under the boot cover: then when it lifts.
+func _screen_music(id: String) -> void:
+	if interactive:
+		Sfx.play_music(id)
+	else:
+		_waiting_music = id
+
+
+## The persistent title backdrop, created on first use (the boot loader asks for it under
+## its cover; screens built without the boot get it from their first StellarBackdrop.draw).
+func backdrop_view() -> ArenaView:
+	if backdrop == null:
+		backdrop = ArenaView.new()
+		backdrop.live = not is_instance_valid(screen) or _uses_backdrop(screen)
+		backdrop.set_pace(BACKDROP_PACE)
+		backdrop.attach(self, Look.SCREEN)
+	return backdrop
+
+
+## The title backdrop renders one frame in this many while its screen is bare (M13): about
+## 10 fps under the 30 fps idle cap — the water and the wind still move, at a third of the GPU
+## work. Under a sheet or the menu it is frozen; under the arena it is off (_swap).
+const BACKDROP_PACE := 3
+
+
+## Every screen except the arena draws the title backdrop: the title and the legacy wave
+## screens (draw, shop, battle, theme, over) through StellarBackdrop / Look.camp_backdrop /
+## Scenery.draw_backdrop. The arena renders its own world (ArenaScreen.view_3d).
+func _uses_backdrop(s: Node) -> bool:
+	return not s is ArenaScreen
+
+
+# --------------------------------------------------------------------------- #
+# 프레임 예산 (O8a) · 덮개 (F8)
+# --------------------------------------------------------------------------- #
+## Whether a battle is actually running on screen: the same condition under which
+## ArenaScreen steps its simulator (no modal, no menu, no shop), and no transition.
+func battle_live() -> bool:
+	if not is_instance_valid(screen) or _fade_dir != 0.0 or (menu != null and menu.opened):
+		return false
+	if screen is ArenaScreen:
+		return Arena.running and Arena.sim != null and Arena.modal.is_empty() and not screen.store.opened
+	if screen is BattleScreen:
+		return Run.running and not screen_modal_open()
+	return false
+
+
+## The frame cap for a state: the player's battle setting, or IDLE_FPS.
+func frame_cap(live_battle: bool) -> int:
+	return Save.fps if live_battle else IDLE_FPS
+
+
+## Whether caps are applied at all: never headless, never under tests.
+static func budget_enabled() -> bool:
+	return DisplayServer.get_name() != "headless" and OS.get_environment("STELLARDEFENSE_NO_SAVE") != "1"
+
+
+## Apply the cap for what is on screen now. Polled each frame; `force` re-applies after the
+## setting itself changed. Nothing happens under the boot cover (loading runs uncapped).
+func refresh_render_budget(force: bool = false) -> void:
+	if not interactive:
+		return
+	var state := 1 if battle_live() else 0
+	if state == _budget_state and not force:
+		return
+	_budget_state = state
+	if budget_enabled():
+		Engine.max_fps = frame_cap(state == 1)
+
+
+## The menu's 30 / 60 toggle: stores Save.fps and applies it at once.
+func set_fps(v: int) -> void:
+	Save.set_fps(v)
+	refresh_render_budget(true)
+
+
+## The boot cover starts to lift: the title music begins with the picture.
+func uncover() -> void:
+	if not _waiting_music.is_empty():
+		var id := _waiting_music
+		_waiting_music = ""
+		Sfx.play_music(id)
+
+
+## The boot cover is gone: from now on this Main takes input and the frame budget.
+func reveal() -> void:
+	uncover()
+	interactive = true
+	refresh_render_budget(true)
 
 
 func screen_modal_open() -> bool:
 	if not is_instance_valid(screen):
 		return false
 	if screen is ArenaScreen:
-		return not Arena.modal.is_empty() or screen.store.opened
+		# The aim and the pick's flourish also keep the menu out: Esc and back reach them first.
+		return not Arena.modal.is_empty() or screen.store.opened or screen.overlay_open()
 	if screen is TitleScreen:
-		return screen.collection.opened or screen.store.opened
+		return screen.overlay_open()
 	if screen is DrawScreen:
 		return screen.fusion.active() or screen.hv.info >= 0
 	if screen is ShopScreen:
@@ -125,17 +244,23 @@ func screen_modal_open() -> bool:
 
 
 func _notification(what: int) -> void:
-	if menu == null:
+	# Under the boot loading cover the back button does nothing (F8).
+	if menu == null or not interactive:
 		return
 	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		# The battlefield's own layers first: the starburst's aim, the constellation map
+		# (zoomed → overview → closed), the jewel box's ceremony (ArenaScreen.back).
+		if screen is ArenaScreen and screen.back():
+			return
 		if (screen is ArenaScreen or screen is TitleScreen) and screen.store.opened:
 			screen.store.close()
 			return
-		if screen is ArenaScreen and Arena.modal in ["shop", "bench"]:
-			Arena.close_modal()
-			return
-		if screen is TitleScreen and screen.collection.opened:
-			screen.collection.close()
+		if screen is ArenaScreen and Arena.modal in ["talent", "bench"]:
+			# A level-up offer refuses to close: one of the three stars has to be picked.
+			if Arena.close_modal():
+				return
+		# The title's sheets close from the top: shop, squad, stage select, collection.
+		if screen is TitleScreen and screen.close_overlay():
 			return
 		if menu.opened:
 			menu.close()
@@ -147,14 +272,61 @@ func _notification(what: int) -> void:
 # 진행 순서
 # --------------------------------------------------------------------------- #
 func show_title() -> void:
+	# ★ F7: the title always shows the default road layout. The arena chooses its own again
+	#   whenever a run starts or resumes (ArenaRun._open_stage / restore), so the last
+	#   battlefield's roads no longer leak into the title, and the persistent backdrop keeps
+	#   the map it was built with (same key: no rebuild on return).
+	ArenaGeometry.use_layout(ArenaGeometry.DEFAULT_LAYOUT)
 	_swap(TitleScreen.new())
 
 
-func start_run(seed_value: int = 0) -> void:
+## Start a ladder stage: `stage_no`, or the next unlocked one (Save.stage_unlocked) when 0.
+## The title's 「시작」 passes Save.stage_unlocked, the stage select the stage it picked.
+func start_run(seed_value: int = 0, stage_no: int = 0) -> void:
 	Run.running = false
 	Arena.running = false
-	Arena.start_run(seed_value)
+	Arena.start_run(seed_value, stage_no)
 	go(show_arena)
+
+
+## The result card's 「다음 STAGE」 (LB1 may use it): the next stage behind the usual black fade,
+## on a fresh arena screen. False while the stage is still running or the next one is locked.
+func next_stage() -> bool:
+	if Arena.running or Arena.hell or not Arena.can_play(Arena.stage + 1):
+		return false
+	start_run(0, Arena.stage + 1)
+	return true
+
+
+## The result card's 「재도전」: the same stage again (or the same Hellbound squad) from the start.
+func retry_stage() -> bool:
+	if Arena.running:
+		return false
+	if Arena.hell:
+		var squad: Variant = Arena.get("squad")
+		return start_hellbound(squad if squad is Array else Save.hell_squad)
+	start_run(0, Arena.stage)
+	return true
+
+
+## Hellbound (DLC): endless waves with the heroes picked on the squad screen (game/squad_view.gd).
+## When the run refuses the squad (Arena.start_hellbound: no DLC, a hero not in the codex, too
+## many) nothing moves and the answer is false.
+func start_hellbound(ids: Array, seed_value: int = 0) -> bool:
+	if not hellbound_ready() or ids.is_empty():
+		return false
+	Run.running = false
+	Arena.running = false
+	if not Arena.start_hellbound(ids, seed_value):
+		return false
+	go(show_arena)
+	return true
+
+
+## Whether a Hellbound run can start now: the DLC and a codex to pick from (the squad screen's
+## Start asks).
+func hellbound_ready() -> bool:
+	return Arena.can_hellbound()
 
 func show_arena() -> void:
 	_swap(ArenaScreen.new())

@@ -17,6 +17,8 @@ extends Harness
 ##     --dissolve-probe  one body and a static control box frozen at fixed material states
 ##                       over a magenta clear colour, with pixel statistics of the screen
 ##                       region and the alpha the 3D viewport stored there (probe_*.png).
+##                       --probe-id a,b (default jelly_seer,ember_imp) probes each body in
+##                       turn (probe_<id>_*.png when more than one).
 ##     --boss-melee      the theme boss (root scale 2) pinned between two sword guardians
 ##                       with a rifle, a bow, an artillery piece and a beam rifle further out,
 ##                       and burn / frost / stun marks: blade contacts, impacts and status
@@ -36,8 +38,9 @@ extends Harness
 ##
 ## Run-level moments (2026-10-13, --moments; tests/3d/moments_review.py drives it):
 ##   first    a fresh run through the game's own flow: the first battlefield's card
-##            (first_card: the reveal waits at age 0), the first rite over it (first_rite)
-##            and the reveal running as the first battle starts (first_NNN)
+##            (first_card: the reveal waits at age 0), the free first jewel box over it
+##            (first_box) and the reveal running as the stage's first preparation starts
+##            (first_NNN)
 ##   revive   the crystal breaks through the real _damage_crystal path with the Guardian's
 ##            blessing in hand: revive_<NNN> at one 60 Hz tick per frame for the first 1.5 s
 ##            (collapse, flash, shockwave, shards), then revive_tail at two ticks per frame
@@ -56,15 +59,24 @@ extends Harness
 ##            at every 60 Hz tick; the report lists a rectangle per followed body for the
 ##            review strips). --scatter-as-kill strips the flag from the events, so the
 ##            same crowd dies the ordinary way (scatterkill_NNN): the comparison
-##   final    stage 10: the four-second warning at the gate, the final boss arriving, then
-##            its fall (final_clear: the last clear, the gates sealed) and the still that
-##            the result panel freezes (final_result, final_rest_field). final_settle is
-##            the same victory after a hitch that leaves the effect clock behind
+##   final    STAGE 10 (a chapter boss): the four-second warning at the gate (the boss wave's
+##            preparation, ArenaSim.jump_to_boss), the boss arriving, then its fall
+##            (final_clear: the last clear, the gates sealed) and the still that the result
+##            panel freezes (final_result, final_rest_field). final_settle is the same
+##            victory after a hitch that leaves the effect clock behind
+## Since 2026-10-19 every ladder stage is a run of its own and its boss ends it: "stage" opens the
+## next stage from the victory panel (Arena.next_stage, what 「다음 STAGE」 starts), and staged scenes
+## sit in the middle of a wave (_mid_wave: skills are refused in a preparation, nothing spawns
+## on its own). `--watchdog SEC` (default 2400) fails a run that stalls.
 ## --moment revive|clear|stage|final|all, --next-theme N (the battlefield that opens after
 ## the clear), --speed 1|2|3 (battle speed the moment is played at).
 ## --film WxH draws the game into an off-screen viewport of that size (design canvas
 ## 1280x800) and keeps the window tiny: the way to capture on a GPU display without
 ## putting a full-size window on the desktop session. Without it the window is captured.
+##
+## Hit feel (2026-10-17, --hitfeel; tools/3d/vfx_review.py --hitfeel drives it): staged
+## scenes at one 30 Hz tick per frame on the bare field of --theme, see _hitfeel below.
+## --scene zone|blast|freeze|hit|kill|melee|fly|levelup|perf|all picks one.
 
 const SQUADS := {
 	"a": ["echo", "kari", "brasa", "jokull", "triton", "limne"],
@@ -91,6 +103,7 @@ func _ready() -> void:
 	var squads := SQUADS.keys() if wanted == "all" else [wanted]
 	var theme := int(arg("--theme", "0"))
 	I18n.set_locale("ko")
+	_watchdog()
 	if arg("--film", "") != "": _open_film(arg("--film", ""))
 	var special := false
 	if has_arg("--moments"):
@@ -105,6 +118,9 @@ func _ready() -> void:
 	if has_arg("--boss-melee"):
 		special = true
 		await _boss_melee(theme)
+	if has_arg("--hitfeel"):
+		special = true
+		await _hitfeel(theme)
 	if not special:
 		for squad in squads:
 			await _squad(String(squad), theme)
@@ -114,7 +130,7 @@ func _ready() -> void:
 	finish("VFX visual preview (%d frames per sequence)" % _frames)
 
 func _squad(squad: String, theme: int) -> void:
-	Arena.start_run(20261010 + squad.hash() % 1000)
+	Arena.start_run(20261010 + squad.hash() % 1000, 1)
 	main = load("res://game/main.gd").new()
 	_host().add_child(main)
 	await frames(3)
@@ -128,6 +144,8 @@ func _squad(squad: String, theme: int) -> void:
 	await paint(screen)
 	_quiet()
 	_field(SQUADS[squad])
+	_no_levelups()
+	_mid_wave(1)
 	var world: StellarWorld = screen.view_3d.world
 	check(world.vfx != null and world.vfx.get_child_count() >= 6, squad + ": VFX pools are built once at start")
 	var pools_before := world.vfx.get_child_count()
@@ -237,7 +255,7 @@ const MARKER := Color(1.0, 0.0, 1.0)
 
 ## The real arena screen on `theme` with no guardians and no enemies: bare ground.
 func _open_arena(theme: int, seed_value: int) -> StellarWorld:
-	Arena.start_run(seed_value)
+	Arena.start_run(seed_value, 1)
 	main = load("res://game/main.gd").new()
 	_host().add_child(main)
 	await frames(3)
@@ -255,6 +273,8 @@ func _open_arena(theme: int, seed_value: int) -> StellarWorld:
 	Arena.selected = -1
 	Arena.sim.monsters.clear()
 	Arena.sim._rebuild_navigation()
+	_no_levelups()
+	_mid_wave(1)
 	screen.view_3d._follow_offset = Vector3.ZERO
 	screen.view_3d._camera_initialized = true
 	screen.view_3d._apply_camera(Vector3.ZERO)
@@ -400,11 +420,19 @@ func _shot(name: String) -> Image:
 ## so a pixel that shows the clear colour (depth written, colour discarded) cannot be
 ## mistaken for ground or for the 2D backdrop behind the viewport texture.
 func _dissolve_probe(theme: int) -> void:
+	# Every body named (comma list). The default keeps both regressions in view: jelly_seer (the
+	# 2026-10-12 depth-only hole) and ember_imp (its glowing crown that outlived the dissolve, X1,
+	# fixed by D3 on 2026-10-19). With one id the files keep their plain probe_* names.
+	var ids := arg("--probe-id", "jelly_seer,ember_imp").split(",", false)
+	_report["probes"] = []
+	for id in ids:
+		await _dissolve_probe_one(theme, String(id), "probe" if ids.size() == 1 else "probe_" + String(id))
+
+func _dissolve_probe_one(theme: int, id: String, prefix: String) -> void:
 	var world := await _open_arena(theme, 20261012)
 	var env := _environment(world)
 	var natural := env.background_color
 	var spot: Vector2 = Balance.ARENA_CENTER + Vector2(-150, 150)
-	var id := arg("--probe-id", "jelly_seer")
 	var mo := _put(id, spot)
 	mo["hp"] = 1.0e9
 	mo["max"] = 1.0e9
@@ -419,7 +447,7 @@ func _dissolve_probe(theme: int) -> void:
 	var canvas_rect := _body_rect(spot, height)
 	var rect := _to_window(canvas_rect)
 	var materials: Array = node.get_meta("_stellar_materials", [])
-	check(not materials.is_empty(), "probe: the body owns per-instance materials")
+	check(not materials.is_empty(), "probe %s: the body owns per-instance materials" % id)
 	# A static, unskinned control mesh with its own alpha-hash material next to the body.
 	var box_spot: Vector2 = spot + Vector2(170, 0)
 	var box := MeshInstance3D.new()
@@ -437,7 +465,7 @@ func _dissolve_probe(theme: int) -> void:
 	await _measure_marker(world, spot)
 	node.visible = false
 	box.visible = false
-	var ref := await _shot("probe_reference")
+	var ref := await _shot(prefix + "_reference")
 	node.visible = true
 	box.visible = true
 	var rows: Array = []
@@ -457,7 +485,7 @@ func _dissolve_probe(theme: int) -> void:
 	for state in states:
 		_probe_apply(node, materials, String(state[1]), float(state[2]))
 		box_material.albedo_color.a = float(state[2]) if String(state[1]) == "hash" else 1.0
-		var img := await _shot("probe_" + String(state[0]))
+		var img := await _shot(prefix + "_" + String(state[0]))
 		var row := _region_stats(img, ref, rect)
 		row["state"] = state[0]
 		row["viewport_alpha_min"] = snappedf(_viewport_alpha(canvas_rect), 0.001)
@@ -479,7 +507,7 @@ func _dissolve_probe(theme: int) -> void:
 	var solid := 0
 	for q in [0.0, 0.30, 0.46, 0.62, 0.80, 0.92, 1.0]:
 		StellarShading.set_dissolve(node, q)
-		var img := await _shot("probe_game_q%03d" % int(round(q * 100.0)))
+		var img := await _shot(prefix + "_game_q%03d" % int(round(q * 100.0)))
 		var row := _region_stats(img, ref, rect)
 		row["state"] = "game_q%.2f" % q
 		row["material_alpha"] = snappedf(float(materials[0].albedo_color.a), 0.001)
@@ -493,24 +521,26 @@ func _dissolve_probe(theme: int) -> void:
 		row["pixels_vs_solid"] = snappedf(float(row["changed"]) / float(maxi(solid, 1)), 0.001)
 		rows.append(row)
 		print("probe ", JSON.stringify(row))
-		check(absf(visible - wanted) < 0.02, "probe: dissolve %.2f leaves %.3f of the body (curve asks %.3f)" % [q, visible, wanted])
-		check(is_equal_approx(mat.albedo_color.a, 1.0) and mat.transparency == BaseMaterial3D.TRANSPARENCY_DISABLED, "probe: the dissolve never touches alpha (q %.2f)" % q)
-		check(float(row["viewport_alpha_min"]) > 0.999, "probe: the 3D viewport keeps alpha 1 under the body at dissolve %.2f" % q)
+		check(absf(visible - wanted) < 0.02, "probe %s: dissolve %.2f leaves %.3f of the body (curve asks %.3f)" % [id, q, visible, wanted])
+		check(is_equal_approx(mat.albedo_color.a, 1.0) and mat.transparency == BaseMaterial3D.TRANSPARENCY_DISABLED, "probe %s: the dissolve never touches alpha (q %.2f)" % [id, q])
+		check(float(row["viewport_alpha_min"]) > 0.999, "probe %s: the 3D viewport keeps alpha 1 under the body at dissolve %.2f" % [id, q])
 		if q >= StellarShading.DISSOLVE_END:
-			check(int(row["changed"]) == 0, "probe: a finished dissolve leaves no pixel of the body (%d changed)" % int(row["changed"]))
-	check(solid > 200, "probe: the whole body is drawn before the fade (%d px)" % solid)
+			check(int(row["changed"]) == 0, "probe %s: a finished dissolve (q %.2f) leaves no pixel of the body (%d changed)" % [id, q, int(row["changed"])])
+	check(solid > 200, "probe %s: the whole body is drawn before the fade (%d px)" % [id, solid])
 	# The same end state in the theme's own colours: what the player sees.
 	env.background_color = natural
 	node.visible = false
-	var natural_ref := await _shot("probe_natural_reference")
+	var natural_ref := await _shot(prefix + "_natural_reference")
 	node.visible = true
-	var seen := await _shot("probe_natural_q100")
+	var seen := await _shot(prefix + "_natural_q100")
 	var natural_row := _region_stats(seen, natural_ref, rect)
 	natural_row["state"] = "natural_q1.00"
 	rows.append(natural_row)
 	print("probe ", JSON.stringify(natural_row))
 	StellarShading.set_dissolve(node, 0.0)
-	_report["probe"] = {"id": id, "rect": _rect_row(rect), "box_rect": _rect_row(box_rect), "rows": rows}
+	var probe := {"id": id, "prefix": prefix, "rect": _rect_row(rect), "box_rect": _rect_row(box_rect), "rows": rows}
+	_report["probes"].append(probe)
+	if not _report.has("probe"): _report["probe"] = probe
 	box.free()
 	await _close_arena()
 
@@ -563,6 +593,7 @@ func _set_meshes_visible(node: Node, on: bool) -> void:
 ## Deaths at every tick, through the real simulator paths.
 func _deaths(theme: int) -> void:
 	var world := await _open_arena(theme, 20261012)
+	_no_levelups()
 	var env := _environment(world)
 	var natural := env.background_color
 	var ring: Array = []
@@ -983,7 +1014,7 @@ const MOMENT_SQUAD := ["echo", "kari", "brasa", "jokull", "triton", "limne"]
 ## The real arena screen in battle on `theme` with six guardians around the crystal and
 ## `count` monsters spread along every road of the battlefield's layout.
 func _open_battle(theme: int, seed_value: int, count: int = 22) -> StellarWorld:
-	Arena.start_run(seed_value)
+	Arena.start_run(seed_value, 1)
 	main = load("res://game/main.gd").new()
 	_host().add_child(main)
 	await frames(3)
@@ -1004,6 +1035,8 @@ func _open_battle(theme: int, seed_value: int, count: int = 22) -> StellarWorld:
 	for i in range(Arena.sim.heroes.size()): Arena.sim.heroes[i]["pos"] = Arena.heroes[i]["position"]
 	Arena.selected = -1
 	Arena.sim.monsters.clear()
+	_no_levelups()
+	_mid_wave(1)
 	_crowd(count)
 	screen.speed = clampf(arg_float("--speed", 1.0), 1.0, 3.0)
 	screen.view_3d._follow_offset = Vector3.ZERO
@@ -1072,7 +1105,7 @@ func _moments(theme: int) -> void:
 ## later one: its reveal waits at age 0 under the card and under the first rite, and runs
 ## when the first battle starts.
 func _moment_first(theme: int) -> void:
-	Arena.start_run(20261019)
+	Arena.start_run(20261019, 1)
 	# The game draws the battlefield itself; put the field under test first and open it
 	# again as the run does (the card stays up: no tool shortcut past it).
 	Arena.stage_themes[0] = theme
@@ -1100,25 +1133,38 @@ func _moment_first(theme: int) -> void:
 	await snap(out_dir + "/first_card.png")
 	vfx.get_viewport().get_texture().get_image().save_png(out_dir + "/first_field.png")
 	var clock: float = vfx._clock
-	# The card is confirmed: the run's first rite opens over the same paused field.
-	check(Arena.confirm_stage() and Arena.modal == "rite", "first: the first rite follows the card")
+	# The card is confirmed: the stage's free first jewel box opens over the same paused field.
+	check(Arena.confirm_stage() and Arena.modal == "box", "first: the free first box follows the card")
 	screen._track_modal()
 	for n in range(4): await paint(screen)
-	await snap(out_dir + "/first_rite.png")
-	check(not Arena.confirm_summon().is_empty(), "first: the rite summons the first guardian")
+	await snap(out_dir + "/first_box.png")
+	check(not Arena.confirm_summon().is_empty(), "first: the box gives the first guardian")
 	for n in range(3): await paint(screen)
-	check(is_equal_approx(vfx._clock, clock) and _live_moments(world) == 1 + gates, "first: the reveal waits through the card and the rite (%d sequences)" % _live_moments(world))
-	check(Arena.close_modal() and Arena.modal.is_empty(), "first: the first battle starts")
+	check(is_equal_approx(vfx._clock, clock) and _live_moments(world) == 1 + gates, "first: the reveal waits through the card and the box (%d sequences)" % _live_moments(world))
+	check(Arena.close_modal() and Arena.modal.is_empty(), "first: the stage starts (its first preparation)")
 	screen._track_modal()
 	var gate_px: Array = []
 	for lane in range(gates): gate_px.append(_px(ArenaGeometry.gate_point(lane, 20.0), 0.6))
 	var reveal := int(round(3.6 * 30.0 / screen.speed))
 	await _roll("first", reveal, 2, 1.0 / 60.0)
 	_note_moment("first", reveal, 2, 1.0 / 60.0, {"crystal": _px(Balance.ARENA_CENTER, 0.9), "gates": gate_px,
-		"stills": ["first_card", "first_field", "first_rite"], "layout": ArenaGeometry.layout(), "theme": theme})
+		"stills": ["first_card", "first_field", "first_box"], "layout": ArenaGeometry.layout(), "theme": theme})
+	# The first preparation is short (ARENA_PREP_FIRST): hold it past the film so wave 1's own gate
+	# beacons and runners (arena_wave) cannot be taken for the reveal's leftovers below.
+	Arena.sim.prep_t += 30.0
 	for n in range(60): await _tick()
-	check(_live_moments(world) == 0 and not (vfx.get_node("Roads") as MeshInstance3D).visible, "first: the reveal is released when it has played")
+	check(_live_moments(world) == 0 and not (vfx.get_node("Roads") as MeshInstance3D).visible, "first: the reveal is released when it has played (%s, roads %s, %.1f s into the first preparation of %.1f)"
+		% [_moment_kinds(world), (vfx.get_node("Roads") as MeshInstance3D).visible, Arena.sim.prep_total() - Arena.sim.prep_left(), Arena.sim.prep_total()])
 	await _close_arena()
+
+## The live Moments sequences by kind name and age, for a check's message.
+func _moment_kinds(world: StellarWorld) -> String:
+	var rows: PackedStringArray = []
+	for fx in world.effects:
+		if typeof(fx) == TYPE_DICTIONARY and String(fx.get("vfx", "")) == "moment":
+			var kind := int(round((fx["custom"] as Color).a))
+			rows.append("%s %.2fs" % [StellarVfx.MomentKind.keys()[kind] if kind >= 0 and kind < StellarVfx.MomentKind.size() else str(kind), float(fx["age"])])
+	return "live: " + (", ".join(rows) if not rows.is_empty() else "none")
 
 ## The crystal's revival through the simulator's own path: a siege blow takes the last
 ## health while the Guardian's blessing is still in hand. Then the same blessing bought on
@@ -1230,36 +1276,54 @@ func _moment_resume(theme: int) -> void:
 	check(mismatch <= 1, "resume: the aegis ends with the simulator's window (%d frames differ)" % mismatch)
 	check(not aegis.visible and Arena.sim.invuln_t <= 0.0, "resume: the capture runs past the window")
 	_note_moment("resume", 1 + count, 4, 1.0 / 60.0, {"crystal": _px(Balance.ARENA_CENTER, 0.9)})
-	# The window also carries over a stage change. The change releases everything born on
-	# the old field; the aegis comes back from the simulator's state, where it stood.
+	# Since 2026-10-19 every stage is a run of its own: the stage is won (its boss falls inside the
+	# window), the victory panel stands, and the next stage (Arena.next_stage) starts with a whole
+	# crystal and no window. Under its card there is the new field's reveal and no aegis.
 	Arena.sim.invuln_t = 3.0
 	for n in range(12): await _tick(1.0 / 60.0)
-	var left: float = Arena.sim.invuln_t
-	check(aegis.visible and left > 2.0, "resume: the aegis is up again before the stage change")
-	Arena.advance_stage()
-	check(Arena.modal == "stage", "resume: the next battlefield opened under its card")
+	check(aegis.visible and Arena.sim.invuln_t > 2.0, "resume: the aegis is up again before the stage is won")
+	_fell_boss_now()
+	var guard := 0
+	while Arena.modal != "result" and guard < 240:
+		await _tick(1.0 / 60.0)
+		guard += 1
+	check(Arena.modal == "result" and Arena.sim.won, "resume: the stage is won inside the window")
+	check(Arena.next_stage() and Arena.modal == "stage", "resume: the next stage opens under its card")
 	screen._track_modal()
 	await _tick(1.0 / 60.0)
 	await paint(screen)
-	var revive_age := -1.0
-	for fx in world.effects:
-		if typeof(fx) == TYPE_DICTIONARY and String(fx.get("vfx", "")) == "moment" and int(round((fx["custom"] as Color).a)) == StellarVfx.MomentKind.REVIVE:
-			revive_age = float(fx["age"])
-	var expected: float = Balance.ARENA_REVIVE_INVULN - Arena.sim.invuln_t
-	check(aegis.visible and absf(revive_age - expected) < 0.06, "resume: across a stage change the aegis stands where the window stands (age %.2f s, window says %.2f s)" % [revive_age, expected])
-	check(_live_moments(world) == 2 + ArenaGeometry.route_count() and _count_bursts(world, StellarVfx.Kind.SEAL) == 0 and vfx._delayed.is_empty(),
-		"resume: under the new card there is the aegis and the reveal, no burst (%d sequences, %d gates)" % [_live_moments(world), ArenaGeometry.route_count()])
+	check(Arena.sim.invuln_t <= 0.0 and not aegis.visible, "resume: a new stage starts without the previous stage's aegis")
+	check(_live_moments(world) == 1 + ArenaGeometry.route_count() and _count_bursts(world, StellarVfx.Kind.SEAL) == 0 and vfx._delayed.is_empty(),
+		"resume: under the new card there is the reveal alone, no burst (%d sequences, %d gates)" % [_live_moments(world), ArenaGeometry.route_count()])
 	await snap(out_dir + "/resume_stage_card.png")
 	await _close_arena()
 
-## A stage boss dies among its escort, the world is rebuilt 1.8 s later and the next
-## battlefield opens under its card; then the card is confirmed and the reveal plays.
+## The stage boss of the run in play steps in (the boss wave's preparation runs out) and is
+## killed through the simulator's own damage path: the clear beat begins.
+func _fell_boss_now() -> void:
+	var sim := Arena.sim
+	_no_levelups()
+	if not sim.boss_spawned:
+		sim.jump_to_boss()
+		for i in range(10):
+			if sim.boss_spawned: break
+			sim.step(1.0 / 60.0)
+	for i in range(sim.monsters.size()):
+		if String(sim.monsters[i]["kind"]) == "boss":
+			sim._cache_positions()
+			sim._hurt(i, 1.0e12, false, -1, "none", false)
+	sim._reap()
+	check(sim.clear_t > 0.0, "the stage boss fell: the clear beat runs")
+
+## A stage boss dies among its escort; the clear beat runs (1.8 s) and the stage is won. From the
+## victory panel the next stage opens (Arena.next_stage, on --next-theme) under its card; then the
+## card is confirmed, the free first box taken, and the reveal plays in the first preparation.
 func _moment_clear_and_stage(theme: int, keep_clear: bool) -> void:
 	var world := await _open_battle(theme, 20261014, 26)
 	var next_theme := int(arg("--next-theme", str((theme + 29) % Roster.THEMES.size())))
-	Arena.stage_themes[Arena.stage] = next_theme
 	Arena.sim.crystal_hp = Arena.sim.crystal_max * 0.55
-	# The boss half way down a road, inside the frame.
+	# The boss wave (its list held: the HUD reads the last wave), the boss half way down a road.
+	_mid_wave(Balance.ARENA_WAVES)
 	Arena.sim._spawn(Arena.boss_for(Arena.stage))
 	if String(Arena.sim.events[-1].get("t", "")) == "spawn": Arena.sim.events.pop_back()
 	var boss: Dictionary = Arena.sim.monsters[-1]
@@ -1305,11 +1369,19 @@ func _moment_clear_and_stage(theme: int, keep_clear: bool) -> void:
 	for n in range(4): world.vfx.event({"t": "hit", "p": Balance.ARENA_CENTER + Vector2(-120 + n * 70, -150), "c": Color("#ffcc66"), "em": 1.0})
 	check(_live_skills(world) >= 2 and not world.vfx._delayed.is_empty() and _visible_domes(world) >= 1,
 		"stage: leftovers are planted before the change (%d skills, %d queued, %d domes)" % [_live_skills(world), world.vfx._delayed.size(), _visible_domes(world)])
-	# Run to the stage change: the card opens over the freshly built field.
+	# Run to the result, then open the next stage from it: the card opens over the freshly built field.
 	var guard := 0
-	while Arena.modal != "stage" and guard < 240:
+	while Arena.modal != "result" and guard < 240:
 		await _tick(1.0 / 60.0)
 		guard += 1
+	check(Arena.modal == "result" and Arena.sim.won, "stage: the clear beat ends in victory")
+	check(Arena.next_stage(), "stage: the victory opens the next stage")
+	Arena.stage_themes[Arena.stage - 1] = next_theme
+	Arena.sim = null
+	Arena._open_stage(Arena.stage)
+	_no_levelups()
+	screen._track_modal()
+	await _tick(1.0 / 60.0)
 	check(Arena.modal == "stage" and Arena.theme_index == next_theme, "stage: the next battlefield opened under its card")
 	# Everything born before the change is released in the frame the world is rebuilt in;
 	# what is live now is the reveal alone: one sweep and one beacon per gate.
@@ -1334,12 +1406,17 @@ func _moment_clear_and_stage(theme: int, keep_clear: bool) -> void:
 		screen.queue_redraw()
 		await frames(1)
 	check(is_equal_approx(world.vfx._clock, clock), "stage: the reveal waits while the card is open")
-	check(Arena.confirm_stage(), "stage: the card is confirmed")
+	check(Arena.confirm_stage() and Arena.modal == "box", "stage: the card is confirmed (the free first box)")
+	Arena.confirm_summon()
+	check(Arena.close_modal(), "stage: the box closes into the first preparation")
+	_no_levelups()
 	screen._track_modal()
 	var reveal := int(round(3.6 * 30.0 / screen.speed))
 	await _roll("stage", reveal, 2, 1.0 / 60.0)
 	_note_moment("stage", reveal, 2, 1.0 / 60.0, {"crystal": _px(Balance.ARENA_CENTER, 0.9), "gates": gates,
 		"stills": ["stage_card", "stage_field"], "layout": ArenaGeometry.layout(), "theme": next_theme})
+	# Hold the first preparation past the film (see _moment_first): wave 1's beacons are not leftovers.
+	Arena.sim.prep_t += 30.0
 	for n in range(40): await _tick()
 	check(_live_moments(world) == 0 and not (world.vfx.get_node("Moments") as MultiMeshInstance3D).visible
 		and not (world.vfx.get_node("Roads") as MeshInstance3D).visible, "stage: the reveal is released when it has played")
@@ -1354,6 +1431,7 @@ func _moment_scatter(theme: int) -> void:
 	var prefix := "scatterkill" if as_kill else "scatter"
 	var world := await _open_battle(theme, 20261018, 30)
 	var vfx: StellarVfx = world.vfx
+	_mid_wave(Balance.ARENA_WAVES)
 	Arena.sim._spawn(Arena.boss_for(Arena.stage))
 	if String(Arena.sim.events[-1].get("t", "")) == "spawn": Arena.sim.events.pop_back()
 	var boss: Dictionary = Arena.sim.monsters[-1]
@@ -1507,7 +1585,7 @@ func _moment_scatter(theme: int) -> void:
 ## Stage 10: the warning at a gate inside the frame, then the final boss.
 func _moment_final(theme: int) -> void:
 	var world := await _open_battle(theme, 20261015, 18)
-	Arena.stage = Balance.ARENA_STAGES
+	Arena.stage = CHAPTER_END
 	Arena.wave = Arena.stage
 	Arena.sim.stage = Arena.stage
 	Arena.sim.wave = Arena.stage
@@ -1522,16 +1600,19 @@ func _moment_final(theme: int) -> void:
 		if margin > best:
 			best = margin
 			lane = i
-	# The simulator's own warning, on the chosen gate; its boss then uses that gate.
+	# The simulator's own warning, on the chosen gate; its boss then uses that gate. The boss wave's
+	# preparation is left with the warning's seconds (ArenaSim.jump_to_boss replaces the old clock).
 	var warning: float = Balance.ARENA_BOSS_WARNING
-	Arena.sim.elapsed = Balance.ARENA_BOSS_AT - warning
+	_no_levelups()
+	Arena.sim.jump_to_boss()
+	Arena.sim.prep_t = warning
 	Arena.sim.boss_warned = true
 	Arena.sim.boss_lane = lane
-	Arena.sim.events.append({"t": "arena_boss_warning", "p": Arena.sim.boss_gate(), "sec": warning, "lane": lane})
+	Arena.sim.events.append({"t": "arena_boss_warning", "p": Arena.sim.boss_gate(), "sec": warning, "lane": lane, "final": Arena.sim.chapter_boss()})
 	var gate := _px(Arena.sim.boss_gate(), 1.2)
 	var warn := int(round((warning - 0.05) * 30.0 / screen.speed))
 	await _roll("final_warn", 1, 2, 1.0 / 60.0)
-	# The warning event carries no `final`: the effect reads the last stage from the simulator.
+	# The warning is a chapter boss's (`final`, as the simulator sends it on STAGE 10).
 	check(_has_moment(world, StellarVfx.MomentKind.FINAL_WARNING) and _live_skills(world) >= 1, "final: the warning adds the dark sun to the gate's own gather")
 	await _roll("final_warn", warn - 1, 2, 1.0 / 60.0, 1)
 	_note_moment("final_warn", warn, 2, 1.0 / 60.0, {"gate": gate})
@@ -1601,7 +1682,7 @@ func _moment_final(theme: int) -> void:
 	check(is_equal_approx(vfx._clock, clock), "final: the still does not move under the result panel")
 	# "Try again" on the same screen: nothing of the won run is left, and the new run's
 	# first battlefield waits under its card with its own reveal at age 0.
-	Arena.start_run(20261099)
+	Arena.start_run(20261099, 1)
 	screen._track_modal()
 	await paint(screen)
 	await paint(screen)
@@ -1625,10 +1706,11 @@ func _moment_final(theme: int) -> void:
 func _moment_final_hitch(theme: int) -> void:
 	var world := await _open_battle(theme, 20261017, 10)
 	var vfx: StellarVfx = world.vfx
-	Arena.stage = Balance.ARENA_STAGES
+	Arena.stage = CHAPTER_END
 	Arena.wave = Arena.stage
 	Arena.sim.stage = Arena.stage
 	Arena.sim.wave = Arena.stage
+	_mid_wave(Balance.ARENA_WAVES)
 	Arena.sim._spawn(Arena.boss_for(Arena.stage))
 	if String(Arena.sim.events[-1].get("t", "")) == "spawn": Arena.sim.events.pop_back()
 	var boss: Dictionary = Arena.sim.monsters[-1]
@@ -1666,3 +1748,422 @@ func _moment_final_hitch(theme: int) -> void:
 	check(_lit_pulses(world) == 1, "hitch: the still keeps its one light (%d lit)" % _lit_pulses(world))
 	await snap(out_dir + "/final_settle.png")
 	await _close_arena()
+
+# --------------------------------------------------------------------------- #
+# Hit feel and volumetric zones (2026-10-17, --hitfeel)
+# --------------------------------------------------------------------------- #
+## Staged scenes for the battle-feel overhaul, each at one 30 Hz tick per frame on the bare
+## field: a ground zone of every element (the simulator's own zone list and tick damage,
+## injected with the same fields _shoot writes), the Starlight Burst and the frost pulse
+## through cast_skill, plain and critical rifle hits, a tank kill beside a swarm kill, a
+## sword guardian's contacts, hits on a hovering body (meta _stellar_fly_height) and the
+## level-up flare. A battle of six guardians against forty monsters closes the run and
+## records the renderer's draw-call and primitive counts (perf). Every sequence carries a
+## focus rectangle (design pixels) for the review crops.
+const HITFEEL_SPOT := Vector2(-30, 205)          # relative to the crystal: open soil below it
+const ZONE_CASTERS := {"fire": "brasa", "ice": "vidarr", "elec": "donn", "water": "limne", "none": "mimic"}
+const HITFEEL_FLY := 1.5
+
+func _hitfeel(theme: int) -> void:
+	var world := await _open_arena(theme, 20261017)
+	var spot: Vector2 = Balance.ARENA_CENTER + HITFEEL_SPOT
+	var only := arg("--scene", "all")
+	var wants := func(name: String) -> bool: return only == "all" or only == name
+	_report["hitfeel"] = {"theme": theme, "spot": [spot.x, spot.y]}
+	_no_levelups()
+	if wants.call("zone"): await _hitfeel_zones(world, spot)
+	if wants.call("blast"): await _hitfeel_blast(world, spot)
+	if wants.call("freeze"): await _hitfeel_freeze(world)
+	if wants.call("hit"): await _hitfeel_hits(world, spot)
+	if wants.call("kill"): await _hitfeel_kills(world, spot)
+	if wants.call("melee"): await _hitfeel_melee(world, spot)
+	if wants.call("fly"): await _hitfeel_fly(world, spot)
+	if wants.call("levelup"): await _hitfeel_levelup(world)
+	if wants.call("perf"): await _hitfeel_perf(world)
+	check(_alpha_leaks.is_empty(), "hitfeel: the 3D viewport keeps alpha 1 in every captured frame (%d leak, first %s)" % [_alpha_leaks.size(), ", ".join(_alpha_leaks.slice(0, 5))])
+	_alpha_leaks.clear()
+	await _close_arena()
+
+## Guardians at explicit logical positions (grade 6), replacing whoever stood before.
+func _stand(ids: Array, spots: Array) -> void:
+	Arena.heroes.clear()
+	Arena.bench.clear()
+	for i in range(ids.size()):
+		Arena.gain_hero(Roster.unit_by_id(String(ids[i])), 6)
+		Arena.heroes[i]["position"] = spots[i]
+	Arena.sim.refresh_heroes()
+	for i in range(Arena.sim.heroes.size()): Arena.sim.heroes[i]["pos"] = Arena.heroes[i]["position"]
+	Arena.selected = -1
+	Arena.sim._nav_key = ""
+	Arena.sim._rebuild_navigation()
+
+## Sturdy bodies held on their spots (hp `hp`), spawned without the portal event.
+func _bodies(ids: Array, spots: Array, hp: float = 1.0e5) -> Array:
+	var out: Array = []
+	for i in range(ids.size()):
+		var mo := _put(String(ids[i]), spots[i])
+		if not Arena.sim.events.is_empty() and String(Arena.sim.events[-1].get("t", "")) == "spawn": Arena.sim.events.pop_back()
+		mo["hp"] = hp
+		mo["max"] = hp
+		out.append(mo)
+	Arena.sim._nav_key = ""
+	Arena.sim._rebuild_navigation()
+	return out
+
+func _clear_bodies() -> void:
+	Arena.sim.monsters.clear()
+	Arena.sim._pending.clear()
+	Arena.sim.bullets.clear()
+	Arena.sim.zones.clear()
+	Arena.sim._nav_key = ""
+	Arena.sim._rebuild_navigation()
+	_no_levelups()
+	for n in range(4): await _tick()
+
+## The staged kills feed the run's experience; a level-up would open the talent offer (a
+## modal that pauses the field until a pick, and opens whenever a preparation begins). Sink
+## the experience so it never comes, and close an offer that is already open.
+func _no_levelups() -> void:
+	var run = Arena.sim.run if Arena.sim != null else null
+	if run == null: return
+	if "pending_levels" in run: run.pending_levels = 0
+	if "xp" in run: run.xp = -1.0e9
+	if "talent_offer" in run and not run.talent_offer.is_empty():
+		run.talent_offer.clear()
+		if String(run.modal) == "talent": run.close_modal()
+
+## A chapter's last stage (STAGE 10): its boss is a chapter boss (ArenaRun.chapter_stage), which
+## the final moments film.
+const CHAPTER_END := 10
+
+## Wave `n` in progress: opened (ArenaSim.begin_wave) as if long ago, so no banner is due, and its
+## list held so the staged bodies are the only ones. Common skills can be cast (they are refused in
+## a preparation), nothing spawns on its own and the wave never ends by itself. Gold for the skills.
+func _mid_wave(n: int) -> void:
+	var sim := Arena.sim
+	sim.begin_wave(n)
+	sim._spawn_t = 1.0e9
+	sim.wave_t = 30.0
+	Arena.gold = maxi(Arena.gold, 99999)
+	var events: Array = sim.events
+	for i in range(events.size() - 1, -1, -1):
+		if String(events[i].get("t", "")) == "arena_wave": events.remove_at(i)
+
+## A run that stops making progress (an awaited step that died on a script error) would hang until
+## the driver's timeout. After `--watchdog` seconds of real time it reports and fails.
+func _watchdog() -> void:
+	var limit := arg_float("--watchdog", 2400.0)
+	if limit <= 0.0: return
+	var timer := get_tree().create_timer(limit, true, false, true)
+	timer.timeout.connect(func() -> void:
+		printerr("!! watchdog: no end after %.0f s" % limit)
+		print("판정: 실패")
+		get_tree().quit(2))
+
+## `count` frames of one tick each, the bodies pinned before every tick.
+func _film_pinned(prefix: String, count: int, bodies: Array, spots: Array, focus: Rect2, dt: float = 1.0 / 30.0) -> void:
+	for n in range(count):
+		_pin(bodies, spots)
+		await _tick(dt)
+		await _capture("%s_%02d" % [prefix, n])
+	_note_focus(prefix, count, 1, focus, dt)
+
+func _note_focus(prefix: String, count: int, ticks: int, focus: Rect2, dt: float = 1.0 / 30.0) -> void:
+	_report["sequences"].append({"prefix": prefix, "frames": count, "ticks_per_frame": ticks, "tick": dt,
+		"focus": [roundi(focus.position.x), roundi(focus.position.y), roundi(focus.size.x), roundi(focus.size.y)]})
+
+## Design-pixel rectangle around a logical point: `radius` logical units wide, `tall`
+## world units high above the ground, for the review crops.
+func _focus(at: Vector2, radius: float, tall: float) -> Rect2:
+	var view = screen.view_3d
+	var rect := Rect2(view.project(at, 0.0), Vector2.ZERO)
+	for corner in [Vector2(-radius, -radius), Vector2(radius, -radius), Vector2(radius, radius), Vector2(-radius, radius)]:
+		rect = rect.expand(view.project(at + corner, 0.0))
+		rect = rect.expand(view.project(at + corner, tall))
+	return rect.grow(16).intersection(Rect2(0, 70, 992, 730))
+
+## One ground zone per element on bodies standing inside it (one outside the radius), from
+## the telegraph through the five ticks to the settle: zone_<el>_NN.
+func _hitfeel_zones(world: StellarWorld, spot: Vector2) -> void:
+	var spec: Dictionary = Balance.BULLET["zone"]
+	var radius := float(spec["radius"])
+	_stand(["echo"], [Balance.ARENA_CENTER + Vector2(-240, 40)])
+	var offsets := [Vector2(-48, -22), Vector2(42, 30), Vector2(-8, 58), Vector2(radius + 34, -10)]
+	for el in ["fire", "ice", "elec", "water", "none"]:
+		var spots: Array = []
+		for o in offsets: spots.append(spot + o)
+		var bodies := _bodies(["bramble_imp", "vine_lynx", "stone_golem", "frost_imp"], spots)
+		for n in range(6):
+			_pin(bodies, spots)
+			await _tick()
+		var color := Color(String(Roster.unit_by_id(String(ZONE_CASTERS[el]))["color"]))
+		Arena.sim.zones.append({"at": spot, "r": radius, "src": 0, "el": el, "c": color, "dmg": 10.0, "crit": false,
+			"t": 0.0, "n": 0, "max": Balance.zone_ticks(), "delay": float(spec["delay"]), "tick": float(spec["tick"])})
+		Arena.sim.events.append({"t": "zone", "p": spot, "r": radius, "c": color, "el": el, "src": 0, "delay": float(spec["delay"])})
+		var zones_node: MultiMeshInstance3D = world.vfx.get_node("Zones")
+		var seen_disc := false
+		var prefix: String = "zone_" + String(el)
+		for n in range(60):
+			_pin(bodies, spots)
+			await _tick()
+			if n == 2:
+				seen_disc = zones_node.multimesh.visible_instance_count >= 1
+				var basis: Basis = zones_node.multimesh.get_instance_transform(0).basis
+				check(is_equal_approx(basis.get_scale().x, radius / StellarWorld.UNIT), "zone %s: the disc is scaled to the damage radius (%.2f u)" % [el, basis.get_scale().x])
+			await _capture("%s_%02d" % [prefix, n])
+		check(seen_disc, "zone %s: the simulator's zone is drawn while it lives" % el)
+		check(Arena.sim.zones.is_empty(), "zone %s: the zone has run its ticks within the capture" % el)
+		_note_focus(prefix, 60, 1, _focus(spot, radius * 1.35, 3.2))
+		await _clear_bodies()
+
+## The Starlight Burst on five bodies (two frail enough to fall): blast_NN at every tick.
+func _hitfeel_blast(world: StellarWorld, spot: Vector2) -> void:
+	_stand(["echo"], [Balance.ARENA_CENTER + Vector2(-240, 40)])
+	var spots := [spot, spot + Vector2(-70, 34), spot + Vector2(66, 26), spot + Vector2(-26, 84), spot + Vector2(44, 74)]
+	var bodies := _bodies(["stone_golem", "bramble_imp", "vine_lynx", "pebble_imp", "crystal_skink"], spots)
+	bodies[1]["hp"] = 40.0
+	bodies[4]["hp"] = 40.0
+	for n in range(6):
+		_pin(bodies, spots)
+		await _tick()
+	Arena.sim.skill_cooldowns["blast"] = 0.0
+	var rest: Vector3 = world.camera.position
+	check(Arena.sim.cast_skill("blast"), "blast: the skill casts on the staged bodies")
+	var alive: Array = []
+	var alive_spots: Array = []
+	for i in range(bodies.size()):
+		if float(bodies[i]["hp"]) > 0.0:
+			alive.append(bodies[i])
+			alive_spots.append(spots[i])
+	var focus := _focus(spot, Balance.ARENA_BLAST_RADIUS * 1.6, 7.5)
+	var shake := 0.0
+	var shake_at := -1
+	for n in range(48):
+		_pin(alive, alive_spots)
+		await _tick()
+		var moved := (world.camera.position - rest).length()
+		if moved > shake:
+			shake = moved
+			shake_at = n
+		await _capture("blast_%02d" % n)
+	_note_focus("blast", 48, 1, focus)
+	_report["hitfeel"]["blast_shake"] = {"max_u": snappedf(shake, 0.001), "frame": shake_at}
+	check(shake > 0.03 and shake <= ArenaView.IMPACT_MAX + 0.01, "blast: the meteor's landing kicks the camera (%.3f u at frame %d, cap %.2f)" % [shake, shake_at, ArenaView.IMPACT_MAX])
+	check(shake_at >= int(StellarVfx.BLAST_FALL * 30.0) - 1, "blast: the kick waits for the landing (frame %d, fall %d frames)" % [shake_at, int(StellarVfx.BLAST_FALL * 30.0)])
+	await _clear_bodies()
+
+## The frost pulse over a crowd on every road: freeze_NN at every tick.
+func _hitfeel_freeze(world: StellarWorld) -> void:
+	_stand(["echo"], [Balance.ARENA_CENTER + Vector2(-240, 40)])
+	_crowd(24)
+	for n in range(6): await _tick()
+	Arena.sim.skill_cooldowns["freeze"] = 0.0
+	check(Arena.sim.cast_skill("freeze"), "freeze: the skill casts on the crowd")
+	for n in range(45):
+		await _tick()
+		await _capture("freeze_%02d" % n)
+	_note_focus("freeze", 45, 1, Rect2(0, 70, 992, 730))
+	await _clear_bodies()
+
+## Rifle hits on two held bodies: hit_plain (no crits) then hit_crit (every shot critical).
+func _hitfeel_hits(world: StellarWorld, spot: Vector2) -> void:
+	_stand(["conor", "echo"], [spot + Vector2(-150, -36), spot + Vector2(150, -60)])
+	var spots := [spot, spot + Vector2(54, 34)]
+	var bodies := _bodies(["stone_golem", "vine_lynx"], spots)
+	# Staged review only: a quicker trigger so a 36-frame capture holds several impacts.
+	for i in range(Arena.sim.heroes.size()):
+		Arena.sim.heroes[i]["crit"] = 0.0
+		Arena.sim.heroes[i]["rate"] = float(Arena.sim.heroes[i].get("rate", 1.0)) * 3.0
+	for n in range(10):
+		_pin(bodies, spots)
+		await _tick()
+	await _film_pinned("hit_plain", 36, bodies, spots, _focus(spot, 110.0, 2.4))
+	for i in range(Arena.sim.heroes.size()): Arena.sim.heroes[i]["crit"] = 1.0
+	var crits := 0
+	var plain := 0
+	var kinds: Dictionary = {}
+	var focus := _focus(spot, 110.0, 2.4)
+	for n in range(36):
+		_pin(bodies, spots)
+		# Peek at this tick's events before the draw drains them.
+		screen._process(1.0 / 30.0)
+		for e in Arena.sim.events:
+			if String(e.get("t", "")) == "hit":
+				if bool(e.get("crit", false)): crits += 1
+				else: plain += 1
+		screen.queue_redraw()
+		await frames(1)
+		screen._draw_dt = 0.0
+		for row in _fresh_bursts(world): kinds[int(row["kind"])] = int(kinds.get(int(row["kind"]), 0)) + 1
+		await _capture("hit_crit_%02d" % n)
+	_note_focus("hit_crit", 36, 1, focus)
+	_report["hitfeel"]["crit_probe"] = {"crit_hits": crits, "plain_hits": plain, "burst_kinds": kinds}
+	check(crits > 0, "hit_crit: the simulator reported critical hits (%d crit, %d plain)" % [crits, plain])
+	check(int(kinds.get(StellarVfx.Kind.CRIT, 0)) > 0, "hit_crit: critical hits spawn CRIT bursts (%s)" % JSON.stringify(kinds))
+	await _clear_bodies()
+
+## A tank falls beside a swarm body that falls four ticks later: kill_NN.
+func _hitfeel_kills(world: StellarWorld, spot: Vector2) -> void:
+	_stand(["echo"], [Balance.ARENA_CENTER + Vector2(-240, 40)])
+	var spots := [spot + Vector2(-40, 0), spot + Vector2(70, 26)]
+	var bodies := _bodies(["wave_giant", "drop_slime"], spots)
+	for n in range(8):
+		_pin(bodies, spots)
+		await _tick()
+	var focus := _focus(spot, 120.0, 3.0)
+	var rest: Vector3 = world.camera.position
+	var shake := 0.0
+	for n in range(40):
+		_pin(bodies, spots)
+		if n == 0: _slay(bodies[0])
+		if n == 4: _slay(bodies[1])
+		await _tick()
+		shake = maxf(shake, (world.camera.position - rest).length())
+		await _capture("kill_%02d" % n)
+	_note_focus("kill", 40, 1, focus)
+	_report["hitfeel"]["kill_shake_u"] = snappedf(shake, 0.001)
+	check(shake > 0.02 and shake <= ArenaView.IMPACT_MAX + 0.01, "kill: a tank's fall kicks the camera a little (%.3f u, cap %.2f)" % [shake, ArenaView.IMPACT_MAX])
+	await _clear_bodies()
+
+## Kill a staged body through the simulator's own damage path.
+func _slay(mo: Dictionary) -> void:
+	var index := Arena.sim.monsters.find(mo)
+	if index < 0: return
+	Arena.sim._cache_positions()
+	Arena.sim._hurt(index, 1.0e9, false, 0, "none")
+
+## A sword guardian with three bodies inside his reach: melee_NN (the arc, the contacts).
+func _hitfeel_melee(world: StellarWorld, spot: Vector2) -> void:
+	var stand := spot + Vector2(0, -62)
+	_stand(["jokull"], [stand])
+	var reach := float(Arena.sim.heroes[0].get("range", 60.0))
+	var spots := [stand + Vector2(0, reach * 0.78), stand + Vector2(-reach * 0.45, reach * 0.62), stand + Vector2(reach * 0.5, reach * 0.66)]
+	var bodies := _bodies(["bramble_imp", "vine_lynx", "pebble_imp"], spots)
+	for n in range(8):
+		_pin(bodies, spots)
+		await _tick()
+	await _film_pinned("melee", 48, bodies, spots, _focus(spot, 95.0, 2.2))
+	await _clear_bodies()
+
+## Shots on a hovering body: the ray rides HITFEEL_FLY units up (the body adapter's own
+## hover when it has one, else the harness lifts the pivot and sets the meta the effect
+## layer reads), and every hit burst must be born at that height: fly_NN.
+func _hitfeel_fly(world: StellarWorld, spot: Vector2) -> void:
+	# Only guns and bows reach a flyer (Balance.ANTI_AIR_WEAPONS): a rifle and a bow, close.
+	_stand(["conor", "echo"], [spot + Vector2(-105, -30), spot + Vector2(110, -48)])
+	var spots := [spot + Vector2(10, 10)]
+	var bodies := _bodies(["rapid_ray"], spots)
+	for n in range(3):
+		_pin(bodies, spots)
+		await _tick()
+	var sid := int(bodies[0]["spawn_id"])
+	var node: Node3D = world.monster_nodes[sid]
+	var fly := float(node.get_meta("_stellar_fly_height", 0.0))
+	if fly <= 0.0:
+		fly = HITFEEL_FLY
+		node.set_meta("_stellar_fly_height", fly)
+		if "_pivot_base" in node and node.get("_pivot") != null:
+			node.set("_pivot_base", (node.get("_pivot_base") as Transform3D).translated(Vector3(0, fly, 0)))
+	_report["hitfeel"]["fly_height"] = fly
+	_report["hitfeel"]["fly_probe"] = {"vfx_reads": world.vfx._fly_height({"sid": sid}), "node_y": node.position.y,
+		"sim_fly": bool(bodies[0].get("fly", false)), "rows": []}
+	for i in range(Arena.sim.heroes.size()): Arena.sim.heroes[i]["crit"] = 0.0
+	var lifted := 0
+	var low := 0
+	var focus := _focus(spot, 90.0, fly + 1.6)
+	for n in range(54):
+		_pin(bodies, spots)
+		await _tick()
+		# The body bobs: its hover meta moves every frame, so compare with this tick's value.
+		var now := float(node.get_meta("_stellar_fly_height", fly)) if is_instance_valid(node) else fly
+		for row in _fresh_bursts(world):
+			if int(row["kind"]) != StellarVfx.Kind.HIT and int(row["kind"]) != StellarVfx.Kind.CRIT: continue
+			if _report["hitfeel"]["fly_probe"]["rows"].size() < 6: _report["hitfeel"]["fly_probe"]["rows"].append([n, int(row["kind"]), snappedf(float(row["y"]), 0.01), snappedf(now, 0.01)])
+			if float(row["y"]) >= minf(now, fly) - 0.45 and float(row["y"]) > 0.6: lifted += 1
+			else: low += 1
+		await _capture("fly_%02d" % n)
+	_note_focus("fly", 54, 1, focus)
+	_report["hitfeel"]["fly_hits"] = {"lifted": lifted, "low": low}
+	check(lifted + low > 0, "fly: the rifle hit the hovering body during the capture (%d hits)" % (lifted + low))
+	check(low == 0, "fly: every hit burst on the hovering body is born at its height (%d at the ground)" % low)
+	await _clear_bodies()
+
+## The level-up flare at the crystal (the HUD popup is the UI's): levelup_NN.
+func _hitfeel_levelup(world: StellarWorld) -> void:
+	_stand(["echo"], [Balance.ARENA_CENTER + Vector2(-240, 40)])
+	for n in range(3): await _tick()
+	world.vfx.arena_event({"t": "arena_levelup", "p": Balance.ARENA_CENTER, "level": 3})
+	for n in range(40):
+		await _tick()
+		await _capture("levelup_%02d" % n)
+	_note_focus("levelup", 40, 1, _focus(Balance.ARENA_CENTER, 130.0, 4.5))
+
+## Six guardians against forty bodies for three seconds: the renderer's draw calls and
+## primitives per frame (min / mean / max), the effect budget's high-water mark, and six
+## frames of the fight for the record (perf_NN).
+func _hitfeel_perf(world: StellarWorld) -> void:
+	_field(SQUADS["a"])
+	var pool := Roster.theme_pool(Arena.theme_for(1))
+	var lanes := ArenaGeometry.route_count()
+	var n := 0
+	while Arena.sim.monsters.size() < 40:
+		Arena.sim._spawn(pool[n % pool.size()])
+		if not Arena.sim.events.is_empty() and String(Arena.sim.events[-1].get("t", "")) == "spawn": Arena.sim.events.pop_back()
+		var mo: Dictionary = Arena.sim.monsters[-1]
+		var path := ArenaGeometry.route_points(n % lanes)
+		mo["pos"] = path[clampi(int(path.size() * (0.30 + 0.04 * float(n / lanes))), 0, path.size() - 2)]
+		mo["route"] = n % lanes
+		mo["hp"] = float(mo["hp"]) * 40.0
+		mo["max"] = mo["hp"]
+		mo["vel"] = ArenaGeometry.road_direction(mo["pos"])
+		n += 1
+	# Every body sturdy: the count must stay at forty for the whole measurement.
+	for mo in Arena.sim.monsters:
+		mo["hp"] = 1.0e6
+		mo["max"] = 1.0e6
+	Arena.sim._nav_key = ""
+	Arena.sim._rebuild_navigation()
+	for k in range(30): await _tick()
+	var calls: Array = []
+	var prims: Array = []
+	var rs_calls: Array = []
+	var rs_prims: Array = []
+	var budget := 0
+	var shot := 0
+	for k in range(90):
+		await _tick()
+		calls.append(int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)))
+		prims.append(int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)))
+		rs_calls.append(int(RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)))
+		rs_prims.append(int(RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME)))
+		budget = maxi(budget, world.effects.size())
+		if k % 15 == 7:
+			await _capture("perf_%02d" % shot)
+			shot += 1
+	_note_focus("perf", shot, 15, Rect2(0, 70, 992, 730))
+	# The same fight with the effects layer hidden: the layer's own draw calls and primitives.
+	var bare_calls: Array = []
+	var bare_prims: Array = []
+	world.vfx.visible = false
+	for k in range(45):
+		await _tick()
+		bare_calls.append(int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)))
+		bare_prims.append(int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)))
+	world.vfx.visible = true
+	var stats := func(rows: Array) -> Dictionary:
+		var total := 0
+		var low: int = int(rows[0])
+		var high: int = int(rows[0])
+		for v in rows:
+			total += int(v)
+			low = mini(low, int(v))
+			high = maxi(high, int(v))
+		return {"min": low, "mean": total / rows.size(), "max": high}
+	_report["hitfeel"]["perf"] = {"heroes": Arena.sim.heroes.size(), "monsters": Arena.sim.monsters.size(),
+		"draw_calls": stats.call(calls), "primitives": stats.call(prims), "effects_peak": budget, "frames": calls.size(),
+		"rs_draw_calls": stats.call(rs_calls), "rs_primitives": stats.call(rs_prims),
+		"without_vfx": {"draw_calls": stats.call(bare_calls), "primitives": stats.call(bare_prims)}}
+	print("perf: heroes %d monsters %d draw calls %s primitives %s effects peak %d" % [Arena.sim.heroes.size(), Arena.sim.monsters.size(),
+		JSON.stringify(stats.call(calls)), JSON.stringify(stats.call(prims)), budget])
+	check(budget <= 72, "perf: the shared effect budget holds (%d)" % budget)
+	await _clear_bodies()

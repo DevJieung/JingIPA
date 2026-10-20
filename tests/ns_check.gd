@@ -35,6 +35,7 @@ func _ready() -> void:
 	var strict := Harness.has_arg("--strict")
 	_check_scripts()
 	_check_roster()
+	_check_talents()
 	_check_elem()
 	_check_theme()
 	_check_wave_plan()
@@ -974,6 +975,38 @@ func _lines_of(path: String) -> Array[String]:
 ##
 ## ★ 여기서 실제로 영웅을 마흔 번 받아 본다. 화면 없이 규칙만 돌려 보는 것이라
 ##   "겹쳤는데 전당에도 남아 있는" 종류의 어긋남이 여기서 잡힌다.
+## 별자리 표(Balance.TALENTS)가 맞게 적혔는가 — id 겹침·없는 선행 노드·없는 패시브/능력치·
+## 효과 없는 노드·영문 문구 누락. 레벨업 팝업이 표를 그대로 보여 주므로 여기서 잡아야 한다.
+func _check_talents() -> void:
+	var was := fail
+	for line in Talents.lint():
+		_bad("별자리 표: " + String(line))
+	if Balance.TALENTS.size() < 60:
+		_bad("별자리 노드가 %d개뿐이다 — 「최대한 풍부하게」(60 이상)" % Balance.TALENTS.size())
+	var roots := 0
+	for node in Balance.TALENTS:
+		if String(node.get("req", "")).is_empty(): roots += 1
+		for key in ["ko", "desc"]:
+			var text := String(node.get(key, ""))
+			if I18n.locale == "en" and I18n.t(text) == text and text.length() > 0:
+				_bad("별자리 %s 의 %s 에 영문이 없다: %s" % [String(node["id"]), key, text])
+	if roots < Balance.ARENA_TALENT_CHOICES * 3:
+		_bad("뿌리 노드가 %d개다 — 첫 레벨업에 셋을 다른 별자리에서 내놓으려면 더 있어야 한다" % roots)
+	# A fresh run must always have at least three open nodes from three constellations.
+	var open := Talents.available({}, [], {})
+	var groups := {}
+	for id in open: groups[String(Talents.by_id(id)["group"])] = true
+	if groups.size() < Balance.ARENA_TALENT_CHOICES:
+		_bad("새 판의 열린 노드가 %d개 별자리뿐이다" % groups.size())
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 777
+	var offer := Talents.roll_offer(rng, {}, [], {})
+	if offer.size() != Balance.ARENA_TALENT_CHOICES:
+		_bad("첫 제시가 %d개다" % offer.size())
+	if fail == was:
+		print("  별자리 표 %d노드 · %d별자리 확인" % [Balance.TALENTS.size(), Balance.TALENT_GROUPS.size()])
+
+
 func _check_roster_slots() -> void:
 	if Balance.HERO_SLOTS != 12 or Balance.POST_SLOTS != 12 or Balance.POST_POINTS.size() != 12:
 		_bad("좌측/중앙/우측 각 4개 배치 지점이 필요하다")

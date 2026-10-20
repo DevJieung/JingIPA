@@ -13,11 +13,72 @@
       "path": "art/ui/launcher_main.png",
       "outputs": [
         "art/ui/launcher_main.png",
-        "art/ui/launcher_adaptive.png"
+        "art/ui/launcher_adaptive.png",
+        "art/ui/launcher_background.svg",
+        "art/ui/launcher_monochrome.svg",
+        "art/ui/launcher_windows.ico"
       ],
-      "generator": "Godot 4.7.1 actual Node3D / MeshInstance3D / Camera3D viewport capture",
+      "generator": "Krea 2 Turbo (krea/Krea-2-Turbo, diffusers Krea2Pipeline, bf16, 8 steps, guidance 0), local GB10; tools/brand/paint.py",
+      "prompt": "Square character illustration for a fantasy tower defense game, with an edge-to-edge background and no frame or border: a close-up bust of a cheerful young guardian knight with spiky dark purple hair, big bright eyes and a confident smile, in ornate crimson red and gold armor, holding up with one gauntleted hand the Soul Stone — a large, tall faceted crystal of luminous cyan and teal shaped like an elongated diamond, glowing from within with a brilliant warm golden star-shaped light — the crystal is as tall as his head and floats just beside his face, lighting his cheek and armor with teal light. Deep midnight-blue background with soft golden sparkles. Centered composition, his face and the crystal fill the middle of the picture, bold readable silhouette, polished painterly premium mobile game art, stylized super-deformed proportions with a large head.",
+      "seed": 52,
+      "source": "build/feedback-2026-10-19/D4/gen/icon_hero2_krea2_1024x1024_s52.png",
       "manifest": "art/ui/launcher_manifest.json",
-      "postprocessing": "Direct Godot viewport capture; five-star crystal crest, alpha adaptive foreground, native SVG monochrome."
+      "postprocessing": "tools/brand/icon_build.py: 1024 RGB master without alpha, adaptive foreground fitted to the 72 dp viewport with edge continuation, sampled radial background SVG, ICO; monochrome is a vector of the emblem (tools/brand/soul_mark.py)."
+    },
+    {
+      "path": "art/ui/soul_stone.png",
+      "generator": "Krea 2 Turbo (krea/Krea-2-Turbo, diffusers Krea2Pipeline, bf16, 8 steps, guidance 0), local GB10; tools/brand/paint.py",
+      "prompt": "A single game asset isolated on a flat, solid, pure magenta background (#FF00FF) with nothing else, no shadow and no glow on the background: the Soul Stone — a large, tall faceted crystal of luminous cyan and teal shaped like an elongated diamond, glowing from within with a brilliant warm golden star-shaped light, floating upright on its own, with a few small crystal shards hovering around it. Bright facets, crisp light edges, a clear dark outline around the crystal. Front view, perfectly centered and symmetrical, the crystal fills three quarters of the frame height. Polished painterly premium mobile game art, crisp clean edges.",
+      "seed": 61,
+      "source": "build/feedback-2026-10-19/D4/gen/stone_cutout_krea2_1024x1024_s61.png",
+      "postprocessing": "tools/brand/key_magenta.py (largest component kept: the loose shards drop out), trimmed, 560 px tall. The Soul Stone the title floats between its guardians (TitleScreen.draw_soul_stone).",
+      "sha256": "79ce52d73abf938bf391569f6e01adec0250aa9a7bc357b66323de479628bd04"
+    },
+    {
+      "path": "art/ui/mindmorph_logo.png",
+      "outputs": [
+        "art/ui/mindmorph_logo.png",
+        "art/ui/mindmorph_logo.svg"
+      ],
+      "generator": "Vector redraw (tools/brand/mindmorph_logo.py) of the user's company logo docs/icon-business-v3-512.png; geometry fitted to the 512 px original by analysis-by-synthesis (cairo + scipy, mean error 0.045/255), colours unchanged",
+      "postprocessing": "1024 px PNG rendered from the same paths as the SVG master (viewBox 0 0 512 512); SVG import set to skip (not exported).",
+      "sha256": {
+        "png": "43d89c059c71e4b82a762c2cac5ac6a5c52e7bb964feb0afdd5f58bc5fd05052",
+        "svg": "94caeb1c014390ee9cec4febe67fd086be7588bcd9676e6e94c2bd4439252b07",
+        "original": "9cb356ed31dd87425e28f3580ba9090f00ce09c0deeb076727a0bf1f0f03b2e4"
+      },
+      "note": "Keep this file the 1024 render: a 2026-10-19 placeholder copy of the 512 px docs file overwrote it once; re-run tools/brand/mindmorph_logo.py."
+    },
+    {
+      "path": "art/ui/brand_lockup_ko.png",
+      "outputs": [
+        "art/ui/brand_lockup_ko.png",
+        "art/ui/brand_lockup_en.png"
+      ],
+      "generator": "Godot 4.7.1 viewport bake (tests/brand/lockup_bake.tscn): the title screen's code wordmark (RefugeSans-Bold, title_wordmark.gdshader ramp) at 2x with art/ui/soul_emblem.png as the crest",
+      "postprocessing": "tools/brand/lockup.py: un-premultiplied, trimmed. Text baked on purpose: the logo lockup is the recorded exception to the no-text-in-images rule.",
+      "sha256": {
+        "ko": "dca90cfda849fd4c23e5c29f6ce3057a6d489b2fbbf66cb9cc05555b26f2dc93",
+        "en": "af9971dee3a36fab4f9fee78cedbac4508249f4d094b79fe9063960be95667d4"
+      }
+    },
+    {
+      "path": "art/ui/soul_emblem.png",
+      "generator": "Krea 2 Turbo (krea/Krea-2-Turbo, diffusers Krea2Pipeline, bf16, 8 steps, guidance 0), local GB10; tools/brand/paint.py",
+      "prompt": "A single game emblem asset isolated on a flat, solid, pure magenta background (#FF00FF) with nothing else, no shadow and no glow on the background. The emblem: the Soul Stone — a large, tall faceted crystal of luminous cyan and teal shaped like an elongated diamond, glowing from within with a brilliant warm golden star-shaped light, mounted on an ornate polished golden heraldic shield with a pointed bottom, small spread golden wings on both sides and star-shaped golden rivets. Bright specular highlights on the gold, clear dark outline around the whole emblem. Front view, perfectly centered and symmetrical, the emblem fills two thirds of the frame. Polished painterly premium mobile game art, crisp clean edges.",
+      "seed": 34,
+      "source": "build/feedback-2026-10-19/D4/gen/emblem_cutout_krea2_1024x1024_s34.png",
+      "postprocessing": "tools/brand/key_magenta.py (alpha from min(R,B)-G, colour un-mixed from the measured magenta, largest component kept), trimmed and scaled to 768 px tall. Brand emblem: lockup crest, title emblem.",
+      "sha256": "e82ca18e0ccc66552278c483daad378f5d83025e739bc083a0aed82d0d892dde"
+    },
+    {
+      "path": "art/ui/stellar_keyart.png",
+      "generator": "Krea 2 Turbo (krea/Krea-2-Turbo, diffusers Krea2Pipeline, bf16, 8 steps, guidance 0), local GB10; tools/brand/paint.py",
+      "prompt": "Wide cinematic key art illustration for a cozy fantasy tower defense game. The whole scene sits in the lower two thirds of the picture: in a moonlit forest clearing an ancient round stone altar carved with softly glowing golden runes stands on the ground at the center, and just above the altar floats the Soul Stone — a large, tall faceted crystal of luminous cyan and teal shaped like an elongated diamond, glowing from within with a brilliant warm golden star-shaped light, casting teal light, soft light rays and tiny sparkles across the clearing; the top of the crystal is no higher than the middle of the picture. Four young guardian heroes with stylized super-deformed proportions (large heads, big expressive eyes, small sturdy bodies) stand on the ground beside the altar in confident defensive poses: a cheerful boy knight with dark purple hair in ornate crimson red and gold plate armor holding a sword; a girl with a navy-blue bob haircut in a teal apron over cobalt-blue work overalls and rubber boots, a metal water tank with two hoses on her back; a silver-haired young woman engineer with her hair in a bun, in a long navy and teal coat with gold trim, a large golden ring-shaped water device on her back, holding a brass staff; and a huge white-bearded explorer in a round polar-bear hood and quilted silver-blue armor gripping a wide translucent ice greatsword. In the dark woods at the far left and far right edges, shadowy rift monsters with glowing orange eyes emerge from cracked purple rifts. Warm golden lanterns hang from wooden posts, fireflies drift, low fog lies on the ground, tall dark pine silhouettes frame the sides. The entire upper third of the picture is open deep blue night sky with stars and a faint teal nebula and nothing else in it. The bottom edge is dark mossy ground in soft shadow. Polished premium mobile game key art, painterly digital illustration, soft rim light, rich contrast between cool blue night and warm lantern gold, cinematic lighting, highly detailed.",
+      "seed": 41,
+      "source": "build/feedback-2026-10-19/D4/gen/keyart_final_krea2_2240x960_s41.png",
+      "postprocessing": "tools/brand/keyart.py: Lanczos 2240x960 -> 2688x1152 (21:9) with a light unsharp mask; imported lossy WebP q0.9 with mipmaps. Loading cover art (game/startup_loading.gd ART_PATH).",
+      "sha256": "6838551325cea799ce70eb8afe78abef3f2fa8697a245694d61733453232f75d"
     },
     {
       "path": "art/terrain/biome_materials.png",
@@ -625,6 +686,18 @@
       "generator": "tools/3d/gen_terrain_noise.py (procedural, numpy; seed 20261013, no external art)",
       "sha256": "1112c6f8a7462a9d6123026c333cd45cd948849e1688089fc624fa3dfb47e2b5",
       "notes": "512x512 RGBA tileable pattern for the arena battlefield shaders: R cloud, G distance to cell border, B cell value, A ridge. Every ground, road, liquid and scenery pattern is thresholded from this one texture. See docs/BATTLEFIELD_BIOMES.md."
+    },
+    {
+      "path": "art/ui/talents",
+      "generator": "tools/talent_art.py + tools/talent_glyphs.py (procedural: pycairo vector shapes, numpy/scipy soft glows; no image model, no external art)",
+      "outputs": {
+        "seal_atlas.png": "768x1344, 4x7 cells of 192 px (seal faces, tier frames ring/hexagon/eight-point star, glows, rays, sparkle, crown, lock, shadow, pip, eight constellation emblems, thin ring, brackets)",
+        "node glyphs": 76
+      },
+      "sha256": {
+        "seal_atlas.png": "471bd6f0c248d5da8e27f93ba359f885009ef684fdb11f1918d17b2f851736d4"
+      },
+      "notes": "2026-10-19 feedback F3 (constellation node identity). Neutral white/ivory art tinted in game/constellation.gd (face = constellation colour, locked = grey); gold parts are baked. Import with mipmaps (LINEAR_WITH_MIPMAPS via CanvasTexture). Rebuild: python3 tools/talent_art.py. Glyph lookup order in Constellation.icon_texture: art/ui/talents/<id>.png -> Roster.ART['pi_<passive>'] -> vector glyph (node icon column). Review: build/feedback-2026-10-19/D2/RECORD.md."
     }
   ]
 }

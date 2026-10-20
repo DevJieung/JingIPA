@@ -22,6 +22,8 @@ stellar_apk="$stellar_stage/sd-tst.apk"
 
 test -x "$stellar_java"
 test -f "$stellar_config/godot/editor_settings-4.7.tres"
+# The C++ kernels the APK ships (addons/stellar_native, docs/PERF_NATIVE.md).
+ANDROID_HOME="$stellar_sdk" bash "$stellar_root/tools/native/build.sh" android
 XDG_CONFIG_HOME="$stellar_config" godot --headless --path "$stellar_root" \
     --export-debug "Android Test APK" "$stellar_apk" > "$stellar_log" 2>&1
 # Godot may return success while reporting script errors.

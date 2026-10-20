@@ -11,6 +11,58 @@
 iOS는 Xcode 프로젝트/PCK export·packed 모델 검사이며 Linux에서 서명 IPA를 만들지 않았다.
 기존 게임 데이터·피해·공격 시계·난수는 바꾸지 않는다. 2026-10-09 사용자가 몬스터25종도 명시적으로 포함했다. 영웅50+몬스터25 native 제작이 현재 범위다.
 
+## 2026-10-18 페인트된 스킨 — 알베도 재베이크(`--retexture`)
+
+캐주얼 3D 개편(「Lantern Stage」, `build/casual-overhaul/PLAN.md` §3 WP-A)의 영웅 알베도 단계다. 2026-10-15 LOD
+아틀라스는 TRELLIS 재구성의 조명·그림자·검정·잡음을 그대로 구워 놓은 것이라(49명 평균 L\* 32.6, 하위 10% 휘도
+0.07~0.10, Carmen 63%가 검정) 전장에서 진흙 같은 실루엣으로 읽혔다. 이 단계는 **지오메트리·UV·가중치·리그·클립·
+소켓·`height`를 바이트 단위로 보존**하고 GLB 안의 이미지 한 장만 바꾼다. 런타임 비용 0.
+
+- 도구: `python3 tools/3d/optimize_native_lod.py --ids <id,..>|--all --candidates --retexture --work
+  build/character-3d/lod-2026-10-18 [--jobs 7]` → `python3 tools/3d/publish_native_lod.py install --ids ..|--all --work
+  build/character-3d/lod-2026-10-18` → `bash tools/godot_import.sh` → `publish_native_lod.py textures` →
+  `bash tools/godot_import.sh`. 색 계산은 `tools/3d/grade_native_albedo.py`(numpy·scipy, Blender 파이썬에서 import).
+- 절차(모델당 25~65초, 75종 `--jobs 7` 약 9분): `game-lod.blend`(저폴리 결과)을 열어 그 표면을 베이크 대상으로 두고,
+  `game.blend`의 55k 표면을 **베이크 소스로만** 붙여 넣는다(보이는 면 우선·전체 판 대체의 EMIT 두 번 — 2026-10-15와
+  같음). 이어 저폴리 메시 단독의 Cycles AO(광선 길이 0.25H, 몬스터 0.30H, 64spp, margin 8)와 높이 패스
+  (`clamp(z/H)`, EMIT)를 굽고, 차트 마스크 안에서 등급을 매긴 뒤 nearest 채움·박스 축소는 그대로다. 결과 GLB는
+  **출시 GLB에 이미지 바이트만 끼워 넣어**(`splice_images`) 만든다 — 다시 내보낸 지오메트리는 쓰지 않는다
+  (FlameDragon은 재내보내기에서 법선 2개가 1e-4 달랐다). 클립 도너도 출시 GLB다(고폴리 백업이 아니다 —
+  `judge_tech_artist.md` W2). `report.json`의 `retexture.geometry_bytes_preserved`가 메시·스킨·노드 지문의 일치를
+  기록하고, 편집 원본 `game-lod.blend`는 새 알베도를 품은 채 다시 저장되며 첫 실행 때 `game-lod.pre-retexture.blend`
+  로 백업된다.
+- 등급(`grade_native_albedo.py` `PARAMS`, 버전 `2026-10-18.6`), 순서대로:
+  1. 잡티 제거 — 채널별 3×3 중앙값 + 반경 3 양방향 필터(σs 1.6, σr 0.10) 2회.
+  2. **이음새 평활화** — 메시의 UV 이음새 양쪽 텍셀은 같은 표면선이므로 그 휘도 비는 구워진 조명 오차다.
+     차트별 로그 이득(휘도 한 값, 채널별 아님 — 작은 어두운 차트가 이웃 색으로 물드는 것을 막는다)을 최소제곱
+     (λ 0.3, 작은 차트일수록 1에 더 세게 묶음, 색상차·비율 2배 이상인 쌍은 색 경계로 보고 가중치 축소)으로 풀고
+     0.7~1.4로 잘라 곱한다. 피부 차트는 제외. 큰 차트들 사이의 명암 계단(모자이크)이 이것으로 사라진다.
+  3. 차트 평탄화 — 폭 48텍셀 이상(1024 기준) 비피부 차트만 `L / blur24(L) · median(L)`, 혼합 0.4(W16).
+  4. 포스터화 — 채널 6단계, 혼합 0.30(피부 차트 제외).
+  5. 레벨 — `v' = 0.06 + 0.88·v^0.9` 뒤 모델별 휘도 백분위 리맵: p10 → 0.17 이상(AO 뒤 최종 p10 ≥ 0.12 확보),
+     p50은 0.42 쪽으로 절반만(최대 1.5배, 내리지는 않음), p90 유지. 채도가 높을수록 들어올림을 절반까지 줄이고
+     (포화 적색이 분홍이 되는 것 방지), 중간톤은 곱셈·검정 근처는 덧셈(잡음 검정이 물들지 않음), 강한 채널 0.78
+     (채도 1이면 0.68)부터 무릎 0.45.
+  6. 채도 — OKLab 크로마 영웅 ×1.20, 몬스터 ×1.15, 피부 ×1.0; HSV S 상한 전체 0.86·피부 0.50(톤매퍼 ACES가 클리핑
+     적색을 주황으로 틀기 때문에 완전 포화는 쓰지 않는다).
+  7. 그린 빛 — 선형 공간에서 `rgb *= (0.55 + 0.45·ao)^0.8 · mix(0.82, 1.12, smoothstep(0.05, 0.70, h))`, 찬 그늘
+     `mix(rgb, rgb·(0.85, 0.90, 1.12), (1 − ao)·0.5)`, 가장자리 빛 `1 + 0.06·smoothstep(0.92, 1, ao)`.
+  8. 얼굴(영웅) — `head_start`(0.675, Pip 0.625) 위 피부 차트의 국소 대비 ×1.3, 피부 차트 안의 어두운 비피부
+     텍셀(눈·눈썹·입)을 L\* ≤ 15·채도 −80%로 되돌린다.
+  피부 판정은 텍셀 HSV 창(색상 8~38°, S 0.15~0.60, V 0.35~0.98, r > 1.05g > 1.05²b)을 차트 단위(60% 이상, 혼합
+  차트 30%)로 모으되 채도 중앙값 > 0.55 또는 p90 > 0.72인 차트는 장비로 본다(Brasa의 적금 갑옷이 피부로 잡혀
+  분홍이 되던 것).
+- 기록: 각 `provenance.json`의 `albedo_grade`(전후 GLB SHA·아틀라스 통계·매개변수·AO·`geometry_bytes_preserved`),
+  manifest `glb_sha256`, `build/character-3d/lod-2026-10-18/<id>/`(`bake_1024_source.png`·`bake_1024.png`·
+  `ao_1024.png`·`height_1024.png`·`skin_1024.png`·`cover_1024.png`·`seams.npz`·`report.json`). 전후 비교·게이트 판정·
+  전수 통계표는 `build/casual-overhaul/after/wp-a/RECORD.md`.
+- 판정 도구: 같은 렌더러에서 옛/새 아틀라스를 나란히 찍는 `build/casual-overhaul/after/wp-a/ab/ab_capture.py`
+  (런타임 GLTF 로드, 현재 조명·`StellarShading.style`·헐 외곽선, 같은 IdleLoop 프레임). 게임 배율 3배·근접
+  시트와 몸통 L\*/S/V 표를 낸다. 다른 패키지의 조명이 같은 날 바뀌어 `before2` 로스터와의 단순 비교는 텍스처
+  변화와 조명 변화가 섞인다.
+- 지켜지는 것: 스킨 계약(`StandardMaterial3D` + `albedo_texture`), 삼각형·정점 수, 리그·클립·소켓, Limne 홍채 재질.
+  클립 재저작(`author_native_motion.py`)은 이 게시 **뒤에** 돌린다(`glb-base` 갱신 순서).
+
 ## 2026-10-15 현행 런타임 — 모바일 폴리곤·텍스처 예산
 
 아래 절들의 55k 삼각형·1024 albedo·보존 UV는 **편집 원본** `source/<id>/game.blend`의 상태다. 출시 런타임

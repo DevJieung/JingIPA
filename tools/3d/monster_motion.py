@@ -279,6 +279,36 @@ def motion_params(spec):
     return params
 
 
+# Gait versions (2026-10-18, casual overhaul MA1/MA2). "v2" authors exactly today's
+# clips. "v3" raises the walk amplitudes to the floors below (never lowers a tuned
+# value), gives every biped the footfall bounce profile and keys the die clip with an
+# ease-in collapse behind a short stretch. Authoring only: the version is applied on
+# top of motion_params() and never written back into native_monster_specs.json, so
+# the default stays v2 until the user asks for v3 (author_monster_motion.py --gait v3).
+GAIT_VERSIONS = ("v2", "v3")
+GAIT_V3_FLOORS = {
+    "biped": dict(bounce=0.07, roll=0.14, head_bob=0.14),
+    "quadruped": dict(pitch=0.14, stretch=0.09),
+}
+GAIT_V3_ARM_SWING = (1.6, 0.8)   # x factor, cap (biped arm swing 0.5 -> 0.8)
+
+
+def apply_gait(params, shape, version="v2"):
+    """Authoring parameters for a gait version (see GAIT_VERSIONS). Returns a new dict."""
+    if version not in GAIT_VERSIONS:
+        raise ValueError("unknown gait version " + str(version))
+    out = dict(params)
+    out["gait"] = version
+    if version == "v3":
+        for key, floor in GAIT_V3_FLOORS.get(shape, {}).items():
+            out[key] = max(float(out.get(key, 0.0)), floor)
+        if shape == "biped":
+            out["impact"] = True
+            factor, cap = GAIT_V3_ARM_SWING
+            out["arm_swing"] = max(float(out.get("arm_swing", 0.0)), min(cap, float(out.get("arm_swing", 0.0)) * factor))
+    return out
+
+
 def runtime_motion(spec, params=None):
     """The subset the Godot adapter needs (stored in native_monsters.json)."""
     params = params or motion_params(spec)
@@ -367,13 +397,19 @@ class Choreographer:
     def die_pose(self, t):
         keys = getattr(self, "die_" + self.shape)
         times = (0.14, 0.50, 0.76)
+        v3 = self.P.get("gait") == "v3"
         # Fliers fall out of their hover while they collapse.
         hover_factor = 1.0 - smooth(seg(t, 0.12, 0.50))
         pose = self.pose(hover_factor)
+        if v3:
+            # MA2: a short stretch (a last breath) right before the collapse drops.
+            b = bump(t, 0.06, 0.20)
+            pose.scale("Body", 1.0 - 0.04 * b, 1.0 - 0.04 * b, 1.0 + 0.07 * b)
         if t < times[0]:
             keys(K(pose, ease_out(t / times[0], 2.0)), 0)
         elif t < times[1]:
-            u = smooth((t - times[0]) / (times[1] - times[0]))
+            # MA2: the collapse eases IN (hangs, then drops) instead of a symmetric blend.
+            u = ease_in((t - times[0]) / (times[1] - times[0]), 2.0) if v3 else smooth((t - times[0]) / (times[1] - times[0]))
             keys(K(pose, 1.0 - u), 0)
             keys(K(pose, u), 1)
         elif t < times[2]:

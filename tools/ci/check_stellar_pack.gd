@@ -2,16 +2,22 @@ extends SceneTree
 
 
 func _initialize() -> void:
-	for module in ["core/arena_run", "core/arena_validation", "game/arena_sim", "game/arena_screen", "game/3d/arena_view", "game/3d/arena_world",
+	for module in ["core/arena_run", "core/arena_validation", "core/talents", "game/arena_sim", "game/arena_screen",
+			"game/arena_hud", "game/arena_cards", "game/arena_box_view", "game/arena_talent_view", "game/arena_help",
+			"game/3d/arena_view", "game/3d/arena_world",
 			"game/3d/arena_biome", "game/3d/arena_land", "game/3d/arena_scenery",
-			"core/store", "core/store/play", "core/store/apple", "core/store/steam", "game/store_view"]:
+			"core/store", "core/store/play", "core/store/apple", "core/store/steam", "game/store_view",
+			# 2026-10-19 feedback round: jewel box, ladder screens, startup cover, constellation map.
+			"core/jewel_box", "game/box_ceremony", "game/constellation", "game/stage_select_view", "game/squad_view",
+			"game/startup", "game/startup_splash", "game/startup_loading", "game/3d/arena_frame"]:
 		if not ResourceLoader.exists("res://%s.gd" % module):
 			_fail("Missing packaged continuous battle module: " + module)
 			return
 	# Stage chain (2026-10-13): battlefield land and scenery, and the run-level moments.
 	for shader in ["art/models/arena_terrain", "art/models/arena_liquid", "art/models/arena_scenery", "art/models/arena_haze",
+			"art/models/skin_outline", "art/models/arena_contact_decal", "art/models/arena_post",
 			"art/vfx/vfx_moment", "art/vfx/vfx_moment_mix", "art/vfx/vfx_aegis", "art/vfx/vfx_aegis_base",
-			"art/vfx/vfx_road", "art/vfx/vfx_road_base"]:
+			"art/vfx/vfx_road", "art/vfx/vfx_road_base", "art/vfx/vfx_ring", "art/vfx/vfx_elite"]:
 		if not ResourceLoader.exists("res://%s.gdshader" % shader, "Shader"):
 			_fail("Missing packaged battlefield shader: " + shader)
 			return
@@ -27,8 +33,8 @@ func _initialize() -> void:
 		_fail("Missing packaged UI translations")
 		return
 	for locale in ["ko", "en"]:
-		for key in ["arena.title", "arena.rules.control", "arena.rules.growth", "arena.rules.boss",
-				"arena.stage_n", "arena.final_clear", "store.title", "store.guardian.name"]:
+		for key in ["arena.title", "arena.rules.control", "arena.rules.growth", "arena.rules.boss", "arena.rules.air",
+				"arena.stage_n", "arena.final_clear", "arena.talents", "arena.levelup", "store.title", "store.guardian.name"]:
 			if not catalog.get(locale, {}).get(key):
 				_fail("Missing packaged continuous battle translation: %s/%s" % [locale, key])
 				return

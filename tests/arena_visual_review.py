@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """Capture the arena using actual Godot OpenGL at both mobile review sizes.
 
-    python3 tests/arena_visual_review.py                      # every HUD/flow screen (Xvfb)
+    python3 tests/arena_visual_review.py                      # every HUD/flow screen
     python3 tests/arena_visual_review.py --only spiral        # one older scenario
+    python3 tests/arena_visual_review.py --only box           # the jewel box over the field ("rite" = old name)
     python3 tests/arena_visual_review.py --only biome --out-root build/biomes/after \
         --before build/biomes/before                          # battlefield biome review
 
-The biome review (2026-10-13) draws into an off-screen picture, so it can borrow the GL
-context of the login session's GPU display (about 30 fps) instead of software GL; it
-falls back to Xvfb. It writes, per resolution:
+Every mode draws into an off-screen picture (--film) when the login session's GPU display
+is up (about 30 fps, serialised with the other GPU captures through
+build/casual-overhaul/gpu.lock) and falls back to a software Xvfb window otherwise
+(REVIEW_DISPLAY=xvfb forces it). The biome review (2026-10-13) writes, per resolution:
 
     screen_<theme>.png   the live battle as the player sees it (HUD on)
     world_<theme>.png    the same moment without the HUD
@@ -43,15 +45,32 @@ SHAPES = ["spiral", "pinwheel", "blades", "coil", "fork"]
 THEME_ORDER = __import__("re").findall(r'\{"id": "([a-z_]+)", "ko": "[^"]+", "main_body"', (ROOT / "core/roster.gd").read_text())
 
 
-def gpu_display(res: str, base: int):
-    """The login session's GPU X server when it is there, else a software Xvfb."""
+GPU_LOCK = ROOT / "build/casual-overhaul/gpu.lock"
+
+
+def gpu_env() -> dict | None:
+    """The login session's GPU X server's environment when it answers, else None."""
     auth = Path(f"/run/user/{os.getuid()}/gdm/Xauthority")
     if os.environ.get("REVIEW_DISPLAY", "auto") != "xvfb" and auth.exists():
         env = dict(os.environ, DISPLAY=":1", XAUTHORITY=str(auth), STELLARDEFENSE_NO_SAVE="1")
         probe = subprocess.run(["xdpyinfo", "-queryExtensions"], env=env, capture_output=True, text=True)
         if probe.returncode == 0 and "NV-GLX" in probe.stdout:
-            return contextlib.nullcontext(env)
-    return xvfb(base, res)
+            return env
+    return None
+
+
+def gpu_display(res: str, base: int):
+    """The login session's GPU X server when it is there, else a software Xvfb."""
+    env = gpu_env()
+    return contextlib.nullcontext(env) if env is not None else xvfb(base, res)
+
+
+def locked(command: list, env: dict) -> list:
+    """GPU runs wait for the shared GPU lock (one capture on the display at a time)."""
+    if env.get("DISPLAY") == ":1":
+        GPU_LOCK.parent.mkdir(parents=True, exist_ok=True)
+        return ["flock", str(GPU_LOCK), *command]
+    return command
 
 
 def sheet(paths, labels, columns, cell_w, out, label_h=0):
@@ -94,7 +113,7 @@ def mean_colour(image, box):
     return tuple(sum(p[c] for p in pixels) / count for c in range(3))
 
 
-def contrast(out: Path, fields: dict) -> dict:
+def contrast(out: Path, fields: dict, picture_width: float = 0.0) -> dict:
     """Colour distance (CIE76) and luminance ratio between each actor's body and the ground
     it stands on. Monsters are compared against the same pixels of the empty field; heroes
     stand in both pictures, so their ground is the strip beside their feet."""
@@ -106,10 +125,13 @@ def contrast(out: Path, fields: dict) -> dict:
             continue
         world = Image.open(world_path).convert("RGB")
         empty = Image.open(empty_path).convert("RGB")
+        # Actor and floor coordinates are reported in the 1280x800 logical picture; a
+        # 1000x625 film is that picture scaled, so every sample scales with the PNG.
+        scale = world.width / picture_width if picture_width else 1.0
         rows = []
         for actor in field["actors"]:
-            fx, fy = actor["foot"]
-            hx, hy = actor["head"]
+            fx, fy = (v * scale for v in actor["foot"])
+            hx, hy = (v * scale for v in actor["head"])
             tall = max(6.0, fy - hy)
             if not (20 < fx < world.width - 20 and 20 < hy and fy < world.height - 8):
                 continue
@@ -130,7 +152,7 @@ def contrast(out: Path, fields: dict) -> dict:
         # The value is the lightness of the mean luminance (what effects add their light to);
         # the 90th percentile shows how bright the brightest patches of the floor get.
         for key, name in [("floor_points", "floor_L"), ("road_points", "road_L")]:
-            samples = [lab(mean_colour(empty, (x - 3, y - 3, x + 4, y + 4))) for x, y in field.get(key, [])
+            samples = [lab(mean_colour(empty, (x - 3, y - 3, x + 4, y + 4))) for x, y in ((px * scale, py * scale) for px, py in field.get(key, []))
                        if 8 < x < empty.width - 8 and 8 < y < empty.height - 8]
             if samples:
                 mean_y = sum(sample[3] for sample in samples) / len(samples)
@@ -167,9 +189,9 @@ def biome_review(args) -> None:
             with gpu_display(resolution, 133 + index) as env:
                 with log_path.open("w") as stream:
                     result = subprocess.run(
-                        [str(GODOT), "--path", str(ROOT), "--resolution", "96x60", "--disable-vsync",
-                         "res://tests/arena_visual_preview.tscn", "--", "--out", str(out), *extra],
-                        env=env, stdout=stream, stderr=subprocess.STDOUT, text=True, timeout=900)
+                        locked([str(GODOT), "--path", str(ROOT), "--resolution", "96x60", "--disable-vsync",
+                                "res://tests/arena_visual_preview.tscn", "--", "--out", str(out), *extra], env),
+                        env=env, stdout=stream, stderr=subprocess.STDOUT, text=True, timeout=1800)
             log = log_path.read_text()
             # An audio stream still held when the process quits is reported as an error line
             # at exit; it is not a rendering or script failure.
@@ -221,7 +243,7 @@ def biome_review(args) -> None:
             name = volley.stem[len("vfx_"):-len("_volley")]
             shots = [volley] + [out / f"vfx_{name}_{skill}_{n}.png" for skill in ["blast", "freeze", "ward"] for n in [1, 3]]
             sheet([p for p in shots if p.exists()], [p.stem for p in shots if p.exists()], 4, 640, out / f"sheet_vfx_{name}.jpg", 16)
-        measured = contrast(out, report["fields"])
+        measured = contrast(out, report["fields"], float(report["picture"][0]))
         (out / "contrast.json").write_text(json.dumps(measured, indent=1) + "\n")
         if args.before:
             before = args.before / resolution
@@ -254,6 +276,20 @@ def biome_review(args) -> None:
         if drifted:
             print("  !! FLOOR_L in game/3d/arena_biome.gd differs from the capture by more than 5 for: "
                   + ", ".join(f"{name} (table {table}, measured {value})" for name, (table, value) in drifted.items()))
+        # The actor rule (2026-10-18 casual overhaul): heroes are the brightest figures on the
+        # stage, a torso at least 15 L* above the road under its feet. A warning for now; it
+        # becomes a failure once every field has been re-lit.
+        lift = {}
+        for name, row in measured.items():
+            heroes = [actor["body_L"] for actor in row.get("actors", []) if actor["kind"] == "hero"]
+            if heroes and "road_L" in row:
+                heroes.sort()
+                lift[name] = round(heroes[len(heroes) // 2] - row["road_L"], 1)
+        dim = {name: value for name, value in lift.items() if value < 15.0}
+        if dim:
+            print("  !! hero torso less than 15 L* above the road (median body L* - road L*): "
+                  + ", ".join(f"{name} {value:+.1f}" for name, value in dim.items()))
+        summary.setdefault("actor_rule", {})[resolution] = lift
         if len(floors) == len(THEME_ORDER):
             rows = ["\t" + ", ".join(f'"{name}": {floors[name]:.0f}' for name in THEME_ORDER[n:n + 5]) + "," for n in range(0, len(THEME_ORDER), 5)]
             (out / "floor_l_table.txt").write_text("const FLOOR_L := {\n" + "\n".join(rows) + "\n}\n")
@@ -273,7 +309,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--res", action="append")
     parser.add_argument("--out-root", type=Path, default=None)
-    parser.add_argument("--only", choices=["polish", "help", "rite", "style", "look", "circle", "hud", "road", "motion", "spiral", "biome"])
+    parser.add_argument("--only", choices=["polish", "help", "box", "rite", "style", "look", "circle", "hud", "road", "motion", "spiral", "biome"])
     parser.add_argument("--sets", help="biome: comma list of fields,shapes,detail,switch,timing")
     parser.add_argument("--themes", help="biome: comma list of theme ids for the fields set, or 'all'")
     parser.add_argument("--shape-theme", dest="shape_theme")
@@ -285,32 +321,53 @@ def main() -> None:
     parser.add_argument("--before", type=Path, help="biome: an earlier out-root to pair against in compare_fields.jpg")
     parser.add_argument("--sheets-only", action="store_true", help="biome: rebuild sheets and measurements from existing captures")
     args = parser.parse_args()
+    if args.only == "rite":
+        args.only = "box"          # the star rite became the jewel box (2026-10-19)
     if args.only == "biome":
         args.out_root = args.out_root or ROOT / "build/biomes/review"
         biome_review(args)
         return
     args.out_root = args.out_root or ROOT / "build/arena-visual"
     report = {"renderer": "gl_compatibility", "device_fps_measured": False, "resolutions": {}}
+    failed = False
     for index, resolution in enumerate(args.res or ["1280x800", "1000x625"]):
         out = args.out_root / resolution
         out.mkdir(parents=True, exist_ok=True)
-        with xvfb(113 + index, resolution) as env:
+        with gpu_display(resolution, 113 + index) as env:
             extra = [f"--{args.only}-only"] if args.only else []
+            # On the GPU display the game draws into an off-screen film of the review size
+            # behind a tiny window; on Xvfb the window itself is the picture.
+            window = ["--resolution", "96x60", "--disable-vsync"] if env.get("DISPLAY") == ":1" else ["--resolution", resolution]
+            film = ["--film", resolution] if env.get("DISPLAY") == ":1" else []
             live_log = out / (f"{args.only}-render.log" if args.only else "render.log")
             with live_log.open("w") as stream:
                 result = subprocess.run(
-                    [str(GODOT), "--path", str(ROOT), "--resolution", resolution,
-                     "res://tests/arena_visual_preview.tscn", "--", "--out", str(out), *extra],
-                    env=env, stdout=stream, stderr=subprocess.STDOUT, text=True, timeout=600,
+                    locked([str(GODOT), "--path", str(ROOT), *window,
+                            "res://tests/arena_visual_preview.tscn", "--", "--out", str(out), *film, *extra], env),
+                    env=env, stdout=stream, stderr=subprocess.STDOUT, text=True, timeout=1800,
                 )
         log = live_log.read_text()
-        if result.returncode or "ERROR:" in log or "!! " in log:
+        bad = [line for line in log.splitlines() if "ERROR:" in line and "still in use at exit" not in line]
+        flagged = [line for line in log.splitlines() if line.startswith("!! ")]
+        report_path = out / (f"{args.only}-report.json" if args.only else "report.json")
+        if bad or not report_path.exists():
+            # The run itself broke (no report): show the end of its log and stop.
             print("\n".join(log.splitlines()[-100:]))
             sys.exit(1)
+        if result.returncode or flagged:
+            # Checks failed but the pictures are there: say which, keep going (sheets, next size).
+            failed = True
+            counts: dict = {}
+            for line in flagged:
+                key = line.split(": ")[0] if "readable text size" in line else line
+                counts[key] = counts.get(key, 0) + 1
+            print(f"{resolution}: {len(flagged)} failed checks")
+            for key, count in sorted(counts.items(), key=lambda item: -item[1])[:12]:
+                print(f"   {count:4d} x {key}")
         for locale in ["ko", "en"]:
-            names = ["spiral_field", "speed_1", "speed_2", "speed_3", "ward_cast", "ward_4s", "ward_6s", "uses_210", "uses_200", "boss_warn_04", "boss_warn_01", "boss_spawn_03", "boss_bar", "road_field_six", "road_center_guardians", "road_pass_10", "road_pass_20", "road_pass_31", "road_entry_00", "road_entry_01", "road_entry_02", "road_entry_03", "circle", "circle_edge_00", "circle_edge_02", "circle_edge_04", "circle_edge_06", "joystick_start_00", "joystick_drag_00", "joystick_drag_01", "joystick_drag_02", "joystick_drag_03", "joystick_released", "reference", "edge_-1_0", "edge_1_0", "edge_0_-1", "edge_0_1", "edge_1_1", "biome_00", "biome_20", "biome_30", "biome_40", "stage_card", "rite_free", "summon_new", "field_six", "help", "growth_result",
-                     "growth_maxed", "upgrades", "passives", "reserves_selected", "boss", "victory",
-                     "defeat", "title", "title_resume", "collection_water", "collection_fire", "collection_elec", "menu_menu", "menu_rite", "menu_elements"]
+            names = ["spiral_field", "speed_1", "speed_2", "speed_3", "ward_cast", "ward_4s", "ward_6s", "uses_210", "uses_200", "boss_warn_04", "boss_warn_01", "boss_spawn_03", "boss_bar", "road_field_six", "road_center_guardians", "road_pass_10", "road_pass_20", "road_pass_31", "road_entry_00", "road_entry_01", "road_entry_02", "road_entry_03", "circle", "circle_edge_00", "circle_edge_02", "circle_edge_04", "circle_edge_06", "joystick_start_00", "joystick_drag_00", "joystick_drag_01", "joystick_drag_02", "joystick_drag_03", "joystick_released", "reference", "edge_-1_0", "edge_1_0", "edge_0_-1", "edge_0_1", "edge_1_1", "biome_00", "biome_20", "biome_30", "biome_40", "stage_card", "box_free", "box_spent", "box_result", "box_paid", "summon_new", "field_six", "help", "growth_result",
+                     "growth_maxed", "talents", "reserves_selected", "boss", "victory",
+                     "defeat", "title", "title_resume", "collection_water", "collection_fire", "collection_elec", "menu_menu", "menu_rules", "menu_box", "menu_elements"]
             names = [name for name in names if (out / f"{locale}_{name}.png").exists()]
             contact = Image.new("RGB", (1280, 267 * max(1, (len(names) + 2) // 3)), (10, 20, 29))
             for n, name in enumerate(names):
@@ -320,7 +377,7 @@ def main() -> None:
                 shot.thumbnail((426, 267))
                 contact.paste(shot, (n % 3 * 426, n // 3 * 267))
             contact.save(out / f"{locale}_contact.jpg", quality=94)
-            for motion in ["move", "limne_move", "skill_blast", "skill_freeze", "skill_ward", "rite_spin", "follow", "echo_attack", "lane", "long_walk", "road_pass", "motion", "boss_warn", "boss_spawn"]:
+            for motion in ["move", "limne_move", "skill_blast", "skill_freeze", "skill_ward", "box_open", "follow", "echo_attack", "lane", "long_walk", "road_pass", "motion", "boss_warn", "boss_spawn"]:
                 files = sorted(out.glob(f"{locale}_{motion}_[0-9][0-9].png"))
                 frames = []
                 for path in files:
@@ -331,20 +388,22 @@ def main() -> None:
                     frames[0].save(out / f"{locale}_{motion}.gif", save_all=True,
                                    append_images=frames[1:], duration={"road_pass": 300, "motion": 67, "boss_warn": 700}.get(motion, 100),
                                    loop=0, optimize=False)
-        checks = json.loads((out / (f"{args.only}-report.json" if args.only else "report.json")).read_text())
+        checks = json.loads(report_path.read_text())
         if "resolution" in checks:
             checks["layout_resolution"] = checks.pop("resolution")
-        reference = {"circle": "ko_circle.png", "road": "ko_road_field_six.png", "motion": "ko_motion_start.png", "spiral": "ko_spiral_field.png"}.get(args.only, "ko_rite_free.png")
-        # Modes that never open the ritual (help) have no such picture: any capture gives the size.
+        reference = {"circle": "ko_circle.png", "road": "ko_road_field_six.png", "motion": "ko_motion_start.png", "spiral": "ko_spiral_field.png"}.get(args.only, "ko_box_free.png")
+        # Modes that never open the box (help) have no such picture: any capture gives the size.
         reference_path = out / reference
         if not reference_path.exists():
             reference_path = sorted(out.glob("ko_*.png"))[0]
         checks["window_resolution"] = list(Image.open(reference_path).size)
-        checks["screenshots"] = {"polish": 32, "help": 2, "rite": 12, "style": 38}.get(args.only, len(list(out.glob("*.png"))))
+        checks["screenshots"] = len(list(out.glob("*.png")))
         checks["render_errors"] = 0
         report["resolutions"][resolution] = checks
-        print(f"{resolution}: {checks['screenshots']} screenshots, {checks['checks']} checks, 0 failures")
+        print(f"{resolution}: {checks['screenshots']} screenshots, {checks['checks']} checks, {checks.get('failures', 0)} failures")
     (args.out_root / (f"{args.only}-report.json" if args.only else "report.json")).write_text(json.dumps(report, indent=2) + "\n")
+    if failed:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -49,11 +49,10 @@ func _ready() -> void:
 		star.position=Vector3(cos(angle)*1.04,1.0-sin(angle)*1.04,-0.13)
 		star.scale=Vector3.ONE*(0.40 if n==2 else 0.31)
 		symbol.add_child(star)
-	await _save(viewport,"res://art/ui/launcher_main.png")
-	await _save(viewport,"res://art/ui/startup_logo.png")
+	# ★ 2026-10-19: the launcher icon and the startup logo are painted art now (D4, art/ui/launcher_manifest.json).
+	#   This renderer must never overwrite them again; it only renders the coin below.
 	viewport.transparent_bg=true
 	camera.size=3.85
-	await _save(viewport,"res://art/ui/launcher_adaptive.png")
 	symbol.free()
 	var coin := Node3D.new()
 	stage.add_child(coin)

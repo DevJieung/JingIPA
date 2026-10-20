@@ -4,8 +4,11 @@ render_mode diffuse_burley;
 // from the uniforms (game/3d/arena_biome.gd), so a stage switch never compiles a shader.
 // Layers, bottom to top: base colour drifting into a patch colour -> plates with joints
 // -> winding lines (ripples, roots, drifts) -> pools (puddles, ice, lava) -> specks
-// (flowers, pebbles, sparks) -> a band along the rim -> glints on wet or frozen ground.
-// All patterns are thresholded fields of art/models/terrain_noise.png.
+// (flowers, pebbles, sparks) -> a band along the rim -> glints on wet or frozen ground
+// -> the stage: a lit centre falling off toward the rim (2026-10-18, Lantern Stage).
+// The floor is a quiet stage: marks are few, large and soft, so the actors and the
+// effects are the sharpest things on it. All patterns are thresholded fields of
+// art/models/terrain_noise.png.
 uniform sampler2D noise_tex : repeat_enable, filter_linear_mipmap;
 uniform vec3 color_a : source_color = vec3(0.10, 0.20, 0.20);
 uniform vec3 color_b : source_color = vec3(0.16, 0.30, 0.24);
@@ -16,22 +19,25 @@ uniform vec3 glow_color : source_color = vec3(1.0, 0.45, 0.12);
 uniform vec3 speck_color : source_color = vec3(0.9, 0.9, 0.7);
 uniform vec3 rim_color : source_color = vec3(0.2, 0.3, 0.3);
 uniform vec3 glint_color : source_color = vec3(0.8, 0.95, 1.0);
-// level, softness, scale, grain contrast
-uniform vec4 patch = vec4(0.5, 0.16, 0.085, 0.16);
+// level, softness, scale, grain contrast (patches twice as large and soft as before)
+uniform vec4 patch = vec4(0.5, 0.30, 0.045, 0.06);
 // scale, joint width (0 = no plates), tone variation per plate, joint strength
 uniform vec4 plate = vec4(0.30, 0.0, 0.0, 0.0);
-// amount, scale, threshold, softness
-uniform vec4 lines = vec4(0.0, 0.2, 0.62, 0.08);
+// amount, scale, threshold, softness (broad soft darkenings, not squiggles)
+uniform vec4 lines = vec4(0.0, 0.2, 0.62, 0.14);
 // coverage (0 = none), softness, scale, roughness inside
-uniform vec4 pool = vec4(0.0, 0.05, 0.12, 0.2);
+uniform vec4 pool = vec4(0.0, 0.14, 0.12, 0.2);
 // joint glow, pool glow, share of joints that glow, pulse
 uniform vec4 glow = vec4(0.0, 0.0, 0.5, 0.0);
 // amount, share of cells that carry one, scale, glow
-uniform vec4 speck = vec4(0.0, 0.2, 1.4, 0.0);
-// strength, width, unused, unused
-uniform vec4 rim = vec4(0.0, 1.4, 0.0, 0.0);
+uniform vec4 speck = vec4(0.0, 0.08, 1.2, 0.0);
+// strength, width, unused, unused (a wide band: the stage falls off toward the kerb)
+uniform vec4 rim = vec4(0.0, 3.5, 0.0, 0.0);
 // amount, unused, pools only (0/1), twinkle speed
 uniform vec4 glint = vec4(0.0, 0.0, 0.0, 0.0);
+// The painted spotlight: radius of the fully lit centre (the fall-off starts at 45 % of
+// it), and how much darker the floor is at the rim (0 = evenly lit as before).
+uniform vec2 stage = vec2(12.0, 0.0);
 uniform float field_radius = 12.0;
 uniform float rough = 0.93;
 uniform vec2 seed = vec2(0.0);
@@ -54,6 +60,7 @@ void fragment() {
 	vec3 emission = vec3(0.0);
 	float pulse = 1.0 + glow.w * sin(TIME * 1.7 + drift.r * 9.0);
 	float wet = 0.0;
+	float from_centre = length(world_pos.xz);
 	if (plate.y > 0.0) {
 		vec4 cell = texture(noise_tex, p * plate.x + (mid.rg - 0.5) * 0.02);
 		albedo *= 1.0 + (cell.b - 0.5) * plate.z;
@@ -75,7 +82,7 @@ void fragment() {
 		float level = 1.0 - pool.x;
 		wet = smoothstep(level - pool.y, level + pool.y, basin);
 		float shore = wet * (1.0 - wet) * 4.0;
-		albedo = mix(albedo * (1.0 - shore * 0.35), pool_color * (0.86 + fine.r * 0.28), wet);
+		albedo = mix(albedo * (1.0 - shore * 0.25), pool_color * (0.90 + fine.r * 0.20), wet);
 		roughness = mix(roughness, pool.w, wet);
 		float deep = smoothstep(level, level + pool.y * 4.0 + 0.08, basin);
 		emission += glow_color * glow.y * wet * (0.35 + 0.65 * deep) * (0.8 + 0.4 * fine.a) * pulse;
@@ -89,8 +96,8 @@ void fragment() {
 		emission += speck_color * blob * speck.w;
 	}
 	if (rim.x > 0.0) {
-		float inside = field_radius - length(world_pos.xz);
-		float band = 1.0 - smoothstep(0.0, rim.y, inside + (cloud - 0.5) * rim.y * 1.1);
+		float inside = field_radius - from_centre;
+		float band = 1.0 - smoothstep(0.0, rim.y, inside + (cloud - 0.5) * rim.y * 0.6);
 		albedo = mix(albedo, rim_color, band * rim.x);
 	}
 	if (glint.x > 0.0) {
@@ -101,8 +108,10 @@ void fragment() {
 		float twinkle = 0.55 + 0.45 * sin(TIME * (1.0 + glint.w * 3.0) + grit.b * 157.0 + drift.r * 9.0);
 		emission += glint_color * lit * twinkle * glint.x * mix(1.0, wet, glint.z);
 	}
+	// The stage light: full in the centre, falling toward the rim. One multiply, no tap.
+	albedo *= mix(1.0, 1.0 - stage.y, smoothstep(stage.x * 0.45, field_radius, from_centre));
 	ALBEDO = albedo;
 	ROUGHNESS = roughness;
-	SPECULAR = 0.4;
+	SPECULAR = 0.32;
 	EMISSION = emission;
 }

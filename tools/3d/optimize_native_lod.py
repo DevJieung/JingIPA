@@ -44,6 +44,19 @@ game-lod.blend (Limne: build/limne-game-motion/limne_game-lod.blend). The high-p
 GLBs are kept in build/character-3d/highpoly-2026-10-15/. Re-finishing a model from its raw
 reconstruction (finish_native_character.py / finish_native_monster.py) brings back a 55k
 runtime GLB: run this pass and publish_native_lod.py again afterwards.
+
+--retexture (2026-10-18 casual overhaul, WP-A "painted skins"): opens game-lod.blend instead
+of game.blend, appends the game.blend surfaces only as bake sources, re-runs steps 2-3 and the
+two EMIT passes on the shipped geometry (no reduce, no rebuild: positions, UVs, weights, rig,
+sockets and height stay byte-identical), then bakes an AO pass (reduced mesh alone, ray length
+0.25 H, monsters 0.30 H, 64 spp) and a height pass (clamp(z / H)) and grades the atlas inside
+the chart mask with tools/3d/grade_native_albedo.py (de-speckle, chart-flatten, light
+posterise, levels, OKLab chroma, painted light, cool shade, edge light, face paint-back). The
+clip bytes are grafted from the *shipped* art/models GLB (never the high-poly backup), the
+report records before/after atlas statistics and a geometry fingerprint, and --work points
+every output at a new work dir:
+    python3 tools/3d/optimize_native_lod.py --ids carmen,isa,brasa --candidates --retexture \
+        --work build/character-3d/lod-2026-10-18
 """
 import argparse, json, math, os, re, sys, hashlib, subprocess, time
 from pathlib import Path
@@ -118,7 +131,10 @@ def _driver() -> None:
     p.add_argument('--jobs', type=int, default=4)
     p.add_argument('--blender', default=str(Path.home() / '.local/bin/bl'))
     p.add_argument('--candidates', action='store_true', help='write build/.../candidates/<id>.glb, not the runtime GLB')
+    p.add_argument('--work', default=str(WORK), help='work dir for candidates, logs and per-model reports')
+    p.add_argument('--retexture', action='store_true', help='re-bake and grade the albedo on the shipped geometry (game-lod.blend)')
     a = p.parse_args()
+    work = Path(a.work).resolve()
     ids = [i for i in a.ids.split(',') if i]
     if a.all:
         ids = list(json.loads(HEROES.read_text())['ready_ids']) + ['limne'] + list(json.loads(MONSTERS.read_text())['ready_ids'])
@@ -126,12 +142,13 @@ def _driver() -> None:
         raise SystemExit('give --ids a,b or --all')
     env = dict(os.environ)
     env.pop('DISPLAY', None)
-    logs = WORK / 'logs'
+    logs = work / 'logs'
     logs.mkdir(parents=True, exist_ok=True)
 
     def run(cid: str):
-        cmd = [a.blender, '-b', '--factory-startup', '--python', str(Path(__file__).resolve()), '--', '--id', cid]
-        if a.candidates: cmd += ['--candidate', str(WORK / 'candidates' / f'{cid}.glb')]
+        cmd = [a.blender, '-b', '--factory-startup', '--python', str(Path(__file__).resolve()), '--', '--id', cid, '--work', str(work)]
+        if a.retexture: cmd.append('--retexture')
+        if a.candidates: cmd += ['--candidate', str(work / 'candidates' / f'{cid}.glb')]
         started = time.time()
         result = subprocess.run(cmd, env=env, capture_output=True, text=True, timeout=3600)
         log = result.stdout + '\n' + result.stderr
@@ -169,7 +186,8 @@ from mathutils.bvhtree import BVHTree
 from scipy import ndimage
 from PIL import Image as PILImage, ImageDraw
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from glb_animation_merge import merge_animations, _read_glb  # noqa: E402
+from glb_animation_merge import merge_animations, _read_glb, _write_glb  # noqa: E402
+import grade_native_albedo as grading  # noqa: E402
 
 argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
 ap = argparse.ArgumentParser()
@@ -179,7 +197,11 @@ ap.add_argument('--bake', type=int, default=0)
 ap.add_argument('--texture', type=int, default=0)
 ap.add_argument('--pitch', type=float, default=-1, help='outer hull voxel size; 0 decimates the source sheets as they are')
 ap.add_argument('--candidate', default='', help='write the GLB here instead of the runtime path')
+ap.add_argument('--work', default='', help='work dir (default build/character-3d/lod-2026-10-15)')
+ap.add_argument('--retexture', action='store_true', help='re-bake + grade the albedo on the shipped geometry')
 args = ap.parse_args(argv)
+if args.work: WORK = Path(args.work).resolve()
+RETEXTURE = bool(args.retexture)
 CID = args.id
 INFO = locate(CID)
 B = budget(INFO['kind'], CID, INFO['height'])
@@ -310,7 +332,7 @@ def sole_metrics(ob, legs):
 
 
 # ---------------------------------------------------------------------------- open
-bpy.ops.wm.open_mainfile(filepath=str(INFO['blend']))
+bpy.ops.wm.open_mainfile(filepath=str(INFO['lod_blend'] if RETEXTURE else INFO['blend']))
 scene = bpy.context.scene
 rig = next(o for o in scene.objects if o.type == 'ARMATURE')
 rig.data.pose_position = 'REST'
@@ -322,7 +344,12 @@ before = {'triangles': sum(tri_count(o) for o in meshes), 'meshes': len(meshes),
 # art/models is the low-poly one.
 BACKUP = ROOT / 'build/character-3d/highpoly-2026-10-15/art-models'
 reference = BACKUP / INFO['glb'].relative_to(ROOT / 'art/models')
-runtime_payload = (reference if reference.exists() else INFO['glb']).read_bytes()
+if RETEXTURE:
+    # Retexture: the shipped GLB is both the triangle reference and the clip donor; the
+    # 2026-10-15 high-poly backup would silently revert any clip authored since.
+    runtime_payload = INFO['glb'].read_bytes()
+else:
+    runtime_payload = (reference if reference.exists() else INFO['glb']).read_bytes()
 runtime_gltf, _ = _read_glb(runtime_payload)
 runtime_tris = sum(runtime_gltf['accessors'][p['indices']]['count'] // 3
                    for m in runtime_gltf['meshes'] for p in m['primitives'])
@@ -330,6 +357,30 @@ if abs(runtime_tris - before['triangles']) > max(40, before['triangles'] * 0.002
     raise SystemExit(f'editable source {before["triangles"]} tris does not match runtime GLB {runtime_tris}')
 
 # ---------------------------------------------------------------------------- classify
+if RETEXTURE:
+    # The opened file is the reduced, atlased, skinned result; its textured surface is the
+    # bake target and stays untouched. The reviewed game.blend surfaces are appended only as
+    # bake sources (their 55k sheets carry the source colour) and removed again afterwards.
+    lod_textured = [o for o in meshes if any(textured(m) for m in o.data.materials)]
+    if len(lod_textured) != 1:
+        raise SystemExit(f'{CID}: expected one atlased surface in {INFO["lod_blend"]}, found {len(lod_textured)}')
+    target = lod_textured[0]
+    lod_accents = [o for o in meshes if o is not target]
+    with bpy.data.libraries.load(str(INFO['blend']), link=False) as (data_from, data_to):
+        data_to.objects = list(data_from.objects)
+    appended = [o for o in data_to.objects if o is not None]
+    for o in appended:
+        if o.type != 'MESH': continue
+        scene.collection.objects.link(o)
+        mw = o.matrix_world.copy()
+        o.parent = None
+        o.matrix_world = mw
+        for mod in list(o.modifiers):
+            if mod.type == 'ARMATURE': o.modifiers.remove(mod)
+    bpy.context.view_layer.update()
+    meshes = [o for o in appended if o.type == 'MESH']
+    if not meshes:
+        raise SystemExit(f'{CID}: no mesh objects in {INFO["blend"]}')
 if INFO['kind'] == 'limne':
     irises = [o for o in meshes if any(m and m.name == 'Eye_brown_radial_iris' for m in o.data.materials)]
     detail = [o for o in meshes if o not in irises and any(m and m.name in LIMNE_DETAIL for m in o.data.materials)]
@@ -442,91 +493,109 @@ for ob, src in zip(body, sources[:len(body)]):
     delete_faces(ob, ~seen)
     delete_faces(src, ~seen)
 
-# Limne: facial detail is reduced per part (they are clean small meshes), the body by VTK.
-for ob in detail:
-    if tri_count(ob) > 120: decimate_blender(ob, 0.32)
-if len(body) > 1:
-    keep = max(body, key=tri_count)
-    select_only(body, keep)
-    bpy.ops.object.join()
-    body = [keep]
-target = body[0]
+if RETEXTURE:
+    # Sources are built; drop the appended originals (meshes, their armature and empties).
+    for o in appended:
+        try:
+            bpy.data.objects.remove(o, do_unlink=True)
+        except ReferenceError:
+            pass
+    # The appended armature brought copies of the clips (Attack.001 ...): purge every orphan so
+    # nothing but the lod blend's own rig, actions and NLA tracks can reach the export.
+    bpy.data.orphans_purge(do_recursive=True)
+    body = [target]
+    detail = []
+    accents = lod_accents
+else:
+    # Limne: facial detail is reduced per part (they are clean small meshes), the body by VTK.
+    for ob in detail:
+        if tri_count(ob) > 120: decimate_blender(ob, 0.32)
+    if len(body) > 1:
+        keep = max(body, key=tri_count)
+        select_only(body, keep)
+        bpy.ops.object.join()
+        body = [keep]
+    target = body[0]
 slot_materials = [m for m in target.data.materials]
 atlas_mat = next((m for m in slot_materials if textured(m)), None)
 
 # ---------------------------------------------------------------------------- reduce + atlas
-for ob in accents:
-    t = tri_count(ob)
-    if INFO['kind'] == 'limne' and t > 200: decimate_blender(ob, 0.35)
-    elif INFO['kind'] != 'limne' and t > 260: decimate_blender(ob, max(0.25, 220 / t))
-locked_tris = sum(tri_count(o) for o in accents + detail)
-goal = max(500, B['triangles'] - locked_tris)
-bm = bmesh.new(); bm.from_mesh(target.data)
-bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=H * 1e-6)
-bm.to_mesh(target.data); bm.free()
-v, t, skin, member = mesh_arrays(target)
-lock = {'lock_v': np.zeros((0, 3), np.float32), 'lock_f': np.zeros((0, 3), np.int32),
-        'lock_skin': np.zeros((0, skin.shape[1]), np.float32), 'lock_extra': np.zeros((0, member.shape[1]), np.float32)}
-if detail:
-    names = [g.name for g in target.vertex_groups]
-    to_target = target.matrix_world.inverted()
-    vs, fs, ss = [], [], []
-    count = 0
-    for ob in detail:
-        dv, dt, dskin, _ = mesh_arrays(ob)
-        m = to_target @ ob.matrix_world
-        dv = np.array([(m @ Vector(p.tolist()))[:] for p in dv], np.float32)
-        mapped = np.zeros((len(dv), len(names)), np.float32)
-        for gi, g in enumerate(ob.vertex_groups):
-            if g.name in names: mapped[:, names.index(g.name)] = dskin[:, gi]
-        vs.append(dv); fs.append(dt + count); ss.append(mapped); count += len(dv)
-    lock = {'lock_v': np.concatenate(vs), 'lock_f': np.concatenate(fs), 'lock_skin': np.concatenate(ss),
-            'lock_extra': np.zeros((count, member.shape[1]), np.float32)}
-    for ob in detail: bpy.data.objects.remove(ob, do_unlink=True)
-np.savez(OUT / 'reduce-in.npz', v=v, f=t, skin=skin, extra=member, **lock)
-proc = subprocess.run([str(TRELLIS_PY), str(REDUCE), str(OUT / 'reduce-in.npz'), str(OUT / 'reduce-out.npz'),
-                       '--triangles', str(goal), '--resolution', str(B['bake']), '--padding', str(max(4, B['bake'] // 128)),
-                       '--pitch', str(B['pitch'])],
-                      capture_output=True, text=True)
-if proc.returncode or 'LOD_REDUCE' not in proc.stdout:
-    raise SystemExit('reduce failed:\n' + proc.stdout + proc.stderr)
-R = np.load(OUT / 'reduce-out.npz')
-rv, rf, rskin, rmember, ruv = R['v'], R['f'], R['skin'], R['extra'], R['corner_uv']
+if RETEXTURE:
+    # Geometry, UVs and skin weights are the shipped ones; the chart count comes from the mask.
+    atlas_info = {'charts': 0, 'utilization': None, 'skipped_faces': 0, 'reduce': 'retexture: geometry/UV/weights reused'}
+else:
+    for ob in accents:
+        t = tri_count(ob)
+        if INFO['kind'] == 'limne' and t > 200: decimate_blender(ob, 0.35)
+        elif INFO['kind'] != 'limne' and t > 260: decimate_blender(ob, max(0.25, 220 / t))
+    locked_tris = sum(tri_count(o) for o in accents + detail)
+    goal = max(500, B['triangles'] - locked_tris)
+    bm = bmesh.new(); bm.from_mesh(target.data)
+    bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=H * 1e-6)
+    bm.to_mesh(target.data); bm.free()
+    v, t, skin, member = mesh_arrays(target)
+    lock = {'lock_v': np.zeros((0, 3), np.float32), 'lock_f': np.zeros((0, 3), np.int32),
+            'lock_skin': np.zeros((0, skin.shape[1]), np.float32), 'lock_extra': np.zeros((0, member.shape[1]), np.float32)}
+    if detail:
+        names = [g.name for g in target.vertex_groups]
+        to_target = target.matrix_world.inverted()
+        vs, fs, ss = [], [], []
+        count = 0
+        for ob in detail:
+            dv, dt, dskin, _ = mesh_arrays(ob)
+            m = to_target @ ob.matrix_world
+            dv = np.array([(m @ Vector(p.tolist()))[:] for p in dv], np.float32)
+            mapped = np.zeros((len(dv), len(names)), np.float32)
+            for gi, g in enumerate(ob.vertex_groups):
+                if g.name in names: mapped[:, names.index(g.name)] = dskin[:, gi]
+            vs.append(dv); fs.append(dt + count); ss.append(mapped); count += len(dv)
+        lock = {'lock_v': np.concatenate(vs), 'lock_f': np.concatenate(fs), 'lock_skin': np.concatenate(ss),
+                'lock_extra': np.zeros((count, member.shape[1]), np.float32)}
+        for ob in detail: bpy.data.objects.remove(ob, do_unlink=True)
+    np.savez(OUT / 'reduce-in.npz', v=v, f=t, skin=skin, extra=member, **lock)
+    proc = subprocess.run([str(TRELLIS_PY), str(REDUCE), str(OUT / 'reduce-in.npz'), str(OUT / 'reduce-out.npz'),
+                           '--triangles', str(goal), '--resolution', str(B['bake']), '--padding', str(max(4, B['bake'] // 128)),
+                           '--pitch', str(B['pitch'])],
+                          capture_output=True, text=True)
+    if proc.returncode or 'LOD_REDUCE' not in proc.stdout:
+        raise SystemExit('reduce failed:\n' + proc.stdout + proc.stderr)
+    R = np.load(OUT / 'reduce-out.npz')
+    rv, rf, rskin, rmember, ruv = R['v'], R['f'], R['skin'], R['extra'], R['corner_uv']
 
-# Rebuild the skinned body in place: object, name, parent, vertex group names, armature
-# modifier and material slots stay; geometry, weights and UVs are the reduced ones.
-bm = bmesh.new()
-deform = bm.verts.layers.deform.verify()
-uvl = bm.loops.layers.uv.new('UVMap')
-for co, w in zip(rv, rskin):
-    vert = bm.verts.new(Vector(co.tolist()))
-    for gi in np.nonzero(w > 1e-4)[0]: vert[deform][int(gi)] = float(w[gi])
-bm.verts.ensure_lookup_table()
-face_slot = rmember[rf].mean(axis=1).argmax(axis=1) if rmember.shape[1] > 1 else np.zeros(len(rf), np.int64)
-skipped = 0
-for k, (a, b, c) in enumerate(rf):
-    try:
-        face = bm.faces.new((bm.verts[int(a)], bm.verts[int(b)], bm.verts[int(c)]))
-    except ValueError:
-        skipped += 1
-        continue
-    face.smooth = True
-    face.material_index = int(face_slot[k])
-    for corner, loop in enumerate(face.loops): loop[uvl].uv = (float(ruv[k, corner, 0]), float(ruv[k, corner, 1]))
-# Consistent winding per connected part (UVs travel with the loops). The collapse can turn
-# a few faces over; their averaged vertex normals would otherwise shade dark seams.
-bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
-bm.to_mesh(target.data); bm.free()
-target.data.update()
-for attr in list(target.data.color_attributes): target.data.color_attributes.remove(attr)
-atlas_info = {'charts': int(R['charts']), 'utilization': float(R['utilization']), 'skipped_faces': skipped, 'reduce': str(R['stats'][0])}
+    # Rebuild the skinned body in place: object, name, parent, vertex group names, armature
+    # modifier and material slots stay; geometry, weights and UVs are the reduced ones.
+    bm = bmesh.new()
+    deform = bm.verts.layers.deform.verify()
+    uvl = bm.loops.layers.uv.new('UVMap')
+    for co, w in zip(rv, rskin):
+        vert = bm.verts.new(Vector(co.tolist()))
+        for gi in np.nonzero(w > 1e-4)[0]: vert[deform][int(gi)] = float(w[gi])
+    bm.verts.ensure_lookup_table()
+    face_slot = rmember[rf].mean(axis=1).argmax(axis=1) if rmember.shape[1] > 1 else np.zeros(len(rf), np.int64)
+    skipped = 0
+    for k, (a, b, c) in enumerate(rf):
+        try:
+            face = bm.faces.new((bm.verts[int(a)], bm.verts[int(b)], bm.verts[int(c)]))
+        except ValueError:
+            skipped += 1
+            continue
+        face.smooth = True
+        face.material_index = int(face_slot[k])
+        for corner, loop in enumerate(face.loops): loop[uvl].uv = (float(ruv[k, corner, 0]), float(ruv[k, corner, 1]))
+    # Consistent winding per connected part (UVs travel with the loops). The collapse can turn
+    # a few faces over; their averaged vertex normals would otherwise shade dark seams.
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    bm.to_mesh(target.data); bm.free()
+    target.data.update()
+    for attr in list(target.data.color_attributes): target.data.color_attributes.remove(attr)
+    atlas_info = {'charts': int(R['charts']), 'utilization': float(R['utilization']), 'skipped_faces': skipped, 'reduce': str(R['stats'][0])}
 
-if INFO['kind'] == 'limne':
-    # One atlas material for the whole joined body (facial parts included by the reduce stage).
-    for i in range(len(target.data.materials)): target.data.materials[i] = atlas_mat
-    for poly in target.data.polygons: poly.material_index = 0
-    while len(target.data.materials) > 1: target.data.materials.pop(index=len(target.data.materials) - 1)
-    slot_materials = [atlas_mat]
+    if INFO['kind'] == 'limne':
+        # One atlas material for the whole joined body (facial parts included by the reduce stage).
+        for i in range(len(target.data.materials)): target.data.materials[i] = atlas_mat
+        for poly in target.data.polygons: poly.material_index = 0
+        while len(target.data.materials) > 1: target.data.materials.pop(index=len(target.data.materials) - 1)
+        slot_materials = [atlas_mat]
 
 # ---------------------------------------------------------------------------- cage from the measured deviation
 def nearest_any(co):
@@ -549,6 +618,19 @@ image.colorspace_settings.name = 'sRGB'
 bake_mat = bpy.data.materials.new('LODBakeTarget'); bake_mat.use_nodes = True
 node = bake_mat.node_tree.nodes.new('ShaderNodeTexImage'); node.image = image
 bake_mat.node_tree.nodes.active = node; node.select = True
+if RETEXTURE:
+    # Surface = emission of clamp(z / H): the height pass bakes this chain (EMIT, target alone).
+    bnt = bake_mat.node_tree
+    bout = next((n for n in bnt.nodes if n.type == 'OUTPUT_MATERIAL'), None) or bnt.nodes.new('ShaderNodeOutputMaterial')
+    geo = bnt.nodes.new('ShaderNodeNewGeometry'); sep = bnt.nodes.new('ShaderNodeSeparateXYZ')
+    bnt.links.new(geo.outputs['Position'], sep.inputs['Vector'])
+    div = bnt.nodes.new('ShaderNodeMath'); div.operation = 'DIVIDE'; div.use_clamp = True
+    div.inputs[1].default_value = float(H)
+    bnt.links.new(sep.outputs['Z'], div.inputs[0])
+    hemit = bnt.nodes.new('ShaderNodeEmission'); hemit.inputs['Strength'].default_value = 1.0
+    bnt.links.new(div.outputs[0], hemit.inputs['Color'])
+    for l in list(bout.inputs['Surface'].links): bnt.links.remove(l)
+    bnt.links.new(hemit.outputs['Emission'], bout.inputs['Surface'])
 for i in range(len(target.data.materials)): target.data.materials[i] = bake_mat
 scene.render.engine = 'CYCLES'
 scene.cycles.device = 'CPU'
@@ -579,6 +661,91 @@ cover = ndimage.binary_erosion(np.array(coverage)[::-1] > 0)   # Blender rows ru
 baked = pixels[..., 3] > 0.5
 missed = cover & ~baked
 fallback = cover & ~visible_hit & baked
+retex = None
+if RETEXTURE:
+    # ------------------------------------------------------------ AO + height on the target alone
+    for src in sources + sources_full: src.hide_render = True
+    select_only([target], target)
+    if scene.world is None: scene.world = bpy.data.worlds.new('LODWorld')
+    ao_distance = (0.30 if INFO['kind'] == 'monster' else 0.25) * H
+    scene.world.light_settings.distance = ao_distance
+    aux = {}
+    for name, kind, samples in (('ao', 'AO', 64), ('height', 'EMIT', 4)):
+        img = bpy.data.images.new(f'{CID}_lod_{name}', size, size, alpha=False, float_buffer=False)
+        img.colorspace_settings.name = 'Non-Color'
+        node.image = img
+        scene.cycles.samples = samples
+        bpy.ops.object.bake(type=kind, use_selected_to_active=False, margin=8, margin_type='EXTEND', use_clear=True,
+                            target='IMAGE_TEXTURES')
+        aux[name] = np.array(img.pixels[:], dtype=np.float32).reshape(size, size, 4)[..., 0].copy()
+        bpy.data.images.remove(img)
+    node.image = image
+    for src in sources + sources_full: src.hide_render = False
+    ao_map = np.clip(aux['ao'], 0, 1); height_map = np.clip(aux['height'], 0, 1)
+    PILImage.fromarray((ao_map[::-1] * 255 + 0.5).astype(np.uint8)).save(OUT / f'ao_{size}.png')
+    PILImage.fromarray((height_map[::-1] * 255 + 0.5).astype(np.uint8)).save(OUT / f'height_{size}.png')
+    # ------------------------------------------------------------ grade inside the chart mask
+    source_rgb = grading.fill_nearest(np.clip(pixels[..., :3], 0, 1).astype(np.float32), baked)
+    PILImage.fromarray((source_rgb[::-1] * 255 + 0.5).astype(np.uint8)).save(OUT / f'bake_{size}_source.png')
+    specs_path = Path(__file__).resolve().parent / 'native_visual_specs.json'
+    head_start = 0.675
+    if INFO['kind'] == 'hero' and specs_path.exists():
+        head_start = float(json.loads(specs_path.read_text()).get('heroes', {}).get(CID, {}).get('head_start', 0.675))
+    grade_kind = 'monster' if INFO['kind'] == 'monster' else 'hero'
+
+    def seam_samples(ob, labels, size, inset=1.5, steps=7):
+        """Texel pairs across every UV seam of `ob`: for a mesh edge shared by two faces whose
+        UVs differ, points along the edge are sampled in both faces' UV spaces (pushed `inset`
+        texels toward each face's centre so the eroded chart mask still covers them)."""
+        me = ob.data
+        uvd = me.uv_layers.active.data
+        edge_faces = {}
+        for poly in me.polygons:
+            loops = list(poly.loop_indices)
+            centre = Vector((0.0, 0.0))
+            for li in loops: centre += uvd[li].uv
+            centre /= max(len(loops), 1)
+            for k in range(len(loops)):
+                l0, l1 = loops[k], loops[(k + 1) % len(loops)]
+                v0, v1 = me.loops[l0].vertex_index, me.loops[l1].vertex_index
+                uv0, uv1 = uvd[l0].uv.copy(), uvd[l1].uv.copy()
+                if v0 > v1: v0, v1, uv0, uv1 = v1, v0, uv1, uv0
+                edge_faces.setdefault((v0, v1), []).append((uv0, uv1, centre.copy()))
+        ts = np.linspace(0.08, 0.92, steps)
+        a_rc, b_rc, ws = [], [], []
+        for (v0, v1), faces in edge_faces.items():
+            if len(faces) != 2: continue
+            (a0, a1, ca), (b0, b1, cb) = faces
+            if (a0 - b0).length < 1e-5 and (a1 - b1).length < 1e-5: continue
+            length = (me.vertices[v0].co - me.vertices[v1].co).length
+            for tt in ts:
+                pa = a0.lerp(a1, tt); pb = b0.lerp(b1, tt)
+                da = (ca - pa); db = (cb - pb)
+                if da.length > 1e-7: pa = pa + da.normalized() * (inset / size)
+                if db.length > 1e-7: pb = pb + db.normalized() * (inset / size)
+                a_rc.append((int(pa.y * size) % size, int(pa.x * size) % size))
+                b_rc.append((int(pb.y * size) % size, int(pb.x * size) % size))
+                ws.append(length)
+        return {'a_rc': np.array(a_rc, np.int64).reshape(-1, 2), 'b_rc': np.array(b_rc, np.int64).reshape(-1, 2), 'w': np.array(ws, np.float32)}
+    labels_full, chart_count, _ = grading.label_charts(cover)
+    seams = seam_samples(target, labels_full, size)
+    # The grade's inputs are kept so a parameter round can be re-graded without Blender
+    # (grade_native_albedo.py regrade <work>/<id>): chart mask, seam samples, AO, height.
+    PILImage.fromarray((cover[::-1]).astype(np.uint8) * 255).save(OUT / f'cover_{size}.png')
+    np.savez_compressed(OUT / 'seams.npz', **seams)
+    graded, grade_info, skin = grading.grade(source_rgb, cover, ao_map, height_map, grade_kind, CID, head_start, seams=seams)
+    # The whole image takes the graded result (the bake's one-texel ring outside the eroded
+    # mask and the nearest-filled gutters included): an ungraded ring would draw a thin line
+    # of the old colour along every UV seam after mipmapping.
+    pixels[..., :3] = graded
+    pixels[..., 3] = 1.0
+    baked = pixels[..., 3] > 0.5
+    PILImage.fromarray((skin[::-1]).astype(np.uint8) * 255).save(OUT / f'skin_{size}.png')
+    atlas_info['charts'] = int(chart_count)
+    retex = {'mode': 'retexture', 'clip_donor': str(INFO['glb']), 'head_start': head_start, 'grade_kind': grade_kind,
+             'ao': {'distance_m': round(ao_distance, 4), 'samples': 64, 'margin': 8},
+             'grade': grade_info, 'source_bake': str(OUT / f'bake_{size}_source.png'),
+             'ao_map': str(OUT / f'ao_{size}.png'), 'height_map': str(OUT / f'height_{size}.png')}
 _, (iy, ix) = ndimage.distance_transform_edt(~baked, return_indices=True)
 filled = pixels[iy, ix]
 rgb8 = (np.clip(filled[..., :3], 0, 1)[::-1] * 255 + 0.5).astype(np.uint8)
@@ -588,8 +755,43 @@ PILImage.fromarray((missed[::-1]).astype(np.uint8) * 255).save(OUT / f'misses_{s
 final = full.resize((B['texture'], B['texture']), PILImage.BOX) if B['texture'] != size else full
 final_path = OUT / f'{CID}_lod_albedo.png'
 final.save(final_path, optimize=True)
+if RETEXTURE:
+    tex = B['texture']; f = size // tex
+    cover_small = cover.reshape(tex, f, tex, f).mean(axis=(1, 3)) > 0.5
+    skin_small = skin.reshape(tex, f, tex, f).mean(axis=(1, 3)) > 0.5
+    PILImage.fromarray((cover_small[::-1]).astype(np.uint8) * 255).save(OUT / f'cover_{tex}.png')
+    PILImage.fromarray((skin_small[::-1]).astype(np.uint8) * 255).save(OUT / f'skin_{tex}.png')
+    labels_s, _, slices_s = grading.label_charts(cover_small)
+    after_rgb = np.asarray(final.convert('RGB')).astype(np.float32)[::-1] / 255.0
+    retex['stats_after'] = grading.atlas_stats(after_rgb, cover_small, labels_s, slices_s, skin=skin_small)
+    # "Before" = the atlas of the 2026-10-15 LOD pass (its candidate GLB, else the shipped GLB):
+    # the editable blend already carries the previous retexture round after a re-run.
+    def embedded_png(glb_payload):
+        gl, binary = _read_glb(glb_payload)
+        view = gl['bufferViews'][gl['images'][0]['bufferView']]
+        start = view.get('byteOffset', 0)
+        import io
+        return PILImage.open(io.BytesIO(bytes(binary[start:start + view['byteLength']]))).convert('RGB')
+    original_lod = ROOT / 'build/character-3d/lod-2026-10-15/candidates' / f'{CID}.glb'
+    before_source = original_lod if original_lod.exists() else INFO['glb']
+    try:
+        old_pil = embedded_png(before_source.read_bytes())
+        if old_pil.size != (tex, tex): old_pil = old_pil.resize((tex, tex), PILImage.BOX)
+        old_rgb = np.asarray(old_pil).astype(np.float32)[::-1] / 255.0
+        old_pil.save(OUT / f'{CID}_lod_albedo_before.png')
+        old_skin = grading.skin_mask(old_rgb, cover_small, labels_s, slices_s)
+        retex['stats_before'] = grading.atlas_stats(old_rgb, cover_small, labels_s, slices_s, skin=old_skin)
+        retex['stats_before_source'] = str(before_source)
+    except Exception as exc:  # noqa: BLE001 - the statistics are evidence, not a gate
+        retex['stats_before'] = None
+        retex['stats_before_source'] = f'unavailable: {exc}'
 
 # ---------------------------------------------------------------------------- materials back
+stale = bpy.data.images.get(f'{CID}_lod_albedo')
+if stale is not None:
+    # Retexture: the previous atlas keeps this name in game-lod.blend; the exported image (and
+    # Godot's extracted <id>_<id>_lod_albedo.png) must keep it, so the old datablock goes first.
+    bpy.data.images.remove(stale)
 albedo = bpy.data.images.load(str(final_path))
 albedo.name = f'{CID}_lod_albedo'
 albedo.colorspace_settings.name = 'sRGB'
@@ -619,6 +821,11 @@ after_meshes = [o for o in scene.objects if o.type == 'MESH']
 after = {'triangles': sum(tri_count(o) for o in after_meshes), 'meshes': len(after_meshes),
          'vertices': sum(len(o.data.vertices) for o in after_meshes)}
 sole_after = sole_metrics(target, legs)
+if RETEXTURE:
+    keep = INFO['lod_blend'].with_name(INFO['lod_blend'].stem + '.pre-retexture.blend')
+    if not keep.exists():
+        import shutil
+        shutil.copy2(INFO['lod_blend'], keep)
 bpy.ops.wm.save_as_mainfile(filepath=str(INFO['lod_blend']))
 
 # ---------------------------------------------------------------------------- export + graft clips
@@ -630,11 +837,66 @@ export_kwargs = dict(filepath=str(temp), export_format='GLB', export_apply=False
 if INFO['kind'] != 'limne': export_kwargs['export_anim_single_armature'] = True
 bpy.ops.export_scene.gltf(**export_kwargs)
 fresh = temp.read_bytes()
-# Limne's joined surfaces change the node list, so its clips are re-targeted by bone name.
-payload = merge_animations(fresh, runtime_payload, by_name=INFO['kind'] == 'limne')
+def splice_images(base_payload, fresh_payload):
+    """The shipped GLB with only its embedded images replaced by the fresh export's: every
+    mesh, skin, node, material and clip byte stays (retexture mode never re-exports geometry
+    into the runtime; the exporter's normal recomputation is not bit-stable on every mesh)."""
+    base, base_bin = _read_glb(base_payload)
+    fresh_g, fresh_bin = _read_glb(fresh_payload)
+    if len(base.get('images', [])) != len(fresh_g.get('images', [])) or not base.get('images'):
+        raise SystemExit(f'{CID}: image count differs between the shipped GLB ({len(base.get("images", []))}) '
+                         f'and the fresh export ({len(fresh_g.get("images", []))})')
+    replaced = {}
+    for bi, fi in zip(base['images'], fresh_g['images']):
+        fv = fresh_g['bufferViews'][fi['bufferView']]
+        start = fv.get('byteOffset', 0)
+        replaced[bi['bufferView']] = bytes(fresh_bin[start:start + fv['byteLength']])
+        if 'mimeType' in fi: bi['mimeType'] = fi['mimeType']
+    out_bin = bytearray(); views = []
+    for idx, view in enumerate(base['bufferViews']):
+        view = dict(view)
+        start = view.get('byteOffset', 0); size = view['byteLength']
+        data = replaced.get(idx, bytes(base_bin[start:start + size]))
+        out_bin += b'\0' * (-len(out_bin) % 4)
+        view['byteOffset'] = len(out_bin); view['byteLength'] = len(data); view['buffer'] = 0
+        out_bin += data
+        views.append(view)
+    base['bufferViews'] = views
+    base['buffers'] = [{'byteLength': len(out_bin) + (-len(out_bin) % 4)}]
+    return _write_glb(base, out_bin)
+
+
+if RETEXTURE:
+    payload = splice_images(runtime_payload, fresh)
+else:
+    # Limne's joined surfaces change the node list, so its clips are re-targeted by bone name.
+    payload = merge_animations(fresh, runtime_payload, by_name=INFO['kind'] == 'limne')
 dest = Path(args.candidate) if args.candidate else INFO['glb']
 dest.parent.mkdir(parents=True, exist_ok=True)
 dest.write_bytes(payload)
+def geometry_fingerprint(glb_payload):
+    """sha256 of every mesh/skin accessor's bytes plus the node list: equal fingerprints mean the
+    shipped positions, normals, UVs, joints, weights, indices, bind matrices and rig are untouched."""
+    gl, binary = _read_glb(glb_payload)
+    digest = hashlib.sha256()
+
+    def accessor_bytes(index):
+        acc = gl['accessors'][index]; view = gl['bufferViews'][acc['bufferView']]
+        start = view.get('byteOffset', 0) + acc.get('byteOffset', 0)
+        return bytes(binary[start:view.get('byteOffset', 0) + view['byteLength']])
+    for mesh in gl.get('meshes', []):
+        for prim in mesh.get('primitives', []):
+            for name in sorted(prim.get('attributes', {})):
+                digest.update(name.encode()); digest.update(accessor_bytes(prim['attributes'][name]))
+            if 'indices' in prim: digest.update(b'indices'); digest.update(accessor_bytes(prim['indices']))
+    for skin in gl.get('skins', []):
+        if 'inverseBindMatrices' in skin: digest.update(b'ibm'); digest.update(accessor_bytes(skin['inverseBindMatrices']))
+        digest.update(json.dumps(skin.get('joints', [])).encode())
+    nodes = [{k: v for k, v in n.items() if k not in ('mesh', 'skin')} for n in gl.get('nodes', [])]
+    digest.update(json.dumps(nodes, sort_keys=True).encode())
+    return digest.hexdigest()
+
+
 g, _ = _read_glb(payload)
 tris = sum(g['accessors'][p['indices']]['count'] // 3 for m in g['meshes'] for p in m['primitives'])
 verts = sum(g['accessors'][p['attributes']['POSITION']]['count'] for m in g['meshes'] for p in m['primitives'])
@@ -650,8 +912,21 @@ report = {'id': CID, 'kind': INFO['kind'], 'budget': B, 'source_blend': str(INFO
                    'interior_fallback_texels': int(fallback.sum()),
                    'miss_fraction': float(missed.sum() / max(cover.sum(), 1))},
           'output': str(dest)}
+if retex is not None:
+    shipped_fp = geometry_fingerprint(runtime_payload); new_fp = geometry_fingerprint(payload)
+    retex.update({'geometry_sha256_shipped': shipped_fp, 'geometry_sha256_candidate': new_fp,
+                  'geometry_bytes_preserved': shipped_fp == new_fp,
+                  'fresh_export_geometry_identical': geometry_fingerprint(fresh) == shipped_fp,
+                  'assembly': 'shipped GLB with its embedded image bytes replaced by the fresh export (splice_images)',
+                  'shipped_glb_sha256': hashlib.sha256(runtime_payload).hexdigest()})
+    report['retexture'] = retex
 (OUT / 'report.json').write_text(json.dumps(report, indent=2) + '\n')
 temp.unlink()
-print('NATIVE_LOD ' + json.dumps({'id': CID, 'tris': tris, 'verts': verts, 'surfaces': surfaces, 'bytes': len(payload),
-      'miss': round(report['bake']['miss_fraction'], 4), 'dev_p99': round(dev['p99'], 4), 'charts': atlas_info['charts'],
-      'floor': [round(sole_before['floor'], 4), round(sole_after['floor'], 4)]}), flush=True)
+summary = {'id': CID, 'tris': tris, 'verts': verts, 'surfaces': surfaces, 'bytes': len(payload),
+           'miss': round(report['bake']['miss_fraction'], 4), 'dev_p99': round(dev['p99'], 4), 'charts': atlas_info['charts'],
+           'floor': [round(sole_before['floor'], 4), round(sole_after['floor'], 4)]}
+if retex is not None:
+    summary['geometry_preserved'] = retex['geometry_bytes_preserved']
+    summary['mean_lstar'] = [retex['stats_before'].get('mean_lstar') if retex['stats_before'] else None, retex['stats_after']['mean_lstar']]
+    summary['p10'] = [retex['stats_before'].get('lum_p10') if retex['stats_before'] else None, retex['stats_after']['lum_p10']]
+print('NATIVE_LOD ' + json.dumps(summary), flush=True)

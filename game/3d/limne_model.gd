@@ -3,6 +3,11 @@ class_name LimneModel
 
 ## Continuous Blender GLB skin driven by the existing five visual pivots.
 ## No attack clock, damage, RNG, or roster values are owned by this adapter.
+## Motion beats (2026-10-18, casual overhaul WP-D): the release pops (the same curve as
+## the native heroes, a squash about the hips on the upper body, zero on the release
+## frame), a placed Limne drops in and lands (visual_event "spawn", sent by the world
+## after the first battle sample), and the skin takes StellarShading's painterly modes
+## and per-instance flash/dissolve materials like the other 49 heroes.
 const SOURCE := "res://art/models/limne/limne.glb"
 const HOSE_SHADER := preload("res://art/models/limne/hose.gdshader")
 const WATER_SHADER := preload("res://art/models/limne/water_spray.gdshader")
@@ -27,6 +32,9 @@ var _aim_amount := 0.0
 var _leg_binds: Array[Transform3D] = []
 var _loco := HeroLocomotion.new()
 var _clock := 0.0
+var _spawn_clock := -INF              # battle clock of the "spawn" event, -INF when none
+var _skeleton_base := Transform3D.IDENTITY
+var _beat := Transform3D.IDENTITY     # spawn pop-in x release pop, on the skeleton node, about the feet
 
 static func create() -> Node3D:
 	var scene: PackedScene = load(SOURCE)
@@ -37,6 +45,10 @@ static func create() -> Node3D:
 	root.set_script(load("res://game/3d/limne_model.gd"))
 	root.set_meta("model_source", SOURCE)
 	_fix_iris_vertex_color(root)
+	# The shared skin modes of the native heroes (wrap diffuse, rim, shade tint): the
+	# iris keeps its name and vertex colours (style() only switches them on). The
+	# per-instance materials come in _ready(), after packing, as for the native heroes.
+	StellarShading.style(root, 0.0)
 	return root
 
 static func _fix_iris_vertex_color(node: Node) -> void:
@@ -95,6 +107,7 @@ static func tube_mesh() -> ArrayMesh:
 func _ready() -> void:
 	_skeleton = _find_skeleton(self)
 	if _skeleton != null:
+		_skeleton_base = _skeleton.transform
 		var skeleton_to_root := global_transform.affine_inverse()*_skeleton.global_transform
 		for name in ["Body","ArmL","ArmR","LegL","LegR"]:
 			var index := _skeleton.find_bone("Skin"+name)
@@ -115,6 +128,7 @@ func _ready() -> void:
 		for side in ["L","R"]: _leg_binds.append((get_node("Leg"+side) as Node3D).transform)
 		_setup_spray()
 		update_visuals()
+		StellarShading.prepare_instance(self)
 		return
 	for side in [-1,1]:
 		var hose := MeshInstance3D.new()
@@ -130,7 +144,15 @@ func _ready() -> void:
 
 func update_visuals() -> void:
 	if _skeleton != null:
-		var root_to_skeleton := _skeleton.global_transform.affine_inverse()*global_transform
+		# Bone poses are solved against the skeleton's authored (base) transform; the
+		# beats (spawn pop-in, release pop) ride on the skeleton node itself, so they
+		# move the skin, the controls and the spray without touching a bone pose.
+		var holder := _skeleton.get_parent() as Node3D
+		var skeleton_global := (holder.global_transform if holder != null else global_transform)*_skeleton_base
+		var root_to_skeleton := skeleton_global.affine_inverse()*global_transform
+		var beating := _beat != Transform3D.IDENTITY
+		var target_node := _skeleton_base*_beat if beating else _skeleton_base
+		if _skeleton.transform != target_node: _skeleton.transform = target_node
 		# Upper body answers the aim direction immediately; legs stay with the root.
 		var twist := Transform3D(Basis(Vector3.UP,_loco.aim_delta),Vector3.ZERO)
 		for binding in _bone_bindings:
@@ -156,7 +178,9 @@ func update_visuals() -> void:
 				# Counter-rotate the palm, so the nozzle stays aligned with the
 				# character's -Z forward even while its elbow lifts the wrist.
 				delta = delta*_around(Vector3(sign_value*0.347,0.565,-0.213),delta.basis.inverse())
-				_hand_deltas[n] = twist*delta
+				# The nozzle (spray origin) follows the beaten skin; a diagonal scale keeps
+				# the horizontal nozzle direction exact.
+				_hand_deltas[n] = (_beat*twist*delta) if beating else twist*delta
 			_skeleton.set_bone_pose(int(binding["index"]),root_to_skeleton*twist*delta*binding["root_rest"])
 		_update_spray()
 		return
@@ -183,12 +207,19 @@ func set_locomotion(velocity: Vector3, dt: float) -> void:
 func face_toward(direction: Vector2, dt: float) -> void:
 	_loco.face_toward(direction, dt)
 
+## Battle events (read-only inputs). Only "spawn" is meaningful here: the attack is a
+## stateless function of age/wind. The world sends "spawn" after the first battle
+## sample has set the clock (pending queue), so the pop-in starts at u = 0.
+func visual_event(e: Dictionary) -> void:
+	if String(e.get("t","")) == "spawn": _spawn_clock = _clock
+
 func animate_visual(time: float, age: float = 9.0, wind: float = 0.6, battle: bool = false) -> void:
 	var clock_dt := clampf(time-_clock,0.0,0.1)
 	_clock = time
 	_motion_time = time
 	wind = maxf(wind,0.04)
 	if not battle:
+		_spawn_clock = -INF
 		_loco.clear_battle()
 		_loco.sync_yaw(rotation.y)
 	elif _loco.update(clock_dt):
@@ -201,6 +232,18 @@ func animate_visual(time: float, age: float = 9.0, wind: float = 0.6, battle: bo
 	var kick := exp(-release*18.0)*sin(release*TAU*3.2)*settle if active and age>=wind else 0.0
 	var charge := clampf((age/wind-0.6)/0.4,0.0,1.0) if active and age<wind else 0.0
 	var tremble := sin(age*TAU*12.0)*0.0025*charge
+	# Beats on the skeleton node (see update_visuals), the native heroes' curves: the
+	# release pop (a volume-preserving squash about the feet, zero on the release frame
+	# and once the release action is over) and, in battle, the spawn pop-in as a
+	# stateless function of time - _spawn_clock.
+	_beat = Transform3D.IDENTITY
+	if active and age >= wind:
+		var pop := NativeCharacterModel.release_pop(release)
+		if pop != 0.0: _beat = Transform3D(Basis.from_scale(Vector3(1.0+pop,1.0-pop,1.0+pop)),Vector3.ZERO)
+	if battle and _spawn_clock > -INF:
+		var u := (time-_spawn_clock)/NativeCharacterModel.SPAWN_SEC
+		if u >= 1.0 or u < 0.0: _spawn_clock = -INF
+		else: _beat = NativeCharacterModel.spawn_pop(u,NativeCharacterModel.SPAWN_DROP)*_beat
 	# Idle: breathing, weight shift and a slow look-around; feet planted.
 	var breath := sin(time*TAU/3.0)*0.008
 	var sway := sin(time*TAU/6.0)

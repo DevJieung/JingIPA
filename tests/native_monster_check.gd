@@ -129,6 +129,7 @@ func _reaction_contract(data: Dictionary) -> void:
 	second.animate_visual(0.41)
 	check(_poses_near(_poses(skeleton), _poses(_skeleton(second)), 0.0001), id + ": turning history does not change the authored walk pose")
 	var pivot_rest: Transform3D = first.motion_state()["pivot"]
+	var hover_rest := float(first.motion_state().get("hover", 0.0))
 	# Hit: squash while the flash lasts, exact recovery when it is gone.
 	var before_hit := _poses(skeleton)
 	first.visual_event("hit", {"p": StellarWorld.logical(first.global_position) + Vector2(-40, 0), "c": Color.WHITE, "n": 1.0})
@@ -156,7 +157,11 @@ func _reaction_contract(data: Dictionary) -> void:
 	for n in range(24):
 		spawned.face_toward(Vector2(1, 0), 1.0 / 30.0)
 		spawned.animate_visual(0.41)
-	check(_transform_near(spawned.motion_state()["pivot"], pivot_rest, 0.002), id + ": the entrance settles within 0.8 s")
+	# A flyer keeps its hover bob on the standing clock (2026-10-17); the entrance is over
+	# once only that bob is left between the two bodies' pivots.
+	var landed: Transform3D = spawned.motion_state()["pivot"]
+	landed.origin.y -= float(spawned.motion_state().get("hover", 0.0)) - hover_rest
+	check(_transform_near(landed, pivot_rest, 0.002), id + ": the entrance settles within 0.8 s")
 	spawned.free()
 	# Siege: standing bodies strike exactly when the phase wraps, then recover.
 	first.set_siege(0.5)

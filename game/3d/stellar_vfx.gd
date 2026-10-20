@@ -12,14 +12,23 @@ class_name StellarVfx
 ##   Beams    (16)   beams, chain lightning, ricochet traces
 ##   Slashes  (12)   sword arcs: the melee fan at the hero's actual reach, aimed along the
 ##                   simulator's fire direction, swept by the blade head in 0.1 s
-##   Zones    (36)   ground rune discs for sim.zones plus caster wind-up circles
-##   Skills   (6)    whole sequences in one instance each: the Starlight Burst (falling
-##                   star, impact, shockwave to the damage radius, fragments, afterglow)
-##                   and the boss gate (four-second warning gather, arrival burst)
+##   Zones    (36)   sim.zones: the rune disc at the damage radius and, above it, the
+##                   element's weather (blizzard helix, magma gouts, thunder strikes,
+##                   geyser whirl, card storm) timed to the simulator's ticks; the last
+##                   tick settles through a ZONE_END burst. Plus caster wind-up circles
+##   Skills   (6)    whole sequences in one instance each: the Starlight Burst (a meteor
+##                   falling from the top of the view, impact, shockwave to the damage
+##                   radius, fragments, afterglow), the boss gate (four-second warning
+##                   gather, arrival burst), the frost pulse (an ice wave with crystal
+##                   spikes along its front), the level-up flare at the crystal, an elite's
+##                   entrance (the boss arrival in miniature, violet) and the arrival of the
+##                   five-star guardian a revival grants (2026-10-19)
 ##   Moments  (8)    run-level sequences, one instance each: the crystal's revival, a stage
 ##                   clear (the last one settles into a held picture and seals every gate),
 ##                   the reveal of a new battlefield (one sweep from the crystal and a beacon
-##                   per gate) and the final boss's extra layers. Hidden while idle.
+##                   per gate), the final boss's extra layers, a wave's start (the gate
+##                   beacons flare) and its clear (a light sweeping the field). Hidden while
+##                   idle.
 ## plus two energy domes, the Guardian's aegis (a faceted gem around the revived crystal),
 ## the road ribbons of a battlefield reveal and six pooled OmniLights for the brightest pulses.
 ## Instances animate in their shaders from `vfx_time`, a clock that only advances in
@@ -67,6 +76,7 @@ const EPOCH_STEP := 8.0
 
 const SPRITES: Texture2D = preload("res://art/vfx/sprites.png")
 const SKILL_SPRITES: Texture2D = preload("res://art/vfx/skill_sprites.png")
+const ZONE_SPRITES: Texture2D = preload("res://art/vfx/zone_sprites.png")
 const NOISE: Texture2D = preload("res://art/vfx/noise.png")
 const SHADER_PROJECTILE: Shader = preload("res://art/vfx/vfx_projectile.gdshader")
 const SHADER_BURST: Shader = preload("res://art/vfx/vfx_burst.gdshader")
@@ -87,18 +97,20 @@ const SHADER_AEGIS: Shader = preload("res://art/vfx/vfx_aegis.gdshader")
 const SHADER_AEGIS_BASE: Shader = preload("res://art/vfx/vfx_aegis_base.gdshader")
 const SHADER_ROAD: Shader = preload("res://art/vfx/vfx_road.gdshader")
 const SHADER_ROAD_BASE: Shader = preload("res://art/vfx/vfx_road_base.gdshader")
+const SHADER_ELITE: Shader = preload("res://art/vfx/vfx_elite.gdshader")
 ## Shared looping status materials (burn / frost / stun) handed to body adapters by
 ## status_group(); the live world's VFX node keeps their clock in step with the battle.
 static var _status_materials: Dictionary = {}
 static var _status_mesh: ArrayMesh
+static var _elite_mesh: ArrayMesh
 
 ## Burst kinds; the shaders key their timing tables on this order.
 enum Kind { HIT, SPLASH, ZONE_TICK, DIE, LEAK, BLOCK, PUSH, FROST, STUN, CURSE, SPAWN, WILDFIRE,
 	BLAST, FREEZE, WARD, MUZZLE_SMOKE, RIC_SPARK, BEAM_CAP, BOLT_CAP, CAST_RELEASE, SLASH_HIT,
-	SEAL, SCATTER }
+	SEAL, SCATTER, CRIT, ZONE_END }
 ## Seconds a burst slot stays reserved: at least the longest layer of that kind.
 const KIND_LIFE := [0.50, 0.75, 0.55, 1.05, 0.60, 0.45, 0.35, 0.95, 0.45, 0.65, 0.90, 1.10,
-	1.30, 1.40, 0.90, 0.62, 0.25, 0.30, 0.30, 0.50, 0.44, 0.82, 0.96]
+	1.30, 1.40, 0.90, 0.62, 0.25, 0.30, 0.30, 0.50, 0.44, 0.82, 0.96, 0.55, 2.30]
 const ELEM_INDEX := {"none": 0, "fire": 1, "ice": 2, "elec": 3, "water": 4}
 const WEAPON_INDEX := {"rifle": 0, "gun": 0, "bow": 1, "cast": 2, "artillery": 3, "sword": 4, "tool": 5}
 ## Projectile head sprites: 0 tracer, 1 arrow, 2 shell, 3 bead, 4 orb, 5 crescent.
@@ -106,21 +118,35 @@ const BULLET_SIZE := {"shot": 0.13, "pierce": 0.15, "splash": 0.19, "chain": 0.1
 const TRAIL_LENGTH := {"shot": 1.05, "pierce": 1.65, "splash": 0.85, "chain": 1.15, "ricochet": 0.95}
 ## Budget priority per burst kind: when the shared 72-slot budget is full, a new
 ## effect evicts the oldest live effect of lower or equal priority (skills never drop).
-const KIND_PRIORITY := [0, 1, 0, 2, 3, 2, 1, 1, 1, 1, 2, 2, 4, 4, 4, 0, 0, 1, 1, 1, 0, 2, 2]
+const KIND_PRIORITY := [0, 1, 0, 2, 3, 2, 1, 1, 1, 1, 2, 2, 4, 4, 4, 0, 0, 1, 1, 1, 0, 2, 2, 0, 1]
 ## Per-frame caps keep bulk events (a freeze slowing 40 bodies) from flooding one frame.
 const FRAME_CAPS := {"hit": 10, "splash": 6, "frost": 4, "stun": 5, "die": 8, "push": 6, "zone_tick": 8}
 ## Girth of a scaled body in world units, measured once by fit_body().
 const META_BODY_RADIUS := "_stellar_body_radius"
+## Hover height of a flying body (NativeMonsterModel.FLY_META, world units above the
+## ground; 0 on walkers): hits, status marks and deaths on it are drawn up there.
+const META_FLY := "_stellar_fly_height"
+## Height (logical units) of an ordinary swarm body: a kill's pop grows with die.h / this.
+const BODY_HEIGHT_BASE := 52.0
 const PORTAL_COLOR := Color("#9d86ff")
 const PUSH_COLOR := Color("#e8f1ff")
 ## Sequence kinds of the Skills pool (vfx_skill*.gdshader key their timelines on this order).
-enum SkillKind { BLAST, BOSS_WARNING, BOSS_BURST }
-## Starlight Burst: the star falls for BLAST_FALL seconds after the cast (the simulator's
+enum SkillKind { BLAST, BOSS_WARNING, BOSS_BURST, FREEZE, LEVELUP, ELITE_BURST, HERO_ARRIVE }
+## Starlight Burst: the meteor falls for BLAST_FALL seconds after the cast (the simulator's
 ## damage is immediate; the lock-on sigil marks the struck radius from the cast moment),
-## then the impact layers run out over the rest of BLAST_LIFE.
-const BLAST_FALL := 0.18
-const BLAST_LIFE := 2.0
+## then the impact layers run out over the rest of BLAST_LIFE. The shaders' HIT constant
+## is this value.
+const BLAST_FALL := 0.32
+const BLAST_LIFE := 2.1
 const BLAST_HOT := Color("#fff4d6")
+const BLAST_LIGHT_REACH := 10.0
+## Frost pulse: the ice wave crosses its reach in FREEZE_WAVE seconds (vfx_skill FREEZE_SEC);
+## the snow and fog behind it are gone by FREEZE_LIFE.
+const FREEZE_WAVE := 0.95
+const FREEZE_LIFE := 2.2
+## Level-up: a star rises from the crystal for LEVELUP_RISE seconds and bursts.
+const LEVELUP_RISE := 0.45
+const LEVELUP_LIFE := 1.3
 ## Boss gate: crimson gather, violet light; R is the arrival footprint (the 2.8x boss).
 const BOSS_RED := Color("#ff3d5c")
 const BOSS_VIOLET := Color("#9a4dff")
@@ -129,7 +155,7 @@ const BOSS_BURST_LIFE := 2.4
 const STUN_COLOR := Color("#ffe38b")
 const CURSE_COLOR := Color("#7a4fc9")
 ## Sequence kinds of the Moments pool (vfx_moment*.gdshader key their timelines on this order).
-enum MomentKind { REVIVE, STAGE_CLEAR, STAGE_SWEEP, GATE_BEACON, FINAL_WARNING, FINAL_BURST, GATE_SEAL }
+enum MomentKind { REVIVE, STAGE_CLEAR, STAGE_SWEEP, GATE_BEACON, FINAL_WARNING, FINAL_BURST, GATE_SEAL, WAVE_CLEAR }
 ## Crystal revival (Guardian's blessing). The simulator has already revived the crystal and
 ## stopped every monster when the event arrives; the picture tells it as a break and a
 ## reforming: REVIVE_FLASH seconds of collapse, the flash, a shockwave that crosses the field
@@ -184,6 +210,55 @@ const FINAL_SCALE := 1.3
 const FINAL_AFTERSHOCK := 0.24
 const FINAL_BURST_LIFE := 3.5
 const FINAL_EMBER := Color("#ffb347")
+## Waves (2026-10-19, feedback O5; ArenaSim arena_wave / arena_wave_clear / arena_elite).
+## A wave starts: every gate's beacon flares at once (the GATE_BEACON sequence entered
+## WAVE_BEACON_SKIP seconds in, right at its flare) and a runner leaves every gate down its
+## road with only the mouths marked (the road ribbon restarted with scan_marks 0). Coral for
+## an ordinary wave, violet for an elite wave; the boss wave has no beacons (its own warning
+## and arrival hold the stage), only crimson runners.
+const WAVE_BEACON_SKIP := SWEEP_ARRIVE - 0.04
+## A wave is beaten: a thin light sweeps from the crystal to the rim in WAVE_SWEEP seconds
+## (vfx_moment.gdshaderinc wave_sweep) with glints popping where it passes; gone by
+## WAVE_CLEAR_LIFE. Lighter than a stage clear, because it comes ten times a stage.
+const WAVE_SWEEP := 0.85
+const WAVE_CLEAR_LIFE := 1.25
+## With a mend (the defence's heal, arena_wave_clear heal / arena_heal) the sequence also
+## closes a cyan ring on the crystal, raises halos up it and glints on its tip (the stage
+## clear's mend layers), so it lives MEND_LIFE. A heal outside a wave clear (a constellation
+## node) plays the mend alone.
+const MEND_LIFE := 1.6
+## Elites: the colour of their line, aura, entrance and wave (the HUD's elite bar may share
+## it), and the entrance's footprint R in world units (the boss gate is BOSS_SIZE 1.5; the
+## shaders scale the sequence by R / 1.5).
+const ELITE_COLOR := Color("#9b62ff")
+const ELITE_SIZE := 0.95
+const ELITE_BURST_LIFE := 2.0
+## Roads body colours (linear) per wave tone: ordinary (the coral of the reveal), elite, boss.
+const ROAD_BODY := {"coral": [Vector3(0.85, 0.23, 0.09), Vector3(1.0, 0.62, 0.36)],
+	"elite": [Vector3(0.36, 0.08, 0.62), Vector3(0.86, 0.66, 1.0)],
+	"boss": [Vector3(0.55, 0.04, 0.12), Vector3(1.0, 0.48, 0.52)]}
+## The five-star guardian a revival grants (arena_revive unit / tier / where): its arrival
+## follows the crystal's reforming (REVIVE_WHOLE). On the field a gold star falls onto its
+## spot for ARRIVE_FALL seconds (a ring tightens there as it comes) and lands: flash, column,
+## ground ring, five big stars thrown into a crown, sparkles; the world has held the body out
+## of sight until then and shows it in the column with its drop-in (NativeCharacterModel's
+## spawn beat). On the bench (or when no body turns up within ARRIVE_WAIT) the star climbs
+## out of the crystal and the revival's aegis dome, bursts just over the dome and its five
+## stars circle the dome's foot — low and outside the dome, inside the ring of default posts
+## (2.24 u), so the crown sits on no guardian's head. ARRIVE_SIZE is the ring R.
+const ARRIVE_FALL := 0.28
+const ARRIVE_SIZE := 0.9
+const ARRIVE_LIFE := 1.75
+const ARRIVE_BENCH_LIFE := 2.3
+const ARRIVE_WAIT := 0.6
+## Bosses and elites walk through guardians (2026-10-19, feedback F4 / PLAN M5: the simulator
+## no longer lets a guardian's body stop them). It is drawn as a shove, never as a block: a
+## puff of trampled dust under the guardian when the big body reaches it and every
+## TRAMPLE_GAP seconds while it pushes through, and the guardian's figure is nudged aside
+## (StellarWorld.shove_hero, up to TRAMPLE_SHOVE world units, eased back after). Visual only.
+const TRAMPLE_GAP := 0.4
+const TRAMPLE_SHOVE := 0.34
+const TRAMPLE_DUST := Color(0.46, 0.38, 0.30)
 
 var projectiles: Node3D                 # shared parent for pooled bullet nodes
 var effects: Array[Dictionary] = []     # shared with StellarWorld.effects (same array)
@@ -213,6 +288,12 @@ var _final_stage := false
 var _reveal_pending := false             # arena_stage arrived this frame (spawned in update)
 var _reveal_at := Vector3.ZERO
 var _won_seen := false                   # the simulator's victory has been settled
+var _arrivals: Array[Dictionary] = []     # revival gifts waiting for their arrival beat
+var _roads_key := ""                     # the layout the road ribbon mesh was built for
+var _roads_longest := 0.0                # its longest road (world units)
+var _trample: Dictionary = {}            # "sid:hero" -> seconds to the next dust puff
+var _heal_stash := 0.0                   # arena_heal seen this frame, not yet shown
+var _trample_clock := 0.0
 ## Frames the idle Moments pool, aegis and road ribbons are still drawn after start-up
 ## (nothing shows: every part is at alpha 0). GL compiles a shader at its first draw; this
 ## puts that cost on the loading frames instead of on the frame a stage boss falls.
@@ -231,6 +312,7 @@ var _delayed: Array[Dictionary] = []        # bursts / pulses waiting on the eff
 var _aims: Dictionary = {}
 var _melee: Dictionary = {}                 # src -> last melee release (origin, dir, reach, sign)
 var _big_bodies: Array[Node3D] = []         # live bodies whose root is scaled (bosses)
+var _zone_live: Dictionary = {}             # zones drawn last frame (key -> {p, r, el, c})
 var _hero_cache: Dictionary = {}
 var _split_gap := 0.0
 var _hit_light_gap := 0.0
@@ -321,6 +403,7 @@ func _material(shader: Shader, priority: int) -> ShaderMaterial:
 	material.render_priority = priority
 	material.set_shader_parameter("sprites", SPRITES)
 	material.set_shader_parameter("skill_sprites", SKILL_SPRITES)
+	material.set_shader_parameter("zone_sprites", ZONE_SPRITES)
 	material.set_shader_parameter("noise_tex", NOISE)
 	material.set_shader_parameter("vfx_time", _clock)
 	material.set_shader_parameter("vfx_epoch", _epoch)
@@ -392,6 +475,8 @@ func _muzzle_mesh() -> ArrayMesh:
 	st.set_material(_material(SHADER_MUZZLE, 1))
 	return st.commit()
 
+## Additive: ground ring, flash, 8 sparks, 8 motes, facing ring, plume, 6 accents.
+## Mix: scorch, 2 puffs, 4 debris.
 func _burst_mesh() -> ArrayMesh:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -400,12 +485,15 @@ func _burst_mesh() -> ArrayMesh:
 	for n in range(8): _quad(st, 2, n)
 	for n in range(8): _quad(st, 3, n)
 	_quad(st, 5, 0)
+	_quad(st, 7, 0)
+	for n in range(6): _quad(st, 8, n)
 	st.set_material(_material(SHADER_BURST, -1))
 	var mesh := st.commit()
 	var soft := SurfaceTool.new()
 	soft.begin(Mesh.PRIMITIVE_TRIANGLES)
 	_quad(soft, 6, 0)
 	for n in range(2): _quad(soft, 4, n)
+	for n in range(4): _quad(soft, 9, n)
 	soft.set_material(_material(SHADER_BURST_MIX, -3))
 	soft.commit(mesh)
 	return mesh
@@ -458,9 +546,10 @@ func _slash_mesh() -> ArrayMesh:
 ## One sequence per instance (vfx_skill / vfx_skill_mix): every quad is a part of the
 ## timeline (UV2.x) and the shaders place it from the instance's age. Additive surface:
 ## shock ring, sigil, flash, flare, pillar, comet tail strip + head, 16 sparks, 12 embers,
-## afterglow, sky flare, 4 lightning bolts, portal ring, crack glow. Mix surface: ground
-## colour and sigil body (first, so everything else lies on them; they only draw on bright
-## fields), cracks, dark ring, 6 smoke puffs, 10 debris chunks, 8 mist wisps.
+## afterglow, sky flare, 4 lightning bolts, facing ring, crack glow, 10 trail embers. Mix
+## surface: ground colour and sigil body (first, so everything else lies on them; they only
+## draw on bright fields), cracks, dark ring, 6 smoke puffs, 10 debris chunks, 8 mist
+## wisps, 5 trail smoke puffs.
 func _skill_mesh() -> ArrayMesh:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -472,6 +561,7 @@ func _skill_mesh() -> ArrayMesh:
 	for part in [9, 10]: _quad(st, part, 0)
 	for n in range(4): _quad(st, 11, n)
 	for part in [12, 13]: _quad(st, part, 0)
+	for n in range(10): _quad(st, 14, n)
 	st.set_material(_material(SHADER_SKILL, 1))
 	var mesh := st.commit()
 	var soft := SurfaceTool.new()
@@ -480,6 +570,7 @@ func _skill_mesh() -> ArrayMesh:
 	for n in range(6): _quad(soft, 22, n)
 	for n in range(10): _quad(soft, 23, n)
 	for n in range(8): _quad(soft, 24, n)
+	for n in range(5): _quad(soft, 27, n)
 	soft.set_material(_material(SHADER_SKILL_MIX, -3))
 	soft.commit(mesh)
 	return mesh
@@ -554,16 +645,27 @@ func _aegis_mesh() -> ArrayMesh:
 		mesh = st.commit(mesh)
 	return mesh
 
+## Mix (under): dark base, 4 mist puffs, the floor's body. Additive: rune disc, 8 motes,
+## 16 vortex shards, 4 veils, 6 strikes, 2 tick caps, landing column, crown, floor glow.
 func _zone_mesh() -> ArrayMesh:
 	var base := SurfaceTool.new()
 	base.begin(Mesh.PRIMITIVE_TRIANGLES)
 	_quad(base, 0, 0)
+	_quad(base, 9, 0)
+	for n in range(4): _quad(base, 8, n)
 	base.set_material(_material(SHADER_ZONE_BASE, -4))
 	var mesh := base.commit()
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	_quad(st, 0, 0)
+	_quad(st, 8, 0)
 	for n in range(8): _quad(st, 1, n)
+	for n in range(4): _quad(st, 3, n)
+	for n in range(16): _quad(st, 2, n)
+	for n in range(6): _quad(st, 4, n)
+	for n in range(2): _quad(st, 5, n)
+	_quad(st, 6, 0)
+	_quad(st, 7, 0)
 	st.set_material(_material(SHADER_ZONE, -2))
 	st.commit(mesh)
 	return mesh
@@ -596,6 +698,68 @@ func sync(sim, _time: float) -> void:
 	_sync_muzzles(sim)
 	_sync_zones(sim)
 	_flush_fires(sim)
+	_sync_trample(sim)
+	if _heal_stash > 0.0:
+		# A heal on its own (a constellation node): the mend without the sweep.
+		var centre := world(Balance.ARENA_CENTER, 0.0)
+		_moment(MomentKind.WAVE_CLEAR, centre, Basis.IDENTITY, ArenaGeometry.RADIUS / UNIT, Look.CRYSTAL,
+			2.0 + _mend_amount(_heal_stash), 0.0, MEND_LIFE)
+		_delayed.append({"at": _clock + 0.35, "kind": -1, "origin": centre + Vector3(0, 1.0, 0), "color": Look.CRYSTAL,
+			"pulse": 2.6, "range": 5.0, "life": 0.8})
+		_heal_stash = 0.0
+
+## 0..1 strength of the crystal's mend for `heal` crystal points (0 when nothing mended):
+## half at once, full from a tenth of the crystal.
+func _mend_amount(heal: float) -> float:
+	if heal <= 0.0: return 0.0
+	var sim = _sim_ref.get_ref() if _sim_ref != null else null
+	var top := float(sim.crystal_max) if sim != null and "crystal_max" in sim else 1200.0
+	return clampf(0.5 + 5.0 * heal / maxf(top, 1.0), 0.5, 1.0)
+
+## A boss or an elite pushing through a guardian (see TRAMPLE_GAP).
+func _sync_trample(sim) -> void:
+	var dt := maxf(_clock - _trample_clock, 0.0)
+	_trample_clock = _clock
+	if _world == null or sim.heroes.is_empty():
+		_trample.clear()
+		return
+	var seen: Dictionary = {}
+	for mo in sim.monsters:
+		var row = mo.get("m", {})
+		var boss: bool = row is Dictionary and String(row.get("kind", "")) == "boss"
+		if not boss and not bool(mo.get("elite", false)): continue
+		if float(mo.get("hp", 1.0)) <= 0.0: continue
+		var sid := int(mo.get("spawn_id", 0))
+		var node := _world.monster_node(sid)
+		var girth := float(node.get_meta(META_BODY_RADIUS, 0.45)) if node != null else 0.45
+		var reach := Balance.ARENA_HERO_RADIUS + girth * UNIT * 0.8
+		var p := BattleSim.mpos(mo)
+		var vel: Vector2 = mo.get("vel", Vector2.ZERO)
+		var heading := vel.normalized() if vel.length_squared() > 0.01 else (Balance.ARENA_CENTER - p).normalized()
+		for i in range(sim.heroes.size()):
+			if not sim.heroes[i].has("pos"): continue
+			var at: Vector2 = sim.heroes[i]["pos"]
+			var gap := at.distance_to(p)
+			if gap >= reach: continue
+			var key := "%d:%d" % [sid, i]
+			seen[key] = true
+			var left := float(_trample.get(key, 0.0)) - dt
+			# Aside, away from the line the big body walks, harder the deeper it is in.
+			var rel := at - p
+			var side := Vector2(-heading.y, heading.x)
+			if rel.dot(side) < 0.0: side = -side
+			if not _trample.has(key) or left <= 0.0:
+				var facing := Basis.looking_at(Vector3(heading.x, 0.0, heading.y), Vector3.UP)
+				_burst(Kind.SPLASH, world(at, 0.0), facing, TRAMPLE_DUST, 1.0 if boss else 0.7, 0.0)
+				if not _trample.has(key):
+					# The first contact: the guardian is jostled (the stumble ring, sideways).
+					_burst(Kind.PUSH, world(at, 0.0), Basis.looking_at(Vector3(side.x, 0.0, side.y), Vector3.UP), PUSH_COLOR, 1.0, 0.0)
+				left = TRAMPLE_GAP
+			_trample[key] = left
+			var push := TRAMPLE_SHOVE * (1.0 - gap / reach) * (1.0 if boss else 0.7)
+			if _world.has_method("shove_hero"): _world.call("shove_hero", i, Vector3(side.x, 0.0, side.y) * push)
+	for key in _trample.keys():
+		if not seen.has(key): _trample.erase(key)
 
 ## Bright snow and ice fields wash additive layers out to white; tell the shaders.
 ## The arena states how bright its playfield is itself (ArenaWorld.ground_wash, 0 dark
@@ -619,8 +783,14 @@ func _sync_bullets(sim) -> void:
 	var multimesh := _bullets.multimesh
 	var count := mini(MAX_BULLETS, sim.bullets.size())
 	multimesh.visible_instance_count = count
+	# A revival's guardian before its arrival beat is not shown yet, nor are its shots.
+	var hidden: Dictionary = {}
+	if _world != null and _world.has_held(): hidden = _world.held_slots()
 	for i in range(count):
 		var b: Dictionary = sim.bullets[i]
+		if not hidden.is_empty() and hidden.has(int(b.get("src", -1))):
+			multimesh.set_instance_transform(i, PARKED)
+			continue
 		var v: Vector2 = b.get("v", Vector2.ZERO)
 		var direction := Vector3(v.x, 0.0, v.y)
 		if direction.length_squared() < 0.0001: direction = Vector3(0, 0, -1)
@@ -650,7 +820,7 @@ func _sync_muzzles(sim) -> void:
 		for i in range(sim.heroes.size()):
 			if n >= MAX_MUZZLES: break
 			var node := _world.hero_node(i)
-			if node == null or not node.has_method("fire_strength") or not node.has_method("weapon_transform"): continue
+			if node == null or not node.visible or not node.has_method("fire_strength") or not node.has_method("weapon_transform"): continue
 			var strength := float(node.call("fire_strength"))
 			if strength <= 0.01: continue
 			var info := _hero_info(i, sim)
@@ -669,16 +839,31 @@ func _sync_muzzles(sim) -> void:
 func _sync_zones(sim) -> void:
 	var multimesh := _zones.multimesh
 	var n := 0
+	var live: Dictionary = {}
 	for z in sim.zones:
 		if n >= MAX_ZONES: break
 		var radius := float(z.get("r", 128.0)) / UNIT
-		multimesh.set_instance_transform(n, Transform3D(Basis.from_scale(Vector3(radius, 1.0, radius)), world(Vector2(z["at"]), 0.0)))
+		var at := Vector2(z["at"])
+		multimesh.set_instance_transform(n, Transform3D(Basis.from_scale(Vector3(radius, 1.0, radius)), world(at, 0.0)))
 		var color := Color(z.get("c", Color.WHITE))
 		color.a = 1.0 - float(z.get("n", 0)) / maxf(1.0, float(z.get("max", 1)))
 		multimesh.set_instance_color(n, color)
+		var elem := String(z.get("el", "none"))
 		multimesh.set_instance_custom_data(n, Color(float(z.get("t", 0.0)), float(z.get("delay", 0.26)),
-			float(z.get("tick", 0.25)), float(ELEM_INDEX.get(String(z.get("el", "none")), 0))))
+			float(z.get("tick", 0.25)), float(ELEM_INDEX.get(elem, 0))))
+		# A zone that has landed and vanishes from the list has run its last tick: it
+		# settles (ZONE_END). One that never landed (a run that ended) just goes.
+		if float(z.get("t", 0.0)) >= float(z.get("delay", 0.26)):
+			live["%.1f,%.1f,%d" % [at.x, at.y, int(z.get("src", -1))]] = {"p": at, "r": radius, "el": elem, "c": Color(z.get("c", Color.WHITE))}
 		n += 1
+	for key in _zone_live:
+		if live.has(key): continue
+		var gone: Dictionary = _zone_live[key]
+		var elem_index := float(ELEM_INDEX.get(String(gone["el"]), 0))
+		var tint: Color = Balance.elem_color(String(gone["el"])) if String(gone["el"]) != "none" else Color(gone["c"])
+		_burst(Kind.ZONE_END, world(gone["p"], 0.0), _yaw(), Color(gone["c"]), float(gone["r"]), elem_index)
+		_pulse(world(gone["p"], 0.7), tint, 2.6, float(gone["r"]) * 2.2, 0.45)
+	_zone_live = live
 	# Caster wind-up circles follow the adapter's actual aim phase.
 	if _world != null:
 		for src in _aims.keys():
@@ -716,6 +901,11 @@ func _flush_fires(sim) -> void:
 		var color := _effect_color(info, elem)
 		var shots := maxi(1, int(e.get("n", 1)))
 		var node: Node3D = _world.hero_node(src) if _world != null else null
+		if (node != null and not node.visible) or (node == null and _world != null and _world.has_held() and _world.held_slots().has(src)):
+			# A revival's guardian before its arrival beat: the body is not shown yet (or its
+			# model is still loading).
+			_aims.erase(src)
+			continue
 		if bool(e.get("melee", false)) or attack == "sword":
 			_melee_release(src, e, sim, info, color, elem_index)
 			_aims.erase(src)
@@ -785,7 +975,7 @@ func _melee_hit(e: Dictionary) -> void:
 	var sid := int(e.get("sid", 0))
 	var big := _big_body_at(p)
 	var body := big.scale.y if big != null else 1.0
-	var origin := world(p, clampf(_monster_height(sid) * 0.55, 0.3, 1.1 * body))
+	var origin := world(p, clampf(_monster_height(sid) * 0.55, 0.3, 1.1 * body) + _fly_height(e))
 	var basis := _yaw()
 	var delay := 0.0
 	var record: Dictionary = _melee.get(src, {})
@@ -850,6 +1040,15 @@ func event(e: Dictionary) -> void:
 			# A scaled body (a boss) fell here: a stage clear in the same tick links to it.
 			if e.get("p") is Vector2 and _big_body_at(e["p"]) != null:
 				_boss_fall = {"clock": _clock, "p": e["p"]}
+		"zone":
+			# The disc itself is drawn from sim.zones; this is the light of its landing,
+			# timed to the delay the simulator gave the telegraph.
+			var p: Vector2 = e.get("p", Vector2.ZERO)
+			var elem_name := String(e.get("el", "none"))
+			var tint := Balance.elem_color(elem_name) if elem_name != "none" else Color(e.get("c", Color.WHITE))
+			_delayed.append({"at": _clock + float(e.get("delay", 0.26)), "kind": -1, "origin": world(p, 0.6),
+				"color": tint, "pulse": 3.0, "range": float(e.get("r", 128.0)) / UNIT * 2.0, "life": 0.3})
+			return
 	if FRAME_CAPS.has(type):
 		var seen := int(_frame_counts.get(type, 0)) + 1
 		_frame_counts[type] = seen
@@ -868,10 +1067,17 @@ func event(e: Dictionary) -> void:
 			var p: Vector2 = e.get("p", Vector2.ZERO)
 			var scale := _impact_scale(e)
 			if scale <= 0.0: return
-			_burst(Kind.HIT, world(p, 0.0), _yaw(), color, scale, elem, body)
-			if (bool(e.get("crit", false)) or float(e.get("em", 1.0)) >= 2.0) and _hit_light_gap <= 0.0:
-				_hit_light_gap = 0.08
-				_pulse(world(p, 0.6), color, 1.4 * scale, 2.0, 0.12)
+			# Sparks spray on through the body along the shot; a hovering body is hit
+			# up where it flies; a crit or weak-point hit is its own, bigger burst and
+			# the body's flash takes the element's colour.
+			var big := bool(e.get("crit", false)) or float(e.get("em", 1.0)) >= 2.0
+			var fly := _fly_height(e)
+			_burst(Kind.CRIT if big else Kind.HIT, world(p, fly), _travel(int(e.get("src", -1)), p), color, scale, elem, body)
+			if big:
+				_accent(int(e.get("sid", 0)), String(e.get("el", "none")), scale)
+				if _hit_light_gap <= 0.0:
+					_hit_light_gap = 0.08
+					_pulse(world(p, 0.6 + fly), color, 1.6 * scale, 2.2, 0.14)
 		"splash":
 			var p: Vector2 = e.get("p", Vector2.ZERO)
 			var radius := float(e.get("r", 48.0)) / UNIT
@@ -907,9 +1113,12 @@ func event(e: Dictionary) -> void:
 			_beam(2, a, b, color, 0.0)
 			_burst(Kind.RIC_SPARK, a, _yaw(), color, 1.0, elem)
 		"die":
+			# The pop grows with the body: a tank's end is a bigger event than an imp's.
 			var p: Vector2 = e.get("p", Vector2.ZERO)
-			_burst(Kind.DIE, world(p, 0.0), _yaw(), color, 1.0, elem, body)
-			_pulse(world(p, 0.5), color.lightened(0.3), 1.3, 2.2, 0.35)
+			var size := clampf(float(e.get("h", BODY_HEIGHT_BASE)) / BODY_HEIGHT_BASE, 0.9, 1.6)
+			var fly := _fly_height(e)
+			_burst(Kind.DIE, world(p, fly), _yaw(), color, size, elem, body)
+			_pulse(world(p, 0.5 + fly), color.lightened(0.3), 1.3 * size, 2.2 + 0.6 * (size - 1.0), 0.35)
 		"leak":
 			var p: Vector2 = e.get("p", Vector2.ZERO)
 			var radius := float(e.get("r", 32.0)) / UNIT
@@ -926,14 +1135,14 @@ func event(e: Dictionary) -> void:
 			if node != null:
 				var back: Vector3 = node.global_basis.z
 				if back.length_squared() > 0.001: facing = Basis.looking_at(Vector3(back.x, 0, back.z).normalized(), Vector3.UP)
-			_burst(Kind.PUSH, world(p, 0.0), facing, PUSH_COLOR, 1.0, 0.0, body)
+			_burst(Kind.PUSH, world(p, _fly_height(e)), facing, PUSH_COLOR, 1.0, 0.0, body)
 		"frost":
-			_burst(Kind.FROST, world(Vector2(e.get("p", Vector2.ZERO)), 0.0), _yaw(), Look.ICE, 1.0, 2.0, body)
+			_burst(Kind.FROST, world(Vector2(e.get("p", Vector2.ZERO)), _fly_height(e)), _yaw(), Look.ICE, 1.0, 2.0, body)
 		"stun":
 			var sid := int(e.get("sid", 0))
-			_burst(Kind.STUN, world(Vector2(e.get("p", Vector2.ZERO)), 0.0), _yaw(), STUN_COLOR, _monster_height(sid) + 0.12 * _monster_scale(sid), 3.0, body)
+			_burst(Kind.STUN, world(Vector2(e.get("p", Vector2.ZERO)), _fly_height(e)), _yaw(), STUN_COLOR, _monster_height(sid) + 0.12 * _monster_scale(sid), 3.0, body)
 		"curse":
-			_burst(Kind.CURSE, world(Vector2(e.get("p", Vector2.ZERO)), 0.0), _yaw(), CURSE_COLOR, 1.0, 0.0, body)
+			_burst(Kind.CURSE, world(Vector2(e.get("p", Vector2.ZERO)), _fly_height(e)), _yaw(), CURSE_COLOR, 1.0, 0.0, body)
 		"spawn":
 			var p: Vector2 = e.get("p", Vector2.ZERO)
 			_burst(Kind.SPAWN, world(p, 0.0), _yaw(), PORTAL_COLOR, 1.0, 0.0)
@@ -947,6 +1156,8 @@ func event(e: Dictionary) -> void:
 ## Arena-wide guardian skills (blast / freeze / ward) and the boss gate.
 ##   arena_blast         p (ground point), r (damage radius, logical units)
 ##   arena_freeze        p, r (map diagonal)      arena_ward  p, r (altar radius)
+##   arena_levelup       p (the crystal), level: a short gold flare rising from the crystal
+##                       (the HUD's popup is the UI's)
 ##   arena_boss_warning  p (the gate the boss will come through), sec (seconds until it does;
 ##                       the gather runs exactly that long and hands over to the burst).
 ##                       On the last stage (final in the event, else read from the simulator)
@@ -961,6 +1172,12 @@ func event(e: Dictionary) -> void:
 ##   arena_stage         p: a battlefield has just been built and is paused under its card
 ##                       (every stage, the run's first included; a restored run sends
 ##                       none); everything born before it is released first
+##   arena_revive        (2026-10-19) also unit, tier, where ("field" | "bench"): the
+##                       five-star guardian it grants arrives after the reforming
+##   arena_wave          wave, total, elite, boss: a wave starts (gate beacons, runners)
+##   arena_wave_clear    wave, gold, prep, heal: it is beaten (the sweep of light, the mend)
+##   arena_heal          n: the crystal mended (shown with the wave clear, or alone)
+##   arena_elite         p, sid: an elite steps in (a small violet boss arrival)
 func arena_event(e: Dictionary) -> void:
 	if _bullets == null: return
 	var type := String(e.get("t", ""))
@@ -973,11 +1190,21 @@ func arena_event(e: Dictionary) -> void:
 			radius = float(e.get("r", Balance.ARENA_BLAST_RADIUS)) / UNIT
 			_skill(SkillKind.BLAST, at, radius, Look.GOLD, 0.0, BLAST_LIFE)
 			_pulse(at + Vector3(0, 0.5, 0), Look.GOLD, 2.0, radius * 1.8, BLAST_FALL + 0.05)
+			# The impact light reaches 3.6 R, capped at BLAST_LIGHT_REACH so the wider radius
+			# awaiting approval (160) does not light the whole field (unchanged at 110).
 			_delayed.append({"at": _clock + BLAST_FALL, "kind": -1, "origin": at + Vector3(0, 0.8, 0),
-				"color": BLAST_HOT, "pulse": 9.0, "range": radius * 3.6, "life": 0.9})
+				"color": BLAST_HOT, "pulse": 9.0, "range": minf(radius * 3.6, BLAST_LIGHT_REACH), "life": 0.9})
 		"arena_freeze":
-			_burst(Kind.FREEZE, at, _yaw(), Look.ICE, minf(radius * 0.36, 10.5), 2.0)
-			_pulse(at + Vector3(0, 0.8, 0), Look.ICE_DEEP, 4.0, 8.0, 0.6)
+			# An ice wave from the crystal with crystal spikes along its front (one Skills
+			# instance); the per-monster frost bursts follow from the simulator's own events.
+			_skill(SkillKind.FREEZE, at, minf(radius * 0.36, 10.5), Look.ICE, 0.0, FREEZE_LIFE)
+			_pulse(at + Vector3(0, 0.8, 0), Look.ICE_DEEP, 4.5, 8.5, 0.6)
+			_delayed.append({"at": _clock + FREEZE_WAVE * 0.5, "kind": -1, "origin": at + Vector3(0, 0.6, 0),
+				"color": Look.ICE, "pulse": 2.0, "range": 12.0, "life": 0.5})
+		"arena_levelup":
+			_skill(SkillKind.LEVELUP, at, Balance.ALTAR_R / UNIT, Look.GOLD, 0.0, LEVELUP_LIFE)
+			_delayed.append({"at": _clock + LEVELUP_RISE, "kind": -1, "origin": at + Vector3(0, 3.0, 0),
+				"color": BLAST_HOT, "pulse": 4.0, "range": 7.0, "life": 0.5})
 		"arena_ward":
 			_burst(Kind.WARD, at, _yaw(), Look.CRYSTAL, radius, 0.0)
 			_dome(at, radius * 1.25, Look.CRYSTAL, 0.95)
@@ -1009,6 +1236,29 @@ func arena_event(e: Dictionary) -> void:
 				_pulse(at + Vector3(0, 1.3, 0), BOSS_VIOLET.lerp(Color.WHITE, 0.3), 8.0, BOSS_SIZE * 7.5, 1.5, 2)
 		"arena_revive":
 			_revive(at, float(e.get("r", ArenaGeometry.RADIUS)) / UNIT, maxf(float(e.get("sec", Balance.ARENA_REVIVE_INVULN)), 1.3))
+			var unit := String(e.get("unit", ""))
+			if unit != "":
+				var where := String(e.get("where", "field"))
+				_arrivals.append({"unit": unit, "where": where, "at": _clock + REVIVE_WHOLE, "until": _clock + REVIVE_WHOLE + ARRIVE_WAIT})
+				if where == "field" and _world != null and _world.has_method("hold_hero"): _world.call("hold_hero", unit)
+		"arena_wave":
+			_wave_start(bool(e.get("elite", false)), bool(e.get("boss", false)))
+		"arena_wave_clear":
+			# The heal of this clear arrived as arena_heal just before: it is shown here.
+			_heal_stash = 0.0
+			var centre := world(Balance.ARENA_CENTER, 0.0)
+			var mend := _mend_amount(float(e.get("heal", 0.0)))
+			_moment(MomentKind.WAVE_CLEAR, centre, Basis.IDENTITY, ArenaGeometry.RADIUS / UNIT, Look.GOLD, mend, WAVE_SWEEP,
+				MEND_LIFE if mend > 0.0 else WAVE_CLEAR_LIFE)
+			_pulse(centre + Vector3(0, 1.4, 0), BLESSING_LIGHT, 3.2, 7.0, 0.55)
+			if mend > 0.0:
+				_delayed.append({"at": _clock + 0.35, "kind": -1, "origin": centre + Vector3(0, 1.0, 0), "color": Look.CRYSTAL,
+					"pulse": 2.2, "range": 4.5, "life": 0.8})
+		"arena_heal":
+			_heal_stash += float(e.get("n", 0.0))
+		"arena_elite":
+			_skill(SkillKind.ELITE_BURST, at, ELITE_SIZE, ELITE_COLOR, 0.0, ELITE_BURST_LIFE)
+			_pulse(at + Vector3(0, 1.0, 0), ELITE_COLOR.lerp(Color.WHITE, 0.3), 5.5, ELITE_SIZE * 6.0, 1.1, 2)
 		"arena_stage_clear":
 			_stage_clear(at, e)
 		"arena_stage":
@@ -1042,6 +1292,7 @@ func update(dt: float) -> void:
 			var lit := _pulse(fx["origin"], fx["color"], float(fx["pulse"]), float(fx.get("range", 2.0)), float(fx.get("life", 0.12)), int(fx.get("mode", 0)))
 			if lit >= 0 and bool(fx.get("rest", false)): _light_fx[lit]["rest"] = true
 		_delayed.remove_at(i)
+	if not _arrivals.is_empty(): _update_arrivals()
 	for i in range(effects.size() - 1, -1, -1):
 		var fx = effects[i]
 		if typeof(fx) != TYPE_DICTIONARY or not fx.has("vfx"): continue
@@ -1191,6 +1442,8 @@ func _skill(kind: int, origin: Vector3, radius: float, color: Color, duration: f
 	var custom := Color(_clock - _epoch, radius, duration, float(kind))
 	multimesh.set_instance_custom_data(slot, custom)
 	_record("skill", slot, life, 4, custom)
+	# Where it plays (a skill is rare: the checks read it without the renderer's copy).
+	effects[-1]["at"] = origin
 
 # --------------------------------------------------------------------------- #
 # Run-level moments: crystal revival, stage clear, new battlefield, final boss
@@ -1233,7 +1486,13 @@ func _clear_field(keep_rest: bool = false) -> void:
 	_pending_hits.clear()
 	_aims.clear()
 	_melee.clear()
+	_zone_live.clear()
 	_boss_fall = {"clock": -99.0}
+	# A guardian still waiting for its arrival beat is shown at once (nothing may stay hidden).
+	_arrivals.clear()
+	_trample.clear()
+	_heal_stash = 0.0
+	if _world != null and _world.has_method("release_holds"): _world.call("release_holds")
 	for i in range(_lights.size()):
 		if keep_rest and bool(_light_fx[i].get("rest", false)): continue
 		_light_fx[i]["life"] = 0.0
@@ -1491,10 +1750,55 @@ func _roads_start() -> float:
 		mesh.surface_set_material(layer, _road_materials[layer])
 		_road_materials[layer].set_shader_parameter("birth", _clock)
 		_road_materials[layer].set_shader_parameter("field_radius", ArenaGeometry.RADIUS / UNIT)
-	_road_materials[1].set_shader_parameter("color", GATE_COLOR)
+		_road_materials[layer].set_shader_parameter("scan_marks", 1.0)
+	_road_tone("coral", GATE_COLOR)
+	_roads_key = ArenaGeometry.layout()
+	_roads_longest = longest
 	_roads.visible = true
 	_roads_fx = {"age": 0.0, "life": SWEEP_ARRIVE + longest / ROAD_SPEED + 1.2}
 	return SWEEP_ARRIVE + (shortest_arm if is_finite(shortest_arm) else longest) / ROAD_SPEED
+
+## The road ribbon's colours: the light (additive) and the body (linear, ROAD_BODY).
+func _road_tone(body: String, light: Color) -> void:
+	var tones: Array = ROAD_BODY.get(body, ROAD_BODY["coral"])
+	_road_materials[0].set_shader_parameter("body", tones[0])
+	_road_materials[0].set_shader_parameter("body_hot", tones[1])
+	_road_materials[1].set_shader_parameter("color", light)
+
+## A wave starts (see WAVE_BEACON_SKIP).
+func _wave_start(elite: bool, boss: bool) -> void:
+	var tone := BOSS_RED if boss else ELITE_COLOR if elite else GATE_COLOR
+	# A beacon still burning at a gate (the battlefield's reveal when the first prep is short,
+	# or the last wave's) gives way to the new one instead of crowding the pool.
+	for i in range(effects.size() - 1, -1, -1):
+		var fx = effects[i]
+		if typeof(fx) != TYPE_DICTIONARY or String(fx.get("vfx", "")) != "moment": continue
+		if int(round((fx["custom"] as Color).a)) != MomentKind.GATE_BEACON: continue
+		_release(fx)
+		effects.remove_at(i)
+	if not boss:
+		var radius := ArenaGeometry.RADIUS / UNIT
+		for lane in range(mini(ArenaGeometry.route_count(), ArenaGeometry.MAX_ROUTES)):
+			var gate := ArenaGeometry.gate_point(lane, GATE_INSET)
+			var inward := Balance.ARENA_CENTER - gate
+			_moment(MomentKind.GATE_BEACON, world(gate, 0.0), Basis.looking_at(Vector3(inward.x, 0.0, inward.y).normalized(), Vector3.UP),
+				radius, tone, 2.0 if elite else 1.0, 0.0, BEACON_LIFE, WAVE_BEACON_SKIP)
+	_wave_roads("boss" if boss else "elite" if elite else "coral", tone)
+
+## Runners down every road at a wave's start: the ribbon of the current layout (rebuilt here
+## only when it is not, e.g. a run restored without a battlefield reveal) restarted already
+## SWEEP_ARRIVE into its timeline, so they leave the gates at once, with only the mouths and
+## the runners' tails marked.
+func _wave_roads(body: String, light: Color) -> void:
+	if _roads_key != ArenaGeometry.layout():
+		_roads_start()
+	if _roads_longest <= 0.0: return
+	for material in _road_materials:
+		material.set_shader_parameter("birth", _clock - SWEEP_ARRIVE)
+		material.set_shader_parameter("scan_marks", 0.0)
+	_road_tone(body, light)
+	_roads.visible = true
+	_roads_fx = {"age": 0.0, "life": _roads_longest / ROAD_SPEED + 1.2}
 
 ## One road as a ribbon of quads: UV.x across, UV.y the distance from its gate, UV2.y its
 ## length (all world units). Returns that length.
@@ -1527,6 +1831,46 @@ func _road_ribbon(st: SurfaceTool, road: PackedVector2Array, half: float) -> flo
 			st.set_uv2(Vector2(0.0, total))
 			st.add_vertex(corners[n])
 	return total
+
+## Revival gifts whose arrival time has come. On the field the star is sent down onto the
+## held body's spot at once and the body is shown ARRIVE_FALL later, inside the landing's
+## column of light, dropping in (NativeCharacterModel's spawn beat); with no body on the field
+## (bench, or it never turned up within ARRIVE_WAIT) the star rises from the crystal instead.
+func _update_arrivals() -> void:
+	for i in range(_arrivals.size() - 1, -1, -1):
+		var arrival: Dictionary = _arrivals[i]
+		var unit := String(arrival["unit"])
+		if arrival.has("reveal"):
+			if _clock < float(arrival["reveal"]): continue
+			_arrivals.remove_at(i)
+			if _world != null and _world.has_method("reveal_hero"): _world.call("reveal_hero", unit)
+			continue
+		if _clock < float(arrival["at"]): continue
+		var node: Node3D = null
+		if String(arrival["where"]) == "field" and _world != null and _world.has_method("held_hero"):
+			node = _world.call("held_hero", unit)
+			# Still waiting for its body: within ARRIVE_WAIT, or while its model loads.
+			if node == null and (_clock < float(arrival["until"]) or bool(_world.call("loading", unit))): continue
+		if node != null:
+			_hero_arrive(Vector3(node.global_position.x, 0.0, node.global_position.z), true)
+			arrival["reveal"] = _clock + ARRIVE_FALL
+			continue
+		_arrivals.remove_at(i)
+		if _world != null and _world.has_method("release_hold"): _world.call("release_hold", unit)
+		_hero_arrive(world(Balance.ARENA_CENTER, 0.0), false)
+
+## The five-star arrival (see ARRIVE_FALL): `field` lands on `at`, otherwise the crown round
+## the crystal at `at`.
+func _hero_arrive(at: Vector3, field: bool) -> void:
+	if field:
+		_skill(SkillKind.HERO_ARRIVE, at, ARRIVE_SIZE, BLESSING_LIGHT, 1.0, ARRIVE_LIFE)
+		_delayed.append({"at": _clock + ARRIVE_FALL, "kind": -1, "origin": at + Vector3(0, 1.0, 0),
+			"color": BLESSING_LIGHT, "pulse": 5.5, "range": 5.5, "life": 0.6})
+	else:
+		# The burst over the aegis dome (vfx_skill kind 6 bench: crown_at 2.8 u).
+		_skill(SkillKind.HERO_ARRIVE, at, ARRIVE_SIZE, BLESSING_LIGHT, 2.0, ARRIVE_BENCH_LIFE)
+		_delayed.append({"at": _clock + LEVELUP_RISE, "kind": -1, "origin": at + Vector3(0, 2.8, 0),
+			"color": BLESSING_LIGHT, "pulse": 4.0, "range": 6.5, "life": 0.6})
 
 func _beam(kind: int, a: Vector3, b: Vector3, color: Color, big: float) -> void:
 	if not _make_room(1): return
@@ -1656,6 +2000,34 @@ static func _status_material(status: String, height: float, body_scale: float, o
 		_status_materials[key] = material
 	return _status_materials[key]
 
+## The elite's mark (StellarModels.elite): a shared mesh (ground sigil + 6 motes) and one
+## shared material whose clock is the battle's (it sits in _status_materials, so update()
+## moves its vfx_time and a paused battle holds it). The node is scaled to the ring radius
+## and the body height; its `fade` instance uniform goes with the dissolve (StellarShading
+## META_AURA). Named Stellar* so the girth measurement (_body_radius) skips it.
+static func elite_aura(height: float) -> MeshInstance3D:
+	if _elite_mesh == null:
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		_quad(st, 0, 0)
+		for n in range(6): _quad(st, 1, n)
+		_elite_mesh = st.commit()
+	if not _status_materials.has("Elite"):
+		var material := ShaderMaterial.new()
+		material.shader = SHADER_ELITE
+		material.render_priority = 1
+		material.set_shader_parameter("sprites", SPRITES)
+		_status_materials["Elite"] = material
+	var node := MeshInstance3D.new()
+	node.name = "StellarEliteAura"
+	node.mesh = _elite_mesh
+	node.material_override = _status_materials["Elite"]
+	var ring := clampf(0.70 * height, 0.50, 1.10)
+	node.scale = Vector3(ring, maxf(height, 0.4), ring)
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	node.custom_aabb = AABB(Vector3(-1.4, -0.2, -1.4), Vector3(2.8, 1.8, 2.8))
+	return node
+
 ## A body whose root is scaled (bosses stand at 2x) is measured once, when it joins the
 ## world: its girth (mean half-extent of its meshes at rest, world units) is remembered on
 ## the node, and its status marks switch to the material of that scale and girth, so the
@@ -1774,6 +2146,33 @@ func _body_scale_at(p) -> float:
 	if _big_bodies.is_empty() or not (p is Vector2): return 1.0
 	var node := _big_body_at(p)
 	return node.scale.y if node != null else 1.0
+
+## Hover height of the body an event names (sid): the hit, the frost, the death are drawn
+## up there. 0 for walkers and for events without a body.
+func _fly_height(e: Dictionary) -> float:
+	var sid := int(e.get("sid", 0))
+	if sid == 0 or _world == null: return 0.0
+	var node := _world.monster_node(sid)
+	if node == null: return 0.0
+	return maxf(float(node.get_meta(META_FLY, 0.0)), 0.0)
+
+## A basis whose -Z runs from the shooting hero to the struck point: the impact's sparks
+## spray on through the body the way the shot travelled. A random yaw without a shooter.
+func _travel(src: int, p: Vector2) -> Basis:
+	var sim = _sim_ref.get_ref() if _sim_ref != null else null
+	if sim != null and src >= 0 and src < sim.heroes.size():
+		var d: Vector2 = p - Vector2(sim.heroes[src]["pos"])
+		if d.length_squared() > 1.0: return Basis.looking_at(Vector3(d.x, 0.0, d.y).normalized(), Vector3.UP)
+	return _yaw()
+
+## A crit or weak-point hit colours and strengthens the body's own hit flash (the flash
+## itself is the simulator's mo.flash, applied by the world each frame).
+func _accent(sid: int, elem_name: String, scale: float) -> void:
+	if sid == 0 or _world == null: return
+	var node := _world.monster_node(sid)
+	if node == null: return
+	var tint := Balance.elem_color(elem_name) if elem_name != "none" else Color("#fff1c9")
+	StellarShading.set_hit_accent(node, clampf(0.45 * scale, 0.4, 0.9), tint)
 
 ## A deterministic pseudo-random yaw (never touches any gameplay RNG).
 func _yaw() -> Basis:

@@ -13,10 +13,20 @@ class_name NativeCharacterModel
 ##            rhythm and timing; arm pump and lean at a run, hip roll at a heavy walk
 ##   lunge  = melee only: a visual step toward the cut on the release (root offset
 ##            re-added over the world's simulated position, never accumulated)
-##   lean   = turn / acceleration / gait lean about the hips
+##   lean   = turn / acceleration / gait lean about the hips, plus the walk rock
+##            (torso pitch at twice the cadence, roll at the cadence)
+##   chunky = hands x1.20 / hand weapons x1.12 about the bone origin (bow, sword,
+##            cast, tool heroes; never rifles or artillery)
 ##   fade   = cross-fade from the pose captured at the last state change
 ##   twist  = immediate upper-body yaw toward the aim direction (HeroLocomotion)
+##   beats  = on the skeleton NODE, never on bones: the release pop (a volume-
+##            preserving squash about the feet, zero on the release frame itself) and
+##            the spawn pop-in (drop, grow, landing squash); identity outside battle
 ## Legs always come from the locomotion layer, so walking and attacking combine.
+## Motion beats (2026-10-18, casual overhaul WP-D): the anticipation is a two-segment
+## time warp into the clip's hold pose (HOLD_T per weapon kind) so every shot shows a
+## held draw, then a 2-3 frame snap to the release; the release pops; walks rock the
+## head and pump the arms; a placed hero drops in and lands. Numbers in docs/HERO_MOTION.md.
 const MANIFEST := "res://art/models/native_heroes.json"
 const ATTACK_RELEASE := 1.0      # seconds into the Attack clip where the release pose sits
 const RECOVERY := 0.5            # seconds of release action after fire
@@ -33,8 +43,35 @@ const UPPER_FADE_OUT := 0.22
 const SOLE_TOE := 0.17
 const SOLE_HEEL := 0.05
 const SOLE_BAND := 0.012          # sole = skin within this fraction of the height above the floor
-const RUN_ARM := 0.55
+const RUN_ARM := 0.9
 const RUN_ELBOW := 0.32
+const WALK_ARM := 0.6            # share of the pump at a plain walk (walk_weight * WALK_ARM + run)
+const PUMP_MAX := 1.2            # cap of walk + run so a sprint stays a swing, not a windmill
+## Hold -> snap (H1): the aim progress q = age / wind is warped so the clip reaches its
+## hold pose (HOLD_T, the clip time where the authored draw/wind-up is complete) at
+## q = 0.65 with an ease-in, holds there, and runs the last clip stretch to the release
+## pose over q 0.65 -> 1. `at == ATTACK_RELEASE` exactly at q == 1 (release contract).
+const HOLD_T := {"bow": 0.86, "sword": 0.85, "tool": 0.85, "cast": 0.90, "artillery": 0.90, "rifle": 0.25, "gun": 0.25}
+const HOLD_AT := 0.65
+## Release pop (H2): a = POP_AMP on frames 1-2 after the release (plateau, in by 12 ms,
+## out between 25 and 75 ms), then a -2 % rebound; zero at t = 0 so the release frame is
+## the authored one and ~1 % at 65 ms where the socket checks sample.
+const POP_AMP := 0.10
+const POP_END := 0.22
+## Spawn pop-in (H5): SPAWN_DROP world units above the ground falling with an ease-in,
+## landing at SPAWN_LAND of SPAWN_SEC into a squash; the body grows 0.6 -> 1 with a
+## back-out overshoot over the whole SPAWN_SEC.
+const SPAWN_SEC := 0.35
+const SPAWN_DROP := 0.6
+const SPAWN_LAND := 0.8
+## Walk rock (H3): torso pitch at twice the cadence, roll at the cadence, about the hip.
+const ROCK_PITCH := 0.14
+const ROCK_ROLL := 0.08
+const ROCK_ROLL_SLOW := 0.025
+## Chunky hands / weapons (H0), uniform about the bone origin (no shear on a flat rig).
+const CHUNKY_HAND := 1.20
+const CHUNKY_WEAPON := 1.12
+const CHUNKY_KINDS := ["bow", "sword", "cast", "tool"]
 static var _sole_cache: Dictionary = {}   # native id -> {"toe": u, "heel": u}, measured once
 ## Melee lunge (presentation only; the simulator's position and the damage moment do
 ## not move): the sword hero steps LUNGE_REACH toward the cut over the 3-frame strike
@@ -81,6 +118,19 @@ var _arm_chains: Dictionary = {}         # side -> [Arm, Forearm, Hand, Weapon] 
 var _arm_pump: Dictionary = {"L": 1.0, "R": 1.0}
 var _lunge_applied := Vector3.ZERO
 var _lunge_position := Vector3.INF
+var _hold_t := 0.86
+var _chunky: Dictionary = {}             # bone index -> uniform scale (H0)
+## Arm chains (B1, 2026-10-19): the bones are parentless absolute controls, so sampling
+## between clip keys, the idle/walk weight blend and the state cross-fade moved each bone on
+## its own and pulled shoulders, elbows and wrists apart for a frame. _chain_order lists the
+## arm bones parents first (Body -> Arm -> Forearm -> Hand -> Weapon); every sample
+## re-seats each joint on its parent and the cross-fade runs in parent-relative space.
+var _chain_order: Array[int] = []
+var _chain_parent: Dictionary = {}       # bone -> parent bone (arm chains only)
+var _chain_joint: Dictionary = {}        # bone -> its head in the parent's rest-local frame
+var _hinge: Dictionary = {}              # side -> rest elbow hinge axis (skeleton space), as authored
+var _skeleton_base := Transform3D.IDENTITY
+var _spawn_clock := -INF                 # battle clock of the spawn event (H5), -INF when none
 
 static func manifest() -> Dictionary:
 	if _manifest.is_empty() and FileAccess.file_exists(MANIFEST):
@@ -132,6 +182,9 @@ func _ready() -> void:
 	_lead = "L" if not release_sockets.is_empty() and String(release_sockets[0].get("bone","")).ends_with("L") else "R"
 	_melee = Balance.is_melee(Roster.unit_by_id(String(get_meta("native_id",""))))
 	_arm_pump = _pump_multipliers()
+	var kind := String(_spec.get("attack",""))
+	_hold_t = float(HOLD_T.get(kind, 0.86))
+	_skeleton_base = _skeleton.transform
 	_loco.stride = float(_spec.get("motion",{}).get("stride",1.5))
 	var names := {"IdleLoop":"","WalkLoop":"","Attack":""}
 	for name in _player.get_animation_list():
@@ -153,6 +206,12 @@ func _ready() -> void:
 			var index := _skeleton.find_bone("Skin"+part+side)
 			if index >= 0: chain.append(index)
 		_arm_chains[side] = chain
+		if kind in CHUNKY_KINDS:
+			var hand := _skeleton.find_bone("SkinHand"+side)
+			if hand >= 0: _chunky[hand] = CHUNKY_HAND
+			var weapon := _skeleton.find_bone("SkinWeapon"+side)
+			if weapon >= 0: _chunky[weapon] = CHUNKY_WEAPON
+	_bind_chains()
 	var order := ["IdleLoop","WalkLoop","Attack"]
 	for c in 3:
 		var clip: Animation = _player.get_animation(names[order[c]]) if names[order[c]] != "" else null
@@ -194,6 +253,39 @@ func _ready() -> void:
 	# Stand-alone previews (portraits, review scenes) get the same per-instance
 	# hit-flash/rim materials as world actors; already prepared instances are skipped.
 	StellarShading.prepare_instance(self)
+
+## Arm chains and elbow hinges from the rest skeleton (tools/3d/author_native_motion.py
+## Rig._arm_geometry: anatomical hinge, flexion toward the front; a rest elbow bent more
+## than 20 degrees keeps its modelled plane).
+func _bind_chains() -> void:
+	for side in ["L", "R"]:
+		var chain: Array = _arm_chains.get(side, [])
+		if chain.is_empty(): continue
+		var parent := _body_bone
+		for bone in chain:
+			if parent >= 0:
+				_chain_parent[bone] = parent
+				_chain_joint[bone] = _rest[parent].affine_inverse()*_rest[bone].origin
+			_chain_order.append(bone)
+			parent = bone
+		var arm := _skeleton.find_bone("SkinArm"+side)
+		var fore := _skeleton.find_bone("SkinForearm"+side)
+		var hand := _skeleton.find_bone("SkinHand"+side)
+		if arm < 0 or fore < 0 or hand < 0: continue
+		var a0 := (_rest[fore].origin-_rest[arm].origin).normalized()
+		var f0 := (_rest[hand].origin-_rest[fore].origin).normalized()
+		var m := (a0+f0).normalized()
+		var p := Vector3.FORWARD-m*Vector3.FORWARD.dot(m)
+		var n := m.cross(p.normalized()).normalized() if p.length() > 1e-6 else Vector3.RIGHT
+		n = (n-f0*n.dot(f0)).normalized()
+		if a0.angle_to(f0) > deg_to_rad(20.0): n = a0.cross(f0).normalized()
+		_hinge[side] = n
+
+## Re-seat each arm joint on its parent (positions only; rotations are untouched).
+func _rechain(pose: Array[Transform3D]) -> void:
+	for bone in _chain_order:
+		if _chain_parent.has(bone):
+			pose[bone].origin = pose[_chain_parent[bone]]*(_chain_joint[bone] as Vector3)
 
 ## Rig geometry for the planted gait: hip pivot height, sole reach and the authored
 ## leg swing amplitude (measured once from the WalkLoop unless the manifest states it).
@@ -322,6 +414,11 @@ func visual_event(e: Dictionary) -> void:
 		_capture_transition(CANCEL_FADE)
 		_mode = 3
 		_phase_clock = _clock
+	elif type == "spawn":
+		# Placed on the field: the pop-in is a stateless function of time - _spawn_clock,
+		# so the world must send it after the clock is set (it routes the event through
+		# its pending queue, replayed right after animate_visual).
+		_spawn_clock = _clock
 
 func _capture_transition(duration: float) -> void:
 	_blend_clock = _clock
@@ -336,6 +433,7 @@ func animate_visual(time: float, age: float = 9.0, raw_wind: float = 0.0, battle
 	if not battle:
 		_mode = 0
 		_fire_strength = 0.0
+		_spawn_clock = -INF
 		_loco.clear_battle()
 		_loco.sync_yaw(rotation.y)
 	var elapsed := maxf(0,time-_phase_clock)
@@ -366,7 +464,9 @@ func animate_visual(time: float, age: float = 9.0, raw_wind: float = 0.0, battle
 		run = _loco.run_factor()*weight
 		slow = _loco.slow_factor()*weight
 		_plant_gait(pose, walk, idle_legs, weight)
-		if run > 0.001: _pump_arms(pose, phi, run)
+		# Arms pump at a walk too (H4), more at a run; the attack layer below overrides
+		# the upper body afterwards, so the release sockets stay exact.
+		_pump_arms(pose, phi, minf(weight*WALK_ARM+run, PUMP_MAX))
 	if lunge > 0.0 and weight < 0.5:
 		# A standing cut steps into the target: weapon-side leg forward, the other braced.
 		var stance := lunge*(1.0-weight*2.0)
@@ -378,7 +478,7 @@ func animate_visual(time: float, age: float = 9.0, raw_wind: float = 0.0, battle
 		var at := 0.0
 		if _mode == 1:
 			_aim_progress = clampf(age/raw_wind,0,1) if raw_wind>0 else 1.0
-			at = ATTACK_RELEASE*_aim_progress
+			at = ATTACK_RELEASE*warp_aim(_aim_progress, _hold_t)
 		else:
 			at = ATTACK_RELEASE+minf(elapsed,RECOVERY)
 		var attack := _sample(2, minf(at, _length(2)))
@@ -386,18 +486,34 @@ func animate_visual(time: float, age: float = 9.0, raw_wind: float = 0.0, battle
 		if _body_bone >= 0: body_delta = pose[_body_bone]*_rest[_body_bone].affine_inverse()
 		for i in count:
 			if _upper[i]: pose[i] = body_delta*attack[i]
-	var lean_roll := _loco.lean_roll+0.045*slow*cos(TAU*(phi-0.1))
-	var lean_pitch := _loco.lean_pitch+(_loco.gait_lean()+_loco.strike_nod())*weight
+	# Walk rock (H3): the torso nods twice per cycle (forward on each strike) and rolls
+	# once; start/stop lag lean and the turn bank come from HeroLocomotion's springs.
+	var lean_roll := _loco.lean_roll+(ROCK_ROLL+ROCK_ROLL_SLOW*slow)*weight*cos(TAU*(phi-0.1))
+	var lean_pitch := _loco.lean_pitch+(_loco.gait_lean()+_loco.strike_nod())*weight+ROCK_PITCH*weight*cos(TAU*2.0*phi+0.3)
 	if absf(lean_roll) > 0.0005 or absf(lean_pitch) > 0.0005:
 		var hip := Vector3(0,_hip,0)
 		var lean := Transform3D(Basis.from_euler(Vector3(lean_pitch,0,lean_roll)), Vector3.ZERO)
 		lean = Transform3D(lean.basis, hip-lean.basis*hip)
 		for i in count:
 			if _upper[i]: pose[i] = lean*pose[i]
+	_rechain(pose)
+	# Chunky hands and weapons (H0): a uniform scale about the bone origin; the bones are
+	# absolute controls, so nothing inherits it and nothing shears.
+	for i in _chunky:
+		pose[i] = Transform3D(pose[i].basis.scaled(Vector3.ONE*float(_chunky[i])), pose[i].origin)
 	var blend := clampf((time-_blend_clock)/_blend_time,0,1) if _blend_time > 0.0 else 1.0
 	if blend < 1.0 and _blend_from.size() == count:
 		var eased := blend*blend*(3.0-2.0*blend)
-		for i in count: pose[i] = _blend_from[i].interpolate_with(pose[i], eased)
+		var target: Array[Transform3D] = pose.duplicate()
+		for i in count:
+			if not _chain_parent.has(i): pose[i] = _blend_from[i].interpolate_with(target[i], eased)
+		# Arm chains blend parent-relative (an elbow hinge stays a hinge, joints stay seated).
+		for i in _chain_order:
+			if not _chain_parent.has(i): continue
+			var p: int = _chain_parent[i]
+			var from_local: Transform3D = _blend_from[p].affine_inverse()*_blend_from[i]
+			var to_local: Transform3D = target[p].affine_inverse()*target[i]
+			pose[i] = pose[p]*from_local.interpolate_with(to_local, eased)
 	_composed = pose
 	var twist := _loco.aim_delta
 	if absf(twist) > 0.0005:
@@ -406,8 +522,63 @@ func animate_visual(time: float, age: float = 9.0, raw_wind: float = 0.0, battle
 			_skeleton.set_bone_pose(i, turn*pose[i] if _upper[i] else pose[i])
 	else:
 		for i in count: _skeleton.set_bone_pose(i, pose[i])
+	_apply_beats(time, elapsed, battle)
 	_sync_controls_from_skin()
 	_update_flash()
+
+## Whole-body beats on the skeleton node (H2 release pop, H5 spawn pop-in), written
+## every sample so the node is exactly its authored transform whenever no beat is on
+## (previews, portraits, paused redraws). Both scale about the feet (the skeleton
+## origin sits on the soles) and carry the five controls and the rank equipment along.
+func _apply_beats(time: float, elapsed: float, battle: bool) -> void:
+	var beat := Transform3D.IDENTITY
+	if battle:
+		if _mode == 2:
+			var a := release_pop(elapsed)
+			if a != 0.0: beat = Transform3D(Basis.from_scale(Vector3(1.0+a, 1.0-a, 1.0+a)), Vector3.ZERO)
+		if _spawn_clock > -INF:
+			var u := (time-_spawn_clock)/SPAWN_SEC
+			if u >= 1.0 or u < 0.0: _spawn_clock = -INF
+			else: beat = spawn_pop(u, SPAWN_DROP*_height_scale)*beat
+	var target := _skeleton_base if beat == Transform3D.IDENTITY else _skeleton_base*beat
+	if _skeleton.transform != target: _skeleton.transform = target
+
+## Anticipation time warp (H1): clip time fraction for aim progress q in [0, 1].
+static func warp_aim(q: float, hold_t: float) -> float:
+	if q >= 1.0: return 1.0
+	if q <= 0.0: return 0.0
+	if q < HOLD_AT: return hold_t*pow(q/HOLD_AT, 1.8)
+	return hold_t+(1.0-hold_t)*(q-HOLD_AT)/(1.0-HOLD_AT)
+
+## Release pop amplitude (H2) at t seconds after the release: 0 on the release frame,
+## POP_AMP on frames 1-2, out by 75 ms, a small rebound stretch until POP_END.
+static func release_pop(t: float) -> float:
+	if t <= 0.0 or t >= POP_END: return 0.0
+	var squash := smoothstep(0.0, 0.012, t)*(1.0-smoothstep(0.025, 0.075, t))
+	var rebound := 0.0
+	if t > 0.075:
+		var x := (t-0.075)/(POP_END-0.075)
+		rebound = sin(PI*x)*sin(PI*x)
+	return POP_AMP*squash-0.02*rebound
+
+## Spawn pop-in (H5) at progress u in [0, 1): the body falls `drop` units with an
+## ease-in and lands at SPAWN_LAND into a squash while it grows 0.6 -> 1 with one
+## back-out overshoot (1.04 at u 0.58). Scale about the feet; identity at u = 1.
+static func spawn_pop(u: float, drop: float) -> Transform3D:
+	u = clampf(u, 0.0, 1.0)
+	var fall := clampf(u/SPAWN_LAND, 0.0, 1.0)
+	var lift := drop*(1.0-fall*fall)
+	var grow := 0.6+0.4*_back_out(u, 1.7)
+	var land := 0.0
+	if u > 0.72:
+		var x := (u-0.72)/0.28
+		land = sin(PI*x)*sin(PI*x)
+	var scale := Vector3(grow*(1.0+0.12*land), grow*(1.0-0.15*land), grow*(1.0+0.12*land))
+	return Transform3D(Basis.from_scale(scale), Vector3(0.0, lift, 0.0))
+
+static func _back_out(x: float, s: float = 1.5) -> float:
+	x = clampf(x, 0.0, 1.0)-1.0
+	return 1.0+x*x*((s+1.0)*x+s)
 
 func _length(c: int) -> float:
 	return _clips[c].length if _clips[c] != null else 1.0
@@ -492,7 +663,12 @@ func _pump_arms(pose: Array[Transform3D], phi: float, run: float) -> void:
 		for i in chain: pose[i] = about_shoulder*pose[i]
 		if chain.size() > 1:
 			var elbow: Vector3 = pose[chain[1]].origin
-			var flex := Basis(axis, RUN_ELBOW*run*mult)
+			# The elbow flexes about its own hinge carried by the upper arm (B1: the body's X
+			# axis spun the forearm about itself by up to 0.4 rad of pump).
+			var hinge := axis
+			if _hinge.has(side):
+				hinge = ((pose[chain[0]].basis.orthonormalized()*_rest[chain[0]].basis.orthonormalized().inverse())*(_hinge[side] as Vector3)).normalized()
+			var flex := Basis(hinge, RUN_ELBOW*run*mult)
 			var about_elbow := Transform3D(flex, elbow-flex*elbow)
 			for n in range(1, chain.size()): pose[chain[n]] = about_elbow*pose[chain[n]]
 

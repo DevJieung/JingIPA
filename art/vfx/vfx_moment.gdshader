@@ -20,7 +20,15 @@ render_mode unshaded, blend_add, depth_draw_never, cull_disabled, skip_vertex_tr
 //              z duration (revival: seconds the crystal cannot be hurt; stage clear: seconds
 //              until the world is rebuilt; final warning: seconds until the boss)  w kind
 // Kinds: 0 revive  1 stage_clear  2 stage_sweep  3 gate_beacon  4 final_warning  5 final_burst
-//        6 gate_seal (the last clear closes every gate)
+//        6 gate_seal (the last clear closes every gate)  7 wave_clear (2026-10-19)
+// A gate beacon is also the wave start (2026-10-19): StellarVfx spawns it already ARR into its
+// timeline, so it opens on the flare; COLOR.a 2 marks an elite wave (violet bodies).
+// Wave clear (kind 7): the wave is beaten. A thin bright front sweeps from the crystal to the
+// rim (wave_sweep) with a gold wake, an echo behind it and glints popping where it passes,
+// a small flash and flare on the crystal; gone by 1.25 s. Lighter than a stage clear: it
+// comes ten times a stage. COLOR.a is how much the crystal mended (0..1, the stage clear's
+// mend layers: a closing cyan ring, halos up the crystal, a soft column, the glint on its
+// tip, ~1.5 s); 2 + that is a mend alone (a heal from a constellation node, no sweep).
 // Parts (UV2.x): 0 ground ring x3   1 ground sprite x2   2 flash x2   3 flare x2
 //   4 pillar x2   5 shards x16   6 motes x16   7 marks x4 (the halos rising up a mending
 //   crystal; the chevrons of a gate are drawn by the road ribbon, vfx_road)   8 lightning x6
@@ -91,7 +99,16 @@ void vertex() {
 	vec3 ember = vec3(1.0, 0.70, 0.28);
 	vec3 ember_hot = vec3(1.0, 0.94, 0.78);
 	vec3 coral = vec3(1.0, 0.51, 0.21);
+	// An elite wave's gate (kind 3, COLOR.a 2): the deepening above is made for gold and
+	// coral and would turn violet into dusty pink.
+	if (kind == 3 && amount > 1.5) {
+		rich = min(tone * vec3(0.92, 0.72, 1.05), vec3(1.0));
+		deep = rich * vec3(0.72, 0.55, 1.0);
+	}
 	float aura = revive_aura(age, dur);
+	// Wave clear: the sweep (0 for a mend alone) and the mend.
+	float wsweep = kind == 7 && amount < 1.5 ? 1.0 : 0.0;
+	float wmend = kind == 7 ? (amount < 1.5 ? amount : amount - 2.0) : 0.0;
 	// Stage clear: nothing of an ordinary clear may be left when the world is rebuilt at
 	// `dur`. The last clear (and its gate seals) settles instead into a rest that holds
 	// under the result panel, and leaves by itself only if time runs on.
@@ -310,6 +327,44 @@ void vertex() {
 			}
 			v_wake = rich;
 			rmax = 3.0;
+		} else if (kind == 7) {
+			rmax = R * 1.03 + 1.0;
+			if (idx == 0) {
+				float f = clamp(age / WAVE_SWEEP, 0.0, 1.0);
+				r = wave_sweep(age, R);
+				w = mix(0.38, 0.22, f);
+				a = 0.85 * (1.0 - f * f) * wsweep;
+				fill = 0.10 * pow(1.0 - f, 1.2);
+				col = mix(vec3(1.0), hot, 0.45);
+				v_wake = rich;
+			} else if (idx == 1) {
+				float t = age - 0.10;
+				if (t >= 0.0) {
+					float f = clamp(t / WAVE_SWEEP, 0.0, 1.0);
+					r = wave_sweep(t, R);
+					w = 0.16;
+					a = 0.32 * (1.0 - f) * wsweep;
+					col = rich;
+					v_wake = rich;
+				}
+			} else if (wmend > 0.0) {
+				// The mend: light closing on the crystal (the stage clear's ring).
+				float f = seg(MEND_RING, MEND_RING + 0.72, age);
+				r = mix(2.7, 0.85, ease_out(f));
+				w = 0.11;
+				a = 0.80 * wmend * pow(sin(f * PI), 0.7);
+				col = crystal_hot;
+				rmax = 3.0;
+				dir = -1.0;
+				y = 0.11;
+			} else {
+				float f = clamp(age / 0.35, 0.0, 1.0);
+				r = mix(1.2, 2.8, ease_out3(f));
+				w = 0.14;
+				a = 0.8 * pow(1.0 - f, 1.2) * wsweep;
+				col = mix(vec3(1.0), hot, 0.4);
+				v_wake = rich;
+			}
 		} else if (kind == 4) {
 			// Rings from across the field closing on the gate: everything is drawn to it.
 			float f = fract(age / 1.35 + fi / 3.0);
@@ -412,6 +467,18 @@ void vertex() {
 				s = 1.7 + (t >= 0.0 ? 0.5 * ease_out(t / 0.3) : 0.0);
 				a = t < 0.0 ? 0.18 : mix(0.55, 0.0, smoothstep(0.0, 1.9, t));
 				col = t < 0.0 ? rich : mix(hot, rich, clamp(t / 0.35, 0.0, 1.0));
+			}
+		} else if (kind == 7) {
+			if (idx == 0) {
+				float f = clamp(age / 0.8, 0.0, 1.0);
+				s = 2.4 + 0.4 * ease_out(f);
+				a = 0.32 * pow(1.0 - f, 1.4) * wsweep;
+				col = rich;
+			} else {
+				float f = seg(0.30, 1.50, age);
+				s = 2.0;
+				a = 0.36 * wmend * pow(sin(f * PI), 0.8);
+				col = crystal;
 			}
 		} else if (kind == 6) {
 			// The crest lands on the sealed gate: white-hot, then a low glow over its body.
@@ -552,6 +619,22 @@ void vertex() {
 				col = ember_hot;
 				at = sun;
 			}
+		} else if (kind == 7) {
+			if (idx == 0) {
+				float f = clamp(age / 0.12, 0.0, 1.0);
+				s = 1.6 + 1.0 * ease_out(f);
+				a = pow(1.0 - f, 1.5) * wsweep;
+				col = mix(vec3(1.0), hot, 0.5);
+				at = origin + up * 1.8;
+			} else if (age >= MEND_DING) {
+				float f = seg(MEND_DING, MEND_DING + 0.28, age);
+				s = 1.0 + 1.0 * ease_out(f);
+				rot += age * 3.0;
+				a = pow(1.0 - f, 1.2) * wmend;
+				col = crystal_hot;
+				at = origin + up * 2.0;
+				cell = 1.0;
+			}
 		} else if (kind == 6) {
 			// The stamp of the crest on a sealed gate.
 			float t = age - SEAL_LOCK - SEAL_STAMP;
@@ -626,6 +709,15 @@ void vertex() {
 				at = origin + up * 0.5;
 				anchor = vec2(0.0, 0.40);
 				cell = 31.0;
+			}
+		} else if (kind == 7) {
+			if (idx == 0) {
+				float f = clamp(age / 0.38, 0.0, 1.0);
+				s = 1.0 + 2.6 * ease_out3(f);
+				rot += f * 0.4;
+				a = 0.8 * pow(1.0 - f, 1.5) * wsweep;
+				col = mix(hot, rich, 0.3 + 0.6 * f);
+				at = origin + up * 1.2;
 			}
 		} else if (kind == 3) {
 			float t = age - ARR;
@@ -720,6 +812,14 @@ void vertex() {
 				a = mix(0.80, 0.26, calm) * rest;
 				col = mix(hot, rich, 0.2 + 0.6 * calm);
 				foot = 1.85 * smoothstep(0.10, 0.28, t);
+			}
+		} else if (kind == 7) {
+			if (idx == 0 && wmend > 0.0) {
+				float f = seg(0.30, 1.50, age);
+				h = 3.4 * ease_out3(seg(0.30, 0.52, age));
+				w = 1.15;
+				a = 0.30 * wmend * pow(sin(f * PI), 0.8);
+				col = mix(crystal, crystal_hot, 0.3);
 			}
 		} else if (kind == 6) {
 			// A short column where the crest lands on a sealed gate; gone before the rest.
@@ -938,6 +1038,21 @@ void vertex() {
 				}
 			}
 			a *= clear_out;
+		} else if (kind == 7) {
+			// Glints popping where the sweep passes: each waits at its own spot on the field.
+			float rad = R * (0.14 + 0.84 * h1);
+			float ang = (fi + h2 * 0.9) / 16.0 * TAU + seed * TAU;
+			float t = age - wave_sweep_at(rad, R);
+			float life = 0.50 + 0.15 * h3;
+			if (t >= 0.0 && t < life) {
+				float g = t / life;
+				at = origin + (mx * cos(ang) + fwd * sin(ang)) * rad + up * (0.25 + 0.55 * ease_out(g));
+				s = (0.17 + 0.10 * h2) * (1.0 - 0.4 * g) * overshoot(clamp(g / 0.3, 0.0, 1.0));
+				rot += g * 3.0;
+				a = pow(sin(g * PI), 0.6) * (0.75 + 0.25 * sin(vfx_time * 31.0 + h1 * 25.0)) * wsweep;
+				col = mix(hot, rich, g);
+				cell = 1.0;
+			}
 		} else if (kind == 2) {
 			// Sparks on the scan front.
 			float ang = (fi + h1) / 16.0 * TAU;
@@ -988,13 +1103,13 @@ void vertex() {
 		}
 	} else if (part == 7) {
 		float a = 0.0;
-		if (kind == 1) {
+		if (kind == 1 || kind == 7) {
 			// Halos rising up the crystal as it mends (glow over their mix bodies).
 			if (idx < 3) {
 				float f = seg(MEND_HALO + 0.20 * fi, MEND_HALO + 0.58 + 0.20 * fi, age);
 				float s = mix(1.20, 0.78, f);
 				world = origin + up * mix(0.35, 2.35, ease_out(f)) + (mx * c.x + fwd * c.y) * 2.0 * s;
-				a = 0.70 * mend * pow(sin(f * PI), 0.7) * clear_out;
+				a = 0.70 * (kind == 7 ? wmend : mend * clear_out) * pow(sin(f * PI), 0.7);
 				col = crystal_hot;
 				cell = 3.0;
 			}

@@ -28,8 +28,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/triton/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/triton/game.blend",
   "height": 1.7,
-  "glb_bytes": 794880,
-  "glb_sha256": "ded36908b1c9e3b5c8c9a21713deff61d2055ba6c32d32f708bde73cbb029ce2",
+  "glb_bytes": 838880,
+  "glb_sha256": "6d96e03a6f601e9400674d0b2b29162f7442600a14911587fe88d247bff60d56",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -70,14 +70,24 @@
     "artist_note": "Direct actual 1280/1000 multiview, grades, awakening, 24 idle and 40 aim/release/recovery frames plus mixed 12-hero battle reviewed. Preserve Triton/Frosti original vertical back cannon rather than invent handheld weapons; fixed equipment shares Body motion and short pale pressure pulses occur only at actual physical top port after fire. Donn continuous glove/forearm guards and fixed three back cartridges retained; no stretched fingers or gear seams in motion. Foot contact and matte original navy/iceblue/lime-purple identity remain legible in small battlefield."
   },
   "motion": {
-    "version": 2,
+    "version": 3,
     "tool": "tools/3d/author_native_motion.py",
-    "authored_utc": "2026-10-10T09:37:17Z",
+    "authored_utc": "2026-10-18T13:34:05Z",
     "clips": {
       "IdleLoop": 6.0,
       "WalkLoop": 1.0,
       "Attack": 1.5,
       "attack_release_time": 1.0
+    },
+    "beats": {
+      "hold_start": 0.8,
+      "hold_dip_h": 0.025,
+      "breath_h": 0.015,
+      "sway_h": 0.025,
+      "fidget_window": [
+        3.0,
+        3.6
+      ]
     },
     "stride": 1.3617,
     "leg_swing": 0.56,
@@ -86,9 +96,9 @@
     "lead": "R",
     "kind": "artillery",
     "bounce_scale": 0.7,
-    "previous_glb_sha256": "6fa26ad07c031ae42c19d33b15215c35f0fe0e9e0720bf24efa5cddfc4fe0616",
+    "previous_glb_sha256": "b9e3f9628f66ff8da562af0814db31d1d1e014d592906c004982152a2c72d0f6",
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/triton/game.motion-v1.blend",
-    "geometry_base_sha256": "e6169d9a4c327220baf54b0671d8fe85d845b31ae91c199f39382a06208fae17",
+    "geometry_base_sha256": "b9e3f9628f66ff8da562af0814db31d1d1e014d592906c004982152a2c72d0f6",
     "geometry_bytes_preserved": true
   },
   "mobile_lod": {
@@ -177,5 +187,251 @@
     ],
     "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/triton/triton.glb",
     "editable_lod_source": "build/character-3d/source/triton/game-lod.blend"
+  },
+  "albedo_grade": {
+    "date": "2026-10-18",
+    "request": "user 2026-10-18: the characters read as a cheap AI-made 3D game; casual overhaul plan \"Lantern Stage\" WP-A \u2014 painted albedos that carry their own light, geometry untouched",
+    "tool": "tools/3d/optimize_native_lod.py --retexture + tools/3d/grade_native_albedo.py; records by tools/3d/publish_native_lod.py",
+    "method": "game-lod.blend opened as the bake target (geometry, UVs, weights, rig, clips, sockets and height untouched), game.blend surfaces appended as bake sources (visible faces first, all sheets as fallback), Cycles EMIT colour bake, AO bake of the reduced mesh alone and a height pass, then the painted grade inside the chart mask: de-speckle, chart-flatten (charts >= 48 texels), light posterise, levels, OKLab chroma with a skin cap, painted light from AO + height, cool shade, edge light, face paint-back; nearest fill, box downsample; clip bytes grafted from the shipped GLB",
+    "grade_version": "2026-10-18.7",
+    "parameters": {
+      "median": 3,
+      "bilateral_radius": 3,
+      "bilateral_sigma_s": 1.6,
+      "bilateral_sigma_r": 0.1,
+      "bilateral_passes": 2,
+      "seam_lambda": 0.3,
+      "seam_gain_min": 0.7,
+      "seam_gain_max": 1.4,
+      "seam_floor": 0.02,
+      "seam_chroma_sigma": 0.08,
+      "seam_small_chart": 96.0,
+      "seam_ratio_sigma": 0.6,
+      "flatten_min_width": 48,
+      "flatten_blur": 24,
+      "flatten_blend": 0.4,
+      "posterize_levels": 6,
+      "posterize_blend": 0.3,
+      "levels_lift": 0.09,
+      "levels_gain": 0.88,
+      "levels_gamma": 0.9,
+      "p10_floor": 0.17,
+      "p50_target": 0.5,
+      "p50_pull": 0.8,
+      "p50_gain_max": 2.2,
+      "dark_additive_lo": 0.04,
+      "dark_additive_hi": 0.16,
+      "lift_saturation_damp": 0.15,
+      "knee_start": 0.78,
+      "knee_slope": 0.45,
+      "knee_saturated_drop": 0.1,
+      "chroma_hero": 1.2,
+      "chroma_monster": 1.15,
+      "chroma_skin": 1.0,
+      "skin_s_cap": 0.5,
+      "s_cap": 0.86,
+      "ao_floor": 0.65,
+      "ao_gamma": 0.8,
+      "ao_smooth": 1.5,
+      "height_low": 0.82,
+      "height_high": 1.12,
+      "height_lo": 0.05,
+      "height_hi": 0.7,
+      "cool_shade": [
+        0.85,
+        0.9,
+        1.12
+      ],
+      "cool_amount": 0.5,
+      "edge_light": 0.06,
+      "edge_lo": 0.92,
+      "skin_hue": [
+        8.0,
+        38.0
+      ],
+      "skin_s": [
+        0.15,
+        0.6
+      ],
+      "skin_v": [
+        0.35,
+        0.98
+      ],
+      "skin_chart_fraction": 0.6,
+      "skin_chart_mixed": 0.3,
+      "skin_chart_s_median_max": 0.55,
+      "skin_chart_s_p90_max": 0.72,
+      "face_contrast": 1.3,
+      "face_dark_fraction": 0.04,
+      "face_dark_lstar": 15.0,
+      "face_blur": 4.0,
+      "face_mark_desaturate": 0.8,
+      "face_mark_lum": 0.35
+    },
+    "override": {},
+    "grade_info": {
+      "charts": 899,
+      "skin_charts_excluded": 28,
+      "seams": {
+        "pairs": 1377,
+        "samples": 8567,
+        "gain_min": 0.715,
+        "gain_max": 1.37,
+        "gain_std": 0.071
+      },
+      "flattened_charts": 123,
+      "levels": {
+        "lum_mean_after_remap": 0.4407,
+        "p50_gain": 1.415,
+        "p10_before": 0.1898,
+        "p10_lift": 0.0,
+        "remap": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.19,
+            0.19
+          ],
+          [
+            0.329,
+            0.466
+          ],
+          [
+            0.614,
+            0.614
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ]
+      },
+      "skin_texels": 5806,
+      "ao_mean": 0.5942,
+      "ao_p10": 0.0998,
+      "face": {
+        "head_texels": 58806,
+        "head_charts": 173,
+        "dark_threshold": 0.2801,
+        "mark_texels": 2360
+      }
+    },
+    "ao": {
+      "distance_m": 0.425,
+      "samples": 64,
+      "margin": 8
+    },
+    "head_start": 0.675,
+    "clip_donor": "art/models/triton/triton.glb",
+    "before": {
+      "glb_sha256": "c5c7fd901d30c169eb28810efdd6e86750b74d7ec575477788226f73ed36da3d",
+      "glb_bytes": 834712,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "atlas_stats": {
+        "used_texels": 65794,
+        "charts": 840,
+        "mean_lstar": 31.26,
+        "lum_mean": 0.2791,
+        "lum_p10": 0.1087,
+        "lum_p50": 0.2415,
+        "lum_p90": 0.5235,
+        "lstar_p10": 12.05,
+        "near_black_fraction": 0.1766,
+        "sat_mean": 0.5849,
+        "sat_p90": 0.9898,
+        "micro_contrast_255": 6.65,
+        "laplacian_mean": 0.0248,
+        "dominant_hues": [
+          {
+            "hue_deg": 22.5,
+            "mass": 0.21
+          },
+          {
+            "hue_deg": 217.5,
+            "mass": 0.207
+          }
+        ],
+        "dominant_hue_count": 2,
+        "skin": {
+          "texels": 592,
+          "mean_lstar": 42.94,
+          "sat_mean": 0.3562,
+          "sat_p90": 0.4833,
+          "sat_max": 0.5909
+        }
+      }
+    },
+    "after": {
+      "glb_sha256": "6d96e03a6f601e9400674d0b2b29162f7442600a14911587fe88d247bff60d56",
+      "glb_bytes": 838880,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      },
+      "atlas_stats": {
+        "used_texels": 65794,
+        "charts": 840,
+        "mean_lstar": 46.5,
+        "lum_mean": 0.4129,
+        "lum_p10": 0.1518,
+        "lum_p50": 0.4097,
+        "lum_p90": 0.6094,
+        "lstar_p10": 17.85,
+        "near_black_fraction": 0.0969,
+        "sat_mean": 0.5686,
+        "sat_p90": 0.8667,
+        "micro_contrast_255": 5.22,
+        "laplacian_mean": 0.0164,
+        "dominant_hues": [
+          {
+            "hue_deg": 217.5,
+            "mass": 0.23
+          },
+          {
+            "hue_deg": 22.5,
+            "mass": 0.179
+          }
+        ],
+        "dominant_hue_count": 2,
+        "skin": {
+          "texels": 1256,
+          "mean_lstar": 51.84,
+          "sat_mean": 0.3606,
+          "sat_p90": 0.4882,
+          "sat_max": 0.5714
+        }
+      }
+    },
+    "geometry_sha256": "2a59b3e11e108d4edfd7a5bf256c3019a846c9e7370629d0af99957d7468128c",
+    "geometry_bytes_preserved": true,
+    "bake": {
+      "size": 1024,
+      "covered_texels": 281554,
+      "missed_texels": 756,
+      "interior_fallback_texels": 582,
+      "miss_fraction": 0.002685097707722142
+    },
+    "visible_faces": {
+      "removed_faces": 39685,
+      "kept_faces": 15313
+    },
+    "removed_extracted_textures": [
+      "triton_triton_lod_albedo.png"
+    ],
+    "editable_lod_source": "build/character-3d/source/triton/game-lod.blend",
+    "evidence": "build/character-3d/lod-2026-10-18/triton"
   }
 }

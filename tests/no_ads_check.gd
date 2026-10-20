@@ -26,8 +26,8 @@ func _ready() -> void:
 	Arena.start_run(2929)
 	Arena.choose_theme(0)
 	legacy = Arena.snapshot()
-	legacy["rite"]["pulls"] = 4
-	check(Arena.restore(legacy) and not Arena.snapshot()["rite"].has("pulls"), "continuous save migrates retired rite counter")
+	legacy["box"]["pulls"] = 4
+	check(Arena.restore(legacy) and not Arena.snapshot()["box"].has("pulls"), "continuous save drops a retired summon counter")
 	Run.running = false
 	var main = load("res://game/main.gd").new()
 	add_child(main)

@@ -10,7 +10,8 @@ render_mode unshaded, blend_mix, depth_draw_never, cull_disabled, skip_vertex_tr
 // the light on top. This layer also carries what light cannot: the darkening before the
 // revival's flash, the dark sun of the final boss, smoke and stones.
 // Kinds: 0 revive  1 stage_clear  2 stage_sweep  3 gate_beacon  4 final_warning  5 final_burst
-//        6 gate_seal
+//        6 gate_seal  7 wave_clear (2026-10-19; a gate beacon with COLOR.a 2 is an elite wave's,
+//        violet instead of coral)
 // Parts (UV2.x): 20 ring body x3 (the same three rings as the additive part 0)
 //   21 disc x3 (0 dark stain, 1 crest body, 2 colour wash)   22 smoke x6   23 stones x8
 //   24 marks x4 (mend halos; the beacon column's body)   25 shards x16
@@ -69,12 +70,18 @@ void vertex() {
 	vec3 pale = vec3(0.74, 0.50, 0.17);
 	vec3 dust = vec3(0.24, 0.27, 0.33);
 	vec3 gate_dark = vec3(0.06, 0.008, 0.05);
+	// A gate's body colour: coral, or violet when an elite wave opens it (COLOR.a 2).
+	vec3 gate_tone = kind == 3 && amount > 1.5 ? vec3(0.36, 0.08, 0.62) : coral;
+	vec3 gate_dust = kind == 3 && amount > 1.5 ? vec3(0.26, 0.13, 0.32) : vec3(0.42, 0.20, 0.12);
 	// The last stage's clear and its gate seals hold a rest (see vfx_moment.gdshader).
 	float fin = (kind == 1 || kind == 6) && amount >= 1.5 ? 1.0 : 0.0;
 	float mend = amount - 2.0 * fin;
 	float clear_out = fin > 0.5 ? 1.0 : 1.0 - smoothstep(dur - 0.42, dur - 0.10, age);
 	float rest = fin * (1.0 - smoothstep(dur + 2.0, dur + 3.4, age));
 	vec3 sun = dark_sun(origin, fwd, cam_fwd, R);
+	// Wave clear (vfx_moment.gdshader): the sweep, and the mend.
+	float wsweep = kind == 7 && amount < 1.5 ? 1.0 : 0.0;
+	float wmend = kind == 7 ? (amount < 1.5 ? amount : amount - 2.0) : 0.0;
 	if (part == 20) {
 		float r = 0.0;
 		float w = 0.1;
@@ -193,7 +200,7 @@ void vertex() {
 			rmax = R + 1.0;
 		} else if (kind == 3) {
 			float t = age - ARR;
-			col = coral;
+			col = gate_tone;
 			if (idx == 0) {
 				if (t < 0.0) {
 					// Nothing at age 0: under the card the HUD's own ring marks the gate.
@@ -219,10 +226,27 @@ void vertex() {
 					r = mix(0.3, 3.3, ease_out3(f));
 					w = 0.24;
 					a = 0.40 * pow(1.0 - f, 1.2);
-					col = mix(coral, vec3(0.26, 0.07, 0.035), 0.4);
+					col = mix(gate_tone, vec3(0.26, 0.07, 0.035), 0.4);
 				}
 			}
 			rmax = 3.6;
+		} else if (kind == 7) {
+			rmax = R * 1.03 + 1.0;
+			if (idx == 0) {
+				float f = clamp(age / WAVE_SWEEP, 0.0, 1.0);
+				r = wave_sweep(age, R);
+				w = mix(0.38, 0.22, f) * 1.6;
+				a = 0.42 * (1.0 - f * f) * wsweep;
+				col = gold;
+			} else if (idx == 2 && wmend > 0.0) {
+				float f = seg(MEND_RING, MEND_RING + 0.72, age);
+				r = mix(2.7, 0.85, ease_out(f));
+				w = 0.19;
+				a = 0.62 * wmend * pow(sin(f * PI), 0.7);
+				col = cyan;
+				rmax = 3.0;
+				y = 0.095;
+			}
 		} else if (kind == 4) {
 			float f = fract(age / 1.35 + fi / 3.0);
 			r = mix(8.6, 0.4, pow(f, 1.7));
@@ -325,6 +349,20 @@ void vertex() {
 				at = origin + up * 0.09;
 				v_cell = 28.0;
 			}
+		} else if (kind == 7) {
+			if (idx == 2) {
+				float f = clamp(age / 0.8, 0.0, 1.0);
+				s = 2.5;
+				a = 0.28 * pow(1.0 - f, 1.3) * wsweep;
+				col = vec3(0.85, 0.50, 0.10);
+				at = origin + up * 0.065;
+			} else if (idx == 0) {
+				// The mend's cyan on the plaza.
+				float f = seg(0.30, 1.50, age);
+				s = 2.1;
+				a = 0.30 * wmend * pow(sin(f * PI), 0.8);
+				col = cyan;
+			}
 		} else if (kind == 6) {
 			// The crest in gold on a sealed gate.
 			float t = age - SEAL_LOCK - SEAL_STAMP;
@@ -402,7 +440,7 @@ void vertex() {
 				s = mix(0.5, 1.6, ease_out3(f));
 				at = origin + radial * (0.4 + 1.3 * ease_out(f)) + up * (0.25 + 0.6 * f);
 				rot += f * (h2 - 0.5) * 2.0;
-				col = mix(vec3(0.42, 0.20, 0.12), dust, smoothstep(0.0, 0.5, f));
+				col = mix(gate_dust, dust, smoothstep(0.0, 0.5, f));
 				a = 0.30 * pow(1.0 - f, 1.3) * smoothstep(0.0, 0.08, f);
 			}
 		} else if (kind == 4) {
@@ -469,13 +507,13 @@ void vertex() {
 		v_cell = 22.0;
 	} else if (part == 24) {
 		float a = 0.0;
-		if (kind == 1) {
+		if (kind == 1 || kind == 7) {
 			// Bodies of the halos rising up the mending crystal.
 			if (idx < 3) {
 				float f = seg(MEND_HALO + 0.20 * fi, MEND_HALO + 0.58 + 0.20 * fi, age);
 				float s = mix(1.20, 0.78, f) * 1.04;
 				world = origin + up * mix(0.35, 2.35, ease_out(f)) + (mx * c.x + fwd * c.y) * 2.0 * s;
-				a = 0.60 * mend * pow(sin(f * PI), 0.7) * clear_out;
+				a = 0.60 * (kind == 7 ? wmend : mend * clear_out) * pow(sin(f * PI), 0.7);
 				col = cyan;
 				v_cell = 3.0;
 			}
@@ -497,7 +535,7 @@ void vertex() {
 				vec3 pillar_side = normalize(cross(up, cam_fwd));
 				world = origin + up * (c.y + 0.5) * h + pillar_side * c.x * w * 0.62 - cam_fwd * 0.18;
 				a *= 0.05 + 0.30 * vfx_wash;
-				col = coral;
+				col = gate_tone;
 				v_cell = 17.0;
 			}
 		}

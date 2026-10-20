@@ -4,7 +4,9 @@ render_mode diffuse_burley;
 // (game/3d/arena_world.gd). Flat parts take the ground colours, steep parts show rock
 // strata banded by height, upward ledges take a cover (snow, moss, ash), seams may glow
 // (lava) and everything settles into the haze colour with distance so the eye stays on
-// the field. All patterns come from art/models/terrain_noise.png.
+// the field (aerial perspective: the haze is lighter than the sky, 2026-10-18). Strata
+// and grain are faint so the land is a calm dark mass around the lit stage. All
+// patterns come from art/models/terrain_noise.png.
 uniform sampler2D noise_tex : repeat_enable, filter_linear_mipmap;
 uniform vec3 top_a : source_color = vec3(0.08, 0.16, 0.16);
 uniform vec3 top_b : source_color = vec3(0.12, 0.22, 0.18);
@@ -14,15 +16,15 @@ uniform vec3 cover_color : source_color = vec3(0.8, 0.86, 0.92);
 uniform vec3 glow_color : source_color = vec3(1.0, 0.4, 0.1);
 uniform vec3 haze_color : source_color = vec3(0.04, 0.09, 0.13);
 // level, softness, scale, grain
-uniform vec4 patch = vec4(0.5, 0.18, 0.07, 0.18);
+uniform vec4 patch = vec4(0.5, 0.18, 0.07, 0.08);
 // bands per unit of height, warp, band contrast, slope where rock begins
-uniform vec4 strata = vec4(2.2, 0.9, 0.3, 0.22);
+uniform vec4 strata = vec4(2.2, 0.9, 0.15, 0.10);
 // amount, slope limit (normal.y above which it lies), lowest height, edge noise
 uniform vec4 cover = vec4(0.0, 0.62, 0.0, 0.25);
 // amount, scale, seam width, pulse
 uniform vec4 glow = vec4(0.0, 0.2, 0.08, 0.0);
 // start distance from the centre, end distance, strength, self light
-uniform vec4 haze = vec4(14.0, 30.0, 0.7, 0.0);
+uniform vec4 haze = vec4(13.0, 30.0, 0.8, 0.0);
 uniform float rough = 0.94;
 uniform vec2 seed = vec2(0.0);
 varying vec3 world_pos;
@@ -48,7 +50,7 @@ void fragment() {
 	float tone = texture(noise_tex, vec2(floor(bed) * 0.173 + 0.05, 0.37)).b;
 	vec3 wall = mix(side_a, side_b, tone);
 	wall *= 1.0 - smoothstep(0.80, 0.97, layer) * strata.z;
-	wall *= 0.88 + 0.24 * texture(noise_tex, vec2(p.x + p.y, world_pos.y * 0.31) * 0.9).a;
+	wall *= 0.92 + 0.16 * texture(noise_tex, vec2(p.x + p.y, world_pos.y * 0.31) * 0.9).a;
 	float steep = smoothstep(strata.w, strata.w + 0.2, 1.0 - normal.y);
 	vec3 albedo = mix(top, wall, steep);
 	float lying = smoothstep(cover.y - 0.1, cover.y + 0.1, normal.y + (fine.a - 0.5) * cover.w);
@@ -65,6 +67,6 @@ void fragment() {
 	float far = smoothstep(haze.x, haze.y, length(world_pos.xz)) * haze.z;
 	ALBEDO = mix(albedo, haze_color, far);
 	ROUGHNESS = rough;
-	SPECULAR = 0.3;
+	SPECULAR = 0.15;
 	EMISSION = emission * (1.0 - far);
 }

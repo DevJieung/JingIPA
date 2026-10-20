@@ -450,12 +450,14 @@ def main() -> int:
 	w("## aqua 물 · flame 불 · wood 나무 · rock 바위 · frost 얼음.")
 	w("## ★ 몸 다섯 × 형 넷 = 스무 종에 보스 다섯이다. 형(kind)이 체력·속도를 정하고")
 	w("##   몸(body)이 상성을 정한다 — 둘은 서로 아무 상관이 없는 축이다.")
+	w("## fly 는 **공중 몬스터**다(2026-10-17). 길은 같이 따르지만 수호자의 몸에 막히지 않고,")
+	w("##   총·활(Balance.ANTI_AIR_WEAPONS)을 든 영웅만 맞힐 수 있다 — BattleSim._can_hit().")
 	w("const MONSTERS := [")
 	for m in r["monsters"]:
-		w('\t{"id": "%s", "ko": "%s", "kind": "%s", "body": "%s", '
+		w('\t{"id": "%s", "ko": "%s", "kind": "%s", "body": "%s", "fly": %s, '
 		  '"desc": "%s", "color": "%s", "h": %d, "art": "res://art/monsters/%s.png", '
 		  '"anim": "res://art/anim/monsters/%s/"},'
-		  % (m["id"], esc(m["ko"]), m["kind"], m["body"],
+		  % (m["id"], esc(m["ko"]), m["kind"], m["body"], "true" if m.get("fly", False) else "false",
 			 esc(m["desc"]), m["color"], gen_art.MON_H[m["kind"]], m["id"], m["id"]))
 	w("]")
 	w("")

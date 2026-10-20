@@ -78,6 +78,19 @@ jobs:
           chmod +x "$binary"
           "$binary" --version
           echo "GODOT=$binary" >> "$GITHUB_ENV"
+      # The C++ kernels (addons/stellar_native, docs/PERF_NATIVE.md): godot-cpp is fetched at
+      # the commit tools/native/build.sh pins and its objects are kept between runs, so a
+      # build after the first costs the four source files. tools/ci/export.sh builds the
+      # Linux library the checks run with and the arm64 library the APK ships.
+      - name: SCons 설치
+        run: pipx install scons
+      - uses: actions/cache@v4
+        with:
+          path: |
+            build/native/godot-cpp
+            build/native/obj
+            build/native/sconsign.dblite
+          key: stellardefense-native-${{ runner.os }}-${{ hashFiles('tools/native/build.sh', 'native/build_profile.json', 'native/SConstruct') }}
       - uses: actions/cache@v4
         with:
           path: |

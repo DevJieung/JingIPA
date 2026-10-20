@@ -7,6 +7,92 @@
 ([NATIVE_MONSTER_PRODUCTION.md](NATIVE_MONSTER_PRODUCTION.md) 「2026-10-15 현행 런타임」).
 데이터·판정·난수·저장은 건드리지 않는다. 월드 쪽 계약은 `game/3d/stellar_world.gd`(부모 소유)가 정한다.
 
+## 2026-10-18 추가 — 피벗 비트 (캐주얼 3D 개편 WP-D)
+
+사용자 평가 "싼마이 AI 3D" 개편(`build/casual-overhaul/PLAN.md` §3 WP-D)의 몬스터 몫. 모든 레버는 피벗
+(`_apply_pivot`)·`face_toward`·`visual_event("spawn")`에 있고 `_compose/_sample/_apply_skeleton`과 C++ 커널은
+그대로다(`native_parity_check` 96/0, 재빌드 없음). 체형 배율 `m`(`BEAT_SHAPE`/`BEAT_KIND`): 슬라임·해파리 1.4,
+탱크 0.6, 보스 0.7, 우상·트리언트 0.6, 나머지 1.0. 실측은 `build/casual-overhaul/after/wp-d/probe/beats_probe.txt`.
+
+| 레이어 | 구현 | 실측 |
+| --- | --- | --- |
+| **M1 피격** | 시뮬 `flash`의 순수 함수. 평탄 구간 `a = smoothstep(0.20, 0.50, flash)·min(m·치명타 1.35, 1.5)`: 스케일 `(1+0.22a, 1−0.26a, 1+0.22a)`, 반동 `0.12H·a`(피격 반대쪽), 들썩임 `0.06H·a`; flash<0.20에서 `b = sin(π(0.20−flash)/0.20)·m`로 늘어남 `(1−0.06b, 1+0.08b, 1−0.06b)`. `set_hit_flash(0)`이면 즉시 원위치. 재질 섬광(WP-B `FLASH_ENERGY 2.6·smoothstep(0.80,0.95)`)이 0~1프레임만 희게 덮으므로 눌린 몸이 **색으로** 보인다 | 60Hz: 임프 y 0.742(26%, 6.8px)가 f0~5 유지, f6 0.82, f7 0.92, f9~11 늘어남 1.04~1.08; 치명타 0.651(35%); 슬라임 0.639(36%), 골렘 0.844, 골렘 왕 0.818. 30Hz 피격 띠: 흰 프레임 1 → 색 눌림 3프레임 → 늘어남 |
+| **M3 등장** | rise: 0.55까지 ease-out 분출(키 +10%·m 늘림), 0.45~0.75에 0.08H 솟아오름, 0.72~1.0 정착 눌림 (1.18, 0.78, 1.18)·m. drop: 낙하 중 (0.94, 1.10, 0.94)·m 늘림, 0.62 착지 눌림 (1.26, 0.68, 1.26)·m. 둘 다 `SPAWN_SEC` 0.45에 정확히 원위치 | 임프: 땅 위 +0.057u(f16) → y 0.781(f23, 5.7px) → f27 원위치; 슬라임: 낙하 y 1.139 → 착지 0.660(6.5px) |
+| **M4 사망** | 0.08~0.20s 팝 ×(1+0.15·m) → 0.20~0.45s 납작 (1+0.25, 1−0.20)·m → 가라앉음(기존 시간). splat은 0.55까지 납작. 쓰러짐(topple/back/side)은 되튐 0.10→0.22rad + 0.08H 튕김. 공중체는 `FALL_SEC` 뒤에 팝. `_death_total` 불변 | 임프 ×1.148(0.13s) → (0.80, 1.25); 골렘 −1.37 → −1.20rad 되튐(0.73s) + 0.09u; 슬라임 ×1.207 → (0.72, 1.35) |
+| **M5 출발·정지** | 이동 목표면 `pitch −= 0.12·(1−_w_move)`, 서면 `+= 0.10·_w_move` — FADE 0.18로 사라지는 한 프레임 스냅. 무거운 체형(m<1) 절반, 공중체 0 | 임프 0.12rad ≈ 2.6px |
+| **M6 보행 흔들림** | 피벗(발 기준, 수직 바운스 없음) 피치 `−0.07·cos(2π·k·τ − 0.3)`, 롤 `0.045·sin(2πτ)`, `τ = 클립 시계/cycle`, k = 2(두 다리·트롯), 1(갤럽·슬라임·뱀), × `_w_move`·무게 배율 | 임프 1.3px, 거인 2.5px — 보행 무게는 MA1(`--gait v3`)의 몫 |
+| **M7 선회 기울임** | `_bank`가 `HeroLocomotion.sod_step`(2.9Hz·ζ 0.5)으로 `yaw_rate·bank`를 따라간다. 루트 요는 그대로(단조) | 한 번 되돌림 ≈1px |
+| **S18 군중 변주** | 등장 `sid`의 황금비 해시 h: 보행 위상 `h·cycle`을 **샘플러 시계에 더한다**(`_clip_time = motion_time + phase·_w_move` — 두 샘플러가 같은 수를 보므로 패리티 유지, 서 있는 몸은 맨 시계라 "첫 샘플은 시뮬 시계만의 함수"·`native_monster_check.gd:279-280` 유지), 크기 `1+0.04·sin(2πh)`, 대칭 체형(슬라임·버섯·해파리·우상)은 h>0.5에서 X 미러(롤·요 부호를 미리 뒤집어 기울기 방향 유지). sid 0은 중립 | 슬라임 sid 1~12: 위상 0.04~0.44s, 0.961~1.040, 미러 6/12 |
+
+검사(2026-10-18): `native_monster_check` 1,239/0(C7 피격 복구·C8 단조 선회·C9 등장 0.8s·C10 사망 1.6s), `native_parity_check`
+96/0, `arena_motion_check` 36/0, `arena_air_check` 107/0, `monster_check --assets` 88/0 — 임계값 수정 없음.
+M2(뼈 움찔 2배)는 C++ 커널 수정이 필요해 하지 않았다.
+
+### 재저작 `--gait v3` (MA1/MA2, `tools/3d/monster_motion.py`·`author_monster_motion.py`; 사용자 승인 뒤에만)
+
+- `author_monster_motion.py --ids all --gait v3`: `monster_motion.apply_gait(params, shape, "v3")`가 저작 매개변수에만
+  덧씌운다 — 두 다리 바운스 ≥0.07H·롤 ≥0.14·머리 ≥0.14·팔 ×1.6(≤0.8)·모든 두 다리 `impact=True`(`footfall` 바운스),
+  사족 피치 ≥0.14·신축 ≥0.09; `die_pose`는 0→1 구간 `ease_in(2.0)`(매달렸다 떨어짐)에 앞서 0.06~0.20에 몸통 +7% 늘림.
+  `native_monster_specs.json`의 `motion` 블록은 v2 그대로 쓰므로 기본값(`--gait v2`)은 오늘 숫자다.
+- 검증(`build/casual-overhaul/after/wp-d/clips/monsters/`, 사본에서만): v2는 HEAD 라이브러리와 **fcurve 240개 전부 동일**;
+  ember_imp v3 바운스 0.039→0.070H, 롤 0.099→0.278rad(±0.14), 머리 0.076→0.266rad, 팔 0.35→0.56, EEVEE 시트
+  `ember_imp_v3_move_side.jpg`·`ember_imp_v3_die.jpg`. 배치 뒤 `tools/3d/check_native_monster_deformation.py` 필수
+  (드래곤 머리 ±0.15 규칙은 v3가 건드리지 않는다 — 드래곤 보행은 `head_bob`을 쓰지 않는다).
+
+## 2026-10-17 추가 — 공중 몬스터(fly): 비행 고도·접지 그림자·낙하
+
+- 계기: 사용자 요청 "날아다니는 로봇이 지금보다도 더 공중에 떠있는 이미지로 수정 (로봇이아니라 몬스터)".
+  같은 세션에 총·활 영웅만 공중 몬스터를 맞히고 공중 몬스터는 수호자의 몸에 막히지 않는 규칙이
+  들어왔으므로(시뮬, 메인 소유) 로스터의 `fly: true` 세 종(`rapid_ray` ray·`jelly_seer` jelly·
+  `runestone_idol` idol)은 실제 카메라 거리(`CAMERA_SIZE` 34, 영웅 1.65u ≈ 48px)에서 한눈에 공중으로
+  읽혀야 한다. 기존 클립의 작은 부유(hover 0.12/0.10/0.08H ≈ 0.1u)는 "살짝 들린 것"으로만 읽혔다.
+- **어디서**: 클립은 그대로다(GLB 바이트 불변, 재저작 없음). 고도는 어댑터 `native_monster_model.gd`의
+  `FLIGHT` 표가 **피벗**에 얹는다 — 루트는 여전히 `world(p, monster_ground)`이고 시뮬 좌표가 유일한
+  위치 원천이다. `StellarModels.monster()`가 로스터 `fly`로 메타 `_stellar_fly`를 켜고 접지 그림자
+  `StellarContact`(루트 직속, +0.02)를 붙인다. 월드는 등장 이벤트에 `sid`를 실어 준다(봅 위상).
+
+| 체형 | 고도 | 봅 진폭 / 주기 | 선회 기울임 상한 | 그림자(×키) | 화면 간격 1280×800 / 1000×625 |
+| --- | --- | --- | --- | --- | --- |
+| ray(가오리) | 1.35u | 0.10u / 1.9s | 0.45rad | 1.15×0.85 | 39px / 31px |
+| jelly(해파리) | 1.25u | 0.13u / 2.5s | 0.28rad | 0.95×0.80 | 36px / 28px |
+| idol(석상) | 0.95u | 0.07u / 2.4s | 0.20rad | 0.72×0.62 | 28px / 22px |
+
+  화면 간격 = 고도 × cos(카메라 앙각 39.3°) × 37.6px/u. 영웅 키 48px의 60~80%라 그림자와 몸 사이가
+  비는 것이 확실히 보인다. 다른 체형이 `fly`를 받으면 `FLIGHT_DEFAULT`(1.2u·0.10/2.0s)다.
+- **봅 시계**: `_air_t`는 `face_toward` dt(시뮬 dt)로만 늘어 서 있어도(포위·막힘) 계속 떠다니고
+  일시정지면 멈춘다. 위상은 등장 이벤트의 `sid` 황금비 해시(난수 없음). 첫 프레임은 시뮬 시계만의
+  함수라는 규칙 그대로다.
+- **등장**(`descend`): 고도 위 0.5H+0.6u(실측 시작 높이 가오리 2.46·해파리 2.48·석상 2.12u)에서 3제곱 감속으로 내려오며 스케일 인. 그림자는
+  몸이 내려올수록 커진다(아래 k 식).
+- **포위 타격**: 공격 클립 시간(= (위상−0.3) mod 1) 기준 0.3~0.62 예비에 고도 +10%, 0.62~0.70 타격에
+  −22%로 급강하(피해가 드는 위상 감김 순간이 최저점), 0.70~1.0 복귀 상승. 실측(가오리) 1.38 → 0.96u.
+- **피격**: 기존 스쿼시·반동에 더해 위로 0.05H×s 들썩임.
+- **사망**(`die`): 0.42초 2차 가속 낙하(1.33 → 0.01u, 12프레임) → 고도 6% 튕김(+0.08u) → 기존 가라앉음/
+  옆 넘어짐과 디졸브. 총 사망 시간(1.15/1.45s)과 `advance_death` 상한 1.6s는 그대로다. 달아남(scatter)과
+  누수(leak)는 고도를 유지한다.
+- **접지 그림자**: `contact_shadow.gdshader`에 `soft` 유니폼(0 = 기존 영웅 판, 1 = 공중 몸 — 코어가
+  0.30~0.92로 퍼지고 가중치 0.75 → 0.40, 반그림자 0.45 유지; opacity 0.34에서 중심 알파 0.29).
+  판 크기 = 표의 그림자 × 몸 키(가오리 0.94×0.70u). 매 프레임 `k = 1 − 0.28·(lift − 고도)/고도`
+  (0.5~1.35)로 높이 날수록 작고 떨어질수록 크며, 디졸브와 함께 사라진다.
+- **메타 계약**: 어댑터가 매 프레임 `node.set_meta("_stellar_fly_height", lift)` — 피벗이 땅 위로 든
+  전체 높이(고도+봅+등장 하강+포위 급강하+피격 들썩임+낙하, 0 이상). 보행 몬스터는
+  `StellarModels.monster()`가 0.0으로 둔다(native·원시체 모두). VFX는 `StellarWorld.monster_node(sid)`의
+  이 메타로 타격 버스트를 몸에 둔다. 상태 표식(`StellarBurn/Frost/Stun`)도 이 높이에 올린다(월드는
+  가시성·스케일·회전만 만진다). `motion_state()["hover"]`는 비행 고도(봅·급강하·낙하 포함, 등장 제외)다.
+- **초상화·검수 도구**: `tests/3d/render_portraits.gd`는 `_stellar_grounded` 메타로 고도를 끄고 그림자를
+  떼어 초상화 프레이밍을 지킨다. `native_monster_visual_preview.gd`는 카메라 프레이밍에서
+  `StellarContact`를 제외한다(몸을 가운데 둔다).
+- **검수 하네스**: `tests/3d/flyer_visual_preview.tscn`(실제 투기장: 문 하강 → 같은 차선의 보행 몬스터·
+  길가 궁수 옆 보행과 피격 → 제단 앞 내려놓기 → 포위 40틱 → hp 0 사망) +
+  `python3 tests/3d/flyer_review.py --out-root build/flyers/after --before build/flyers/before`
+  (GPU 디스플레이 :1, 오프스크린 필름 1280×800·1000×625, 프레임 PNG·`<id>.gif`·`<id>_focus.gif/.mp4`
+  (몸 추적 2배 크롭)·`<id>_keyframes.jpg`·`<id>_before_after.jpg`·`flyers_sheet.jpg`·`flyers-report.json`
+  (프레임별 발·몸 화면 좌표·flash·메타 높이)). 첫 촬영에서 석상 장면의 제단 앞 내려놓기가 나선 차선을
+  벗어나 두 몸을 수정 한가운데(거리 0)에 두는 하네스 버그가 있어(그 자리에선 heading이 0이라
+  `face_toward`가 dt를 버려 봅도 멈춘다 — 실제 플레이에선 닿지 않는 자리) 차선 길이 기준으로 고쳐 석상만
+  전후 재촬영했다.
+- 검수 결과·남은 문제는 [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) 「2026-10-17 공중 몬스터」.
+
 ## 2026-10-13 추가 — 흩어짐(scatter): 처치가 아닌 퇴장
 
 - 계기: 한 판이 10탄으로 바뀌면서 탄 보스가 쓰러지면 남은 호위가 `die {scatter: true, gold: 0}`으로 한꺼번에
@@ -74,9 +160,11 @@
 | 모션 파라미터(체형 기본값 → 종류 보정 → 몬스터별 `motion` 블록) | `tools/3d/native_monster_specs.json` |
 | 런타임 어댑터(샘플링·블렌드·반응 레이어) | `game/3d/native_monster_model.gd` |
 | 런타임 파라미터(`motion` 행: cycle/death/spawn/hover/turn_rate/turn_max/bank) | `art/models/native_monsters.json` |
+| 공중 몬스터 비행 표(고도·봅·그림자, 2026-10-17) | `game/3d/native_monster_model.gd` `FLIGHT` |
 | 변형·루프 이음 검사(4클립) | `tools/3d/check_native_monster_deformation.py` |
 | 계약 검사 | `tests/native_monster_check.gd` |
 | 연속 프레임 촬영 | `tests/3d/native_monster_visual_preview.gd`, `tools/3d/native_monster_review.py` |
+| 공중 몬스터 투기장 촬영(2026-10-17) | `tests/3d/flyer_visual_preview.gd`, `tests/3d/flyer_review.py` |
 
 재현:
 

@@ -29,8 +29,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/saeta/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/saeta/game.blend",
   "height": 1.65,
-  "glb_bytes": 747040,
-  "glb_sha256": "8cbed6d251fa559add4dd66bc36c6d9ddf2c68fea509ca124b512da4612e31d1",
+  "glb_bytes": 785284,
+  "glb_sha256": "ef2e79edc6cb5c08e8f8b6fcfff12c710ba3322c357f4c75e9d78b6fd69c304a",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -71,14 +71,24 @@
     "artist_note": "Actual native rest and attack multiview plus both two-resolution galleries/40frame attack contacts/grades0,4,9,awakening and selected 12unique hero battle directly inspected. Whole bows/string and hands move together, boots remain fixed, back quivers/cloaks retain their original silhouettes. Eira measured lower gray bow frame is bound to weapon, separate from boot/Body; no trailing black stretched connection. Matte game palette/face readable, no device FPS assertion."
   },
   "motion": {
-    "version": 2,
+    "version": 4,
     "tool": "tools/3d/author_native_motion.py",
-    "authored_utc": "2026-10-10T09:37:09Z",
+    "authored_utc": "2026-10-19T02:21:31Z",
     "clips": {
       "IdleLoop": 6.0,
       "WalkLoop": 1.0,
       "Attack": 1.5,
       "attack_release_time": 1.0
+    },
+    "beats": {
+      "hold_start": 0.78,
+      "hold_dip_h": 0.025,
+      "breath_h": 0.015,
+      "sway_h": 0.025,
+      "fidget_window": [
+        3.0,
+        3.6
+      ]
     },
     "stride": 1.5256,
     "leg_swing": 0.66,
@@ -87,9 +97,36 @@
     "lead": "L",
     "kind": "bow",
     "bounce_scale": 1.0,
-    "previous_glb_sha256": "8d459d3aace5a7ee8bd0833a803b132521166d0fc3736f15a3edfcf1e96260a4",
+    "arms": {
+      "solver": "hinge two-bone IK, forearm-relative wrists (soft limits 80/88 deg), bow rides the hand",
+      "hinge": {
+        "L": [
+          0.7585,
+          -0.6517,
+          0.0047
+        ],
+        "R": [
+          0.8087,
+          0.5882,
+          0.0
+        ]
+      },
+      "wrist_pivot_offset_m": {
+        "L": 0.223,
+        "R": 0.186
+      },
+      "attack_wrist_limit_excess_deg": {
+        "L": 0.0
+      },
+      "socket_forward_dot": {
+        "0:hold": 1.0,
+        "0:release": 1.0,
+        "0:release+65ms": 0.997
+      }
+    },
+    "previous_glb_sha256": "ef2e79edc6cb5c08e8f8b6fcfff12c710ba3322c357f4c75e9d78b6fd69c304a",
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/saeta/game.motion-v1.blend",
-    "geometry_base_sha256": "8d459d3aace5a7ee8bd0833a803b132521166d0fc3736f15a3edfcf1e96260a4",
+    "geometry_base_sha256": "75f34297187c5bc4abc7fe14bd9983c6e963ae0e93fe779592de8ee2fc874137",
     "geometry_bytes_preserved": true
   },
   "mobile_lod": {
@@ -178,5 +215,243 @@
     ],
     "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/saeta/saeta.glb",
     "editable_lod_source": "build/character-3d/source/saeta/game-lod.blend"
+  },
+  "albedo_grade": {
+    "date": "2026-10-18",
+    "request": "user 2026-10-18: the characters read as a cheap AI-made 3D game; casual overhaul plan \"Lantern Stage\" WP-A \u2014 painted albedos that carry their own light, geometry untouched",
+    "tool": "tools/3d/optimize_native_lod.py --retexture + tools/3d/grade_native_albedo.py; records by tools/3d/publish_native_lod.py",
+    "method": "game-lod.blend opened as the bake target (geometry, UVs, weights, rig, clips, sockets and height untouched), game.blend surfaces appended as bake sources (visible faces first, all sheets as fallback), Cycles EMIT colour bake, AO bake of the reduced mesh alone and a height pass, then the painted grade inside the chart mask: de-speckle, chart-flatten (charts >= 48 texels), light posterise, levels, OKLab chroma with a skin cap, painted light from AO + height, cool shade, edge light, face paint-back; nearest fill, box downsample; clip bytes grafted from the shipped GLB",
+    "grade_version": "2026-10-18.7",
+    "parameters": {
+      "median": 3,
+      "bilateral_radius": 3,
+      "bilateral_sigma_s": 1.6,
+      "bilateral_sigma_r": 0.1,
+      "bilateral_passes": 2,
+      "seam_lambda": 0.3,
+      "seam_gain_min": 0.7,
+      "seam_gain_max": 1.4,
+      "seam_floor": 0.02,
+      "seam_chroma_sigma": 0.08,
+      "seam_small_chart": 96.0,
+      "seam_ratio_sigma": 0.6,
+      "flatten_min_width": 48,
+      "flatten_blur": 24,
+      "flatten_blend": 0.4,
+      "posterize_levels": 6,
+      "posterize_blend": 0.3,
+      "levels_lift": 0.09,
+      "levels_gain": 0.88,
+      "levels_gamma": 0.9,
+      "p10_floor": 0.17,
+      "p50_target": 0.5,
+      "p50_pull": 0.8,
+      "p50_gain_max": 2.2,
+      "dark_additive_lo": 0.04,
+      "dark_additive_hi": 0.16,
+      "lift_saturation_damp": 0.15,
+      "knee_start": 0.78,
+      "knee_slope": 0.45,
+      "knee_saturated_drop": 0.1,
+      "chroma_hero": 1.2,
+      "chroma_monster": 1.15,
+      "chroma_skin": 1.0,
+      "skin_s_cap": 0.5,
+      "s_cap": 0.86,
+      "ao_floor": 0.65,
+      "ao_gamma": 0.8,
+      "ao_smooth": 1.5,
+      "height_low": 0.82,
+      "height_high": 1.12,
+      "height_lo": 0.05,
+      "height_hi": 0.7,
+      "cool_shade": [
+        0.85,
+        0.9,
+        1.12
+      ],
+      "cool_amount": 0.5,
+      "edge_light": 0.06,
+      "edge_lo": 0.92,
+      "skin_hue": [
+        8.0,
+        38.0
+      ],
+      "skin_s": [
+        0.15,
+        0.6
+      ],
+      "skin_v": [
+        0.35,
+        0.98
+      ],
+      "skin_chart_fraction": 0.6,
+      "skin_chart_mixed": 0.3,
+      "skin_chart_s_median_max": 0.55,
+      "skin_chart_s_p90_max": 0.72,
+      "face_contrast": 1.3,
+      "face_dark_fraction": 0.04,
+      "face_dark_lstar": 15.0,
+      "face_blur": 4.0,
+      "face_mark_desaturate": 0.8,
+      "face_mark_lum": 0.35
+    },
+    "override": {},
+    "grade_info": {
+      "charts": 831,
+      "skin_charts_excluded": 61,
+      "seams": {
+        "pairs": 900,
+        "samples": 5867,
+        "gain_min": 0.7,
+        "gain_max": 1.269,
+        "gain_std": 0.057
+      },
+      "flattened_charts": 112,
+      "levels": {
+        "lum_mean_after_remap": 0.3962,
+        "p50_gain": 1.663,
+        "p10_before": 0.1702,
+        "p10_lift": 0.0,
+        "remap": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.17,
+            0.17
+          ],
+          [
+            0.273,
+            0.455
+          ],
+          [
+            0.517,
+            0.517
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ]
+      },
+      "skin_texels": 17041,
+      "ao_mean": 0.5908,
+      "ao_p10": 0.0763,
+      "face": {
+        "head_texels": 79662,
+        "head_charts": 262,
+        "dark_threshold": 0.1359,
+        "mark_texels": 3215
+      }
+    },
+    "ao": {
+      "distance_m": 0.4125,
+      "samples": 64,
+      "margin": 8
+    },
+    "head_start": 0.675,
+    "clip_donor": "art/models/saeta/saeta.glb",
+    "before": {
+      "glb_sha256": "af5427571a613830f4d03874a8c8509256a49ab714a3057f262873e0ac689c12",
+      "glb_bytes": 775312,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "atlas_stats": {
+        "used_texels": 65464,
+        "charts": 765,
+        "mean_lstar": 28.18,
+        "lum_mean": 0.2178,
+        "lum_p10": 0.0908,
+        "lum_p50": 0.1823,
+        "lum_p90": 0.4471,
+        "lstar_p10": 8.22,
+        "near_black_fraction": 0.3228,
+        "sat_mean": 0.7364,
+        "sat_p90": 0.935,
+        "micro_contrast_255": 6.24,
+        "laplacian_mean": 0.0212,
+        "dominant_hues": [
+          {
+            "hue_deg": 7.5,
+            "mass": 0.31
+          }
+        ],
+        "dominant_hue_count": 1,
+        "skin": {
+          "texels": 2515,
+          "mean_lstar": 58.49,
+          "sat_mean": 0.4433,
+          "sat_p90": 0.534,
+          "sat_max": 0.7615
+        }
+      }
+    },
+    "after": {
+      "glb_sha256": "75f34297187c5bc4abc7fe14bd9983c6e963ae0e93fe779592de8ee2fc874137",
+      "glb_bytes": 783636,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      },
+      "atlas_stats": {
+        "used_texels": 65464,
+        "charts": 765,
+        "mean_lstar": 43.43,
+        "lum_mean": 0.342,
+        "lum_p10": 0.1521,
+        "lum_p50": 0.3513,
+        "lum_p90": 0.492,
+        "lstar_p10": 16.73,
+        "near_black_fraction": 0.097,
+        "sat_mean": 0.7326,
+        "sat_p90": 0.8653,
+        "micro_contrast_255": 5.26,
+        "laplacian_mean": 0.0162,
+        "dominant_hues": [
+          {
+            "hue_deg": 7.5,
+            "mass": 0.221
+          }
+        ],
+        "dominant_hue_count": 1,
+        "skin": {
+          "texels": 3902,
+          "mean_lstar": 55.27,
+          "sat_mean": 0.4285,
+          "sat_p90": 0.4924,
+          "sat_max": 0.593
+        }
+      }
+    },
+    "geometry_sha256": "9f92de48b5393ce6ee07f510122faa31be61351ac67f401222df24b3c8b8bc14",
+    "geometry_bytes_preserved": true,
+    "bake": {
+      "size": 1024,
+      "covered_texels": 280183,
+      "missed_texels": 678,
+      "interior_fallback_texels": 172,
+      "miss_fraction": 0.0024198470285491983
+    },
+    "visible_faces": {
+      "removed_faces": 44274,
+      "kept_faces": 10726
+    },
+    "removed_extracted_textures": [
+      "saeta_saeta_lod_albedo.png"
+    ],
+    "editable_lod_source": "build/character-3d/source/saeta/game-lod.blend",
+    "evidence": "build/character-3d/lod-2026-10-18/saeta"
   }
 }

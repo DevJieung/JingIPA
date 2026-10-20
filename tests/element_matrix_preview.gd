@@ -13,8 +13,11 @@ func capture_chart(language: String, state: String) -> void:
 	check(main.menu.page == "elements", "element chart is selected")
 	check(not main.screen.is_processing() and not main.screen.is_processing_input(), "chart pauses background gameplay and input")
 	await snap(output + "/" + language + "_" + state + ".png")
-	for source in ["캐릭터 속성 ↓", "몬스터 속성 →", "피해 배율", "2배", "1배", "0.5배", "0배"]:
+	for source in ["피해 배율", "2배", "1배", "0.5배", "0배"]:
 		check(I18n.observed.has(source), "rendered chart includes " + source)
+	# B2 (2026-10-19): the axis words are gone; the corner's 「피해 배율」 and its glyph say it.
+	for source in ["캐릭터 속성 ↓", "몬스터 속성 →"]:
+		check(not I18n.observed.has(source), "the chart no longer draws the axis label " + source)
 	for body in Balance.MBODY_ORDER:
 		check(Look.text_width(Balance.body_ko(body), 20) <= 108.0, "translated monster heading fits")
 	for element in MenuOverlay.ELEMENT_ROWS:

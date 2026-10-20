@@ -11,21 +11,54 @@ extends RefCounted
 ##   UV.x  baked shade        UV.y  blend toward the instance's second tint
 ##   UV2.x sway weight        UV2.y cover weight (snow / moss on upward faces), +2 where
 ##                                  the vertex may glow (the instance decides how much)
+##
+## Contact pools (2026-10-18, Lantern Stage): every standing prop of a solid kind gets a
+## flat "contact" quad on the ground under it, drawn with art/models/arena_contact_decal
+## .gdshader as one more MultiMesh, so trees, rocks and posts sit in a pool of shadow
+## instead of floating on the land. Kerb skirts and the plaza rim use the same shader as
+## generated meshes (decal_mesh()).
 
 const SHADER := preload("res://art/models/arena_scenery.gdshader")
+const DECAL_SHADER := preload("res://art/models/arena_contact_decal.gdshader")
 const FLOATS := 20
 ## Templates too thin or flat to need a place in the shadow pass.
-const NO_SHADOW := ["tuft", "reed", "pad", "slab0", "slab1", "slab2"]
+const NO_SHADOW := ["tuft", "reed", "pad", "slab0", "slab1", "slab2", "contact"]
+## Kinds (by template base name) that stand in a contact pool: [strength, pool size as a
+## multiple of the footprint]. Compact props need a wide pool (their body covers its
+## centre from the camera); trees keep a tighter one under their overhanging crown.
+const CONTACT_KINDS := {"rock": [0.6, 1.9], "tree": [0.55, 1.4], "fir": [0.55, 1.5], "dead": [0.5, 1.9], "mush": [0.5, 1.7],
+	"column": [0.6, 2.0], "spire": [0.55, 1.9], "dome": [0.4, 1.5], "hoodoo": [0.6, 1.8], "crystal": [0.55, 1.9], "slab": [0.4, 1.5]}
+## Widest pool in world units: a bigger one would cut into the bumps of the land.
+const CONTACT_MAX := 3.2
 static var _templates: Dictionary = {}
 
 var material := ShaderMaterial.new()
+## Material of the contact pools (instances) and of the generated skirt meshes.
+var decal_material := ShaderMaterial.new()
+var skirt_material := ShaderMaterial.new()
 ## Whether the instances placed next take the field's cover (snow, moss, ash) on their
 ## upward faces. The sanctuary and anything that must keep its own colour turn it off.
 var covered := true
+## Whether stand() lays a contact pool under solid props (off for the sanctuary).
+var pools := true
+## Colour of the pools: the field's haze, darkened (set by the biome).
+var pool_color := Color(0.03, 0.05, 0.07)
+## Ground height function (x, z) -> y of the land, so a pool lies on the land's slope;
+## unset, pools lie level at the prop's own foot.
+var ground_height := Callable()
+## Surface of the field's water or lava: props standing below it get no pool (the
+## liquid hides the land anyway).
+var water_level := -INF
 var _buffers: Dictionary = {}
+var _decal_meshes: Array[ArrayMesh] = []
 
 func _init() -> void:
 	material.shader = SHADER
+	decal_material.shader = DECAL_SHADER
+	decal_material.render_priority = 1
+	skirt_material.shader = DECAL_SHADER
+	skirt_material.render_priority = 1
+	skirt_material.set_shader_parameter("vertex_strength", 1.0)
 
 # --------------------------------------------------------------------------- #
 # Placing instances
@@ -34,14 +67,17 @@ func _init() -> void:
 ## leaves); `glow` lights the parts the template marks; `sway` moves foliage tips.
 func add(kind: String, xform: Transform3D, color: Color, second: Color = Color.BLACK,
 		glow: float = 0.0, sway: float = 0.0) -> void:
+	_push(kind, xform, color, second.srgb_to_linear(), 1.0 - clampf(glow, 0.0, 1.0), sway if covered else -1.0)
+
+## One raw instance: `alpha` is the colour's alpha slot (1 - glow), `custom_a` the custom
+## data's alpha slot (sway; below 0 = never covered; the pool strength of a decal).
+func _push(kind: String, xform: Transform3D, color: Color, second: Color, alpha: float, custom_a: float) -> void:
 	var buffer: PackedFloat32Array = _buffers.get(kind, PackedFloat32Array())
 	var b := xform.basis
 	var o := xform.origin
 	# The renderer linearises instance (and vertex) colours itself; custom data is raw.
-	var c := color
-	var s := second.srgb_to_linear()
 	buffer.append_array(PackedFloat32Array([b.x.x, b.y.x, b.z.x, o.x, b.x.y, b.y.y, b.z.y, o.y,
-		b.x.z, b.y.z, b.z.z, o.z, c.r, c.g, c.b, 1.0 - clampf(glow, 0.0, 1.0), s.r, s.g, s.b, sway if covered else -1.0]))
+		b.x.z, b.y.z, b.z.z, o.z, color.r, color.g, color.b, alpha, second.r, second.g, second.b, custom_a]))
 	_buffers[kind] = buffer
 
 ## A scaled, rotated primitive, like StellarModels.part().
@@ -63,6 +99,38 @@ func stand(kind: String, at: Vector3, size: Vector3, yaw: float, color: Color, s
 		glow: float = 0.0, sway: float = 0.0, lean: Vector2 = Vector2.ZERO) -> void:
 	var basis := Basis.from_euler(Vector3(lean.x, yaw, lean.y)) * Basis.from_scale(size)
 	add(kind, Transform3D(basis, at), color, second, glow, sway)
+	if not pools: return
+	var spec: Array = CONTACT_KINDS.get(kind.rstrip("0123456789"), [])
+	if not spec.is_empty(): contact(at, Vector2(size.x, size.z) * float(spec[1]), float(spec[0]))
+
+## A pool of contact shadow lying on the ground at `at`, `size` across in world units.
+## Skipped for things that hang or stack well above the land and for things standing in
+## the water. The quad follows the land's slope so it lies on the surface.
+func contact(at: Vector3, size: Vector2, strength: float = 0.55, yaw: float = 0.0) -> void:
+	var across := Vector2(minf(size.x, CONTACT_MAX), minf(size.y, CONTACT_MAX))
+	var normal := Vector3.UP
+	var y := at.y
+	if ground_height.is_valid():
+		var step := maxf(0.25, across.x * 0.3)
+		var h := float(ground_height.call(at.x, at.z))
+		# Hanging or stacked things get none; sunk things (piles, half-buried rocks) do.
+		if at.y - h > 0.35 or at.y - h < -0.9: return
+		y = h
+		var dx := (float(ground_height.call(at.x + step, at.z)) - float(ground_height.call(at.x - step, at.z))) / (2.0 * step)
+		var dz := (float(ground_height.call(at.x, at.z + step)) - float(ground_height.call(at.x, at.z - step))) / (2.0 * step)
+		normal = Vector3(-dx, 1.0, -dz).normalized()
+	if y < water_level - 0.03: return
+	var tx := (Vector3.RIGHT - normal * normal.x).normalized()
+	var tz := tx.cross(normal).normalized()
+	var basis := Basis(normal, yaw) * Basis(tx * across.x, normal, tz * across.y)
+	# Lifted 0.05 u (1.5 px on screen): the land mesh interpolates between its rings by a
+	# few hundredths, and a pool under that surface is hidden by the depth test.
+	_push("contact", Transform3D(basis, Vector3(at.x, y, at.z) + normal * 0.05), pool_color, Color.BLACK, 1.0, strength)
+
+## A generated mesh drawn with the pool shader: vertex colour = pool colour, vertex
+## alpha = strength (kerb skirts, the plaza rim). One draw each.
+func decal_mesh(mesh: ArrayMesh) -> void:
+	if mesh != null and mesh.get_surface_count() > 0: _decal_meshes.append(mesh)
 
 func count() -> int:
 	var total := 0
@@ -83,10 +151,18 @@ func commit(parent: Node3D) -> void:
 		var node := MultiMeshInstance3D.new()
 		node.name = "Scenery_" + String(kind)
 		node.multimesh = multimesh
-		node.material_override = material
+		node.material_override = decal_material if kind == "contact" else material
 		if kind in NO_SHADOW: node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		parent.add_child(node)
 	_buffers.clear()
+	for mesh in _decal_meshes:
+		var node := MeshInstance3D.new()
+		node.name = "Scenery_skirt"
+		node.mesh = mesh
+		node.material_override = skirt_material
+		node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		parent.add_child(node)
+	_decal_meshes.clear()
 
 # --------------------------------------------------------------------------- #
 # Templates
@@ -115,6 +191,7 @@ static func template(kind: String) -> ArrayMesh:
 		"slab": mesh = _slab(variant)
 		"pad": mesh = _pad()
 		"crystal": mesh = _crystal(variant)
+		"contact": mesh = _contact()
 		_:
 			push_error("unknown scenery template " + kind)
 			mesh = _from_primitive("box")
@@ -211,7 +288,7 @@ static func _from_primitive(kind: String) -> ArrayMesh:
 	shade.resize(vertices.size())
 	extra.resize(vertices.size())
 	for i in range(vertices.size()):
-		shade[i] = Vector2(0.86 + 0.14 * clampf(vertices[i].y + 0.5, 0.0, 1.0), 0.0)
+		shade[i] = Vector2(0.78 + 0.22 * clampf(vertices[i].y + 0.5, 0.0, 1.0), 0.0)
 		extra[i] = Vector2(0.0, 3.0)
 	var out := []
 	out.resize(Mesh.ARRAY_MAX)
@@ -338,7 +415,7 @@ static func _rock(variant: int) -> ArrayMesh:
 	var tall: Array[float] = [0.74, 0.60, 0.92, 0.50]
 	var deep: Array[float] = [0.86, 1.0, 0.78, 0.94]
 	var size := Vector3(1.0, tall[variant % 4], deep[variant % 4])
-	_blob(geo, rng, 1, Vector3(0, size.y * 0.36, 0), size, 0.17, 0.72, 1.06, 0.0, 0.0, -0.72)
+	_blob(geo, rng, 1, Vector3(0, size.y * 0.36, 0), size, 0.17, 0.58, 1.06, 0.0, 0.0, -0.72)
 	return geo.mesh()
 
 ## Tapering six-sided shard: one unit tall, one wide at the foot. Ice spires, stalagmites.
@@ -412,7 +489,7 @@ static func _fir(variant: int) -> ArrayMesh:
 		var tip := Vector3(rng.randf_range(-0.012, 0.012), base_y + height, rng.randf_range(-0.012, 0.012))
 		var sway_low := pow(base_y, 1.6)
 		var sway_high := pow(base_y + height, 1.6)
-		geo.fan(skirt, tip, Vector3(0, base_y - 0.3, 0), 1.08, 0.80, 0.0, sway_low, sway_high)
+		geo.fan(skirt, tip, Vector3(0, base_y - 0.3, 0), 1.08, 0.62, 0.0, sway_low, sway_high)
 	return geo.mesh()
 
 ## Broadleaf tree: short trunk under a full crown of leaf masses. One unit tall, about
@@ -431,7 +508,7 @@ static func _tree(variant: int) -> ArrayMesh:
 		var reach := 0.24 if i > 0 else 0.0
 		var centre := Vector3(cos(angle) * reach, 0.70 if i == 0 else 0.56 + rng.randf_range(-0.05, 0.06), sin(angle) * reach)
 		var size: Vector3 = Vector3(0.62, 0.52, 0.62) * (1.0 if i == 0 else rng.randf_range(0.66, 0.84)) * sizes[variant % 3]
-		_blob(geo, rng, 1 if i == 0 else 0, centre, size, 0.15, 0.60, 1.12, 0.0, 0.04)
+		_blob(geo, rng, 1 if i == 0 else 0, centre, size, 0.15, 0.45, 1.12, 0.0, 0.04)
 	return geo.mesh()
 
 ## Bare, broken tree (burnt trunks, drowned snags, thorn stems). One unit tall.
@@ -538,6 +615,21 @@ static func _slab(variant: int) -> ArrayMesh:
 	geo.loft([low, high], [Vector3.ZERO, Vector3(0, 1, 0)], [0.70, 0.94])
 	geo.fan(high, Vector3(0, 1, 0), Vector3(0, 0.5, 0), 1.0, 1.05)
 	return geo.mesh()
+
+## Flat unit quad on y = 0 (x, z in -0.5..0.5) with UV 0..1: the contact pool. Drawn
+## with the pool shader, so shade and sway slots are unused.
+static func _contact() -> ArrayMesh:
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = PackedVector3Array([Vector3(-0.5, 0, -0.5), Vector3(0.5, 0, -0.5), Vector3(0.5, 0, 0.5), Vector3(-0.5, 0, 0.5)])
+	arrays[Mesh.ARRAY_NORMAL] = PackedVector3Array([Vector3.UP, Vector3.UP, Vector3.UP, Vector3.UP])
+	arrays[Mesh.ARRAY_TEX_UV] = PackedVector2Array([Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1)])
+	arrays[Mesh.ARRAY_TEX_UV2] = PackedVector2Array([Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO])
+	# Clockwise seen from above (Godot front faces); the material does not cull anyway.
+	arrays[Mesh.ARRAY_INDEX] = PackedInt32Array([0, 1, 2, 0, 2, 3])
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
 
 ## Round leaf lying on water with a notch, one unit across.
 static func _pad() -> ArrayMesh:

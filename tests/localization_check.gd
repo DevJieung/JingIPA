@@ -78,7 +78,7 @@ func _test_messages() -> void:
 	for unit in Roster.UNITS:
 		check(I18n.hero_name(unit["id"]) == unit["en"], "영문 영웅 이름 " + unit["id"])
 		check(not I18n.hero_concept(unit["id"]).is_empty(), "영문 컨셉 누락 " + unit["id"])
-	for group in [Roster.MONSTERS, Roster.THEMES, Balance.UPGRADES, Balance.PASSIVES]:
+	for group in [Roster.MONSTERS, Roster.THEMES, Balance.UPGRADES, Balance.PASSIVES, Balance.TALENTS, Balance.TALENT_GROUPS.values()]:
 		for entry in group:
 			check(I18n._hangul.search(I18n.t(entry["ko"])) == null, "데이터 이름 번역 " + entry["ko"])
 			if entry.has("desc"):

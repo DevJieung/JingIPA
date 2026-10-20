@@ -283,7 +283,8 @@ func _position_camera(view: String,model: Node3D) -> void:
 	camera.position+=camera.global_basis*Vector3(center.x,center.y,0)
 
 func _corners(node: Node,points: Array[Vector3]) -> void:
-	if node is MeshInstance3D and node.visible:
+	# The review frames the body; a flyer's contact shadow lies on the ground under it.
+	if node is MeshInstance3D and node.visible and node.name != "StellarContact":
 		var box: AABB=node.mesh.get_aabb()
 		for n in range(8): points.append(node.global_transform*box.get_endpoint(n))
 	for child in node.get_children():

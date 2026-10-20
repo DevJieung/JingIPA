@@ -55,6 +55,11 @@ const ICE_DEEP := Color("#59bfe6")
 const DMG_WEAK   := Color("#ff8a3c")   ## 2배 — 뜨거운 주황
 const DMG_NORMAL := Color("#f3f3e9")   ## 보통 — 흰 글자와 같은 색
 const DMG_RESIST := Color("#847bA2")   ## 반감 — 식은 잿빛
+## Which damage numbers the battle draws (2026-10-18). false: only the big ones — critical
+## and weakness hits, flagged `big` by the 3D world — the way Kingdom Rush and Clash Royale
+## show none and Brawl Stars only bold ones; plain chip damage is read from the bar, the
+## hit flash and the squash. true: every hit (one constant, for testers who miss them).
+const SHOW_ALL_DAMAGE := false
 
 ## 등급별 색 — 반 별 단위의 열 칸(Balance.TIER_ATK). 낮으면 수수하게, 높으면 눈이 부시게.
 ## 별맞춤 의식은 온 별(1 · 3 · 5 · 7 · 9번 칸)만 주고, 사이의 반 별은 승급과 합성으로 오른다.
@@ -176,8 +181,10 @@ static func draw_rarity_fit(ci: CanvasItem, box: Rect2, tier: int, radius: float
 ##
 ## 도형을 쓰기 어려운 텍스트 목록을 위한 짧은 이름이다.
 const ELEM_CHAR := {"none": "무", "fire": "불", "ice": "얼", "elec": "전", "water": "물"}
-## 몸을 한 글자로. 「나무」·「바위」는 두 자라 한 자로 줄인다.
-const BODY_CHAR := {"aqua": "물", "flame": "불", "wood": "나", "rock": "바", "frost": "얼"}
+## 몸을 한 글자로. 「나무」·「대지」는 두 자라 한 자로 줄인다.
+## ★ rock 의 몸 이름은 2026-10-19 상성표 C안(사용자 확정)으로 「바위」→「대지」(Ground)가 된다(DB 적용은
+##   메인의 마지막 묶음). 글자는 먼저 「대」로 바꿔 둔다 — 「바」로 두면 DB 적용 뒤 칩과 이름이 어긋난다.
+const BODY_CHAR := {"aqua": "물", "flame": "불", "wood": "나", "rock": "대", "frost": "얼"}
 
 static func elem_char(e: String) -> String:
 	return String(ELEM_CHAR.get(e, "무"))
@@ -288,14 +295,26 @@ static func draw_elem_x(ci: CanvasItem, c: Vector2, r: float, e: String) -> void
 	ci.draw_line(c + Vector2(-d, -d), c + Vector2(d, d), Color(1, 1, 1, 0.85), maxf(1.0, r * 0.20))
 
 
-## 체력 막대의 색. 넉넉하면 초록, 반쯤이면 금색, 얼마 안 남으면 빨강.
+## 체력 막대의 색은 편에 따라 다르다 (2026-10-18, 전장 HUD 개편).
+## 아군(수정·방벽)은 빈 쪽 금색 → 가득 초록, 적은 빈 쪽 빨강 → 가득 따뜻한 주황.
+## tobe.png 와 클래시 로얄처럼 "우리 / 저들"이 색만으로 먼저 읽히고, 남은 양은 그 안의
+## 밝기 변화로 읽힌다. 적 막대가 초록이면 길 위의 영웅 막대와 구별되지 않는다.
 ##
 ## ★ 세 토막으로 딱 끊지 않고 이어서 섞는다. 끊어 두면 34%와 36%가 전혀 다른 색이라
 ##   "얼마나 남았나"가 아니라 "어느 칸에 들어갔나"로 읽힌다 — 막대를 두는 뜻이 없어진다.
+const HP_ENEMY_FULL := Color("#ff9a4a")
+
+static func hp_color_ally(k: float) -> Color:
+	return GOLD.lerp(GREEN, clampf(k, 0.0, 1.0))
+
+
+static func hp_color_enemy(k: float) -> Color:
+	return RED.lerp(HP_ENEMY_FULL, clampf(k, 0.0, 1.0))
+
+
+## 옛 이름: 아군 막대의 색 (옛 전투 화면·디버그 보기가 쓴다).
 static func hp_color(k: float) -> Color:
-	if k > 0.5:
-		return GOLD.lerp(GREEN, clampf((k - 0.5) * 2.0, 0.0, 1.0))
-	return RED.lerp(GOLD, clampf(k * 2.0, 0.0, 1.0))
+	return hp_color_ally(k)
 
 
 ## 모서리가 둥근 사각형을 채운다. Godot 에는 이 기본 함수가 없다.
@@ -413,10 +432,32 @@ static func text_center_fit(ci: CanvasItem, pos: Vector2, s: String, size: int,
 
 
 ## Boxed copy is measured after translation, in both axes, without dropping letters.
+## ★ Memoized (O8d, 2026-10-19): the HUD fits the same strings into the same boxes every
+##   frame and each step of the loop measures the whole string again. The answer is kept per
+##   translated text and (size, box), so a language switch simply misses and the result is the
+##   very integer the loop gives (same pixels). Counters and timers keep making new strings,
+##   so the table is emptied once it holds FIT_CACHE_MAX answers.
+const FIT_CACHE_MAX := 2048
+static var _fit_cache: Dictionary = {}
+static var _fit_count := 0
+
 static func fit_size(s: String, size: int, area: Vector2, _preferred_min: int = 12) -> int:
+	var text := I18n.t(s)
+	var box := Vector3(size, area.x, area.y)
+	var known: Dictionary = _fit_cache.get(text, {})
+	if known.has(box):
+		return known[box]
 	var fitted := size
 	while fitted > 1 and (text_width(s, fitted) > area.x or font(fitted).get_height(fitted) > area.y):
 		fitted -= 1
+	if _fit_count >= FIT_CACHE_MAX:
+		_fit_cache.clear()
+		_fit_count = 0
+		known = {}
+	if known.is_empty():
+		_fit_cache[text] = known
+	known[box] = fitted
+	_fit_count += 1
 	return fitted
 
 
@@ -477,12 +518,23 @@ static func text_center(ci: CanvasItem, pos: Vector2, s: String, size: int, col:
 
 ## 어두운 테두리를 두른 가운데 정렬 글자.
 ## 화려한 연출 위에서는 테두리가 없으면 글자가 배경에 먹혀 안 읽힌다.
+## `w` 는 테두리의 두께(px): 글자를 여덟 방향으로 `w` 만큼 비껴 찍고 위에 본체를 찍는다.
+## ★ draw_string_outline 로 두 번에 끝내는 길은 막혀 있다 — 번들 글꼴은 MSDF 로 임포트돼
+##   있고(core/fonts/*.import) GL 호환 렌더러에서 그 외곽선은 size 를 얼마로 주든 1px 도 안
+##   되는 희미한 테두리만 남는다(2026-10-18 GL 측정, build/casual-overhaul/after/wp-e/
+##   outline_probe/). 전장의 피해 숫자는 세계 쪽에서 8개로 묶이므로 아홉 번 그리기로 충분하다.
 static func text_center_out(ci: CanvasItem, pos: Vector2, s: String, size: int,
 		col: Color, edge: Color = BG_DEEP, w: float = 3.0) -> void:
-	for a in [Vector2(-w, 0), Vector2(w, 0), Vector2(0, -w), Vector2(0, w),
-			Vector2(-w, -w), Vector2(w, -w), Vector2(-w, w), Vector2(w, w)]:
-		text_center(ci, pos + a, s, size, edge)
-	text_center(ci, pos, s, size, col)
+	s = I18n.t(s)
+	var f := font(size)
+	var width := f.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
+	var at := _baseline(f, pos - Vector2(width * 0.5, 0), size)
+	_audit_raw(ci, s, pos - Vector2(width * 0.5, f.get_height(size) * 0.5), size)
+	if w > 0.0:
+		for a in [Vector2(-w, 0), Vector2(w, 0), Vector2(0, -w), Vector2(0, w),
+				Vector2(-w, -w), Vector2(w, -w), Vector2(-w, w), Vector2(w, w)]:
+			ci.draw_string(f, at + a, s, HORIZONTAL_ALIGNMENT_LEFT, -1, size, edge)
+	ci.draw_string(f, at, s, HORIZONTAL_ALIGNMENT_LEFT, -1, size, col)
 
 
 static func text_left(ci: CanvasItem, pos: Vector2, s: String, size: int, col: Color) -> void:
@@ -1006,3 +1058,200 @@ static func glass_panel(ci: CanvasItem, rect: Rect2, edge: Color = PANEL_EDGE,
 			var x: float = rect.get_center().x + side * (rect.size.x * 0.5 - 3)
 			var dot := edge.lightened(0.35)
 			ci.draw_circle(Vector2(x, p.y + 7), 1.8, Color(dot, dot.a * alpha))
+
+
+# --------------------------------------------------------------------------- #
+# One visual language for the whole cycle (2026-10-17, docs/UI_CYCLE_AUDIT_2026-10-17.md)
+# --------------------------------------------------------------------------- #
+## Tokens the screens used to spell by hand. A screen names a colour from here or, for a
+## purely local tone (a skill's own colour), keeps a named constant of its own.
+const WARN      := Color("#ff9a8c")   ## danger that is still ahead: last stage, boss countdown, defeat, spent blessings
+const IVORY     := Color("#fff0c7")   ## the brightest gold: the final banner, the victory number, the current step
+const STARLIGHT := Color("#fff0b8")   ## experience and constellation stars (the ritual's LIGHT, the 5-star tier)
+const STEEL_DIM := Color("#6f8794")   ## hollow pips and spent outlines
+const INK_MUTE  := Color("#8b9aa5")   ## labels of things that cannot be pressed
+const CRYSTAL_INK := Color("#eafcff") ## words on a crystal-blue plaque
+const BOSS      := Color("#be797e")   ## the boss strip's rim
+const AIR       := Color("#5fe6ff")   ## flying monsters and the heroes that reach them (the arms constellation's air tint)
+## Glass faces: the HUD's default, the deeper one of cards and sheets, the rail's.
+const GLASS_FACE := Color(0.028, 0.07, 0.105, 0.96)
+const GLASS_DEEP := Color(0.018, 0.04, 0.065, 0.93)
+## The shade that lies over the paused field under every modal.
+const SHADE := Color(0.018, 0.04, 0.065, 0.84)
+## Type scale. Every screen picks from these; a value between two of them is a mistake.
+const TYPE_TITLE := 34      ## a modal's one title (gold)
+const TYPE_HEADING := 23    ## a card's or section's name
+const TYPE_BODY := 20       ## sentences
+const TYPE_CAPTION := 16    ## labels under or beside a value
+const TYPE_BUTTON := 25     ## the primary action of a modal
+const TYPE_BUTTON_2 := 23   ## its secondary actions
+
+
+## A modal sheet over the paused game: the same chamfered glass as the HUD, with its cast
+## shadow. Title, store, menu, collection, result, ritual and the constellation popup all
+## stand on this one surface.
+static func sheet(ci: CanvasItem, rect: Rect2, edge: Color = STEEL, face: Color = GLASS_FACE,
+		selected: bool = false, alpha: float = 1.0) -> void:
+	if alpha >= 0.999:
+		fill_round(ci, Rect2(rect.position + Vector2(0, 7), rect.size), 8, Color(0, 0, 0, 0.40))
+	else:
+		ci.draw_rect(Rect2(rect.position + Vector2(3, 7), rect.size - Vector2(6, 0)), Color(0, 0, 0, 0.40 * alpha))
+	glass_panel(ci, rect, edge, face, selected, alpha)
+
+
+## A modal's title row: one gold title, centred, with an optional line under it.
+static func sheet_title(ci: CanvasItem, box: Rect2, title: String, hint: String = "") -> void:
+	text_box(ci, Rect2(box.position, Vector2(box.size.x, 44)), title, TYPE_TITLE, GOLD)
+	if not hint.is_empty():
+		text_box(ci, Rect2(box.position + Vector2(0, 46), Vector2(box.size.x, 30)), hint, TYPE_BODY, INK_DIM)
+
+
+## A small solid chip with dark words: the stage number, the level, a state. The words
+## fit the chip; the chip is as wide as its words plus the padding.
+static func chip(ci: CanvasItem, at: Vector2, label: String, size: int = 17, face: Color = GOLD,
+		ink: Color = BG_DEEP, align: int = HORIZONTAL_ALIGNMENT_LEFT) -> Rect2:
+	var w := text_width(label, size) + 20.0
+	var h := float(size) + 8.0
+	var x := at.x if align == HORIZONTAL_ALIGNMENT_LEFT else (at.x - w if align == HORIZONTAL_ALIGNMENT_RIGHT else at.x - w * 0.5)
+	var rect := Rect2(x, at.y - h * 0.5, w, h)
+	fill_round(ci, rect, 3, face)
+	text_center(ci, rect.get_center(), label, size, ink)
+	return rect
+
+
+## A diamond: the game's separator and pip.
+static func draw_diamond(ci: CanvasItem, at: Vector2, radius: float, color: Color, hollow: bool = false, width: float = 1.3) -> void:
+	var points := PackedVector2Array([at + Vector2(0, -radius), at + Vector2(radius * 0.67, 0), at + Vector2(0, radius), at + Vector2(-radius * 0.67, 0)])
+	if hollow:
+		points.append(points[0])
+		ci.draw_polyline(points, color, width, true)
+	else:
+		ci.draw_colored_polygon(points, color)
+
+
+## Wings: a flying monster. Not a circle (an attack element) and not a square (a body) —
+## a trait mark that sits on a thumbnail's corner or beside a word. Rimmed dark so it
+## holds on a render.
+static func draw_wing(ci: CanvasItem, c: Vector2, r: float, color: Color = AIR, rim: bool = true) -> void:
+	if r < 2.5:
+		return
+	var shape := PackedVector2Array([c + Vector2(-1.0, 0.25) * r, c + Vector2(-0.5, -0.45) * r, c + Vector2(0.0, 0.15) * r,
+		c + Vector2(0.5, -0.45) * r, c + Vector2(1.0, 0.25) * r])
+	if rim:
+		ci.draw_polyline(shape, Color(BG_DEEP, 0.85), maxf(3.0, r * 0.62), true)
+	ci.draw_polyline(shape, color, maxf(1.5, r * 0.30), true)
+	ci.draw_circle(c + Vector2(0, 0.22) * r, maxf(1.0, r * 0.16), color, true, -1, true)
+
+
+## Anti-air: a hero whose shots reach a flying monster. The same inlaid circle as the
+## attack element, holding an arrow that leaves the ground.
+static func draw_anti_air(ci: CanvasItem, c: Vector2, r: float, color: Color = AIR) -> void:
+	if r < 3.0:
+		return
+	ci.draw_circle(c + Vector2(0, 1), r + 2, BG_DEEP, true, -1, true)
+	ci.draw_circle(c, r + 1, color.darkened(0.50), true, -1, true)
+	ci.draw_circle(c, r, BG_DEEP.lerp(color, 0.10), true, -1, true)
+	var stroke := maxf(1.2, r * 0.2)
+	var light := color.lightened(0.3)
+	ci.draw_line(c + Vector2(0, r * 0.62), c + Vector2(0, -r * 0.55), light, stroke, true)
+	ci.draw_colored_polygon(PackedVector2Array([c + Vector2(0, -r * 0.82), c + Vector2(r * 0.42, -r * 0.30), c + Vector2(-r * 0.42, -r * 0.30)]), light)
+	ci.draw_line(c + Vector2(-r * 0.52, r * 0.68), c + Vector2(r * 0.52, r * 0.68), Color(color, 0.85), stroke, true)
+
+
+# --------------------------------------------------------------------------- #
+# Waves and the starfall's aim (2026-10-19, feedback O2 · O5 · F6 — D6 battle HUD,
+# build/feedback-2026-10-19/D6/RECORD.md)
+# --------------------------------------------------------------------------- #
+## Elites: the violet of their 3D line, aura and entrance (StellarVfx.ELITE_COLOR), and a
+## lighter violet for words on dark glass. An elite is never told by colour alone: its step on
+## a wave track stands taller with a notch, its health bar carries a crest.
+const ELITE := Color("#9b62ff")
+const ELITE_INK := Color("#cdb6ff")
+## The starfall's aim (F6): the gold the 3D aim ring reaches on screen (ArenaWorld.AIM_GOLD
+## through ACES and the field's grade, about 252, 175, 40) and its red-grey for a spot the star
+## cannot take — the HUD's hint, the latched button and the ground ring read as one gesture.
+const AIM_GOLD := Color("#fcaf28")
+const AIM_BAD := Color("#e47870")
+
+
+## One stage's waves as `total` steps, in the stage track's language so the two read alike:
+## held waves filled gold, the one being fought (or prepared for) bright, the rest hollow.
+## `marks` maps a step (0-based) to "elite" or "boss". An elite step stands taller than its
+## neighbours with a notch in it and is violet until held; the boss step ends in a point like
+## the stage track's last step and burns crimson until held — shape first, colour second.
+## `current` is 1-based, `held` the number of waves already held. `glow`, `fallen`, `alpha`
+## and `glint` work as in draw_stage_track. Callers leave max(1.5, h·0.35) px above and below
+## the rect for the elite step.
+static func draw_wave_track(ci: CanvasItem, rect: Rect2, current: int, total: int, held: int,
+		marks: Dictionary = {}, glow: float = 0.0, fallen: bool = false, alpha: float = 1.0,
+		glint: float = -1.0) -> void:
+	if total <= 0 or rect.size.x <= 0.0 or rect.size.y <= 0.0 or alpha <= 0.0:
+		return
+	var glinting := glint > 0.0 and glint < 1.0
+	var glint_at := lerpf(-0.16, 1.16, glint)
+	var gap := clampf(rect.size.x * 0.016, 2.0, 5.0)
+	var width := (rect.size.x - gap * float(total - 1)) / float(total)
+	var h := rect.size.y
+	var rise := maxf(1.5, h * 0.35)
+	for i in range(total):
+		var kind := String(marks.get(i, ""))
+		var x := rect.position.x + float(i) * (width + gap)
+		var y := rect.position.y - (rise if kind == "elite" else 0.0)
+		var sh := h + (rise * 2.0 if kind == "elite" else 0.0)
+		var here := i == current - 1 and i >= held
+		var color := Color(0.17, 0.26, 0.32, 0.92)
+		if i < held:
+			color = GOLD
+		elif here:
+			if fallen: color = RED.lerp(INK, 0.18)
+			elif kind == "boss": color = Color("#ff9d86")
+			elif kind == "elite": color = ELITE_INK
+			else: color = IVORY
+		elif kind == "boss":
+			color = Color(0.40, 0.17, 0.22, 0.95)
+		elif kind == "elite":
+			color = Color(0.33, 0.22, 0.52, 0.95)
+		if glinting:
+			var near := clampf(1.0 - absf((float(i) + 0.5) / float(total) - glint_at) / 0.16, 0.0, 1.0)
+			color = color.lerp(Color(1, 1, 1, color.a), 0.80 * near)
+		var shape := PackedVector2Array([Vector2(x, y), Vector2(x + width, y), Vector2(x + width, y + sh), Vector2(x, y + sh)])
+		if kind == "boss":
+			var tip := minf(sh * 0.5, width * 0.45)
+			shape = PackedVector2Array([Vector2(x, y), Vector2(x + width - tip, y), Vector2(x + width, y + sh * 0.5),
+				Vector2(x + width - tip, y + sh), Vector2(x, y + sh)])
+		if here:
+			# A plain rectangle: its alpha changes every frame (fill_round caches per colour).
+			ci.draw_rect(Rect2(x - 2.0, y - 2.0, width + 4.0, sh + 4.0), Color(color, (0.22 + 0.22 * clampf(glow, 0.0, 1.0)) * alpha))
+		ci.draw_colored_polygon(shape, Color(color, color.a * alpha))
+		if kind == "elite" and width >= 6.0 and sh >= 6.0:
+			# The notch: a dark diamond cut into the tall step.
+			var mid := Vector2(x + width * 0.5, y + sh * 0.5)
+			var r := minf(width * 0.32, sh * 0.30)
+			draw_diamond(ci, mid, r, Color(BG_DEEP, 0.78 * alpha))
+		elif i >= held and not here:
+			ci.draw_line(Vector2(x, y + 0.5), Vector2(x + width - (sh * 0.5 if kind == "boss" else 0.0), y + 0.5), Color(1, 1, 1, 0.10 * alpha), 1.0)
+
+
+## The marks of a stage's waves for draw_wave_track: the ladder's elite and boss waves of the
+## block of `total` waves that starts after wave `first - 1` (Hellbound walks such blocks).
+static func wave_marks(first: int, total: int, endless: bool) -> Dictionary:
+	var marks := {}
+	var span := Balance.ARENA_WAVES if endless else total
+	for i in range(total):
+		var w := first + i
+		if Balance.arena_boss_wave(w, 0 if endless else span):
+			marks[i] = "boss"
+		elif Balance.arena_elite_wave(w, 0 if endless else span):
+			marks[i] = "elite"
+	return marks
+
+
+## Endless (Hellbound's waves): a lemniscate `r` wide on each side of `c`. The bundled font has
+## no ∞, and a drawn mark keeps its weight at every size.
+static func draw_infinity(ci: CanvasItem, c: Vector2, r: float, color: Color, width: float = 2.0) -> void:
+	var points := PackedVector2Array()
+	for n in range(33):
+		var a := float(n) / 32.0 * TAU
+		var d := 1.0 + sin(a) * sin(a)
+		points.append(c + Vector2(r * cos(a) / d, r * sin(a) * cos(a) / d * 1.15))
+	ci.draw_polyline(points, color, width, true)

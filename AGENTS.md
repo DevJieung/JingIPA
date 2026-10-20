@@ -60,3 +60,13 @@
 - 서브에이전트 도구가 제공되지 않거나 호출이 실패하면 위임이 실행되지 않았음을 알리고,
   독립적인 작업을 계속한다. 메인 에이전트가 작업한 것을 전담 에이전트의 결과라고 하지 않는다.
 - 사용자 지시가 이 기본 분담을 명시적으로 바꾸면 그 지시를 따른다.
+
+# C++ 커널 (addons/stellar_native)
+
+- 도로 판정·몬스터 길찾기·몬스터 자세 샘플러는 `native/` 의 C++(godot-cpp)가 답한다.
+  GDScript 판(`*_script` 함수)은 참조 구현이자 대체 경로라 지우지 않는다. 둘 중 하나만
+  고치지 않는다 — 고치면 `tests/native_parity_check`(비트 일치)가 잡는다.
+- 네이티브 클래스 이름을 GDScript 에 직접 적지 않는다(`Native.make("...")` 로 만든다).
+  바이너리(`addons/stellar_native/bin/`)와 `build/native/` 는 Git 에 넣지 않는다.
+- `tools/verify.sh`·`tools/build_apk.sh`·`tools/ci/export.sh` 가 먼저 `tools/native/build.sh` 를
+  부른다. 절차와 측정은 `docs/PERF_NATIVE.md` 를 따른다.

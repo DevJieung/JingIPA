@@ -46,7 +46,9 @@ UNIT_KEYS = ("ko", "en", "role", "profile", "bullet", "weapon", "elem", "sc", "s
 			 "prompt", "color", "holes", "anim")
 ## 영웅 표에 나중에 더한 열과 그 기본값 — 아직 그 열이 없는 JSON 도 읽는다(값은 DB 에서 고친다).
 UNIT_DEFAULTS = {"spd": 1.0}
-MONSTER_KEYS = ("ko", "kind", "body", "desc", "prompt", "color", "holes")
+MONSTER_KEYS = ("ko", "kind", "body", "fly", "desc", "prompt", "color", "holes")
+## 몬스터 표에 나중에 더한 열과 그 기본값(판 3: 공중 몬스터 fly).
+MONSTER_DEFAULTS = {"fly": False}
 THEME_KEYS = ("ko", "main_body", "boss_body", "rank", "weights", "bg", "floor", "prompt", "floor_prompt")
 ART_KEYS = ("ko", "cut", "fx", "square", "size", "prompt", "color", "art", "holes")
 ART_OPTIONAL = ("fx", "square", "size", "art", "holes")
@@ -70,9 +72,11 @@ SPECS = (
 	{"kind": "rows", "file": BALANCE, "const": "ELEM", "sec": "elements", "base": ("ko", "color", "rider", "dmg")},
 	{"kind": "rows", "file": BALANCE, "const": "MBODY", "sec": "bodies", "base": ("ko", "color", "weak", "resist", "immune")},
 	{"kind": "rows", "file": BALANCE, "const": "STATUS", "sec": "statuses", "base": ("ko", "sec"), "bag": "params"},
-	{"kind": "rows", "file": BALANCE, "const": "MKIND", "sec": "monster_kinds", "base": ("hp", "spd", "gold", "crush", "ko")},
+	{"kind": "rows", "file": BALANCE, "const": "MKIND", "sec": "monster_kinds", "base": ("hp", "spd", "gold", "xp", "crush", "ko")},
 	{"kind": "list", "file": BALANCE, "const": "UPGRADES", "sec": "upgrades", "base": ("ko", "desc", "show", "base", "grow", "cap")},
 	{"kind": "list", "file": BALANCE, "const": "PASSIVES", "sec": "passives", "base": ("ko", "desc", "cost", "rank", "icon", "tint"), "bag": "effects"},
+	{"kind": "rows", "file": BALANCE, "const": "TALENT_GROUPS", "sec": "talent_groups", "base": ("ko", "desc", "color")},
+	{"kind": "list", "file": BALANCE, "const": "TALENTS", "sec": "talents", "base": ("ko", "desc", "group", "tier", "req", "max", "icon", "tint"), "bag": "effects"},
 	{"kind": "col", "file": BALANCE, "const": "THEME_RANK_HP", "sec": "theme_rank_hp", "field": "mult"},
 	{"kind": "col", "file": BALANCE, "const": "RITE_GATE", "sec": "rite_gates", "field": "width"},
 	{"kind": "scalars", "file": BALANCE, "sec": "tuning"},
@@ -100,6 +104,8 @@ SECTIONS = {
 	"monster_kinds": ("몬스터 형", (BALANCE,)),
 	"upgrades": ("상점 능력치", (BALANCE,)),
 	"passives": ("패시브", (BALANCE,)),
+	"talent_groups": ("별자리", (BALANCE,)),
+	"talents": ("별자리 노드", (BALANCE,)),
 	"theme_rank_hp": ("테마 체력 배수", (BALANCE,)),
 	"rite_gates": ("의식 문 너비", (BALANCE,)),
 	"tuning": ("숫자 상수", (BALANCE,)),
@@ -498,12 +504,12 @@ def read_files() -> dict:
 			units["order"].append(u["id"])
 			units["rows"][u["id"]] = {"art_tier": t["tier"], **UNIT_DEFAULTS,
 									  **_take(u, UNIT_KEYS, tuple(UNIT_DEFAULTS), where="units." + u["id"])}
-	for sec, key, keys, optional in (("monsters", "monsters", MONSTER_KEYS, ()), ("themes", "themes", THEME_KEYS, ()),
-									 ("arts", "arts", ART_KEYS, ART_OPTIONAL)):
+	for sec, key, keys, optional, defaults in (("monsters", "monsters", MONSTER_KEYS, tuple(MONSTER_DEFAULTS), MONSTER_DEFAULTS),
+											   ("themes", "themes", THEME_KEYS, (), {}), ("arts", "arts", ART_KEYS, ART_OPTIONAL, {})):
 		table = _table(doc, sec, True)
 		for row in r[key]:
 			table["order"].append(row["id"])
-			table["rows"][row["id"]] = _take(row, keys, optional, where="%s.%s" % (sec, row["id"]))
+			table["rows"][row["id"]] = {**defaults, **_take(row, keys, optional, where="%s.%s" % (sec, row["id"]))}
 
 	heroes = _load_json(HEROES_JSON)
 	for uid, entry in heroes.items():
@@ -718,8 +724,10 @@ def _color(col: str) -> str:
 	return '"%s" TEXT NOT NULL CHECK ("%s" GLOB \'#%s\')' % (col, col, "[0-9A-Fa-f]" * 6)
 
 
-SCHEMA_VERSION = "2"
+SCHEMA_VERSION = "3"
 ## 판 1 → 2: units 에 이동 속도 배수 spd 를 더했다(`migrate`).
+## 판 2 → 3 (2026-10-17): monsters.fly(공중 몬스터) · monster_kinds.xp(처치 경험치) ·
+##   별자리 표 talent_groups · talents · talent_effects(레벨업 노드)를 더했다(`migrate`).
 
 # ★ CHECK 를 **열에** 붙인다. 표 제약으로 두면 그 뒤에 다른 열을 못 적는다.
 _TYPED = ('"type" TEXT NOT NULL DEFAULT \'float\' CHECK ("type" IN (\'int\', \'float\', \'str\', \'bool\')), '
@@ -744,7 +752,7 @@ CREATE TABLE bullets (id TEXT PRIMARY KEY, sort INTEGER NOT NULL, ko TEXT NOT NU
 CREATE TABLE bullet_params (bullet TEXT NOT NULL REFERENCES bullets(id), key TEXT NOT NULL, sort INTEGER NOT NULL DEFAULT 0,
 	{_TYPED}, PRIMARY KEY (bullet, key));
 CREATE TABLE monster_kinds (id TEXT PRIMARY KEY, sort INTEGER NOT NULL, ko TEXT NOT NULL, {_real("hp")}, {_real("spd")},
-	{_real("gold")}, {_int("crush")});
+	{_real("gold")}, {_int("crush")}, {_real("xp")});
 CREATE TABLE rite_gates (ring INTEGER PRIMARY KEY, {_int("width")});
 CREATE TABLE theme_rank_hp (rank INTEGER PRIMARY KEY, {_real("mult")});
 CREATE TABLE tuning (key TEXT PRIMARY KEY, sort INTEGER NOT NULL, {_TYPED}, doc TEXT NOT NULL DEFAULT '');
@@ -757,6 +765,14 @@ CREATE TABLE passives (id TEXT PRIMARY KEY, sort INTEGER NOT NULL, ko TEXT NOT N
 CREATE TABLE passive_effects (passive TEXT NOT NULL REFERENCES passives(id) ON DELETE CASCADE, key TEXT NOT NULL,
 	sort INTEGER NOT NULL DEFAULT 0, {_TYPED}, PRIMARY KEY (passive, key));
 
+-- ── 별자리 (core/balance.gd) ── 레벨업 때 고르는 노드. 줄을 더하고 뺄 수 있다 ──────
+CREATE TABLE talent_groups (id TEXT PRIMARY KEY, sort INTEGER NOT NULL, ko TEXT NOT NULL, "desc" TEXT NOT NULL, {_color("color")});
+CREATE TABLE talents (id TEXT PRIMARY KEY, sort INTEGER NOT NULL, ko TEXT NOT NULL, "desc" TEXT NOT NULL,
+	"group" TEXT NOT NULL REFERENCES talent_groups(id), {_int("tier")}, req TEXT NOT NULL DEFAULT '', {_int("max")},
+	icon TEXT NOT NULL, {_color("tint")});
+CREATE TABLE talent_effects (talent TEXT NOT NULL REFERENCES talents(id) ON DELETE CASCADE, key TEXT NOT NULL,
+	sort INTEGER NOT NULL DEFAULT 0, {_TYPED}, PRIMARY KEY (talent, key));
+
 -- ── 캐릭터 · 몬스터 · 테마 · 화면 그림 (tools/roster.json → core/roster.gd) ───────
 CREATE TABLE art_tiers (key TEXT PRIMARY KEY, sort INTEGER NOT NULL, ko TEXT NOT NULL, {_int("n")});
 CREATE TABLE units (id TEXT PRIMARY KEY, sort INTEGER NOT NULL, art_tier TEXT NOT NULL REFERENCES art_tiers(key),
@@ -765,7 +781,7 @@ CREATE TABLE units (id TEXT PRIMARY KEY, sort INTEGER NOT NULL, art_tier TEXT NO
 	{_real("sc")}, {_real("spd")}, "desc" TEXT NOT NULL, lore TEXT NOT NULL, prompt TEXT NOT NULL, {_color("color")}, {_flag("holes")}, {_flag("anim")},
 	blurb_ko TEXT, blurb_en TEXT);
 CREATE TABLE monsters (id TEXT PRIMARY KEY, sort INTEGER NOT NULL, ko TEXT NOT NULL, kind TEXT NOT NULL REFERENCES monster_kinds(id),
-	body TEXT NOT NULL REFERENCES bodies(id), "desc" TEXT NOT NULL, prompt TEXT NOT NULL, {_color("color")}, {_flag("holes")});
+	body TEXT NOT NULL REFERENCES bodies(id), {_flag("fly")}, "desc" TEXT NOT NULL, prompt TEXT NOT NULL, {_color("color")}, {_flag("holes")});
 CREATE TABLE themes (id TEXT PRIMARY KEY, sort INTEGER NOT NULL, ko TEXT NOT NULL, main_body TEXT NOT NULL REFERENCES bodies(id),
 	boss_body TEXT NOT NULL REFERENCES bodies(id), rank INTEGER NOT NULL REFERENCES theme_rank_hp(rank), {_color("bg")}, {_color("floor")},
 	prompt TEXT NOT NULL, floor_prompt TEXT NOT NULL, motif TEXT, CHECK (boss_body = main_body));
@@ -797,8 +813,8 @@ def connect(write: bool = False) -> sqlite3.Connection:
 		schema = conn.execute("SELECT value FROM _meta WHERE key = 'schema'").fetchone()
 	except sqlite3.Error:
 		schema = None
-	if schema == ("1",):
-		raise DataError("%s 는 판 1 이다 — `python3 tools/gamedb.py migrate` 로 판 %s 로 올린다 (units.spd 열)" % (DB_REL, SCHEMA_VERSION))
+	if schema in (("1",), ("2",)):
+		raise DataError("%s 는 판 %s 다 — `python3 tools/gamedb.py migrate` 로 판 %s 로 올린다" % (DB_REL, schema[0], SCHEMA_VERSION))
 	if schema != (SCHEMA_VERSION,):
 		raise DataError("%s 는 이 도구가 지은 DB 가 아니거나 판이 다르다 (%r)" % (DB_REL, schema))
 	return conn
@@ -843,7 +859,7 @@ def read_db(conn: sqlite3.Connection) -> dict:
 	table("units", "SELECT u.id, u.art_tier, u.ko, u.en, u.role, u.profile, u.bullet, u.weapon, u.elem, u.sc, u.spd, u.\"desc\", u.lore, "
 		  "u.prompt, u.color, u.holes, u.anim, u.blurb_ko, u.blurb_en FROM units u JOIN art_tiers t ON t.key = u.art_tier "
 		  "ORDER BY t.sort, t.key, u.sort, u.id", ("art_tier",) + UNIT_KEYS + ("blurb_ko", "blurb_en"), True, ("holes", "anim"))
-	table("monsters", 'SELECT id, ko, kind, body, "desc", prompt, color, holes FROM monsters ORDER BY sort, id', MONSTER_KEYS, True, ("holes",))
+	table("monsters", 'SELECT id, ko, kind, body, fly, "desc", prompt, color, holes FROM monsters ORDER BY sort, id', MONSTER_KEYS, True, ("fly", "holes"))
 	themes = table("themes", "SELECT id, ko, main_body, boss_body, rank, bg, floor, prompt, floor_prompt, motif FROM themes ORDER BY sort, id",
 				   ("ko", "main_body", "boss_body", "rank", "bg", "floor", "prompt", "floor_prompt", "motif"), True)
 	for tid, row in themes["rows"].items():
@@ -875,7 +891,7 @@ def read_db(conn: sqlite3.Connection) -> dict:
 	for sid, ko, amount, chance, sec in q("SELECT id, ko, amount, chance, sec FROM statuses ORDER BY sort, id"):
 		params = {k: v for k, v in (("amount", amount), ("chance", chance)) if v is not None}
 		_table(doc, "statuses")["rows"][sid] = {"ko": ko, "sec": sec, "params": params}
-	table("monster_kinds", "SELECT id, ko, hp, spd, gold, crush FROM monster_kinds ORDER BY sort, id", ("ko", "hp", "spd", "gold", "crush"))
+	table("monster_kinds", "SELECT id, ko, hp, spd, gold, crush, xp FROM monster_kinds ORDER BY sort, id", ("ko", "hp", "spd", "gold", "crush", "xp"))
 	bullets = table("bullets", "SELECT id, ko, dmg, speed FROM bullets ORDER BY sort, id", ("ko", "dmg", "speed"))
 	for bid, row in bullets["rows"].items():
 		row["params"] = bag("SELECT key, type, value FROM bullet_params WHERE bullet = ? ORDER BY sort, key", bid, "bullet_params")
@@ -884,6 +900,11 @@ def read_db(conn: sqlite3.Connection) -> dict:
 					 ("ko", "desc", "cost", "rank", "icon", "tint"), True)
 	for pid, row in passives["rows"].items():
 		row["effects"] = bag("SELECT key, type, value FROM passive_effects WHERE passive = ? ORDER BY sort, key", pid, "passive_effects")
+	table("talent_groups", 'SELECT id, ko, "desc", color FROM talent_groups ORDER BY sort, id', ("ko", "desc", "color"))
+	talents = table("talents", 'SELECT id, ko, "desc", "group", tier, req, max, icon, tint FROM talents ORDER BY sort, id',
+					("ko", "desc", "group", "tier", "req", "max", "icon", "tint"), True)
+	for tid, row in talents["rows"].items():
+		row["effects"] = bag("SELECT key, type, value FROM talent_effects WHERE talent = ? ORDER BY sort, key", tid, "talent_effects")
 	for key, kind, value in q("SELECT key, type, value FROM tuning ORDER BY sort, key"):
 		_table(doc, "tuning")["rows"][key] = _typed(kind, value, "tuning." + key)
 	for sid, gap in q("SELECT id, gap FROM sfx_gaps ORDER BY sort, id"):
@@ -948,7 +969,8 @@ def write_db(conn: sqlite3.Connection, doc: dict) -> None:
 		_sync(conn, table, (key,), [{key: int(i), **need(sec, i, r, field)} for i, r in rows(sec).items()])
 	for sec, fields in (("weapons", ("range",)), ("profiles", ("ko", "atk", "rate", "range_mult")), ("roles", ("ko", "atk", "desc")),
 						("elements", ("ko", "color", "rider", "dmg")), ("bodies", ("ko", "color")),
-						("monster_kinds", ("ko", "hp", "spd", "gold", "crush")), ("bullets", ("ko", "dmg", "speed"))):
+						("monster_kinds", ("ko", "hp", "spd", "gold", "crush", "xp")), ("bullets", ("ko", "dmg", "speed")),
+						("talent_groups", ("ko", "desc", "color"))):
 		_sync(conn, sec, ("id",), [{"id": i, **need(sec, i, r, fields)} for i, r in rows(sec).items()], "keep")
 	_sync(conn, "affinity", ("body", "elem"), [{"body": b, "elem": e, "kind": kind, "sort": i}
 											   for b, r in rows("bodies").items() for kind in ("weak", "resist", "immune")
@@ -967,6 +989,9 @@ def write_db(conn: sqlite3.Connection, doc: dict) -> None:
 	_sync(conn, "passives", ("id",), [{"id": i, **need("passives", i, rows("passives")[i], ("ko", "desc", "cost", "rank", "icon", "tint"))}
 									  for i in order("passives")], "order")
 	bags("passive_effects", "passive", "passives", "effects")
+	_sync(conn, "talents", ("id",), [{"id": i, **need("talents", i, rows("talents")[i], ("ko", "desc", "group", "tier", "req", "max", "icon", "tint"))}
+									 for i in order("talents")], "order")
+	bags("talent_effects", "talent", "talents", "effects")
 	tuning = []
 	for key, value in rows("tuning").items():
 		kind, stored = _untyped(value)
@@ -1241,8 +1266,9 @@ def cmd_log(args) -> int:
 
 
 def cmd_migrate(args) -> int:
-	"""판 1 → 2: units 에 이동 속도 배수(spd, 기본 1.0) 열을 더한다. 값은 바꾸지 않는다.
-	뒤이어 `pull` 을 돌려 기준(_baseline)에 새 열을 들인다."""
+	"""예전 판의 DB 에 새 열·표를 더한다. 값은 바꾸지 않는다. 뒤이어 `pull` 로 기준(_baseline)에 새 칸을 들인다.
+	판 1 → 2: units.spd(이동 속도 배수, 기본 1.0).
+	판 2 → 3: monsters.fly(공중, 기본 0) · monster_kinds.xp(처치 경험치, 기본 1.0) · talent_groups · talents · talent_effects."""
 	if not os.path.exists(DB_PATH):
 		raise DataError("%s 가 없다 — `python3 tools/gamedb.py init` 으로 짓는다" % DB_REL)
 	conn = sqlite3.connect(DB_PATH, isolation_level=None)
@@ -1250,13 +1276,24 @@ def cmd_migrate(args) -> int:
 	if schema == (SCHEMA_VERSION,):
 		print("이미 판 %s 다." % SCHEMA_VERSION)
 		return 0
-	if schema != ("1",):
+	if schema not in (("1",), ("2",)):
 		raise DataError("%s 의 판 %r 은 이 도구가 올릴 줄 모른다" % (DB_REL, schema))
 	conn.execute("BEGIN")
-	conn.execute('ALTER TABLE units ADD COLUMN "spd" REAL NOT NULL DEFAULT 1.0 CHECK (typeof("spd") = \'real\')')
+	if schema == ("1",):
+		conn.execute('ALTER TABLE units ADD COLUMN "spd" REAL NOT NULL DEFAULT 1.0 CHECK (typeof("spd") = \'real\')')
+		print("판 1 → 2: units.spd 열을 더했다(전원 1.0).")
+	conn.execute('ALTER TABLE monsters ADD COLUMN "fly" INTEGER NOT NULL DEFAULT 0 CHECK ("fly" IN (0, 1))')
+	conn.execute('ALTER TABLE monster_kinds ADD COLUMN "xp" REAL NOT NULL DEFAULT 1.0 CHECK (typeof("xp") = \'real\')')
+	conn.execute('CREATE TABLE talent_groups (id TEXT PRIMARY KEY, sort INTEGER NOT NULL, ko TEXT NOT NULL, "desc" TEXT NOT NULL, %s)' % _color("color"))
+	conn.execute('CREATE TABLE talents (id TEXT PRIMARY KEY, sort INTEGER NOT NULL, ko TEXT NOT NULL, "desc" TEXT NOT NULL, '
+				 '"group" TEXT NOT NULL REFERENCES talent_groups(id), %s, req TEXT NOT NULL DEFAULT \'\', %s, icon TEXT NOT NULL, %s)'
+				 % (_int("tier"), _int("max"), _color("tint")))
+	conn.execute('CREATE TABLE talent_effects (talent TEXT NOT NULL REFERENCES talents(id) ON DELETE CASCADE, key TEXT NOT NULL, '
+				 'sort INTEGER NOT NULL DEFAULT 0, %s, PRIMARY KEY (talent, key))' % _TYPED)
 	conn.execute("UPDATE _meta SET value = ? WHERE key = 'schema'", (SCHEMA_VERSION,))
 	conn.execute("COMMIT")
-	print("판 1 → %s: units.spd 열을 더했다(전원 1.0). 이어서 `python3 tools/gamedb.py pull` 로 기준을 맞춘다." % SCHEMA_VERSION)
+	print("판 %s → %s: monsters.fly · monster_kinds.xp 열과 별자리 표(talent_groups · talents · talent_effects)를 더했다. "
+		  "이어서 `python3 tools/gamedb.py pull` 로 기준을 맞춘다." % (schema[0], SCHEMA_VERSION))
 	return 0
 
 

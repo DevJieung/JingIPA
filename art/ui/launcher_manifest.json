@@ -1,32 +1,53 @@
 {
-  "generator": "Godot 4.7.1 actual Node3D / MeshInstance3D / Camera3D viewport capture",
-  "date": "2026-10-08",
-  "model_scene": "tests/3d/render_brand.tscn",
-  "emblem": "3D life crystal and five orbital stars; original green startup background #235D48",
+  "generator": "Krea 2 Turbo (krea/Krea-2-Turbo, diffusers Krea2Pipeline, bf16, 8 steps, guidance 0), local GB10; tools/brand/paint.py",
+  "date": "2026-10-19",
+  "owner": "D4 brand package (build/feedback-2026-10-19/D4/RECORD.md)",
+  "motif": "Guardian knight (the game's red-gold, purple-haired hero) holding the Soul Stone: a tall faceted cyan crystal with a golden star inside, the same stone as the loading key art and the title emblem",
+  "source": {
+    "file": "build/feedback-2026-10-19/D4/gen/icon_hero2_krea2_1024x1024_s52.png",
+    "seed": 52,
+    "size": [
+      1024,
+      1024
+    ],
+    "job": "icon_hero2",
+    "prompt": "Square character illustration for a fantasy tower defense game, with an edge-to-edge background and no frame or border: a close-up bust of a cheerful young guardian knight with spiky dark purple hair, big bright eyes and a confident smile, in ornate crimson red and gold armor, holding up with one gauntleted hand the Soul Stone — a large, tall faceted crystal of luminous cyan and teal shaped like an elongated diamond, glowing from within with a brilliant warm golden star-shaped light — the crystal is as tall as his head and floats just beside his face, lighting his cheek and armor with teal light. Deep midnight-blue background with soft golden sparkles. Centered composition, his face and the crystal fill the middle of the picture, bold readable silhouette, polished painterly premium mobile game art, stylized super-deformed proportions with a large head.",
+    "sha256": "0993774832a2cb03291f5001d5a8d4c9f9f645a9929ff44822a284d8a036ac87"
+  },
+  "build": "python3 tools/brand/icon_build.py --master <source> --write ; python3 tools/brand/soul_mark.py --write",
+  "layers": {
+    "launcher_main.png": "1024 RGB, no alpha (desktop icon, iOS source via config/icon, Android legacy 192)",
+    "launcher_adaptive.png": "1024 RGBA foreground: the painting fills the 72 dp viewport (683 px), its edges continued outward for launcher parallax; face and stone inside the 66 dp safe circle",
+    "launcher_background.svg": "radial night gradient sampled from the painting (shows only if a launcher moves the layers)",
+    "launcher_monochrome.svg": "Android 13 themed layer: one-colour vector of the Soul Stone emblem (stone on a winged shield, star cut out), farthest point on the 66 dp circle (tools/brand/soul_mark.py, shapely)",
+    "launcher_windows.ico": "16..256 px from launcher_main.png; not referenced until the Windows preset sets application/icon"
+  },
   "assets": [
     {
       "path": "art/ui/launcher_main.png",
-      "sha256": "894fce87881be73bb1daf1d0130206af85513b6b9368c92fe3b5e95550365a90"
+      "sha256": "150484a596c3d1f678ef7ca0a967760cf7c173cc262b92a1cd60383209f73e1a"
     },
     {
       "path": "art/ui/launcher_adaptive.png",
-      "sha256": "2085b764857d810f578275513afdf585000a550baaa0d1d531253b6592ac730d"
-    },
-    {
-      "path": "art/ui/launcher_monochrome.svg",
-      "sha256": "c17f05707eab77939f2a46c55600d50e96d02513cc233fc1cabc999659d690e4"
+      "sha256": "338842999f1aee3edfd8ed8b2aba39a1d9a6a94c50166927559cb7eb6aacea20"
     },
     {
       "path": "art/ui/launcher_background.svg",
-      "sha256": "306a0c0f1a33f50616bcbe3de19046b3f1f1559b35c4849b899072900d646bd4"
+      "sha256": "9a3ac2de61ff1cf5ec21df2efea0a4fe989d7c902da67f1cf7ca4e2d5c511a84"
     },
     {
-      "path": "art/ui/startup_logo.png",
-      "sha256": "894fce87881be73bb1daf1d0130206af85513b6b9368c92fe3b5e95550365a90"
+      "path": "art/ui/launcher_monochrome.svg",
+      "sha256": "caf46a1a92a24fd3e7d121a0a832274b82722392ce24ce25bf492ddcc9fc6572"
     },
     {
-      "path": "art/ui/coin.png",
-      "sha256": "ae2c2bacecabd83fb97b6e58101bdd85fa8160c7d97abfb51369ebaa78261d7d"
+      "path": "art/ui/launcher_windows.ico",
+      "sha256": "99a71c8f6e0d7797c92fcfa8bfb8b53fb4115898461a247aef96eff201cbafb3"
     }
-  ]
+  ],
+  "rejected": [
+    "icon_stone_* (emblem-only icon: reads, but the user rejected a crystal icon as cheap)",
+    "icon_hero_* (stone too small, no golden star)",
+    "icon_hero2 s53 and icon_box_* (painted a rounded frame into the art)"
+  ],
+  "previous": "2026-10-08 3D crystal capture by tests/3d/render_brand.tscn (sha 894fce87...), replaced"
 }

@@ -351,7 +351,7 @@ func _check_layouts() -> void:
 					for other in gates:
 						if other.distance_to(gate) < ArenaGeometry.ROAD_WIDTH * 2.0: shape_errors += 1
 					gates.append(gate)
-					for monster in [Arena.stage_spawns(1, 0)[0], Roster.boss_of_body("flame")]:
+					for monster in [Arena.wave_spawns(1, 1)[0]["m"], Roster.boss_of_body("flame")]:
 						sim.monsters.clear()
 						sim._forced_lane = lane
 						sim._spawn(monster)
@@ -408,6 +408,10 @@ func _check_floating_input() -> void:
 	screen._pointer(4, Vector2(200, 350), true)
 	_drag(screen, 4, Vector2(235, 350))
 	Arena.sim.skill_cooldowns["ward"] = 0.0
+	# Skills wait for a wave and cost gold (2026-10-19): open wave 1 now, spawns held.
+	Arena.sim.begin_wave(1)
+	Arena.sim._spawn_t = 1.0e9
+	Arena.gold = 1000
 	await paint(screen)
 	var skill := zone_of(screen, "skill:ward")
 	screen._pointer(5, Rect2(skill["rect"]).get_center(), true)

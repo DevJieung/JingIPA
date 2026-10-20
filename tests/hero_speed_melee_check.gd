@@ -93,7 +93,9 @@ func _fire_until_hits(sim: ArenaSim, pins: Dictionary, limit: int = 240) -> Arra
 	return [fires, hits]
 
 func _place(sim: ArenaSim, hero_pos: Vector2, offsets: Array) -> Dictionary:
-	var pool := Roster.theme_pool(Arena.theme_for(1))
+	# Ground bodies only: a sword never reaches a flyer (2026-10-17 anti-air rule), and this
+	# test measures the strike geometry, not that rule (tests/arena_air_check does).
+	var pool: Array = Roster.theme_pool(Arena.theme_for(1)).filter(func(m: Dictionary) -> bool: return not Balance.flies(m))
 	var pins := {}
 	for i in range(offsets.size()):
 		sim._spawn(pool[i % pool.size()])

@@ -78,11 +78,11 @@ func input(event: InputEvent, ui: Ui) -> bool:
 func draw(ci: CanvasItem, ui: Ui) -> void:
 	if not opened:
 		return
-	ci.draw_rect(Look.SCREEN, Color(0, 0, 0, 0.88))
+	ci.draw_rect(Look.SCREEN, Look.SHADE)
 	ui.zone(Look.SCREEN, "collection:none")
-	Look.material_panel(ci, Rect2(76, 88, 1128, 660), Look.PANEL, Look.GOLD_DEEP)
+	Look.sheet(ci, Rect2(76, 88, 1128, 660), Look.STEEL)
 	# 영문 「Guardians met」은 길다 — 옆의 수(x=320)와 겹치지 않게 칸에 맞춘다.
-	Look.text_box(ci, Rect2(104, 106, 204, 44), "만난 수호자" if fusion_only else "만난 영웅", 34, Look.GOLD, HORIZONTAL_ALIGNMENT_LEFT)
+	Look.text_box(ci, Rect2(104, 106, 204, 44), "만난 수호자" if fusion_only else "만난 영웅", Look.TYPE_TITLE, Look.GOLD, HORIZONTAL_ALIGNMENT_LEFT)
 	Look.text_left(ci, Vector2(320, 128), "%d / %d" % [_fusion_seen_count(), ELEMENTS.size()] if fusion_only else "%d / %d" % [Save.seen_count(), Roster.UNITS.size()], 25, Look.INK_DIM)
 	ui.tab(ci, Rect2(544, 106, 226, 42), "일반 소환", "collection:source:normal", not fusion_only, 19)
 	ui.tab(ci, Rect2(782, 106, 272, 42), "합성 전용 수호자", "collection:source:fusion", fusion_only, 19)

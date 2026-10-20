@@ -21,6 +21,20 @@ float clear_wave(float t, float field) {
 	return mix(0.4, field * 1.04, 1.0 - pow(1.0 - clamp(t / 0.60, 0.0, 1.0), 2.2));
 }
 
+// Wave clear (2026-10-19): a light sweeps the field from the crystal to the rim in WAVE_SWEEP
+// seconds (StellarVfx.WAVE_SWEEP); glints pop where it passes.
+const float WAVE_SWEEP = 0.85;
+
+float wave_sweep(float t, float field) {
+	return mix(0.5, field * 1.03, 1.0 - pow(1.0 - clamp(t / WAVE_SWEEP, 0.0, 1.0), 1.8));
+}
+
+// Seconds the wave-clear sweep needs to reach radius r.
+float wave_sweep_at(float r, float field) {
+	float k = clamp((r - 0.5) / max(field * 1.03 - 0.5, 0.01), 0.0, 1.0);
+	return WAVE_SWEEP * (1.0 - pow(1.0 - k, 1.0 / 1.8));
+}
+
 // Radius of the new battlefield's scan: charged around the plaza at 0, at the rim at ARR.
 float sweep_radius(float t, float field) {
 	return mix(2.1, field, 1.0 - pow(1.0 - clamp(t / ARR, 0.0, 1.0), 1.5));

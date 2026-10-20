@@ -47,7 +47,7 @@ data/game.db ──────────────────────�
 | `check` | `tools/verify.sh` 0-2 단계. 게임 파일이 DB 를 안 거치고 바뀌었으면 실패 |
 | `log` | 내리고 들인 기록 |
 | `init` | 지금 게임 파일에서 DB 를 새로 짓는다(`--force` 면 있던 DB 를 버린다) |
-| `migrate` | 예전 판의 DB 에 새 열을 더한다(값은 바꾸지 않는다). 2026-10-11 판 2: `units.spd`. 뒤이어 `pull` 로 기준을 맞춘다 |
+| `migrate` | 예전 판의 DB 에 새 열·표를 더한다(값은 바꾸지 않는다). 2026-10-11 판 2: `units.spd`. 2026-10-17 판 3: `monsters.fly` · `monster_kinds.xp` · 별자리 표 셋. 뒤이어 `pull` 로 기준을 맞춘다(새 열의 기본값이 코드 값과 다르면 `pull --force`) |
 
 ## 세 가지 상태
 
@@ -68,19 +68,20 @@ data/game.db ──────────────────────�
 |---|---|---|---|
 | `units` | 영웅 50 — 이름 · 역할 · 성향 · 방식 · 무기 · 속성 · 크기 보정 · 이동 속도 배수(`spd`, 투기장 기준 속도 `ARENA_HERO_SPEED` 에 곱한다) · 설명 · 프롬프트 · 한영 소개문 | `tools/roster.json` → `core/roster.gd`, `core/locales/heroes.json` | 된다 |
 | `art_tiers` | 원화 격 10 | `tools/roster.json` | 된다 |
-| `monsters` | 몬스터 25 | `tools/roster.json` → `core/roster.gd` | 된다 |
+| `monsters` | 몬스터 25 — 이름 · 형 · 몸 · **공중(`fly`, 2026-10-17: 총·활만 맞히고 수호자를 넘어간다)** · 설명 · 프롬프트 · 색 | `tools/roster.json` → `core/roster.gd` | 된다 |
 | `themes` · `theme_weights` | 테마 50 · 몸 분포 250 · 지형 모티프 | `tools/roster.json` → `core/roster.gd`, `core/scenery.gd` 의 `MAP_MOTIFS` | 된다 |
 | `arts` | 화면 그림 47 | `tools/roster.json` → `core/roster.gd` | 된다 |
 | `strings` | UI 문구 ko 20 · en 611 | `core/locales/ui.json` | 된다 |
 | `passives` · `passive_effects` | 패시브 26 과 효과 값 | `core/balance.gd` 의 `PASSIVES` | 된다(줄 차례는 못 바꾼다) |
-| `upgrades` | 상점 능력치 7 | `core/balance.gd` 의 `UPGRADES` | 된다(새 id 는 코드가 알아야 동작한다) |
+| `upgrades` | 능력치 7 (2026-10-17 부터 골드로 사지 않는다 — 별자리 노드의 `lv_<id>` 가 단계를 올린다. 비용 열은 옛 모드만 쓴다) | `core/balance.gd` 의 `UPGRADES` | 된다(새 id 는 코드가 알아야 동작한다) |
+| `talent_groups` · `talents` · `talent_effects` | 별자리 8 · 레벨업 노드 76 과 효과 값(`lv_*` 능력치 단계 · `grant_*` 패시브 · `now_*` 즉시 · 그 밖은 곱/더함 — `core/talents.gd` 의 `ADD_KEYS`) | `core/balance.gd` 의 `TALENT_GROUPS` · `TALENTS` | 된다(줄 차례는 못 바꾼다) |
 | `sfx_gaps` | 효과음 최소 간격 28 | `core/sound.gd` 의 `GAP` | 된다 |
 | `tuning` | 숫자 상수 80 (`START_GOLD` · `HP_GROW` …). `doc` 열은 코드 주석에서 옮긴 설명 | `core/balance.gd` 의 `const` | 값만 |
 | `hero_tiers` | 등급 10칸의 공격력 · 공속 | `TIER_ATK` · `TIER_RATE` | 값만 |
 | `elements` · `bodies` · `affinity` | 공격 속성 5 · 몸 5 · 상성(약점/저항/면역) | `ELEM` · `MBODY` | 값만(상성은 `affinity` 줄로 바꾼다) |
 | `profiles` · `weapons` · `roles` | 성향 4 · 무기 사거리 5 · 역할 4 | `PROFILE` · `PROFILE_RANGE` · `WEAPON_RANGE` · `ROLE` | 값만 |
 | `bullets` · `bullet_params` | 공격 방식 7 과 방식별 손잡이 | `BULLET` | 값만 |
-| `statuses` · `monster_kinds` | 상태이상 3 · 몬스터 형 5 | `STATUS` · `MKIND` | 값만 |
+| `statuses` · `monster_kinds` | 상태이상 3 · 몬스터 형 5(체력 · 속도 · 골드 · **처치 경험치 `xp`** · 부수는 수) | `STATUS` · `MKIND` | 값만 |
 | `rite_gates` · `theme_rank_hp` | 의식 문 너비 5 · 테마 체력 배수 6 | `RITE_GATE` · `THEME_RANK_HP` | 값만 |
 | `_meta` · `_baseline` · `_approvals` | 도구가 쓰는 표 | — | 손대지 않는다 |
 

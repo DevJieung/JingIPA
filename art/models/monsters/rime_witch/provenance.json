@@ -28,8 +28,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/rime_witch/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/rime_witch/game.blend",
-  "glb_sha256": "6cf45faff31c948402c5f329596b24d88a0ae03693949e74922c94b0b68513bd",
-  "glb_bytes": 520464,
+  "glb_sha256": "118d62cc45efe9587ca25875b88b25579a80caf5c1069c454c657f64875fc28b",
+  "glb_bytes": 538088,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -192,5 +192,223 @@
     ],
     "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/monsters/rime_witch/rime_witch.glb",
     "editable_lod_source": "build/character-3d/monster-source/rime_witch/game-lod.blend"
+  },
+  "albedo_grade": {
+    "date": "2026-10-18",
+    "request": "user 2026-10-18: the characters read as a cheap AI-made 3D game; casual overhaul plan \"Lantern Stage\" WP-A \u2014 painted albedos that carry their own light, geometry untouched",
+    "tool": "tools/3d/optimize_native_lod.py --retexture + tools/3d/grade_native_albedo.py; records by tools/3d/publish_native_lod.py",
+    "method": "game-lod.blend opened as the bake target (geometry, UVs, weights, rig, clips, sockets and height untouched), game.blend surfaces appended as bake sources (visible faces first, all sheets as fallback), Cycles EMIT colour bake, AO bake of the reduced mesh alone and a height pass, then the painted grade inside the chart mask: de-speckle, chart-flatten (charts >= 48 texels), light posterise, levels, OKLab chroma with a skin cap, painted light from AO + height, cool shade, edge light, face paint-back; nearest fill, box downsample; clip bytes grafted from the shipped GLB",
+    "grade_version": "2026-10-18.6",
+    "parameters": {
+      "median": 3,
+      "bilateral_radius": 3,
+      "bilateral_sigma_s": 1.6,
+      "bilateral_sigma_r": 0.1,
+      "bilateral_passes": 2,
+      "seam_lambda": 0.3,
+      "seam_gain_min": 0.7,
+      "seam_gain_max": 1.4,
+      "seam_floor": 0.02,
+      "seam_chroma_sigma": 0.08,
+      "seam_small_chart": 96.0,
+      "seam_ratio_sigma": 0.6,
+      "flatten_min_width": 48,
+      "flatten_blur": 24,
+      "flatten_blend": 0.4,
+      "posterize_levels": 6,
+      "posterize_blend": 0.3,
+      "levels_lift": 0.06,
+      "levels_gain": 0.88,
+      "levels_gamma": 0.9,
+      "p10_floor": 0.17,
+      "p50_target": 0.42,
+      "p50_pull": 0.5,
+      "p50_gain_max": 1.5,
+      "dark_additive_lo": 0.04,
+      "dark_additive_hi": 0.16,
+      "lift_saturation_damp": 0.5,
+      "knee_start": 0.78,
+      "knee_slope": 0.45,
+      "knee_saturated_drop": 0.1,
+      "chroma_hero": 1.2,
+      "chroma_monster": 1.15,
+      "chroma_skin": 1.0,
+      "skin_s_cap": 0.5,
+      "s_cap": 0.86,
+      "ao_floor": 0.55,
+      "ao_gamma": 0.8,
+      "ao_smooth": 1.5,
+      "height_low": 0.82,
+      "height_high": 1.12,
+      "height_lo": 0.05,
+      "height_hi": 0.7,
+      "cool_shade": [
+        0.85,
+        0.9,
+        1.12
+      ],
+      "cool_amount": 0.5,
+      "edge_light": 0.06,
+      "edge_lo": 0.92,
+      "skin_hue": [
+        8.0,
+        38.0
+      ],
+      "skin_s": [
+        0.15,
+        0.6
+      ],
+      "skin_v": [
+        0.35,
+        0.98
+      ],
+      "skin_chart_fraction": 0.6,
+      "skin_chart_mixed": 0.3,
+      "skin_chart_s_median_max": 0.55,
+      "skin_chart_s_p90_max": 0.72,
+      "face_contrast": 1.3,
+      "face_dark_fraction": 0.04,
+      "face_dark_lstar": 15.0,
+      "face_blur": 4.0,
+      "face_mark_desaturate": 0.8,
+      "face_mark_lum": 0.35
+    },
+    "override": {},
+    "grade_info": {
+      "charts": 278,
+      "skin_charts_excluded": 0,
+      "seams": {
+        "pairs": 452,
+        "samples": 3929,
+        "gain_min": 0.822,
+        "gain_max": 1.29,
+        "gain_std": 0.067
+      },
+      "flattened_charts": 91,
+      "levels": {
+        "lum_mean_after_remap": 0.3374,
+        "p50_gain": 1.386,
+        "p10_before": 0.112,
+        "p10_lift": 0.058,
+        "remap": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.112,
+            0.17
+          ],
+          [
+            0.237,
+            0.328
+          ],
+          [
+            0.577,
+            0.577
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ]
+      },
+      "skin_texels": 0,
+      "ao_mean": 0.6678,
+      "ao_p10": 0.0122
+    },
+    "ao": {
+      "distance_m": 0.3,
+      "samples": 64,
+      "margin": 8
+    },
+    "head_start": 0.675,
+    "clip_donor": "art/models/monsters/rime_witch/rime_witch.glb",
+    "before": {
+      "glb_sha256": "6cf45faff31c948402c5f329596b24d88a0ae03693949e74922c94b0b68513bd",
+      "glb_bytes": 520464,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "atlas_stats": {
+        "used_texels": 98967,
+        "charts": 246,
+        "mean_lstar": 27.19,
+        "lum_mean": 0.2543,
+        "lum_p10": 0.0601,
+        "lum_p50": 0.1586,
+        "lum_p90": 0.5386,
+        "lstar_p10": 4.82,
+        "near_black_fraction": 0.4884,
+        "sat_mean": 0.6512,
+        "sat_p90": 0.7742,
+        "micro_contrast_255": 4.95,
+        "laplacian_mean": 0.0142,
+        "dominant_hues": [
+          {
+            "hue_deg": 217.5,
+            "mass": 0.352
+          }
+        ],
+        "dominant_hue_count": 1
+      }
+    },
+    "after": {
+      "glb_sha256": "118d62cc45efe9587ca25875b88b25579a80caf5c1069c454c657f64875fc28b",
+      "glb_bytes": 538088,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      },
+      "atlas_stats": {
+        "used_texels": 98967,
+        "charts": 246,
+        "mean_lstar": 34.03,
+        "lum_mean": 0.3068,
+        "lum_p10": 0.1197,
+        "lum_p50": 0.2463,
+        "lum_p90": 0.5618,
+        "lstar_p10": 12.24,
+        "near_black_fraction": 0.2622,
+        "sat_mean": 0.6518,
+        "sat_p90": 0.8421,
+        "micro_contrast_255": 3.93,
+        "laplacian_mean": 0.0107,
+        "dominant_hues": [
+          {
+            "hue_deg": 217.5,
+            "mass": 0.301
+          }
+        ],
+        "dominant_hue_count": 1
+      }
+    },
+    "geometry_sha256": "e691ce5362f529a3dcc50385fdc4a46a55ec57210a4b2de13e412a4e13dd3cb0",
+    "geometry_bytes_preserved": true,
+    "bake": {
+      "size": 1024,
+      "covered_texels": 408625,
+      "missed_texels": 358,
+      "interior_fallback_texels": 128,
+      "miss_fraction": 0.0008761089018048333
+    },
+    "visible_faces": {
+      "removed_faces": 166289,
+      "kept_faces": 9683
+    },
+    "removed_extracted_textures": [
+      "rime_witch_rime_witch_lod_albedo.png"
+    ],
+    "editable_lod_source": "build/character-3d/monster-source/rime_witch/game-lod.blend",
+    "evidence": "build/character-3d/lod-2026-10-18/rime_witch"
   }
 }

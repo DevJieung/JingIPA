@@ -1,7 +1,8 @@
 extends Harness
 
 ## Purchases: what a build without a shop does, the one product for sale (the Guardian's
-## blessing: up to three revivals a run, with gold each time), battle speed staying free,
+## blessing, the DLC: revival tickets that each bring a five-star hero, never gold — 2026-10-19 D2),
+## battle speed staying free,
 ## and the three shop backends driven through stand-in clients that speak the same
 ## signals and methods as the real plugins.
 
@@ -150,7 +151,7 @@ func _ready() -> void:
 	Store.use_backend(null)
 	Save.runs = _runs
 	Arena.running = false
-	finish("상점·수호자의 가호(3회 부활·골드)·무료 배속·플랫폼 연동")
+	finish("상점·수호자의 가호(부활권·5성 영웅)·무료 배속·플랫폼 연동")
 
 func _shop(owned: Array = []) -> TestShop:
 	var shop := TestShop.new()
@@ -261,16 +262,52 @@ func _check_speed_is_free() -> void:
 func _revive_events(sim: ArenaSim) -> Array:
 	return sim.events.filter(func(e: Dictionary) -> bool: return String(e.get("t", "")) == "arena_revive")
 
+func _party() -> int:
+	return Arena.heroes.size() + Arena.bench.size()
+
+## The revival's hero (D2): on the field or the bench at the top grade, where Arena.revive_gift says, and the
+## arena_revive event names it — unit, tier and where, and no gold.
+func _gift_ok(event: Dictionary) -> bool:
+	var gift: Dictionary = Arena.revive_gift
+	if gift.is_empty() or int(gift.get("tier", -1)) != Balance.TIER_MAX or event.has("gold"):
+		return false
+	var id := String(gift["unit"]["id"])
+	var found: Array = Arena.find_hero(id)
+	if int(found[1]) < 0 or String(found[0]) != String(gift["where"]) or int(found[1]) != int(gift["slot"]):
+		return false
+	var list: Array = Arena.heroes if String(found[0]) == "field" else Arena.bench
+	return int(list[int(found[1])]["tier"]) == Balance.TIER_MAX and String(event.get("unit", "")) == id \
+		and int(event.get("tier", -1)) == Balance.TIER_MAX and String(event.get("where", "")) == String(gift["where"])
+
+## Break the crystal inside a tick: a monster at the altar strikes on the next frame while the crystal is
+## nearly gone. The revival then lands in the middle of _move_monsters, and its hero must wait for the
+## end of the tick.
+func _break_in_tick(sim: ArenaSim) -> bool:
+	sim._spawn(Arena.wave_spawns(Arena.stage, 1)[0]["m"])
+	var mo: Dictionary = sim.monsters[sim.monsters.size() - 1]
+	mo["pos"] = Balance.ARENA_CENTER + Vector2(Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS - 2, 0)
+	mo["hp"] = 1.0e9
+	mo["max"] = 1.0e9
+	mo["siege_t"] = 0.99
+	sim.invuln_t = 0.0
+	sim.shield = 0.0
+	sim.crystal_hp = 0.01
+	var before := sim.revives
+	for i in range(30):
+		sim._tick(1.0 / 60.0)
+		if sim.revives > before or sim.done: break
+	return sim.revives == before + 1
+
 func _check_revival() -> void:
 	var uses := Balance.ARENA_REVIVE_USES
-	check(uses == 3 and Balance.arena_revive_gold(1) > 0 and Balance.arena_revive_gold(10) > Balance.arena_revive_gold(1), "가호: 판마다 세 번, 부활마다 골드(늦은 탄일수록 큼)")
-	# Without the blessing a broken crystal ends the run.
+	check(uses >= 1 and JewelBox.tier_of(JewelBox.MAX_STARS) == Balance.TIER_MAX, "부활권: 판마다 %d번, 부활마다 5성 영웅(골드 없음)" % uses)
+	# Without the DLC a broken crystal ends the stage.
 	var shop := _shop()
 	var sim := _battle(41)
-	check(not Arena.revive_ready() and Arena.revives_left() == 0, "가호가 없으면 부활 없음")
+	check(not Arena.revive_ready() and Arena.revives_left() == 0, "DLC 가 없으면 부활 없음")
 	sim._damage_crystal(100000.0, Balance.ARENA_CENTER)
-	check(sim.done and not Arena.running and Arena.modal == "result" and sim.revives == 0, "가호 없이 수정이 깨지면 패배")
-	# Bought on the defeat screen: this very run picks up again.
+	check(sim.done and not Arena.running and Arena.modal == "result" and sim.revives == 0 and Arena.revive_gift.is_empty(), "DLC 없이 수정이 깨지면 패배")
+	# Bought on the defeat screen: this very stage picks up again, with a five-star hero instead of gold.
 	var kills_total: int = Save.total_kills
 	Arena.kills = 5
 	var screen := ArenaScreen.new()
@@ -279,66 +316,122 @@ func _check_revival() -> void:
 	var offered := false
 	for zone in screen.ui.zones:
 		if String(zone["id"]) == "result:guardian" and bool(zone["on"]): offered = true
-	check(offered, "패배 화면에 가호 제안")
+	check(offered, "패배 화면에 DLC 제안")
 	screen._action("result:guardian")
 	check(screen.store.opened and screen.store.focus == Store.GUARDIAN, "제안을 누르면 구매창")
 	Save.total_kills = kills_total + 5
 	var gold_before: int = Arena.gold
+	var party_before := _party()
+	var candidate: Dictionary = Arena.revive_candidate()
+	var candidate_free: bool = int(Arena.find_hero(String(candidate["id"]))[1]) < 0
 	sim.events.clear()
 	screen._action("store:buy:" + Store.GUARDIAN)
 	check(Store.owns(Store.GUARDIAN) and Arena.running and Arena.modal == "" and not screen.store.opened, "패배 화면에서 사면 그 판이 이어짐")
 	sim = Arena.sim
 	check(sim.revives == 1 and not sim.done and is_equal_approx(sim.crystal_hp, sim.crystal_max * Balance.ARENA_REVIVE_HP) and sim.invuln_t > 0.0, "수정이 절반으로 되살아나고 잠시 무적")
-	check(Arena.gold == gold_before + Balance.arena_revive_gold(Arena.stage), "되살아나며 골드를 받음 (+%d)" % Balance.arena_revive_gold(Arena.stage))
 	var revived := _revive_events(sim)
-	check(revived.size() == 1 and int(revived[0].get("gold", 0)) == Balance.arena_revive_gold(Arena.stage) and int(revived[0].get("left", -1)) == uses - 1, "부활 이벤트에 받은 골드와 남은 횟수")
+	check(Arena.gold == gold_before and revived.size() == 1 and _gift_ok(revived[0]) and int(revived[0].get("left", -1)) == uses - 1, "골드 없이 5성 영웅 하나 합류·이벤트에 영웅·자리·남은 횟수")
+	check(_party() == party_before + 1 and (not candidate_free or String(Arena.revive_gift["unit"]["id"]) == String(candidate["id"])), "판의 시드로 정한 후보 영웅이 온다(미리 불러 둘 수 있음)")
+	check(sim.heroes.size() == Arena.heroes.size(), "합류한 영웅이 전투에도 섬")
 	check(Save.total_kills == kills_total, "되살린 판의 처치 수를 두 번 세지 않음")
 	check(ArenaValidation.valid(Arena.snapshot()), "되살린 판 저장 가능")
 	screen.queue_free()
 	await frames(1)
-	# The rest of the three: each one is automatic and pays again, the fourth break ends the run.
+	# The rest of the tickets: each one is automatic and brings another hero, never gold.
 	for n in range(2, uses + 1):
 		sim.invuln_t = 0.0
 		gold_before = Arena.gold
+		party_before = _party()
+		sim.events.clear()
 		sim._damage_crystal(100000.0, Balance.ARENA_CENTER)
-		check(Arena.running and not sim.done and sim.revives == n and Arena.revives_left() == uses - n and Arena.gold == gold_before + Balance.arena_revive_gold(Arena.stage), "%d번째 부활: 자동·골드 지급·남은 횟수 %d" % [n, uses - n])
+		revived = _revive_events(sim)
+		check(Arena.running and not sim.done and sim.revives == n and Arena.revives_left() == uses - n and Arena.gold == gold_before \
+			and _party() == party_before + 1 and revived.size() == 1 and _gift_ok(revived[0]), "%d번째 부활: 자동·5성 영웅·골드 없음·남은 %d" % [n, uses - n])
 	sim.invuln_t = 0.0
 	gold_before = Arena.gold
 	sim._damage_crystal(100000.0, Balance.ARENA_CENTER)
-	check(sim.done and not Arena.running and Arena.modal == "result" and Arena.gold == gold_before, "세 번을 다 쓰면 다음 파괴는 패배")
+	check(sim.done and not Arena.running and Arena.modal == "result" and Arena.gold == gold_before, "부활권을 다 쓰면 다음 파괴는 패배")
 	check(not Arena.revive_from_defeat() and not Arena.revive_ready(), "다 쓴 판은 다시 못 되살림")
-	# Owned from the start: every run has all three.
+	# Owned from the start: every stage has all its tickets; a break inside a tick brings the hero at the
+	# end of that tick.
 	sim = _battle(42)
-	check(Arena.revive_ready() and Arena.revives_left() == uses and sim.revives == 0, "가호 보유: 새 판마다 세 번")
-	sim._spawn(Arena.stage_spawns(1, 0)[0])
-	var mo: Dictionary = sim.monsters[0]
-	mo["pos"] = Balance.ARENA_CENTER + Vector2(Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS - 2, 0)
-	mo["hp"] = 1.0e9
+	check(Arena.revive_ready() and Arena.revives_left() == uses and sim.revives == 0 and Arena.revive_gift.is_empty(), "DLC 보유: 새 판마다 %d번" % uses)
+	var before_break := Arena.snapshot()
+	party_before = _party()
 	sim.events.clear()
-	sim._damage_crystal(100000.0, Balance.ARENA_CENTER)
-	var seen := false
-	for e in _revive_events(sim):
-		if is_equal_approx(float(e.get("sec", 0.0)), Balance.ARENA_REVIVE_INVULN): seen = true
-	check(Arena.running and not sim.done and sim.revives == 1 and seen and Arena.modal == "", "수정이 깨지는 순간 자동 부활·이벤트")
-	check(is_equal_approx(float(mo["stun_t"]), Balance.ARENA_REVIVE_STUN) and Arena.lives > 0, "부활 충격으로 몬스터 정지")
+	var in_tick := _break_in_tick(sim)
+	revived = _revive_events(sim)
+	check(in_tick and Arena.running and not sim.done and Arena.modal == "" and revived.size() == 1 and _gift_ok(revived[0]), "틱 안에서 깨져도 자동 부활·영웅은 틱이 끝난 뒤 합류")
+	check(_party() == party_before + 1 and sim.heroes.size() == Arena.heroes.size() and is_equal_approx(float(revived[0].get("sec", 0.0)), Balance.ARENA_REVIVE_INVULN), "합류 영웅이 전투 목록과 맞음·무적 시간 이벤트")
+	var mo: Dictionary = sim.monsters[sim.monsters.size() - 1]
+	check(float(mo["stun_t"]) > Balance.ARENA_REVIVE_STUN - 0.1 and Arena.lives > 0, "부활 충격으로 몬스터 정지")
+	var first_gift := String(Arena.revive_gift["unit"]["id"])
+	# The same moment again from its save: the same hero comes.
+	check(Arena.restore(before_break), "부활 직전으로 되돌림")
+	sim = Arena.sim
+	_break_in_tick(sim)
+	check(not Arena.revive_gift.is_empty() and String(Arena.revive_gift["unit"]["id"]) == first_gift, "같은 저장에서는 같은 영웅이 옴")
 	var hp: float = sim.crystal_hp
 	for i in range(roundi((Balance.ARENA_REVIVE_INVULN - 0.5) * 60)): sim._tick(1.0 / 60.0)
 	check(sim.crystal_hp == hp and sim.invuln_t > 0.0, "무적 시간 동안 수정 피해 없음")
 	var mid := Arena.snapshot()
 	check(ArenaValidation.valid(mid) and Arena.restore(mid) and Arena.sim.revives == 1 and Arena.sim.invuln_t > 0.0 and Arena.revives_left() == uses - 1, "쓴 횟수·무적 시간 저장·복구")
+	check(String(Arena.revive_gift.get("unit", {}).get("id", "")) == first_gift and int(Arena.revive_gift["tier"]) == Balance.TIER_MAX and Arena.revive_gift["where"] == mid["revive_gift"]["where"] and int(Arena.revive_gift["slot"]) == int(mid["revive_gift"]["slot"]), "부활 영웅 기록(영웅·등급·자리) 저장·복구")
 	# A save made while the blessing revived once carries a flag instead of the count.
 	var flagged := mid.duplicate(true)
 	flagged["sim"].erase("revives")
 	flagged["sim"]["revived"] = true
 	check(ArenaValidation.valid(flagged) and Arena.restore(flagged) and Arena.sim.revives == 1, "부활이 한 번이던 때의 저장도 이어 함")
+	var older := mid.duplicate(true)
+	older.erase("revive_gift")
+	check(ArenaValidation.valid(older) and Arena.restore(older) and Arena.revive_gift.is_empty(), "부활 영웅 기록이 없는 저장도 이어 함")
 	var broken := mid.duplicate(true)
-	broken["sim"]["revives"] = uses + 1
-	check(not ArenaValidation.valid(broken), "횟수가 맞지 않는 저장 거부")
+	broken["sim"]["revives"] = -1
+	check(not ArenaValidation.valid(broken), "음수 부활 횟수 저장 거부")
+	# More revivals than today's ARENA_REVIVE_USES (the value was lowered): valid, restored as all used.
+	var lowered := mid.duplicate(true)
+	lowered["sim"]["revives"] = uses + 2
+	check(ArenaValidation.valid(lowered) and Arena.restore(lowered) and Arena.sim.revives == uses and Arena.revives_left() == 0, "지금 횟수보다 많이 쓴 저장은 받아 다 쓴 것으로")
+	check(Arena.restore(mid), "부활 한 번 쓴 판으로 되돌림")
+	for bad in [{"u": "nobody"}, {"t": Balance.TIER_MAX + 1}, {"where": "sky"}, {"slot": -1}]:
+		broken = mid.duplicate(true)
+		broken["revive_gift"].merge(bad, true)
+		check(not ArenaValidation.valid(broken), "부활 영웅 기록이 틀린 저장 거부: " + str(bad))
+	var stranger := ""
+	for unit in Roster.UNITS:
+		if int(Arena.find_hero(String(unit["id"]))[1]) < 0: stranger = String(unit["id"])
+	broken = mid.duplicate(true)
+	broken["revive_gift"]["u"] = stranger
+	check(stranger != "" and not ArenaValidation.valid(broken), "판에 없는 영웅을 가리키는 부활 기록 거부")
 	check(Arena.restore(mid), "판 되돌림")
 	sim = Arena.sim
 	for i in range(240): sim._tick(1.0 / 60.0)
 	check(sim.invuln_t == 0.0 and sim.crystal_hp < hp, "무적이 끝나면 다시 피해")
+	# Everyone already here: the lowest hero below the top grade reaches it; all at the top: nobody comes.
+	for unit in Roster.UNITS:
+		if int(Arena.find_hero(String(unit["id"]))[1]) < 0:
+			Arena.bench.append({"unit": unit, "tier": Balance.TIER_MAX, "n": 1, "wave": 1, "growth_points": 0})
+	for hero in Arena.heroes + Arena.bench:
+		hero["tier"] = Balance.TIER_MAX
+		hero["growth_points"] = 0
+	var low: Dictionary = Arena.bench[Arena.bench.size() - 1]
+	low["tier"] = 2
+	low["growth_points"] = 3
+	party_before = _party()
+	var gift := Arena.grant_revive_hero()
+	check(_party() == party_before and int(low["tier"]) == Balance.TIER_MAX and int(low["growth_points"]) == 0 and gift.get("where") == "bench" and int(gift.get("slot", -1)) == Arena.bench.size() - 1 and String(gift["unit"]["id"]) == String(low["unit"]["id"]), "모두 와 있으면 가장 낮은 영웅이 5성이 됨")
+	check(ArenaValidation.valid(Arena.snapshot()), "그 뒤의 판도 저장 가능")
+	if uses >= 2:
+		sim.events.clear()
+		sim.invuln_t = 0.0
+		sim._damage_crystal(100000.0, Balance.ARENA_CENTER)
+		revived = _revive_events(sim)
+		check(Arena.running and sim.revives == 2 and _party() == party_before and Arena.revive_gift.is_empty() and revived.size() == 1 \
+			and String(revived[0].get("unit", "?")) == "" and int(revived[0].get("tier", 0)) == -1 and not revived[0].has("gold"), "모두 5성이면 아무도 오지 않고 부활만 함")
+	else:
+		check(Arena.grant_revive_hero().is_empty() and _party() == party_before and Arena.revive_gift.is_empty(), "모두 5성이면 아무도 오지 않음")
 	sim.revives = uses
+	sim.invuln_t = 0.0
 	sim._damage_crystal(100000.0, Balance.ARENA_CENTER)
 	check(sim.done and Arena.modal == "result", "남은 횟수가 없으면 패배")
 	await frames(1)
@@ -348,12 +441,12 @@ func _check_revival() -> void:
 	offered = false
 	for zone in screen.ui.zones:
 		if String(zone["id"]) == "result:guardian": offered = true
-	check(not offered, "가호를 가진 사람에게는 제안하지 않음")
+	check(not offered, "DLC 를 가진 사람에게는 제안하지 않음")
 	screen.queue_free()
 	await frames(1)
-	# A new run starts the count again.
+	# A new stage starts the count again.
 	sim = _battle(43)
-	check(sim.revives == 0 and Arena.revives_left() == uses, "새 판은 다시 세 번")
+	check(sim.revives == 0 and Arena.revives_left() == uses and Arena.revive_gift.is_empty(), "새 판은 다시 %d번" % uses)
 	shop.owned = []
 
 func _play(client: PlayClient) -> StorePlay:

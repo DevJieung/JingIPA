@@ -85,20 +85,7 @@ static func hero_info(ci: CanvasItem, unit: Dictionary, tier: int, box: Rect2,
 	Look.wrap_text(ci, concept, Rect2(x, y + 69, box.size.x, 68), 22, Look.INK_DIM, true)
 	if bool(unit.get("fusion_only", false)):
 		Look.text_box(ci, Rect2(x, y + 210, box.size.x, 30), "합성 전용 · 각성 수호자", 20, Look.GOLD, HORIZONTAL_ALIGNMENT_LEFT)
-	var chips := trait_labels(unit)
-	var chip_x := x
-	var chip_y := y + 166
-	for i in range(chips.size()):
-		var width := Look.text_width(chips[i], 19) + 26
-		if chip_x + width > box.end.x:
-			chip_x = x
-			chip_y += 43
-		var rect := Rect2(chip_x, chip_y, width, 34)
-		var tint := Look.CRYSTAL if i == 0 else Look.GOLD
-		Look.fill_round(ci, rect, 4, tint.darkened(0.55))
-		Look.fill_round(ci, rect.grow(-1), 3, Look.BG_DEEP.lerp(tint, 0.09))
-		Look.text_center(ci, rect.get_center(), chips[i], 19, tint)
-		chip_x += width + 9
+	draw_chips(ci, trait_labels(unit), Rect2(x, y + 166, box.size.x, 34))
 	if not stats:
 		return
 	# Stat grid, 3 x 2 in the same height the old 2 x 2 used: attack / attack speed /
@@ -117,6 +104,45 @@ static func hero_info(ci: CanvasItem, unit: Dictionary, tier: int, box: Rect2,
 		Look.fill_round(ci, r, 5, Look.BG_DEEP)
 		Look.text_left(ci, r.position + Vector2(12, 15), rows[i][0], 16, Look.INK_DIM)
 		Look.text_box(ci, Rect2(r.position.x + 12, r.position.y + 23, r.size.x - 24, 25), rows[i][1], 22, Look.INK, HORIZONTAL_ALIGNMENT_RIGHT)
+
+
+## The trait chips in a row (wrapping to a second row when the box is narrow). The first
+## chip is crystal-blue (how the hero attacks), the rest gold; an anti-air chip is in the
+## air colour so the same word reads the same on the hero card's mark.
+static func draw_chips(ci: CanvasItem, chips: Array, box: Rect2, centered: bool = false) -> void:
+	var widths: Array = []
+	var total := 0.0
+	for chip in chips:
+		var width := Look.text_width(String(chip), 19) + 26
+		if _is_air(String(chip)): width += 16
+		widths.append(width)
+		total += width + 9
+	var chip_x := box.position.x
+	if centered and total - 9 <= box.size.x:
+		chip_x = box.get_center().x - (total - 9) * 0.5
+	var chip_y := box.position.y
+	for i in range(chips.size()):
+		var width: float = widths[i]
+		if chip_x + width > box.end.x and chip_x > box.position.x:
+			chip_x = box.position.x
+			chip_y += 43
+		var rect := Rect2(chip_x, chip_y, width, 34)
+		var chip := String(chips[i])
+		var air := _is_air(chip)
+		var tint := Look.AIR if air else (Look.CRYSTAL if i == 0 else Look.GOLD)
+		Look.fill_round(ci, rect, 4, tint.darkened(0.55))
+		Look.fill_round(ci, rect.grow(-1), 3, Look.BG_DEEP.lerp(tint, 0.09))
+		if air:
+			Look.draw_anti_air(ci, rect.position + Vector2(15, 17), 6.0)
+			Look.text_center(ci, rect.get_center() + Vector2(8, 0), chip, 19, tint)
+		else:
+			Look.text_center(ci, rect.get_center(), chip, 19, tint)
+		chip_x += width + 9
+
+
+## The anti-air chip, in either language.
+static func _is_air(chip: String) -> bool:
+	return chip == "대공" or chip == I18n.t("arena.anti_air")
 
 
 ## The leading trait chip. Swords are melee — the blade itself cuts the bodies in
@@ -149,6 +175,9 @@ static func trait_labels(unit: Dictionary) -> Array[String]:
 		var strike := strike_type(unit)
 		if strike != "단일":
 			labels.append(strike)
+	# Guns and bows reach flying monsters (Balance.anti_air); the chip says so.
+	if Balance.anti_air(unit):
+		labels.append("대공")
 	var element := String(unit.get("elem", "none"))
 	match Balance.elem_rider(element):
 		"burn": labels.append("화상")

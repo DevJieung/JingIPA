@@ -54,24 +54,24 @@ func _impact(b: Dictionary, mi: int) -> void:
 
 
 func _splash(skip: int, at: Vector2, radius: float, dmg: float, src: int,
-		elem: String = "none") -> void:
+		elem: String = "none", air: bool = true) -> void:
 	if not Dbg.on:
-		super(skip, at, radius, dmg, src, elem)
+		super(skip, at, radius, dmg, src, elem, air)
 		return
 	var old := _ctx
 	_ctx = "광역"
-	super(skip, at, radius, dmg, src, elem)
+	super(skip, at, radius, dmg, src, elem, air)
 	_ctx = old
 
 
 func _chain(from_i: int, dmg: float, jumps: int, decay: float, hop: float,
-		seen: Array, col: Color, src: int, elem: String = "none", shot_src: int = -1) -> void:
+		seen: Array, col: Color, src: int, elem: String = "none", shot_src: int = -1, air: bool = true) -> void:
 	if not Dbg.on:
-		super(from_i, dmg, jumps, decay, hop, seen, col, src, elem, shot_src)
+		super(from_i, dmg, jumps, decay, hop, seen, col, src, elem, shot_src, air)
 		return
 	var old := _ctx
 	_ctx = "연쇄"
-	super(from_i, dmg, jumps, decay, hop, seen, col, src, elem, shot_src)
+	super(from_i, dmg, jumps, decay, hop, seen, col, src, elem, shot_src, air)
 	_ctx = old
 
 

@@ -23,12 +23,24 @@ candidates/<id>.glb produced by tools/3d/optimize_native_lod.py --candidates):
 import: at 1.5x the legacy BattleScreen's maximum zoom lossless, lossy 0.7/0.85 and ETC2 were
 indistinguishable (mean difference 0.4-1.0 of 255) and a 512 albedo is 83-119 KB lossy
 against 447 KB lossless and 175 KB ETC2. Godot keeps these params when it re-extracts.
+
+`--work <dir>` (2026-10-18) reads another work dir, e.g. the painted-skin retexture candidates of
+optimize_native_lod.py --retexture --work build/character-3d/lod-2026-10-18. A candidate whose
+report carries a `retexture` block is installed the same way, except that its provenance gets an
+`albedo_grade` block next to the untouched `mobile_lod` (before = the previously shipped GLB,
+after = the candidate, the grade parameters, atlas statistics and the geometry fingerprint) and the
+extracted `<id>_<id>_lod_albedo.png` is deleted together with its `.import`, because Godot keeps
+an existing extracted PNG and would never re-extract the new embedded image. Run the usual
+install -> import -> textures -> import afterwards.
 """
 import argparse, fcntl, hashlib, json, os, re, shutil, struct
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 WORK = ROOT / 'build/character-3d/lod-2026-10-15'
+RETEXTURE_DATE = '2026-10-18'
+RETEXTURE_REQUEST = ('user 2026-10-18: the characters read as a cheap AI-made 3D game; casual overhaul plan '
+                     '"Lantern Stage" WP-A — painted albedos that carry their own light, geometry untouched')
 HIGHPOLY = ROOT / 'build/character-3d/highpoly-2026-10-15'
 HEROES = ROOT / 'art/models/native_heroes.json'
 MONSTERS = ROOT / 'art/models/native_monsters.json'
@@ -92,17 +104,55 @@ def install(ids):
         backup = HIGHPOLY / 'art-models' / dest.relative_to(ROOT / 'art/models')
         if not backup.exists():
             raise SystemExit(f'{cid}: high-poly backup missing ({backup})')
+        retexture = report.get('retexture')
+        previous = dest.read_bytes() if dest.exists() else b''
         before = glb_stats(backup.read_bytes())
+        if retexture and previous:
+            if hashlib.sha256(previous).hexdigest() != retexture.get('shipped_glb_sha256'):
+                raise SystemExit(f'{cid}: the shipped GLB changed after the retexture run (clip donor stale); re-run optimize_native_lod.py --retexture')
+            before = glb_stats(previous)
         dest.write_bytes(payload)
         keep = f'{cid}_{cid}_lod_albedo.png'
         removed = []
         for png in sorted(dest.parent.glob('*.png')):
-            if png.name == keep: continue
+            # Retexture: the extracted atlas and its .import go too, so Godot re-extracts the
+            # new embedded image (the importer keeps an existing PNG and never overwrites it).
+            if png.name == keep and not retexture: continue
             png.unlink(); Path(str(png) + '.import').unlink(missing_ok=True); removed.append(png.name)
         after = glb_stats(payload)
         prov_path = dest.parent / 'provenance.json'
         prov = json.loads(prov_path.read_text()) if prov_path.exists() else {'id': cid}
-        prov['mobile_lod'] = {
+        if retexture:
+            grade = retexture.get('grade', {})
+            prov['albedo_grade'] = {
+                'date': RETEXTURE_DATE,
+                'request': RETEXTURE_REQUEST,
+                'tool': 'tools/3d/optimize_native_lod.py --retexture + tools/3d/grade_native_albedo.py; records by tools/3d/publish_native_lod.py',
+                'method': ('game-lod.blend opened as the bake target (geometry, UVs, weights, rig, clips, sockets and height '
+                           'untouched), game.blend surfaces appended as bake sources (visible faces first, all sheets as '
+                           'fallback), Cycles EMIT colour bake, AO bake of the reduced mesh alone and a height pass, then the '
+                           'painted grade inside the chart mask: de-speckle, chart-flatten (charts >= 48 texels), light '
+                           'posterise, levels, OKLab chroma with a skin cap, painted light from AO + height, cool shade, edge '
+                           'light, face paint-back; nearest fill, box downsample; clip bytes grafted from the shipped GLB'),
+                'grade_version': grade.get('version'),
+                'parameters': grade.get('params'),
+                'override': grade.get('override', {}),
+                'grade_info': {k: v for k, v in grade.items() if k not in ('params', 'override', 'version')},
+                'ao': retexture.get('ao'), 'head_start': retexture.get('head_start'),
+                'clip_donor': str(Path(retexture['clip_donor']).relative_to(ROOT)) if retexture.get('clip_donor') else None,
+                'before': {'glb_sha256': retexture.get('shipped_glb_sha256'), 'glb_bytes': len(previous),
+                           'texture': image_sizes(previous) if previous else None, 'atlas_stats': retexture.get('stats_before')},
+                'after': {'glb_sha256': sha, 'glb_bytes': len(payload), 'texture': image_sizes(payload),
+                          'texture_import': TEXTURE_PARAMS, 'atlas_stats': retexture.get('stats_after')},
+                'geometry_sha256': retexture.get('geometry_sha256_candidate'),
+                'geometry_bytes_preserved': retexture.get('geometry_bytes_preserved'),
+                'bake': report['bake'], 'visible_faces': report.get('bake_source_visibility'),
+                'removed_extracted_textures': removed,
+                'editable_lod_source': str(Path(report['lod_blend']).relative_to(ROOT)),
+                'evidence': str((WORK / cid).relative_to(ROOT)) if str(WORK).startswith(str(ROOT)) else str(WORK / cid),
+            }
+        else:
+            prov['mobile_lod'] = {
             'date': '2026-10-15',
             'request': 'user 2026-10-15: app size first, polygon reduction most of all; judged on real battle captures',
             'tool': 'tools/3d/optimize_native_lod.py + tools/3d/lod_reduce_vtk.py; records by tools/3d/publish_native_lod.py',
@@ -231,7 +281,10 @@ def main():
     p.add_argument('mode', choices=['install', 'textures', 'summary', 'baseline'])
     p.add_argument('--ids', default='')
     p.add_argument('--all', action='store_true')
+    p.add_argument('--work', default='', help='work dir with <id>/report.json and candidates/ (default: the 2026-10-15 LOD run)')
     a = p.parse_args()
+    global WORK
+    if a.work: WORK = Path(a.work).resolve()
     if a.mode == 'install':
         ids = all_ids() if a.all else [i for i in a.ids.split(',') if i]
         install(ids)

@@ -30,8 +30,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/pip/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/pip/game.blend",
   "height": 1.56,
-  "glb_bytes": 759036,
-  "glb_sha256": "aab227f1e542f567b2a08cf1216f2a1e8f393d962b70cfb9f4907f21c29964ef",
+  "glb_bytes": 799512,
+  "glb_sha256": "285cf8ed386498be941fb97fee71f63de872257a9dd016c06d7abadb5102bc83",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -71,14 +71,24 @@
     ]
   },
   "motion": {
-    "version": 2,
+    "version": 4,
     "tool": "tools/3d/author_native_motion.py",
-    "authored_utc": "2026-10-10T09:36:25Z",
+    "authored_utc": "2026-10-19T02:21:36Z",
     "clips": {
       "IdleLoop": 6.0,
       "WalkLoop": 1.0,
       "Attack": 1.5,
       "attack_release_time": 1.0
+    },
+    "beats": {
+      "hold_start": 0.78,
+      "hold_dip_h": 0.025,
+      "breath_h": 0.015,
+      "sway_h": 0.025,
+      "fidget_window": [
+        3.0,
+        3.6
+      ]
     },
     "stride": 1.3,
     "leg_swing": 0.4,
@@ -87,9 +97,36 @@
     "lead": "L",
     "kind": "tool",
     "bounce_scale": 1.0,
-    "previous_glb_sha256": "cc04148db6a4b5c747bf5ef2f26681b2982e4e7a60b3468f134c6b46ddc4ef03",
+    "arms": {
+      "solver": "hinge two-bone IK, forearm-relative wrists (soft limits 80/88 deg), bow rides the hand",
+      "hinge": {
+        "L": [
+          0.7771,
+          -0.6294,
+          0.002
+        ],
+        "R": [
+          0.7771,
+          0.6294,
+          -0.002
+        ]
+      },
+      "wrist_pivot_offset_m": {
+        "L": 0.232,
+        "R": 0.261
+      },
+      "attack_wrist_limit_excess_deg": {
+        "L": 47.6
+      },
+      "socket_forward_dot": {
+        "0:hold": -0.0941,
+        "0:release": -0.0941,
+        "0:release+65ms": -0.8451
+      }
+    },
+    "previous_glb_sha256": "285cf8ed386498be941fb97fee71f63de872257a9dd016c06d7abadb5102bc83",
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/pip/game.motion-v1.blend",
-    "geometry_base_sha256": "05bb4dbf5a3297538a423259b68123e7afe7128fc2055f4edc24b94c285d3998",
+    "geometry_base_sha256": "1a98aaadef4cd843494624fc3a1b2bf6af28209ba76e96e4d897a216807996fa",
     "geometry_bytes_preserved": true
   },
   "mobile_lod": {
@@ -176,5 +213,247 @@
     "removed_extracted_textures": [],
     "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/pip/pip.glb",
     "editable_lod_source": "build/character-3d/source/pip/game-lod.blend"
+  },
+  "albedo_grade": {
+    "date": "2026-10-18",
+    "request": "user 2026-10-18: the characters read as a cheap AI-made 3D game; casual overhaul plan \"Lantern Stage\" WP-A \u2014 painted albedos that carry their own light, geometry untouched",
+    "tool": "tools/3d/optimize_native_lod.py --retexture + tools/3d/grade_native_albedo.py; records by tools/3d/publish_native_lod.py",
+    "method": "game-lod.blend opened as the bake target (geometry, UVs, weights, rig, clips, sockets and height untouched), game.blend surfaces appended as bake sources (visible faces first, all sheets as fallback), Cycles EMIT colour bake, AO bake of the reduced mesh alone and a height pass, then the painted grade inside the chart mask: de-speckle, chart-flatten (charts >= 48 texels), light posterise, levels, OKLab chroma with a skin cap, painted light from AO + height, cool shade, edge light, face paint-back; nearest fill, box downsample; clip bytes grafted from the shipped GLB",
+    "grade_version": "2026-10-18.7",
+    "parameters": {
+      "median": 3,
+      "bilateral_radius": 3,
+      "bilateral_sigma_s": 1.6,
+      "bilateral_sigma_r": 0.1,
+      "bilateral_passes": 2,
+      "seam_lambda": 0.3,
+      "seam_gain_min": 0.7,
+      "seam_gain_max": 1.4,
+      "seam_floor": 0.02,
+      "seam_chroma_sigma": 0.08,
+      "seam_small_chart": 96.0,
+      "seam_ratio_sigma": 0.6,
+      "flatten_min_width": 48,
+      "flatten_blur": 24,
+      "flatten_blend": 0.4,
+      "posterize_levels": 6,
+      "posterize_blend": 0.3,
+      "levels_lift": 0.09,
+      "levels_gain": 0.88,
+      "levels_gamma": 0.9,
+      "p10_floor": 0.17,
+      "p50_target": 0.5,
+      "p50_pull": 0.8,
+      "p50_gain_max": 2.2,
+      "dark_additive_lo": 0.04,
+      "dark_additive_hi": 0.16,
+      "lift_saturation_damp": 0.15,
+      "knee_start": 0.78,
+      "knee_slope": 0.45,
+      "knee_saturated_drop": 0.1,
+      "chroma_hero": 1.2,
+      "chroma_monster": 1.15,
+      "chroma_skin": 1.0,
+      "skin_s_cap": 0.5,
+      "s_cap": 0.86,
+      "ao_floor": 0.65,
+      "ao_gamma": 0.8,
+      "ao_smooth": 1.5,
+      "height_low": 0.82,
+      "height_high": 1.12,
+      "height_lo": 0.05,
+      "height_hi": 0.7,
+      "cool_shade": [
+        0.85,
+        0.9,
+        1.12
+      ],
+      "cool_amount": 0.5,
+      "edge_light": 0.06,
+      "edge_lo": 0.92,
+      "skin_hue": [
+        8.0,
+        38.0
+      ],
+      "skin_s": [
+        0.15,
+        0.6
+      ],
+      "skin_v": [
+        0.35,
+        0.98
+      ],
+      "skin_chart_fraction": 0.6,
+      "skin_chart_mixed": 0.3,
+      "skin_chart_s_median_max": 0.55,
+      "skin_chart_s_p90_max": 0.72,
+      "face_contrast": 1.3,
+      "face_dark_fraction": 0.04,
+      "face_dark_lstar": 15.0,
+      "face_blur": 4.0,
+      "face_mark_desaturate": 0.8,
+      "face_mark_lum": 0.35
+    },
+    "override": {},
+    "grade_info": {
+      "charts": 726,
+      "skin_charts_excluded": 207,
+      "seams": {
+        "pairs": 559,
+        "samples": 3634,
+        "gain_min": 0.757,
+        "gain_max": 1.215,
+        "gain_std": 0.045
+      },
+      "flattened_charts": 55,
+      "levels": {
+        "lum_mean_after_remap": 0.4527,
+        "p50_gain": 1.447,
+        "p10_before": 0.1525,
+        "p10_lift": 0.0175,
+        "remap": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.153,
+            0.17
+          ],
+          [
+            0.321,
+            0.464
+          ],
+          [
+            0.731,
+            0.731
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ]
+      },
+      "skin_texels": 139895,
+      "ao_mean": 0.7459,
+      "ao_p10": 0.249,
+      "face": {
+        "head_texels": 87708,
+        "head_charts": 98,
+        "dark_threshold": 0.1547,
+        "mark_texels": 6711
+      }
+    },
+    "ao": {
+      "distance_m": 0.39,
+      "samples": 64,
+      "margin": 8
+    },
+    "head_start": 0.625,
+    "clip_donor": "art/models/pip/pip.glb",
+    "before": {
+      "glb_sha256": "7ae7b9e4042e59e3f2e87644044ab828007525a90c4ff9f48b23385434a24618",
+      "glb_bytes": 797836,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "atlas_stats": {
+        "used_texels": 73360,
+        "charts": 691,
+        "mean_lstar": 36.48,
+        "lum_mean": 0.3506,
+        "lum_p10": 0.0656,
+        "lum_p50": 0.2333,
+        "lum_p90": 0.7045,
+        "lstar_p10": 5.03,
+        "near_black_fraction": 0.4404,
+        "sat_mean": 0.4152,
+        "sat_p90": 0.7733,
+        "micro_contrast_255": 10.3,
+        "laplacian_mean": 0.0284,
+        "dominant_hues": [
+          {
+            "hue_deg": 22.5,
+            "mass": 0.377
+          }
+        ],
+        "dominant_hue_count": 1,
+        "skin": {
+          "texels": 31604,
+          "mean_lstar": 60.75,
+          "sat_mean": 0.2706,
+          "sat_p90": 0.381,
+          "sat_max": 0.9444
+        }
+      }
+    },
+    "after": {
+      "glb_sha256": "1a98aaadef4cd843494624fc3a1b2bf6af28209ba76e96e4d897a216807996fa",
+      "glb_bytes": 799508,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      },
+      "atlas_stats": {
+        "used_texels": 73360,
+        "charts": 691,
+        "mean_lstar": 45.42,
+        "lum_mean": 0.4257,
+        "lum_p10": 0.153,
+        "lum_p50": 0.4128,
+        "lum_p90": 0.7051,
+        "lstar_p10": 15.99,
+        "near_black_fraction": 0.0856,
+        "sat_mean": 0.4039,
+        "sat_p90": 0.8462,
+        "micro_contrast_255": 9.21,
+        "laplacian_mean": 0.0252,
+        "dominant_hues": [
+          {
+            "hue_deg": 232.5,
+            "mass": 0.211
+          },
+          {
+            "hue_deg": 37.5,
+            "mass": 0.145
+          }
+        ],
+        "dominant_hue_count": 2,
+        "skin": {
+          "texels": 33220,
+          "mean_lstar": 61.59,
+          "sat_mean": 0.2404,
+          "sat_p90": 0.2676,
+          "sat_max": 0.5944
+        }
+      }
+    },
+    "geometry_sha256": "00e40ac776ca82feaf65e8a06f670788cc7d200d7cfb46578749420ba4eaa95c",
+    "geometry_bytes_preserved": true,
+    "bake": {
+      "size": 1024,
+      "covered_texels": 310269,
+      "missed_texels": 435,
+      "interior_fallback_texels": 144,
+      "miss_fraction": 0.0014020092242537927
+    },
+    "visible_faces": {
+      "removed_faces": 38865,
+      "kept_faces": 16134
+    },
+    "removed_extracted_textures": [
+      "pip_pip_lod_albedo.png"
+    ],
+    "editable_lod_source": "build/character-3d/source/pip/game-lod.blend",
+    "evidence": "build/character-3d/lod-2026-10-18/pip"
   }
 }

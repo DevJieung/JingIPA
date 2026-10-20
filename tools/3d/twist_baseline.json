@@ -1,0 +1,650 @@
+{
+ "tool": "tools/3d/audit_native_twist.py",
+ "generated_utc": "2026-10-19T07:05:02Z",
+ "thresholds_deg": {
+  "elbow_twist": 30.0,
+  "wrist_twist": 90.0,
+  "wrist_bend": 100.0,
+  "flip": 45.0
+ },
+ "note": "accepted twist state: 'fail' heroes are known failures (allowed up to --tol worse), 'pass' heroes must keep passing",
+ "heroes": {
+  "brasa": {
+   "kind": "cast",
+   "glb_sha256": "9d55c9403329d04bf518fb5632ac7e2a14a558667721f42138356bdec8939c82",
+   "status": "fail",
+   "worst": {
+    "elbow_twist": 34.38,
+    "wrist_twist": 13.84,
+    "wrist_bend": 25.14,
+    "flip": 20.49,
+    "spin": 43.19,
+    "shoulder_twist": 17.64
+   }
+  },
+  "echo": {
+   "kind": "bow",
+   "glb_sha256": "fcc4b43a09a81b0323472f62281b89a5828382aea813d7cc984724fcf04fdca1",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 7.41,
+    "wrist_twist": 25.54,
+    "wrist_bend": 79.18,
+    "flip": 17.83,
+    "spin": 17.83,
+    "shoulder_twist": 69.54
+   }
+  },
+  "pip": {
+   "kind": "tool",
+   "glb_sha256": "285cf8ed386498be941fb97fee71f63de872257a9dd016c06d7abadb5102bc83",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 3.57,
+    "wrist_twist": 25.72,
+    "wrist_bend": 87.92,
+    "flip": 40.95,
+    "spin": 59.58,
+    "shoulder_twist": 106.5
+   }
+  },
+  "chispa": {
+   "kind": "rifle",
+   "glb_sha256": "0c3d9e620dc383e691ec075620c70d45379067d22eef29c4190d7e4afaa16615",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 20.69,
+    "wrist_twist": 78.89,
+    "wrist_bend": 87.9,
+    "flip": 23.06,
+    "spin": 24.85,
+    "shoulder_twist": 79.81
+   }
+  },
+  "lind": {
+   "kind": "cast",
+   "glb_sha256": "0b59ad40af7e0194ca9c200c04d5bf734980d58070620c6339aa78dc6251cf95",
+   "status": "fail",
+   "worst": {
+    "elbow_twist": 41.81,
+    "wrist_twist": 17.89,
+    "wrist_bend": 22.47,
+    "flip": 22.75,
+    "spin": 51.84,
+    "shoulder_twist": 18.67
+   }
+  },
+  "brigid": {
+   "kind": "bow",
+   "glb_sha256": "9dc6192e7ba5ec7086c2615b3f360d0b5cb13738bcf990009143e04a2fc03183",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 6.39,
+    "wrist_twist": 15.35,
+    "wrist_bend": 80.58,
+    "flip": 18.09,
+    "spin": 18.09,
+    "shoulder_twist": 70.71
+   }
+  },
+  "phorkys": {
+   "kind": "rifle",
+   "glb_sha256": "71c9557aa20e68356c494ae261b4f5402b982ce1e96b572c29c0502ecb3d636b",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 11.0,
+    "wrist_twist": 79.94,
+    "wrist_bend": 86.46,
+    "flip": 24.57,
+    "spin": 18.07,
+    "shoulder_twist": 71.99
+   }
+  },
+  "solana": {
+   "kind": "bow",
+   "glb_sha256": "03e66cf7e90f2e19145603e48cbc32a9fc6c268b15bbf0737cbd79de3773afea",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 6.39,
+    "wrist_twist": 15.35,
+    "wrist_bend": 80.58,
+    "flip": 18.09,
+    "spin": 18.09,
+    "shoulder_twist": 70.71
+   }
+  },
+  "jokull": {
+   "kind": "sword",
+   "glb_sha256": "4bdaf561674a4f05157aadafed664f5716398a4eb9ebfad46b6eb0a121e9dd5c",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 3.92,
+    "wrist_twist": 38.38,
+    "wrist_bend": 84.91,
+    "flip": 31.12,
+    "spin": 36.8,
+    "shoulder_twist": 40.0
+   }
+  },
+  "rhiannon": {
+   "kind": "cast",
+   "glb_sha256": "002d628fe8df41211b895ccd08f086e79fc5dc2ada806fd478481166a33cd203",
+   "status": "fail",
+   "worst": {
+    "elbow_twist": 41.81,
+    "wrist_twist": 17.89,
+    "wrist_bend": 22.47,
+    "flip": 22.75,
+    "spin": 51.84,
+    "shoulder_twist": 18.67
+   }
+  },
+  "mimic": {
+   "kind": "cast",
+   "glb_sha256": "b91a07224af6844ccd5e7f01dcbafb417d46b6a8e696c29342de18c440d29faf",
+   "status": "fail",
+   "worst": {
+    "elbow_twist": 41.81,
+    "wrist_twist": 17.89,
+    "wrist_bend": 22.47,
+    "flip": 22.75,
+    "spin": 51.84,
+    "shoulder_twist": 18.67
+   }
+  },
+  "protea": {
+   "kind": "bow",
+   "glb_sha256": "b428484bf7ce6b981c0b6804a7099e00f3788041a8db00274ab0ab6e454bd2f8",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 6.39,
+    "wrist_twist": 15.35,
+    "wrist_bend": 80.58,
+    "flip": 18.09,
+    "spin": 18.09,
+    "shoulder_twist": 70.71
+   }
+  },
+  "ceniza": {
+   "kind": "rifle",
+   "glb_sha256": "f0931970a578f4872a2a4e44d8c843c4336a35a790254e3b65b9f15e7d5222c7",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 4.93,
+    "wrist_twist": 80.0,
+    "wrist_bend": 86.85,
+    "flip": 31.47,
+    "spin": 31.47,
+    "shoulder_twist": 74.39
+   }
+  },
+  "kari": {
+   "kind": "rifle",
+   "glb_sha256": "90191ff1a17f6cad470fc0ea1edd6971bcec47d27a087344a7f4b452cd1c2767",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 5.2,
+    "wrist_twist": 53.26,
+    "wrist_bend": 75.55,
+    "flip": 9.69,
+    "spin": 9.69,
+    "shoulder_twist": 62.59
+   }
+  },
+  "vidarr": {
+   "kind": "cast",
+   "glb_sha256": "bd158d50e6324ce872e25ec1bd93ff263b811d9ab85a9be834ad9877cc9d97f8",
+   "status": "fail",
+   "worst": {
+    "elbow_twist": 45.54,
+    "wrist_twist": 19.83,
+    "wrist_bend": 20.78,
+    "flip": 17.6,
+    "spin": 50.9,
+    "shoulder_twist": 20.0
+   }
+  },
+  "igni": {
+   "kind": "sword",
+   "glb_sha256": "e55f2c84b11cb8ede31312c337a410502d81478b32af46e366f3bd0ea0da2141",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 3.53,
+    "wrist_twist": 29.33,
+    "wrist_bend": 70.27,
+    "flip": 28.87,
+    "spin": 28.87,
+    "shoulder_twist": 52.6
+   }
+  },
+  "volcan": {
+   "kind": "cast",
+   "glb_sha256": "b393287cadaeadb137bbd81f8a5c72ad84f03616d57ecd6c3385675766dc3a35",
+   "status": "fail",
+   "worst": {
+    "elbow_twist": 45.54,
+    "wrist_twist": 19.83,
+    "wrist_bend": 20.78,
+    "flip": 17.6,
+    "spin": 50.9,
+    "shoulder_twist": 20.0
+   }
+  },
+  "shift": {
+   "kind": "cast",
+   "glb_sha256": "b290166b2b6b022d2678906ce95a05f5fc700ae4f246222d0444a697452265fe",
+   "status": "fail",
+   "worst": {
+    "elbow_twist": 41.81,
+    "wrist_twist": 17.89,
+    "wrist_bend": 22.47,
+    "flip": 22.75,
+    "spin": 51.84,
+    "shoulder_twist": 18.67
+   }
+  },
+  "thalassa": {
+   "kind": "cast",
+   "glb_sha256": "81fc43b705bbfbf52c46b2c092487a7cae6c33436168dc57a7998534fdb7ebad",
+   "status": "fail",
+   "worst": {
+    "elbow_twist": 41.81,
+    "wrist_twist": 17.89,
+    "wrist_bend": 22.47,
+    "flip": 22.75,
+    "spin": 51.84,
+    "shoulder_twist": 18.67
+   }
+  },
+  "snorri": {
+   "kind": "cast",
+   "glb_sha256": "38c653bdca1413386925175b0fb6ef3ed25cac6cbca9bc6284c964d21236de82",
+   "status": "fail",
+   "worst": {
+    "elbow_twist": 45.54,
+    "wrist_twist": 19.83,
+    "wrist_bend": 20.78,
+    "flip": 17.6,
+    "spin": 50.9,
+    "shoulder_twist": 20.0
+   }
+  },
+  "morrigan": {
+   "kind": "cast",
+   "glb_sha256": "c86746a34457433f3a7a4721b50be675125754ea5fbfa3d56dd1f221e9526028",
+   "status": "fail",
+   "worst": {
+    "elbow_twist": 41.81,
+    "wrist_twist": 17.89,
+    "wrist_bend": 22.47,
+    "flip": 22.75,
+    "spin": 51.84,
+    "shoulder_twist": 18.67
+   }
+  },
+  "blank": {
+   "kind": "cast",
+   "glb_sha256": "b6994083ed77f67002e7aaa27a45696a7f1c5ba45c60337c4e34f92306b6c268",
+   "status": "fail",
+   "worst": {
+    "elbow_twist": 45.54,
+    "wrist_twist": 19.83,
+    "wrist_bend": 20.78,
+    "flip": 17.6,
+    "spin": 50.9,
+    "shoulder_twist": 20.0
+   }
+  },
+  "candela": {
+   "kind": "cast",
+   "glb_sha256": "0186be499be06d891a92989dd3641764a3ae6bf6202e7cd73f7bcdf510180307",
+   "status": "fail",
+   "worst": {
+    "elbow_twist": 41.81,
+    "wrist_twist": 17.89,
+    "wrist_bend": 22.47,
+    "flip": 22.75,
+    "spin": 51.84,
+    "shoulder_twist": 18.67
+   }
+  },
+  "sigrid": {
+   "kind": "cast",
+   "glb_sha256": "8dbaac44e6175b62be2b33e58e42cd37c8e451faa7069621ddd0483d15dd2711",
+   "status": "fail",
+   "worst": {
+    "elbow_twist": 45.54,
+    "wrist_twist": 19.83,
+    "wrist_bend": 20.78,
+    "flip": 17.6,
+    "spin": 50.9,
+    "shoulder_twist": 20.0
+   }
+  },
+  "helga": {
+   "kind": "sword",
+   "glb_sha256": "a909fbf39d5fc13f7c9f802a381d7d823833ada0274ae2832ecb1700e523a421",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 3.92,
+    "wrist_twist": 35.49,
+    "wrist_bend": 82.27,
+    "flip": 34.03,
+    "spin": 36.42,
+    "shoulder_twist": 46.57
+   }
+  },
+  "lugh": {
+   "kind": "cast",
+   "glb_sha256": "fb0c170d0956b220cb67b6bb69c968fd6129030367cd28e62a325594dba6f407",
+   "status": "fail",
+   "worst": {
+    "elbow_twist": 45.54,
+    "wrist_twist": 19.83,
+    "wrist_bend": 20.78,
+    "flip": 17.6,
+    "spin": 50.9,
+    "shoulder_twist": 20.0
+   }
+  },
+  "galene": {
+   "kind": "cast",
+   "glb_sha256": "0d3895ae026a83a1f06943c74950c82fe4aadebdb8568855baa2e482e505b883",
+   "status": "fail",
+   "worst": {
+    "elbow_twist": 45.54,
+    "wrist_twist": 19.83,
+    "wrist_bend": 20.78,
+    "flip": 17.6,
+    "spin": 50.9,
+    "shoulder_twist": 20.0
+   }
+  },
+  "zero": {
+   "kind": "cast",
+   "glb_sha256": "0bb6fc24ec38a6f854c33b26448419bff29057394c5ad4118439dbb5b441d75a",
+   "status": "fail",
+   "worst": {
+    "elbow_twist": 45.54,
+    "wrist_twist": 19.83,
+    "wrist_bend": 20.78,
+    "flip": 17.6,
+    "spin": 50.9,
+    "shoulder_twist": 20.0
+   }
+  },
+  "phantom": {
+   "kind": "sword",
+   "glb_sha256": "abf12c8feeda013c0b1cca1fdf4d2373d389c08d8f1a7b5a577812504e5625f4",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 3.53,
+    "wrist_twist": 79.97,
+    "wrist_bend": 87.48,
+    "flip": 28.26,
+    "spin": 46.54,
+    "shoulder_twist": 63.38
+   }
+  },
+  "caden": {
+   "kind": "sword",
+   "glb_sha256": "5b4f4971879ad363e7614ed3dc3918bcd0d393e1c31091a90edcd1cac20628ea",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 3.53,
+    "wrist_twist": 32.14,
+    "wrist_bend": 77.2,
+    "flip": 31.02,
+    "spin": 33.88,
+    "shoulder_twist": 48.82
+   }
+  },
+  "estoque": {
+   "kind": "sword",
+   "glb_sha256": "d9562e6d42c1bd6f873e42318876d43c2d7adab9a4940b1f3b009f31b43e9d7a",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 3.53,
+    "wrist_twist": 30.79,
+    "wrist_bend": 75.7,
+    "flip": 34.63,
+    "spin": 57.8,
+    "shoulder_twist": 45.64
+   }
+  },
+  "nerea": {
+   "kind": "sword",
+   "glb_sha256": "459f7ccb80a87fc6239eef9ca53ccf80f71b93b5319864ecbce7b306e71ee3a0",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 3.92,
+    "wrist_twist": 29.91,
+    "wrist_bend": 77.86,
+    "flip": 40.13,
+    "spin": 73.81,
+    "shoulder_twist": 56.57
+   }
+  },
+  "glaukos": {
+   "kind": "sword",
+   "glb_sha256": "edf97dbae3aaf1c2d4f758a20e7d683f58621e341a487fc315a205d0f3b9f335",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 3.92,
+    "wrist_twist": 33.06,
+    "wrist_bend": 85.1,
+    "flip": 38.48,
+    "spin": 63.15,
+    "shoulder_twist": 47.74
+   }
+  },
+  "finn": {
+   "kind": "sword",
+   "glb_sha256": "50d5c69693d12f4d2753c2566f49cad3fdf8c3867f50daa8a0b9f81a823b8c52",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 4.13,
+    "wrist_twist": 40.43,
+    "wrist_bend": 87.47,
+    "flip": 44.54,
+    "spin": 44.54,
+    "shoulder_twist": 61.33
+   }
+  },
+  "marea": {
+   "kind": "rifle",
+   "glb_sha256": "f2431cc537c0d43d51a435273dd9b42bd883c03719fc878720652ea810abd24e",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 17.13,
+    "wrist_twist": 79.49,
+    "wrist_bend": 79.29,
+    "flip": 21.23,
+    "spin": 17.93,
+    "shoulder_twist": 68.24
+   }
+  },
+  "grey": {
+   "kind": "rifle",
+   "glb_sha256": "262f9beb6fbbf3d6def386f52255bdadc33c6830533aacb514dbe4d9d7265287",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 15.72,
+    "wrist_twist": 78.42,
+    "wrist_bend": 86.41,
+    "flip": 17.51,
+    "spin": 16.75,
+    "shoulder_twist": 82.98
+   }
+  },
+  "carmen": {
+   "kind": "rifle",
+   "glb_sha256": "a41e5b7f9fbf669b8088b00aada5bbb5be3bc719b54ec18fbe3b774dd08ca4e6",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 14.57,
+    "wrist_twist": 16.99,
+    "wrist_bend": 53.66,
+    "flip": 10.99,
+    "spin": 3.97,
+    "shoulder_twist": 28.82
+   }
+  },
+  "conor": {
+   "kind": "rifle",
+   "glb_sha256": "778fce90f98bf05851192faa5a6264a63f548799d4e056a1a7cfa8a72f72e6d9",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 16.33,
+    "wrist_twist": 8.83,
+    "wrist_bend": 39.28,
+    "flip": 1.55,
+    "spin": 9.97,
+    "shoulder_twist": 32.47
+   }
+  },
+  "brian": {
+   "kind": "rifle",
+   "glb_sha256": "c4c0ef327a2bdad264eec7923fd78c63caacd9b1303b98b9fbec8c1ad6d74bcb",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 10.28,
+    "wrist_twist": 80.0,
+    "wrist_bend": 74.79,
+    "flip": 40.82,
+    "spin": 40.82,
+    "shoulder_twist": 69.24
+   }
+  },
+  "niamh": {
+   "kind": "bow",
+   "glb_sha256": "18560401d13c490110e4272dd5f5e79683f9c95ee4f4523cbfd0f19daa50c97e",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 5.73,
+    "wrist_twist": 18.49,
+    "wrist_bend": 59.49,
+    "flip": 18.92,
+    "spin": 18.92,
+    "shoulder_twist": 69.06
+   }
+  },
+  "saeta": {
+   "kind": "bow",
+   "glb_sha256": "ef2e79edc6cb5c08e8f8b6fcfff12c710ba3322c357f4c75e9d78b6fd69c304a",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 7.06,
+    "wrist_twist": 25.27,
+    "wrist_bend": 67.26,
+    "flip": 18.92,
+    "spin": 18.92,
+    "shoulder_twist": 69.06
+   }
+  },
+  "keto": {
+   "kind": "bow",
+   "glb_sha256": "75bb21def69f2b7b950b5fb2573b0c7df82ba765a98d9b07727d45ae82ccf152",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 7.74,
+    "wrist_twist": 30.62,
+    "wrist_bend": 56.64,
+    "flip": 18.92,
+    "spin": 18.92,
+    "shoulder_twist": 69.06
+   }
+  },
+  "null": {
+   "kind": "bow",
+   "glb_sha256": "80eb86e257f3b9c9b57a6fcf2a94988225cced90abd18250c0d06202a0ee17b2",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 6.93,
+    "wrist_twist": 25.24,
+    "wrist_bend": 62.08,
+    "flip": 18.92,
+    "spin": 18.92,
+    "shoulder_twist": 69.06
+   }
+  },
+  "isa": {
+   "kind": "bow",
+   "glb_sha256": "a13d101f91209ef89615fe00bd569f80c722d71a53c2aba899f5cc79b9ebcc98",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 4.15,
+    "wrist_twist": 15.15,
+    "wrist_bend": 57.82,
+    "flip": 18.92,
+    "spin": 18.92,
+    "shoulder_twist": 69.06
+   }
+  },
+  "eira": {
+   "kind": "bow",
+   "glb_sha256": "0fc7081dee70191e6431c36e409b5960ffbb746c0cb282d9ff94243fbcfa8673",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 3.37,
+    "wrist_twist": 9.78,
+    "wrist_bend": 74.96,
+    "flip": 18.92,
+    "spin": 18.92,
+    "shoulder_twist": 69.06
+   }
+  },
+  "triton": {
+   "kind": "artillery",
+   "glb_sha256": "6d96e03a6f601e9400674d0b2b29162f7442600a14911587fe88d247bff60d56",
+   "status": "fail",
+   "worst": {
+    "elbow_twist": 45.54,
+    "wrist_twist": 0.0,
+    "wrist_bend": 0.0,
+    "flip": 2.23,
+    "spin": 6.89,
+    "shoulder_twist": 15.96
+   }
+  },
+  "frosti": {
+   "kind": "artillery",
+   "glb_sha256": "01ef3069ffc1e2cc1f8862f83458750e776f4353a52b32836e78e55bec3c8953",
+   "status": "fail",
+   "worst": {
+    "elbow_twist": 45.54,
+    "wrist_twist": 0.0,
+    "wrist_bend": 0.0,
+    "flip": 2.23,
+    "spin": 6.89,
+    "shoulder_twist": 15.96
+   }
+  },
+  "donn": {
+   "kind": "cast",
+   "glb_sha256": "116a880d87666391683944d724be551754dce0e04908d9129cb55f015678f023",
+   "status": "fail",
+   "worst": {
+    "elbow_twist": 45.54,
+    "wrist_twist": 19.83,
+    "wrist_bend": 20.78,
+    "flip": 17.6,
+    "spin": 50.9,
+    "shoulder_twist": 20.0
+   }
+  },
+  "dummy": {
+   "kind": "rifle",
+   "glb_sha256": "0fa4393efed6d41d74d4c8bb67d019f817a18dca0d0f385b7d0c3b5d0d4fe160",
+   "status": "pass",
+   "worst": {
+    "elbow_twist": 20.69,
+    "wrist_twist": 80.0,
+    "wrist_bend": 84.48,
+    "flip": 21.23,
+    "spin": 21.23,
+    "shoulder_twist": 81.22
+   }
+  }
+ }
+}

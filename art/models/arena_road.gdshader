@@ -5,7 +5,9 @@ render_mode diffuse_burley;
 // cell pattern serves stone setts, boardwalk planks, basalt slabs, packed earth and
 // cleared ice: only the uniforms differ (game/3d/arena_biome.gd). The kerb is separate
 // geometry built from the true road outline, so nothing here draws an edge line that
-// could cross a junction.
+// could cross a junction. The road is one clean light ribbon (2026-10-18): pavers are
+// about two units long (at most two joints under a hero), their tone and grain are
+// faint and each carries one soft bevel inside its joint.
 uniform sampler2D noise_tex : repeat_enable, filter_linear_mipmap;
 uniform vec3 color_a : source_color = vec3(0.30, 0.36, 0.36);
 uniform vec3 color_b : source_color = vec3(0.40, 0.46, 0.44);
@@ -14,13 +16,13 @@ uniform vec3 edge_color : source_color = vec3(0.14, 0.24, 0.18);
 uniform vec3 glow_color : source_color = vec3(1.0, 0.45, 0.12);
 uniform vec3 fade_color : source_color = vec3(0.06, 0.12, 0.14);
 // cell length along the road, rows across, stagger between rows, joint width (world units)
-uniform vec4 cell = vec4(0.82, 3.0, 0.5, 0.035);
+uniform vec4 cell = vec4(2.2, 3.0, 0.5, 0.035);
 // tone variation between cells, grain amount, grain scale along, grain scale across
-uniform vec4 tone = vec4(0.22, 0.14, 0.9, 0.9);
+uniform vec4 tone = vec4(0.10, 0.08, 0.9, 0.9);
 // side band width (share of the half width), strength, raggedness, wheel ruts
 uniform vec4 edge = vec4(0.16, 0.5, 0.5, 0.0);
 // joint glow, share of cells with a glowing joint, rails, joint darkness
-uniform vec4 glow = vec4(0.0, 0.3, 0.0, 0.8);
+uniform vec4 glow = vec4(0.0, 0.3, 0.0, 0.5);
 uniform float field_radius = 12.0;
 uniform float fade_length = 4.0;
 uniform float road_width = 2.32;
@@ -71,12 +73,12 @@ void fragment() {
 	vec4 grain = texture(noise_tex, vec2(world_pos.x, world_pos.z) * 0.9 + pick * 3.0);
 	vec4 fibre = texture(noise_tex, vec2(q.x * tone.z, q.y * tone.w) + id * 0.173);
 	vec3 albedo = mix(color_a, color_b, pick * tone.x * 2.0 + (fibre.r - 0.5) * tone.y * 2.0);
-	albedo *= 0.94 + grain.r * 0.12;
+	albedo *= 0.97 + grain.r * 0.06;
 	float soft = fwidth(gap) * 1.2;
 	float joint = 1.0 - smoothstep(cell.w - soft, cell.w + soft, gap);
-	// A lighter chamfer just inside the joint gives every paver a little form.
-	float chamfer = (1.0 - smoothstep(cell.w, cell.w * 3.2 + soft, gap)) * (1.0 - joint);
-	albedo = mix(albedo * (1.0 + chamfer * 0.16), joint_color, joint * glow.w);
+	// One lighter bevel just inside the joint gives every paver its form.
+	float chamfer = (1.0 - smoothstep(cell.w, cell.w * 4.5 + soft, gap)) * (1.0 - joint);
+	albedo = mix(albedo * (1.0 + chamfer * 0.24), joint_color, joint * glow.w);
 	vec3 emission = vec3(0.0);
 	if (glow.x > 0.0) {
 		float hot = step(1.0 - glow.y, hash(id + 7.0));
@@ -101,6 +103,6 @@ void fragment() {
 	albedo = mix(albedo, edge_color, band * edge.y);
 	ALBEDO = mix(albedo, fade_color, beyond * 0.85);
 	ROUGHNESS = rough;
-	SPECULAR = 0.35;
+	SPECULAR = 0.25;
 	EMISSION = emission * (1.0 - beyond);
 }

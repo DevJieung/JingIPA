@@ -18,6 +18,13 @@ Outputs (deterministic, no external art):
    12 guardian crest (wreath)  13 reserved (transparent)  14 eclipse corona  15 glory rays
   Cells 12, 14 and 15 belong to the run-level moments (vfx_moment*.gdshader: crystal
   revival, stage clear, final boss).
+  art/vfx/zone_sprites.png  1024x1024 RGBA, 4x4 cells of 256px (2026-10-17), for the
+    volumetric ground zones, the meteor, the frost pulse and the hit accents
+    (vfx_zone*, vfx_burst*, vfx_skill*: read as cells 32..47):
+    0 vortex veil (tiles in x)  1 ice spike        2 snowflake          3 lava gout
+    4 spray column              5 playing card     6 meteor head        7 smoke trail
+    8 rime cluster              9 frost disc      10 whirlpool         11 strike bolt
+   12 magma cracks             13 ray burst       14 debris shard      15 glow column
 
 Sprites are white with alpha; shaders tint them. The cell layout is read by
 art/vfx/*.gdshader (`cell()`); keep indices stable when adding sprites.
@@ -356,11 +363,10 @@ def light_pillar():
     return np.clip((core + halo) * vert + foot, 0, 1)
 
 
-def _cracks_plane(seed=505):
+def _cracks_plane(seed=505, rays=7, bold=1.0):
     u, v = grid()
     rng = np.random.default_rng(seed)
     a = np.zeros((CELL, CELL), np.float32)
-    rays = 7
     for k in range(rays):
         th = k * 2 * math.pi / rays + rng.uniform(-0.25, 0.25)
         p = (0.0, 0.0)
@@ -371,13 +377,13 @@ def _cracks_plane(seed=505):
             f1 = (i + 1) / steps
             th1 = th + rng.uniform(-0.28, 0.28)
             q = (p[0] + math.cos(th1) * length * (f1 - f0), p[1] + math.sin(th1) * length * (f1 - f0))
-            w = 0.052 * (1.0 - f0) + 0.014
+            w = (0.052 * (1.0 - f0) + 0.014) * bold
             _seg(a, u, v, p, q, w, 1.0 - 0.25 * f0)
             if i in (1, 3):
                 bth = th1 + rng.choice([-1, 1]) * rng.uniform(0.55, 1.0)
                 blen = rng.uniform(0.14, 0.30)
                 b = (p[0] + math.cos(bth) * blen, p[1] + math.sin(bth) * blen)
-                _seg(a, u, v, p, b, 0.022, 0.75)
+                _seg(a, u, v, p, b, 0.022 * bold, 0.75)
             p = q
     return np.clip(a, 0, 1)
 
@@ -607,6 +613,258 @@ def empty_cell():
     return np.zeros((CELL, CELL), np.float32)
 
 
+# --------------------------------------------------------------------------- #
+# Zone / hit-feel atlas (art/vfx/zone_sprites.png, 2026-10-17)
+# --------------------------------------------------------------------------- #
+def _upright(u, v):
+    """Cell coordinates for standing sprites: xx -1..1 across, yy 0 (foot) .. 1 (top)."""
+    return u, (v + 1.0) * 0.5
+
+
+def _spike(a, u, v, cx, lean, height, half_w, amp=1.0):
+    """Max-blend one crystal spike into `a`: foot at (cx, -0.92), leaning `lean` radians off
+    vertical, `height` tall in cell units, `half_w` wide at the foot, pointed at the top."""
+    du, dv = u - cx, v + 0.92
+    x = du * math.cos(lean) - dv * math.sin(lean)
+    y = du * math.sin(lean) + dv * math.cos(lean)
+    yy = y / height
+    half = half_w * np.clip(1.0 - yy, 0, 1) ** 0.65
+    inside = (yy > 0.0) & (yy < 1.0)
+    body = (1.0 - smooth(half - 0.02, half + 0.008, np.abs(x))) * inside
+    edge = smooth(half - 0.08, half - 0.03, np.abs(x)) * body
+    facet = np.exp(-((x - 0.25 * half) / (0.09 * half_w + 0.01)) ** 2) * (yy < 0.9) * inside
+    np.maximum(a, np.clip(body * (0.58 + 0.32 * edge) + facet * 0.55, 0, 1) * amp, out=a)
+
+
+def vortex_veil():
+    """A sheet of slanted wind streaks for the column's swirling veils; tileable in x so the
+    shader can scroll it. Bright at the foot, feathered toward the top."""
+    u, v = grid()
+    xx, yy = (u + 1.0) * 0.5, (v + 1.0) * 0.5
+    n = fbm(CELL, 4, 3, 1616)
+    n2 = fbm(CELL, 8, 2, 1717)
+    s = (xx + 0.42 * yy) % 1.0
+    streak = (0.5 + 0.5 * np.cos(2.0 * math.pi * (s * 5.0 + (n - 0.5) * 0.9))) ** 2.0
+    env = smooth(0.0, 0.12, yy) * (1.0 - smooth(0.45, 0.98, yy))
+    return np.clip((streak * (0.55 + 0.45 * n2) + 0.12) * env * 1.3, 0, 1)
+
+
+def ice_spike():
+    """One upright ice crystal with a smaller one leaning off its foot."""
+    u, v = grid()
+    a = np.zeros((CELL, CELL), np.float32)
+    _spike(a, u, v, 0.04, 0.0, 1.86, 0.42)
+    _spike(a, u, v, -0.46, -0.42, 0.95, 0.22, 0.9)
+    return a
+
+
+def snowflake():
+    """Six-armed flake with two pairs of branches on every arm."""
+    u, v = grid()
+    r = np.sqrt(u * u + v * v)
+    a = np.zeros((CELL, CELL), np.float32)
+    for k in range(6):
+        th = k * math.pi / 3.0
+        tip = (math.cos(th) * 0.9, math.sin(th) * 0.9)
+        _seg(a, u, v, (0.0, 0.0), tip, 0.05, 1.0)
+        for along, blen in ((0.42, 0.26), (0.68, 0.18)):
+            base = (math.cos(th) * along, math.sin(th) * along)
+            for side in (-1, 1):
+                bth = th + side * math.pi / 3.0
+                _seg(a, u, v, base, (base[0] + math.cos(bth) * blen, base[1] + math.sin(bth) * blen), 0.034, 0.9)
+    a = np.maximum(a, np.exp(-(r / 0.13) ** 2))
+    return np.clip(a, 0, 1)
+
+
+def lava_gout():
+    """Magma column: a fat tongue of lava bulging as it rises, with flung drops at the top."""
+    u, v = grid()
+    _, yy = _upright(u, v)
+    n = fbm(CELL, 5, 3, 1818)
+    width = 0.34 * (1.0 - 0.4 * yy) * (1.0 + 0.22 * np.sin(yy * 9.0 + n * 3.0)) + 0.04
+    d = np.abs(u + (n - 0.5) * 0.32 * yy) / width
+    body = (1.0 - smooth(0.6, 1.0, d)) * smooth(0.0, 0.05, yy) * (1.0 - smooth(0.78, 0.97, yy))
+    core = (1.0 - smooth(0.1, 0.55, d)) * (1.0 - smooth(0.45, 0.85, yy))
+    a = body * 0.8 + core
+    for cx, cy, rad in ((-0.36, 0.52, 0.07), (0.33, 0.62, 0.06), (0.12, 0.86, 0.05), (-0.2, 0.9, 0.04)):
+        a = np.maximum(a, np.exp(-(((u - cx) / rad) ** 2 + ((v - cy) / rad) ** 2)) * 0.95)
+    return np.clip(a, 0, 1)
+
+
+def spray_column():
+    """Geyser plume: narrow at the foot, fanning into droplets at the top."""
+    u, v = grid()
+    _, yy = _upright(u, v)
+    width = 0.12 + 0.55 * yy ** 1.5
+    d = np.abs(u) / width
+    body = (1.0 - smooth(0.45, 1.0, d)) * smooth(0.0, 0.04, yy) * (1.0 - smooth(0.70, 0.98, yy))
+    core = np.exp(-(u / (0.09 + 0.14 * yy)) ** 2) * (1.0 - smooth(0.6, 0.95, yy))
+    n = fbm(CELL, 9, 2, 1919)
+    drops = smooth(0.62, 0.78, n) * (1.0 - smooth(0.3, 1.0, d)) * smooth(0.45, 0.7, yy) * (1.0 - smooth(0.85, 1.0, yy))
+    return np.clip(body * 0.7 + core * 0.9 + drops, 0, 1)
+
+
+def card():
+    """A playing card: rounded rectangle, inset border and a four-point star in the middle."""
+    u, v = grid()
+    hw, hh, cr = 0.50, 0.74, 0.10
+    qx = np.abs(u) - hw + cr
+    qy = np.abs(v) - hh + cr
+    sdf = np.sqrt(np.maximum(qx, 0) ** 2 + np.maximum(qy, 0) ** 2) + np.minimum(np.maximum(qx, qy), 0) - cr
+    fill = (1.0 - smooth(-0.012, 0.012, sdf)) * 0.62
+    border = np.exp(-((sdf + 0.085) / 0.016) ** 2)
+    r = np.sqrt(u * u + v * v)
+    ang = np.arctan2(v, u)
+    star_a = np.exp(-r / 0.26) * np.abs(np.cos(ang * 2.0)) ** 10 * (r < 0.5)
+    core = np.exp(-(r / 0.07) ** 2)
+    return np.clip(fill + border + star_a + core, 0, 1)
+
+
+def meteor_head():
+    """Hot core with a short flare trailing toward the bottom of the cell (the shader turns
+    the cell so that side points back along the fall)."""
+    u, v = grid()
+    r = np.sqrt(u * u + v * v)
+    core = np.exp(-(r / 0.21) ** 2)
+    halo = np.exp(-(r / 0.48) ** 2) * 0.45
+    back = np.clip(-v, 0, 1)
+    tail = np.exp(-(u / (0.15 + 0.12 * back)) ** 2) * back ** 0.6 * np.exp(-back / 0.5) * 0.85
+    return np.clip(core + halo + tail, 0, 1) * (1.0 - smooth(0.9, 1.0, np.maximum(np.abs(u), np.abs(v))))
+
+
+def smoke_trail():
+    """A dense, ragged smoke blob for the meteor's trail and heavy impact smoke."""
+    u, v = grid()
+    r = np.sqrt(u * u + v * v)
+    n = fbm(CELL, 4, 4, 2020)
+    n2 = fbm(CELL, 8, 3, 2121)
+    shape = 1.0 - smooth(0.18, 0.95, r + (n - 0.5) * 0.7)
+    body = np.clip(shape * (0.55 + 0.45 * n2), 0, 1) * (1.0 - smooth(0.86, 1.0, r))
+    img = Image.fromarray((body * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(3))
+    return np.asarray(img).astype(np.float32) / 255.0
+
+
+def rime_cluster():
+    """Three crystals growing out of one foot: the rime that juts up in an ice zone."""
+    u, v = grid()
+    a = np.zeros((CELL, CELL), np.float32)
+    _spike(a, u, v, 0.02, 0.0, 1.80, 0.34)
+    _spike(a, u, v, -0.40, -0.55, 1.05, 0.24, 0.92)
+    _spike(a, u, v, 0.42, 0.48, 0.88, 0.22, 0.92)
+    return a
+
+
+def frost_disc():
+    """Crackled ice disc: bright rim, hairline rings and radial cracks."""
+    u, v = grid()
+    r = np.sqrt(u * u + v * v)
+    rim = np.exp(-((r - 0.94) / 0.028) ** 2)
+    rings = np.exp(-((r - 0.62) / 0.012) ** 2) * 0.5 + np.exp(-((r - 0.34) / 0.012) ** 2) * 0.4
+    cracks = _cracks_plane(seed=2222, rays=9, bold=0.6) * 0.75
+    fill = (1.0 - smooth(0.1, 0.95, r)) * 0.16
+    return np.clip(rim + rings + cracks + fill, 0, 1) * (r < 0.99)
+
+
+def whirlpool():
+    """Two-arm spiral: bands wound toward the centre, bright at the rim."""
+    u, v = grid()
+    r = np.sqrt(u * u + v * v)
+    ang = np.arctan2(v, u)
+    s = ang / (2.0 * math.pi) + 1.35 * r
+    bands = (0.5 + 0.5 * np.cos(2.0 * math.pi * 2.0 * s)) ** 2.6
+    bands *= smooth(0.06, 0.30, r) * (1.0 - smooth(0.88, 0.98, r))
+    rim = np.exp(-((r - 0.91) / 0.035) ** 2) * 0.7
+    eye = np.exp(-(r / 0.08) ** 2) * 0.6
+    return np.clip(bands * 0.95 + rim + eye, 0, 1)
+
+
+def strike_bolt():
+    """Thunder strike: a tall bolt from a glowing cloud at the top to a hot foot at the
+    bottom, branched; narrower than the battle atlas bolt so it reads as a vertical strike."""
+    u, v = grid()
+    rng = np.random.default_rng(2323)
+    a = np.zeros((CELL, CELL), np.float32)
+    pts = []
+    x = rng.uniform(-0.1, 0.1)
+    for i in range(8):
+        y = 0.96 - i * 0.27
+        x = np.clip(x + rng.uniform(-0.16, 0.16), -0.34, 0.34)
+        pts.append((x, y))
+    pts[-1] = (pts[-1][0] * 0.5, -0.93)
+    for i in range(len(pts) - 1):
+        _seg(a, u, v, pts[i], pts[i + 1], 0.10 - 0.025 * (i / 7.0), 1.0)
+    for i in (1, 3, 5):
+        bx, by = pts[i]
+        ex = np.clip(bx + rng.choice([-1, 1]) * rng.uniform(0.18, 0.34), -0.9, 0.9)
+        ey = by - rng.uniform(0.12, 0.28)
+        _seg(a, u, v, (bx, by), (ex, ey), 0.055, 0.75)
+    glow = Image.fromarray((a * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(12))
+    g = np.asarray(glow).astype(np.float32) / 255.0
+    foot = np.exp(-(((u - pts[-1][0]) / 0.30) ** 2 + ((v + 0.9) / 0.14) ** 2)) * 0.95
+    cloud = np.exp(-(((u - pts[0][0]) / 0.5) ** 2 + ((v - 0.92) / 0.18) ** 2)) * 0.6
+    return np.clip(a + g * 1.1 + foot + cloud, 0, 1)
+
+
+def magma_cracks():
+    """Bold fissures of a magma floor with a molten pool in the middle and a hot rim."""
+    u, v = grid()
+    r = np.sqrt(u * u + v * v)
+    a = _cracks_plane(seed=2424, rays=8, bold=1.7)
+    img = Image.fromarray((a * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(2))
+    g = np.asarray(img).astype(np.float32) / 255.0
+    pool = np.exp(-(r / 0.30) ** 2) * 0.85
+    rim = np.exp(-((r - 0.93) / 0.03) ** 2) * 0.55
+    return np.clip(a * 0.9 + g * 0.5 + pool + rim, 0, 1) * (1.0 - smooth(0.93, 1.0, r))
+
+
+def ray_burst():
+    """Twelve sharp rays and a hot core: the critical-hit accent."""
+    u, v = grid()
+    r = np.sqrt(u * u + v * v) + 1e-6
+    ang = np.arctan2(v, u)
+    rays = np.exp(-r / 0.50) * np.abs(np.cos(ang * 4.0)) ** 7 * 1.6
+    rays2 = np.exp(-r / 0.30) * np.abs(np.sin(ang * 4.0)) ** 9 * 1.2
+    core = np.exp(-(r / 0.17) ** 2) + np.exp(-(r / 0.40) ** 2) * 0.35
+    return np.clip(rays + rays2 + core, 0, 1) * (1.0 - smooth(0.9, 1.0, r))
+
+
+def debris_shard():
+    """An angular chip (ice shatter, rock chips): a convex five-sided silhouette with a
+    bright edge."""
+    u, v = grid()
+    pts = [(0.02, 0.92), (0.58, 0.18), (0.34, -0.84), (-0.46, -0.62), (-0.56, 0.26)]
+    inside = np.ones((CELL, CELL), bool)
+    dist = np.full((CELL, CELL), 9.0, np.float32)
+    # The points run clockwise; the sign test follows the polygon's own winding.
+    area = sum(pts[i][0] * pts[(i + 1) % len(pts)][1] - pts[(i + 1) % len(pts)][0] * pts[i][1] for i in range(len(pts)))
+    for i in range(len(pts)):
+        (x0, y0), (x1, y1) = pts[i], pts[(i + 1) % len(pts)]
+        ex, ey = x1 - x0, y1 - y0
+        side = ((u - x0) * ey - (v - y0) * ex) * (-1.0 if area < 0 else 1.0)
+        inside &= side <= 0
+        ll = math.sqrt(ex * ex + ey * ey)
+        dist = np.minimum(dist, np.abs(side) / ll)
+    body = inside.astype(np.float32)
+    edge = (1.0 - smooth(0.0, 0.09, dist)) * body
+    return np.clip(body * 0.62 + edge * 0.5, 0, 1)
+
+
+def glow_column():
+    """A wide, soft column of light that fades at the top and the sides: the volumetric
+    body of a zone (mottled so it reads as mist, not a flat gradient)."""
+    u, v = grid()
+    _, yy = _upright(u, v)
+    n = fbm(CELL, 3, 3, 2525)
+    body = np.exp(-(u / 0.72) ** 2) * smooth(0.0, 0.05, yy) * (1.0 - smooth(0.35, 1.0, yy))
+    return np.clip(body * (0.78 + 0.22 * n) * 1.15, 0, 1)
+
+
+ZONE_SPRITES = [vortex_veil, ice_spike, snowflake, lava_gout,
+                spray_column, card, meteor_head, smoke_trail,
+                rime_cluster, frost_disc, whirlpool, strike_bolt,
+                magma_cracks, ray_burst, debris_shard, glow_column]
+
+
 SKILL_SPRITES = [star_sigil, light_pillar, ground_cracks, crack_glow,
                  comet_tail, flare8, debris_chunk, fog_wisp,
                  boss_rune, thorn_ring, glow_disc, star_streak,
@@ -648,8 +906,9 @@ def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     build_atlas().save(OUT / "sprites.png", optimize=True)
     build_atlas(SKILL_SPRITES).save(OUT / "skill_sprites.png", optimize=True)
+    build_atlas(ZONE_SPRITES).save(OUT / "zone_sprites.png", optimize=True)
     build_noise().save(OUT / "noise.png", optimize=True)
-    print("wrote", OUT / "sprites.png", OUT / "skill_sprites.png", OUT / "noise.png")
+    print("wrote", OUT / "sprites.png", OUT / "skill_sprites.png", OUT / "zone_sprites.png", OUT / "noise.png")
     return 0
 
 

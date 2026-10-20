@@ -218,7 +218,8 @@ func _escort_scatters() -> void:
 		# From just inside the gate to deep in the spiral: near and far from the crystal.
 		sim.monsters[-1]["pos"] = route[mini(route.size() - 2, 6 + n * 11)]
 		sim.monsters[-1]["hp"] = 1.0e9
-	sim.elapsed = Balance.ARENA_BOSS_AT - 0.02
+	# The end of the boss wave's preparation: the warning, then the boss steps in (its escort follows later).
+	sim.jump_to_boss()
 	for n in range(6): sim.step(1.0 / 60.0)
 	var boss_sid := 0
 	for mo in sim.monsters:

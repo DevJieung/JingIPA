@@ -2,23 +2,31 @@ extends RefCounted
 class_name StoreView
 
 ## The purchase sheet shared by the title and the battlefield. One thing is for sale: the
-## Guardian's blessing (Store.GUARDIAN), a permanent purchase that revives the life crystal
-## Balance.ARENA_REVIVE_USES times in every run and hands over gold each time. The sheet
-## shows that product with the shop's own price, the restore button and the answer to the
-## last request. It never opens by itself: the title's shop button and the defeat panel's
-## offer open it.
+## DLC (Store.GUARDIAN, a permanent purchase; the id, the locale keys and the SKU stay
+## "guardian"), a bundle of three benefits (2026-10-19, PLAN M9): more free jewel-box
+## rerolls, revival tickets (the Soul Stone rises again and a 5-star hero joins, never
+## gold) and the Hellbound mode. The sheet shows that product with the shop's own price,
+## the restore button and the answer to the last request. It never opens by itself: the
+## title's shop button and the defeat panel's offer open it.
 ##
 ## Tone (user, 2026-10-13: "부담없이"): the sheet says once that this is the only thing
-## for sale and that it is bought once, states what is bought in three plain lines, shows
-## the price before anything is tapped, and leaves as easily as it buys (close button, a
-## tap outside, Esc / back). No timers, no badges, no discounts, nothing that moves except
-## the spinner of a running request. Layout and states: docs/UI_STAGE_STORE.md.
+## for sale and that it is bought once, states what is bought in three plain rows (two
+## lines each at most), shows the price before anything is tapped, and leaves as easily as
+## it buys (close button, a tap outside, Esc / back). No timers, no badges, no discounts,
+## nothing that moves except the spinner of a running request. Layout and states:
+## docs/UI_STAGE_STORE.md.
 ##
 ## The sheet is laid out for this single product. Battle speed was a second product for a
 ## few hours of 2026-10-13 and is free again; a second row would need its own layout.
-const PANEL := Rect2(232, 167, 816, 466)
-const BLOCK_H := 212.0
+const PANEL := Rect2(232, 143, 816, 514)
+const BLOCK_H := 260.0
+## One benefit row's slot: two lines of the largest size at which all three rows fit
+## (FACT_TEXT_H), with air between the rows.
+const FACT_ROW_H := 64.0
+const FACT_TEXT_H := 56.0
 const NOTICE_SECONDS := 6.0
+## The Hellbound mode's own colour: the embers inside its gate (sheet row, squad picker).
+const HELL_EMBER := Color("#ff6b3d")
 
 var opened := false
 ## The product the sheet was opened for (the defeat panel's offer passes the blessing);
@@ -31,6 +39,8 @@ var notice_tone := "info"
 var _notice_at := -100.0
 var _clock := 0.0
 var _bound := false
+## Whether the sheet was last drawn over the battlefield (see resumes_run).
+var _on_arena := false
 
 
 func open(product: String = "") -> void:
@@ -95,6 +105,15 @@ func action(id: String) -> bool:
 	return true
 
 
+## Whether buying now continues the run that was just lost — the sheet was opened from the
+## defeat panel's offer: over the battlefield, the run over and lost, its result up (the
+## state Arena.revive_from_defeat accepts). The title opens the same product (its shop button
+## and the locked Hellbound button) with no run to continue, so the sheet does not say so there.
+func resumes_run() -> bool:
+	return focus == Store.GUARDIAN and _on_arena and not Arena.running and Arena.modal == "result" \
+		and Arena.sim != null and not Arena.sim.won
+
+
 ## What the product shows on its right side:
 ##   "owned"    bought: a tick, no button
 ##   "busy"     this purchase is with the shop right now
@@ -125,19 +144,20 @@ func button_label(id: String) -> String:
 
 func draw(ci: CanvasItem, ui: Ui, time: float) -> void:
 	_clock = time
+	_on_arena = ci is ArenaScreen
 	if not opened: return
 	# Deep enough that a result panel under the sheet (the defeat offer opens it, and
 	# that panel is taller than the sheet) does not read as part of it.
-	ci.draw_rect(Look.SCREEN, Color(0.01, 0.025, 0.04, 0.87))
+	ci.draw_rect(Look.SCREEN, Color(Look.SHADE, 0.87))
 	# Leaving is as easy as buying: anywhere outside the sheet closes it. The sheet
 	# itself swallows taps, so nothing underneath ever reacts.
 	ui.zone(Look.SCREEN, "store:close")
 	ui.zone(PANEL, "modal:block")
-	Look.material_panel(ci, PANEL, Look.PANEL.darkened(0.08), Look.PANEL_EDGE)
+	Look.sheet(ci, PANEL, Look.STEEL)
 	var x := PANEL.position.x
 	var y := PANEL.position.y
-	Look.text_box(ci, Rect2(x + 40, y + 16, PANEL.size.x - 80, 50), Arena.label("store.title"), 32, Look.GOLD)
-	Look.text_box(ci, Rect2(x + 40, y + 64, PANEL.size.x - 80, 30), Arena.label("store.all"), 19, Look.INK_DIM)
+	Look.text_box(ci, Rect2(x + 40, y + 16, PANEL.size.x - 80, 50), Arena.label("store.title"), Look.TYPE_TITLE, Look.GOLD)
+	Look.text_box(ci, Rect2(x + 40, y + 64, PANEL.size.x - 80, 30), Arena.label("store.all"), Look.TYPE_BODY, Look.INK_DIM)
 	var rule_y := y + 104.0
 	ci.draw_line(Vector2(x + 44, rule_y), Vector2(PANEL.end.x - 44, rule_y), Color(Look.PANEL_EDGE, 0.45), 1, true)
 	_diamond(ci, Vector2(PANEL.get_center().x, rule_y), 4.0, Look.GOLD_DEEP)
@@ -148,7 +168,7 @@ func draw(ci: CanvasItem, ui: Ui, time: float) -> void:
 	# One line under the product: the answer to the last request, else what is true now.
 	var line := Rect2(x + 40, block.end.y + 12, PANEL.size.x - 80, 30)
 	if time - _notice_at < NOTICE_SECONDS and not notice.is_empty():
-		var tone: Color = {"good": Look.GREEN, "quiet": Look.INK_DIM, "bad": Color("#ff9a8c")}.get(notice_tone, Look.GOLD)
+		var tone: Color = {"good": Look.GREEN, "quiet": Look.INK_DIM, "bad": Look.WARN}.get(notice_tone, Look.GOLD)
 		var width := minf(line.size.x - 34.0, Look.text_width(notice, 18))
 		var mark := Vector2(line.get_center().x - width * 0.5 - 16.0, line.get_center().y)
 		if notice_tone == "good":
@@ -161,13 +181,13 @@ func draw(ci: CanvasItem, ui: Ui, time: float) -> void:
 		Look.text_box(ci, line, Arena.label("store.restoring"), 18, Look.INK_DIM)
 	elif state == "offline":
 		Look.text_box(ci, line, Arena.label("store.result.unavailable"), 18, Look.INK_DIM)
-	elif focus == id and state in ["buy", "test", "busy"]:
+	elif resumes_run() and state in ["buy", "test", "busy"]:
 		# Opened from a defeat: buying now is not only for later runs.
 		Look.text_box(ci, line, Arena.label("store.resume_note"), 18, Look.INK_DIM)
 	var busy := not Store.buying().is_empty() or Store.restoring()
 	var foot := PANEL.end.y - 78.0
 	_restore_button(ci, ui, Rect2(x + 32, foot, 252, 54), Store.has_shop() and not busy)
-	ui.button(ci, Rect2(PANEL.end.x - 284, foot, 252, 54), I18n.t("닫기"), "store:close", true, Look.PANEL_EDGE, 23)
+	ui.button(ci, Rect2(PANEL.end.x - 284, foot, 252, 54), I18n.t("닫기"), "store:close", true, Look.PANEL_EDGE, Look.TYPE_BUTTON_2)
 	# Test builds only (never a store build): forget the purchases made without paying.
 	if Store.test_build() and not Save.iap_sandbox.is_empty():
 		var reset := Rect2(PANEL.get_center().x - 104, foot + 6, 208, 42)
@@ -178,42 +198,56 @@ func draw(ci: CanvasItem, ui: Ui, time: float) -> void:
 		Look.text_box(ci, reset.grow(-8), Arena.label("store.test_reset"), 15, Look.INK_DIM if not busy else Color("#6e8390"))
 
 
-## The three plain statements of what is bought. Every number is read from the balance
-## table, so the sheet cannot disagree with the rule.
+## The three plain statements of what is bought, one per benefit of the DLC: the jewel
+## box's free rerolls, the revival ticket and the Hellbound mode. Every number is read
+## from the balance table, so the sheet cannot disagree with the rule.
 static func facts() -> Array:
+	# The revival's hero is a 5-star (PLAN M9); ARENA_REVIVE_HERO_STARS if the run names it.
+	var table: Script = Balance
+	var hero_stars: Variant = table.get("ARENA_REVIVE_HERO_STARS")
+	var hero_tier := JewelBox.tier_of(int(hero_stars)) if hero_stars != null else Balance.TIER_MAX
 	return [
-		["crystal", Arena.label("store.guardian.desc") % Balance.ARENA_REVIVE_USES],
-		["coin", Arena.label("store.guardian.gold") % [Balance.arena_revive_gold(1), Balance.arena_revive_gold(Balance.ARENA_STAGES)]],
-		["ward", Arena.label("store.guardian.guard") % [roundi(Balance.ARENA_REVIVE_HP * 100.0), roundi(Balance.ARENA_REVIVE_INVULN)]],
+		["reroll", Arena.label("store.guardian.reroll") % [Balance.FREE_REROLL, Balance.ARENA_DLC_FREE_REROLL]],
+		["revive", Arena.label("store.guardian.revive") % [Balance.ARENA_REVIVE_USES, I18n.t(Look.star_label(hero_tier))]],
+		["hell", Arena.label("store.guardian.hell")],
 	]
 
 
-## The product: its crest over one pip per revival, its name, the three facts, and on the
+## The product: its crest over the DLC chip, its name, the three benefits, and on the
 ## right the price button (or what stands in its place) with the kind of payment under it.
 func _draw_product(ci: CanvasItem, ui: Ui, block: Rect2, id: String, state: String, time: float) -> void:
 	var owned := state == "owned"
 	var tint := Look.CRYSTAL if owned else Look.GOLD
-	Look.material_panel(ci, block, Look.BG_DEEP.lerp(Look.PANEL, 0.62), Look.CRYSTAL.darkened(0.25) if owned else Look.GOLD_DEEP)
-	# Crest column.
-	var crest := block.position + Vector2(78, 84)
+	Look.glass_panel(ci, block, Look.CRYSTAL.darkened(0.15) if owned else Look.GOLD_DEEP.lightened(0.15), Look.GLASS_DEEP, owned)
+	# Crest column: the crest the battle HUD lights for a revival, over the bundle's chip.
+	var crest := block.position + Vector2(76, 106)
 	ci.draw_circle(crest, 58, Color(tint, 0.05), true, -1, true)
 	draw_icon(ci, crest, id, 44, tint)
-	for n in range(Balance.ARENA_REVIVE_USES):
-		_diamond(ci, Vector2(crest.x + (float(n) - float(Balance.ARENA_REVIVE_USES - 1) * 0.5) * 22.0, block.position.y + 160), 7.0, tint)
-	# Name and facts. The three lines share one size: the largest that fits them all.
-	var text_x := block.position.x + 152.0
-	var text_w := block.size.x - 152.0 - 228.0
+	Look.chip(ci, Vector2(crest.x, block.position.y + 194), "DLC", 17, tint, Look.BG_DEEP, HORIZONTAL_ALIGNMENT_CENTER)
+	# Name and benefits. The rows share one size: the largest at which each fits two lines.
+	var text_x := block.position.x + 150.0
+	var text_w := block.size.x - 150.0 - 228.0
 	Look.text_box(ci, Rect2(text_x, block.position.y + 12, text_w, 42), Arena.label("store.%s.name" % id), 28, Look.INK, HORIZONTAL_ALIGNMENT_LEFT)
 	var rows := facts()
+	var body_w := text_w - 34.0
 	var fact_size := 18
-	for row in rows:
-		fact_size = mini(fact_size, Look.fit_size(String(row[1]), 18, Vector2(text_w - 32.0, 34.0)))
+	while fact_size > 13:
+		var fits := true
+		for row in rows:
+			if float(Look.wrapped_lines(String(row[1]), body_w, fact_size).size()) * Look.line_height(fact_size) > FACT_TEXT_H:
+				fits = false
+				break
+		if fits:
+			break
+		fact_size -= 1
 	for n in range(rows.size()):
-		var mid := block.position.y + 82.0 + float(n) * 40.0
-		_fact_glyph(ci, Vector2(text_x + 11, mid), String(rows[n][0]), tint)
-		Look.text_box(ci, Rect2(text_x + 32, mid - 17, text_w - 32, 34), String(rows[n][1]), fact_size, Look.INK.lerp(Look.INK_DIM, 0.30), HORIZONTAL_ALIGNMENT_LEFT)
+		var text := String(rows[n][1])
+		var height := float(Look.wrapped_lines(text, body_w, fact_size).size()) * Look.line_height(fact_size)
+		var mid := block.position.y + 58.0 + (float(n) + 0.5) * FACT_ROW_H
+		draw_fact_glyph(ci, Vector2(text_x + 12, mid), String(rows[n][0]), tint)
+		Look.wrap_text(ci, text, Rect2(text_x + 34, mid - height * 0.5, body_w, height), fact_size, Look.INK.lerp(Look.INK_DIM, 0.30), true)
 	# Price column.
-	var button := Rect2(block.end.x - 216, block.position.y + 64, 196, 58)
+	var button := Rect2(block.end.x - 216, block.position.y + 86, 196, 58)
 	var caption := Rect2(button.position.x - 8, button.end.y + 6, button.size.x + 16, 24)
 	if owned:
 		# Bought: a quiet tick where the price was. The zone stays, switched off.
@@ -231,7 +265,7 @@ func _draw_product(ci: CanvasItem, ui: Ui, block: Rect2, id: String, state: Stri
 	# foreign text (Look.price_box) and a running request carries a spinner.
 	ui.button(ci, button, "", zone_id, on, Look.GREEN if state == "test" else Look.GOLD, 24)
 	var label_box := Rect2(button.position + Vector2(12, 4 if down else 2), button.size - Vector2(24, 7))
-	var ink := Look.BG_DEEP if state == "buy" else Look.INK if state == "test" else Color("#93a3ad")
+	var ink := Look.BG_DEEP if state == "buy" else Look.INK if state == "test" else Look.INK_MUTE
 	match state:
 		"busy":
 			var label := Arena.label("store.busy")
@@ -256,27 +290,104 @@ func _draw_product(ci: CanvasItem, ui: Ui, block: Rect2, id: String, state: Stri
 		Look.text_box(ci, caption, Arena.label("store.once"), 15, Look.INK_DIM)
 
 
-## Line marks of the three facts: the crystal that reforms, the coin, the ward.
-static func _fact_glyph(ci: CanvasItem, at: Vector2, kind: String, color: Color) -> void:
+## Marks of the benefit rows, drawn (not baked) so they keep their weight at every size:
+##   reroll  a jewel inside a turning arrow: the box is rolled again
+##   revive  a ticket holding a star: the revival that brings a 5-star hero
+##   hell    a spiked gate with embers inside: the Hellbound mode
+##   coin · ward · crystal  marks of the earlier rows, kept for callers
+## `scale` 1.0 is the 20 px row mark; the guide and the squad picker draw them larger.
+static func draw_fact_glyph(ci: CanvasItem, at: Vector2, kind: String, color: Color, scale: float = 1.0) -> void:
 	match kind:
+		"reroll":
+			var r := 10.0 * scale
+			var end := PI * 1.30
+			ci.draw_arc(at, r, -PI * 0.22, end, 28, color, maxf(1.4, 1.8 * scale), true)
+			var tip := at + Vector2.from_angle(end) * r
+			var along := Vector2.from_angle(end + PI * 0.5)
+			var out := Vector2.from_angle(end)
+			ci.draw_colored_polygon(PackedVector2Array([tip + along * 4.6 * scale, tip - along * 1.4 * scale + out * 4.2 * scale,
+				tip - along * 1.4 * scale - out * 4.2 * scale]), color)
+			draw_gem(ci, at + Vector2(0, 0.6 * scale), 5.4 * scale, color)
+		"revive":
+			_ticket(ci, at, scale, color)
+		"hell":
+			_hell_gate(ci, at, scale, color)
 		"coin":
-			ci.draw_circle(at, 9.0, color.darkened(0.45), true, -1, true)
-			ci.draw_circle(at, 8.0, color.darkened(0.08), true, -1, true)
-			ci.draw_arc(at, 5.2, 0, TAU, 20, color.lightened(0.45), 1.2, true)
+			ci.draw_circle(at, 9.0 * scale, color.darkened(0.45), true, -1, true)
+			ci.draw_circle(at, 8.0 * scale, color.darkened(0.08), true, -1, true)
+			ci.draw_arc(at, 5.2 * scale, 0, TAU, 20, color.lightened(0.45), 1.2, true)
 		"ward":
-			var r := 9.0
+			var r := 9.0 * scale
 			var points := PackedVector2Array([at + Vector2(-r, -r * 0.75), at + Vector2(0, -r), at + Vector2(r, -r * 0.75),
 				at + Vector2(r * 0.82, r * 0.4), at + Vector2(0, r), at + Vector2(-r * 0.82, r * 0.4)])
 			ci.draw_polyline(points + PackedVector2Array([points[0]]), color, 1.8, true)
-			ci.draw_line(at + Vector2(-3.5, 0), at + Vector2(3.5, 0), color, 1.8, true)
-			ci.draw_line(at + Vector2(0, -3.5), at + Vector2(0, 3.5), color, 1.8, true)
+			ci.draw_line(at + Vector2(-3.5, 0) * scale, at + Vector2(3.5, 0) * scale, color, 1.8, true)
+			ci.draw_line(at + Vector2(0, -3.5) * scale, at + Vector2(0, 3.5) * scale, color, 1.8, true)
 		_:
-			var top := at + Vector2(0, -10.0)
-			var bottom := at + Vector2(0, 10.0)
-			var left := at + Vector2(-6.0, -0.6)
-			var right := at + Vector2(6.0, -0.6)
+			var top := at + Vector2(0, -10.0) * scale
+			var bottom := at + Vector2(0, 10.0) * scale
+			var left := at + Vector2(-6.0, -0.6) * scale
+			var right := at + Vector2(6.0, -0.6) * scale
 			ci.draw_colored_polygon(PackedVector2Array([top, right, bottom, left]), color.darkened(0.22))
-			ci.draw_colored_polygon(PackedVector2Array([top, at + Vector2(0, -0.6), bottom, left]), color.lightened(0.18))
+			ci.draw_colored_polygon(PackedVector2Array([top, at + Vector2(0, -0.6) * scale, bottom, left]), color.lightened(0.18))
+
+
+## A cut jewel: a lit crown over a two-tone pavilion (not the life crystal's tall rhombus).
+static func draw_gem(ci: CanvasItem, at: Vector2, w: float, color: Color) -> void:
+	var girdle_l := at + Vector2(-w, -w * 0.12)
+	var girdle_r := at + Vector2(w, -w * 0.12)
+	var culet := at + Vector2(0, w * 0.86)
+	ci.draw_colored_polygon(PackedVector2Array([girdle_l, girdle_r, culet]), color.darkened(0.30))
+	ci.draw_colored_polygon(PackedVector2Array([girdle_l, at + Vector2(0, -w * 0.12), culet]), color.darkened(0.04))
+	ci.draw_colored_polygon(PackedVector2Array([girdle_l, at + Vector2(-w * 0.55, -w * 0.64), at + Vector2(w * 0.55, -w * 0.64), girdle_r]), color.lightened(0.22))
+	ci.draw_line(at + Vector2(-w * 0.50, -w * 0.58), at + Vector2(-w * 0.18, -w * 0.16), Color(1, 1, 1, 0.50), maxf(1.0, w * 0.13), true)
+
+
+## A ticket with notched sides and a star on it.
+static func _ticket(ci: CanvasItem, at: Vector2, scale: float, color: Color) -> void:
+	var w := 11.0 * scale
+	var h := 7.6 * scale
+	var notch := 2.7 * scale
+	var points := PackedVector2Array([at + Vector2(-w, -h), at + Vector2(w, -h)])
+	for i in range(9):
+		points.append(at + Vector2(w, 0) + Vector2.from_angle(-PI * 0.5 - PI * float(i) / 8.0) * notch)
+	points.append(at + Vector2(w, h))
+	points.append(at + Vector2(-w, h))
+	for i in range(9):
+		points.append(at + Vector2(-w, 0) + Vector2.from_angle(PI * 0.5 - PI * float(i) / 8.0) * notch)
+	ci.draw_colored_polygon(points, Color(color, 0.22))
+	points.append(points[0])
+	ci.draw_polyline(points, color, maxf(1.3, 1.6 * scale), true)
+	ci.draw_colored_polygon(Look.star_points(at, 5.4 * scale), color.lightened(0.18))
+
+
+## A gate: an arch with spikes along its crown and embers rising in its dark opening.
+static func _hell_gate(ci: CanvasItem, at: Vector2, scale: float, color: Color) -> void:
+	var spring := at + Vector2(0, -1.0 * scale)
+	var base := at.y + 9.5 * scale
+	var outer := 8.6 * scale
+	var inner := 5.0 * scale
+	for angle in [PI * 1.25, PI * 1.5, PI * 1.75]:
+		ci.draw_colored_polygon(PackedVector2Array([spring + Vector2.from_angle(angle - 0.20) * (outer - 0.5 * scale),
+			spring + Vector2.from_angle(angle) * (outer + 3.6 * scale), spring + Vector2.from_angle(angle + 0.20) * (outer - 0.5 * scale)]), color)
+	var frame := PackedVector2Array()
+	var hole := PackedVector2Array()
+	for i in range(13):
+		frame.append(spring + Vector2.from_angle(PI + PI * float(i) / 12.0) * outer)
+		hole.append(spring + Vector2.from_angle(PI + PI * float(i) / 12.0) * inner)
+	frame.append_array(PackedVector2Array([Vector2(at.x + outer, base), Vector2(at.x - outer, base)]))
+	hole.append_array(PackedVector2Array([Vector2(at.x + inner, base), Vector2(at.x - inner, base)]))
+	ci.draw_colored_polygon(frame, color.darkened(0.28))
+	ci.draw_colored_polygon(hole, Look.BG_DEEP)
+	for flame in [[0.0, 7.6, 2.9], [-2.7, 4.6, 1.8], [2.7, 4.6, 1.8]]:
+		var x: float = at.x + float(flame[0]) * scale
+		var fh: float = float(flame[1]) * scale
+		var fw: float = float(flame[2]) * scale
+		ci.draw_colored_polygon(PackedVector2Array([Vector2(x - fw, base), Vector2(x - fw * 0.85, base - fh * 0.45),
+			Vector2(x - fw * 0.25, base - fh * 0.82), Vector2(x, base - fh), Vector2(x + fw * 0.40, base - fh * 0.66),
+			Vector2(x + fw * 0.90, base - fh * 0.36), Vector2(x + fw, base)]), HELL_EMBER if flame[0] == 0.0 else HELL_EMBER.lightened(0.25))
+	frame.append(frame[0])
+	ci.draw_polyline(frame, color, maxf(1.2, 1.5 * scale), true)
 
 
 ## Restore purchases: a real button with its own glyph, always on the sheet

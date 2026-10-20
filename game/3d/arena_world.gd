@@ -9,6 +9,75 @@ var _crystal_light: OmniLight3D
 var _weather_body := "wood"
 var _map_key := ""
 var _weather_material: ShaderMaterial
+## Prop sway (2026-10-18): the field's resting `wind` plus a gust that a starfall blast
+## raises through `pulse_wind` and that settles within 0.4 s.
+var _scenery_material: ShaderMaterial
+var _wind_base := 0.0
+var _wind_pulse := 0.0
+const WIND_PULSE_DECAY := 1.5
+## Gusts waiting on the simulated clock: the trees answer the meteor when it lands, not
+## when it is cast ([seconds left, amount]).
+var _wind_due: Array = []
+## Gust strengths: the starfall's impact, the boss and an elite stepping in, the revival's
+## shockwave crossing the field.
+const GUST_BLAST := 0.6
+const GUST_BOSS := 0.5
+const GUST_ELITE := 0.3
+const GUST_REVIVE := 0.45
+## Ground rings (2026-10-19, feedback O3/F6; art/vfx/vfx_ring.gdshader): one quad for the
+## selected hero's reach and feet, one for the starlight-burst aim. Unshaded, fixed screen
+## width, drawn above every effect and under the bodies; nothing is rebuilt when the
+## radius changes (two uniforms). Gold for the reach and a valid aim, red-grey for an aim
+## the star cannot take.
+const RING_SHADER := preload("res://art/vfx/vfx_ring.gdshader")
+## Colours are chosen for what reaches the screen through ACES and the field's grade (a
+## calibration over the four reference fields: tests/3d/d3_visual_preview --scene calib):
+## RING_GOLD shows about (254, 190, 55), AIM_GOLD (252, 175, 40), AIM_BAD (228, 120, 112).
+const RING_GOLD := Color(1.0, 0.66, 0.04)
+const RING_HALO := Color(0.09, 0.05, 0.01, 0.70)
+const AIM_GOLD := Color(1.0, 0.58, 0.03)
+const AIM_BAD := Color(0.78, 0.40, 0.38)
+const AIM_BAD_HALO := Color(0.05, 0.03, 0.035, 0.62)
+## Heights over the ground (the plaza tops out at 0.046): the aim draws over the reach.
+const RING_HEIGHT := 0.10
+const AIM_HEIGHT := 0.115
+## The feet: radius in world units (the battle hero's disc is 0.96 x 0.68 x HERO_SCALE).
+const FOOT_RADIUS := 0.50
+## Screen length of one dash period at 1280x800 (37.6 px per world unit across, the ground
+## ellipse 0.63 as tall): about a 16 px dash and a 10 px gap.
+const DASH_PX := 26.0
+const RING_DRAW_IN := 0.20
+const AIM_DRAW_IN := 0.14
+const AIM_LOCK := 0.22
+const AIM_FADE := 0.12
+var _ring: MeshInstance3D
+var _ring_material: ShaderMaterial
+var _ring_at := Vector2.INF
+var _ring_born := -10.0
+var _ring_reach := -1.0
+var _ring_settled := false
+var _ring_lit := false
+var _aim: MeshInstance3D
+var _aim_material: ShaderMaterial
+var _aim_state := {"at": Vector2.INF, "radius": 0.0, "valid": true, "shown": false, "born": -10.0,
+	"hidden": -10.0, "locked": -10.0}
+## Start-up frames that still draw the buried warm bodies and the hidden ring quads
+## (counted only when this world's viewport actually renders); see _process.
+const WARM_FRAMES := 4
+var _warm_left := WARM_FRAMES
+var _warm_nodes: Array[Node3D] = []
+## The five-star guardian the next revival would bring (2026-10-19, LA3) is loaded while the
+## battlefield card is up — ArenaRun.revive_candidate, fixed by the run seed and the stage —
+## and its body stands buried for WARM_FRAMES drawn frames so its top-grade details compile:
+## the revival then neither reads a model from storage nor compiles in the middle of the
+## fight. Only while a revival can still come (the DLC's tickets); see _keep_revival.
+var _revival_seed := 0
+var _revival_stage := -1
+var _revival_unit: Dictionary = {}
+var _revival_body: Node3D
+var _revival_left := 0
+## Picture-to-screen compensation of the ring strokes (see _sync_screen_k).
+var _screen_k := 1.0
 ## How bright the playfield floor of the current field is, for the effects layer (which
 ## may read these instead of inferring brightness from the theme's biome):
 ## `floor_lightness` is its measured CIE L* (44..66 across the fifty fields),
@@ -57,13 +126,164 @@ func _ready() -> void:
 	warm.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	warm.extra_cull_margin = 100.0
 	add_child(warm)
+	_warm_bodies()
+	_ring = _ring_node("RangeRing", 10)
+	_ring_material = _ring.material_override
+	selection.add_child(_ring)
+	_aim = _ring_node("AimRing", 11)
+	_aim_material = _aim.material_override
+	add_child(_aim)
+	# Both ring quads stay drawn (fully transparent) through the warm frames so their
+	# shader is compiled before the first selection or aim.
+	for ring in [_ring, _aim]:
+		var material: ShaderMaterial = ring.material_override
+		material.set_shader_parameter("presence", 0.0)
+		ring.visible = true
+	selection.visible = true
+
+## A ground ring quad with its own material (render priority over every effect layer).
+func _ring_node(name_value: String, priority: int) -> MeshInstance3D:
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(2.0, 2.0)
+	var node := MeshInstance3D.new()
+	node.name = name_value
+	node.mesh = plane
+	var material := ShaderMaterial.new()
+	material.shader = RING_SHADER
+	material.render_priority = priority
+	node.material_override = material
+	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	node.position = Vector3(0, -30, 0)
+	node.extra_cull_margin = 100.0
+	return node
+
+## The warm frames are counted only while this world's viewport is drawn (the battery
+## saver may freeze it on still screens), then the buried bodies are hidden, not freed:
+## their per-instance materials stay alive, so the compiled skin variants stay cached and
+## the first placement on the field does not stall (O8d, 2026-10-19). A hidden node costs
+## nothing to draw and the bodies were never animated.
+## Also runs the aim ring's lock and fade after the screen has stopped calling set_aim, and
+## hides the revival candidate's buried body after its own warm frames (_keep_revival).
+func _process(_delta: float) -> void:
+	var now := Time.get_ticks_msec() * 0.001
+	var drawn := _view_live()
+	if _revival_left > 0 and drawn:
+		_revival_left -= 1
+		if _revival_left == 0 and is_instance_valid(_revival_body): _revival_body.visible = false
+	if _warm_left > 0:
+		if not drawn: return
+		_warm_left -= 1
+		if _warm_left > 0: return
+		for body in _warm_nodes:
+			if is_instance_valid(body): body.visible = false
+		for ring in [_ring, _aim]:
+			var material: ShaderMaterial = ring.material_override
+			material.set_shader_parameter("presence", 1.0)
+		_ring_lit = true
+		if not _ring_at.is_finite(): _ring.visible = false
+	_draw_aim(now)
+	if not _aim_settling(now) and _revival_left <= 0: set_process(false)
+
+## Whether this world's picture is really being drawn every frame. A frozen view keeps
+## UPDATE_ONCE on its node after its one refresh (ArenaView leaves it there), so only a live
+## view (UPDATE_ALWAYS) or a world drawn straight into a window counts: a frozen battlefield
+## never ticks the warm frames away before their materials have been drawn and compiled.
+func _view_live() -> bool:
+	var view := get_viewport()
+	if not (view is SubViewport): return true
+	return (view as SubViewport).render_target_update_mode == SubViewport.UPDATE_ALWAYS
+
+## How many screen pixels one pixel of this world's picture covers. The picture is drawn at
+## the battle box's design size (1280x800) and the window scales the canvas it is shown on
+## (canvas_items stretch; a film SubViewport with a 2D override does the same), so at
+## 1000x625 one picture pixel is 0.78 screen pixels.
+func screen_scale() -> float:
+	var view := get_viewport()
+	if not (view is SubViewport) or view.get_parent() == null: return 1.0
+	var host := view.get_parent().get_viewport()
+	if host == null: return 1.0
+	return clampf(host.get_final_transform().get_scale().y, 0.25, 4.0)
+
+## The ring strokes stay at least their design width on the real screen: below 1:1 they are
+## drawn wider in the picture by 1 / scale (3.6 px at 1000x625 instead of 2.8); above it they
+## grow with the canvas like the rest of the HUD.
+func _sync_screen_k() -> void:
+	var k := 1.0 / clampf(screen_scale(), 0.5, 1.0)
+	if is_equal_approx(k, _screen_k): return
+	_screen_k = k
+	for material in [_ring_material, _aim_material]:
+		(material as ShaderMaterial).set_shader_parameter("screen_k", k)
+	_ring_reach = -1.0
+
+## True while the aim ring is still locking on or fading out without the screen's calls.
+func _aim_settling(now: float) -> bool:
+	return not bool(_aim_state["shown"]) and (now - float(_aim_state["locked"]) < AIM_LOCK or now - float(_aim_state["hidden"]) < AIM_FADE)
+
+## One native hero and one native monster stand buried under the field from the first
+## frame so every skin material variant (wrap, shade tint, fog-free, hull, flash) is
+## compiled before the first placement rather than during it (docs/PERF_NATIVE.md).
+func _warm_bodies() -> void:
+	var bodies: Array = []
+	var unit := Roster.unit_by_id("echo")
+	if not unit.is_empty(): bodies.append(StellarModels.hero(unit, 4))
+	var monster := Roster.monster_by_id("ember_imp")
+	if not monster.is_empty(): bodies.append(StellarModels.monster(monster))
+	# The monster wears the elite look (violet hull, aura) so those variants compile too.
+	if bodies.size() > 1: StellarModels.elite(bodies[-1])
+	for body in bodies:
+		body.name = "Warm" + body.name
+		_bury(body)
+		_warm_nodes.append(body)
+
+## Stand a body under the field, drawn (never culled, no shadow) while it is visible.
+func _bury(body: Node3D) -> void:
+	body.position = Vector3(0, -30, 0)
+	for mesh in body.find_children("*", "MeshInstance3D", true, false):
+		mesh.extra_cull_margin = 100.0
+		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(body)
+
+## See _revival_unit. Runs every picture: from sync_battle with the simulator's run, and from
+## build_map with the run autoload — ArenaView may skip the battle's sync under a frozen
+## window such as the battlefield card, which is exactly when this should load. It does work
+## only when the run's seed or stage has changed and a revival can still come. The previous
+## candidate, if it never joined, is let go from the model cache. No screen call is needed.
+func _keep_revival(sim) -> void:
+	var run = sim.get("run") if sim is Object else null
+	if run == null: run = get_node_or_null(^"/root/Arena")
+	if run == null or not (run is Object) or not run.has_method("revive_candidate") or not run.has_method("revives_left"): return
+	var seed_now := int(run.get("run_seed"))
+	var stage_now := int(run.get("stage"))
+	if seed_now == _revival_seed and stage_now == _revival_stage: return
+	if int(run.call("revives_left")) <= 0: return
+	_revival_seed = seed_now
+	_revival_stage = stage_now
+	var unit: Dictionary = run.call("revive_candidate")
+	var id := String(unit.get("id", ""))
+	var previous := String(_revival_unit.get("id", ""))
+	if id == previous: return
+	if previous != "" and run.has_method("find_hero") and int(run.call("find_hero", previous)[1]) < 0:
+		StellarModels.forget_hero(_revival_unit, Balance.TIER_MAX)
+	if is_instance_valid(_revival_body): _revival_body.queue_free()
+	_revival_body = null
+	_revival_unit = unit
+	if id == "": return
+	_revival_body = StellarModels.hero(unit, Balance.TIER_MAX)
+	_revival_body.name = "WarmRevival"
+	_revival_body.scale = Vector3.ONE * StellarModels.HERO_SCALE
+	_bury(_revival_body)
+	_revival_left = WARM_FRAMES
+	set_process(true)
 
 func build_map(theme: Dictionary) -> void:
+	_keep_revival(null)
 	var id := String(theme.get("id", "wood"))
 	# A battlefield is its theme and its road layout (ArenaGeometry.use_layout).
 	var key := id + "|" + ArenaGeometry.layout()
 	if key == _map_key: return
-	_map_key = key
+	# The key is written at the end (F7): a build that stops part-way is built again on the
+	# next call instead of being taken for done.
+	_map_key = ""
 	theme_id = id
 	_clear(terrain)
 	crystals.clear()
@@ -100,6 +320,10 @@ func build_map(theme: Dictionary) -> void:
 	scenery.material.set_shader_parameter("cover_color", look["cover"])
 	scenery.material.set_shader_parameter("cover_amount", look["cover_amount"])
 	scenery.material.set_shader_parameter("wind", look["wind"])
+	_scenery_material = scenery.material
+	_wind_base = float(look["wind"])
+	_wind_pulse = 0.0
+	_wind_due.clear()
 	scenery.material.set_shader_parameter("lift", lift)
 	# Roads: every arm in full on its own hair of height (arms cross near the plaza),
 	# feeders above them so their mouths cover the arm, an approach outside every gate.
@@ -187,6 +411,7 @@ func build_map(theme: Dictionary) -> void:
 		lamp.omni_range = float(spec["range"])
 		terrain.add_child(lamp)
 	_build_weather(look["weather"], radius)
+	_map_key = key
 
 ## Point lights a field may add to the crystal's: one lamp per gate first, then the
 ## lights a place asks for, in its own order of importance. The old field had one lamp
@@ -378,29 +603,154 @@ func _monster_heading(mo: Dictionary, p: Vector2, _ahead: Vector2) -> Vector2:
 	if velocity.length_squared() > 0.001: return velocity
 	return Balance.ARENA_CENTER - p
 
+## Unused here (the heading above is the simulator's velocity): skip the legacy lookup.
+func _monster_ahead(_mo: Dictionary, p: Vector2) -> Vector2:
+	return p
+
 func sync_battle(sim, time: float, lives: int, dt: float = 0.016) -> void:
 	super.sync_battle(sim, time, lives, dt)
+	_keep_revival(sim)
 	for crystal in crystals: crystal.visible = sim.crystal_hp > 0
 	if is_instance_valid(_ward): _ward.visible = sim.shield > 0
 	if is_instance_valid(_crystal_light):
 		_crystal_light.light_energy = 0.35 + 0.75 * clampf(sim.crystal_hp / maxf(1, sim.crystal_max), 0, 1)
+	if dt > 0.0:
+		for i in range(_wind_due.size() - 1, -1, -1):
+			var due: Array = _wind_due[i]
+			due[0] = float(due[0]) - dt
+			if float(due[0]) <= 0.0:
+				pulse_wind(float(due[1]))
+				_wind_due.remove_at(i)
+	if _wind_pulse > 0.0 and _scenery_material != null:
+		_wind_pulse = maxf(0.0, _wind_pulse - WIND_PULSE_DECAY * dt)
+		_scenery_material.set_shader_parameter("wind", _wind_base + _wind_pulse)
 
+## A gust through every prop: the trees answer a starfall blast.
+func pulse_wind(amount: float) -> void:
+	_wind_pulse = maxf(_wind_pulse, amount)
+
+## The same gust `delay` simulated seconds from now (a paused battle holds it).
+func pulse_wind_later(delay: float, amount: float) -> void:
+	if delay <= 0.0:
+		pulse_wind(amount)
+		return
+	_wind_due.append([delay, amount])
+
+## The selected hero's reach (contract unchanged: ArenaView calls it every frame with the
+## hero's logical position and range, INF to hide). One quad and two uniforms: switching
+## to a hero with another range rebuilds nothing. A new selection draws the ring in from
+## the feet with a short flash so the eye finds it.
 func set_selection(at: Vector2, available: bool, radius: float = 0.0) -> void:
-	selection.visible = at.is_finite()
-	if not at.is_finite(): return
-	selection.position = world(at, 0.10)
-	if is_equal_approx(radius, _range) and selection.get_child_count() > 0: return
+	_available = available
+	if not at.is_finite():
+		_ring_at = Vector2.INF
+		if _warm_left <= 0: _ring.visible = false
+		return
+	var now := Time.get_ticks_msec() * 0.001
+	# Another hero (or a fresh selection): the ring jumped or its reach changed.
+	if not _ring_at.is_finite() or _ring_at.distance_to(at) > 40.0 or not is_equal_approx(radius, _range):
+		_ring_born = now
+		_ring_settled = false
+	_ring_at = at
 	_range = radius
-	_clear(selection)
-	StellarModels.part(selection, "ring", Vector3.ZERO, Vector3(1.0, 0.038, 1.0), Color("#ffe0a1"), 0.25, 0.35)
-	for side in [-1, 1]:
-		StellarModels.part(selection, "cone", Vector3(side * 0.54, 0.09, 0), Vector3(0.10, 0.16, 0.10), Color("#ffe0a1"), 0, 0.3)
-	if radius > 0:
-		for n in range(56):
-			var a := Vector3(cos(TAU * n / 56.0), 0.035, sin(TAU * n / 56.0)) * (radius / UNIT)
-			var b := Vector3(cos(TAU * (n + 0.55) / 56.0), 0.035, sin(TAU * (n + 0.55) / 56.0)) * (radius / UNIT)
-			StellarModels.link(selection, a, b, 0.019, Color("#ebc77f"), 0.1, 0.15)
-	StellarModels.compact(selection)
+	var reach := maxf(radius / UNIT, 0.0)
+	_ring.position = world(at, RING_HEIGHT)
+	var m := _ring_material
+	_sync_screen_k()
+	if not is_equal_approx(reach, _ring_reach):
+		# Only a new reach writes the ring's shape (most frames just move it with the hero).
+		_ring_reach = reach
+		var extent := maxf(reach, FOOT_RADIUS) + 0.45
+		_ring.scale = Vector3(extent, 1.0, extent)
+		m.set_shader_parameter("mode", 0)
+		m.set_shader_parameter("radius", reach)
+		m.set_shader_parameter("foot", FOOT_RADIUS)
+		m.set_shader_parameter("color", RING_GOLD)
+		m.set_shader_parameter("halo_color", RING_HALO)
+		m.set_shader_parameter("stroke_px", 3.6)
+		m.set_shader_parameter("fill", 0.10 if reach > 2.6 else 0.16)
+		m.set_shader_parameter("dashes", ring_dashes(reach, 1.0 / _screen_k))
+		m.set_shader_parameter("dash_on", 0.62)
+	var age := now - _ring_born
+	if age < 0.4 or not _ring_settled:
+		# The draw-in: animated for its 0.4 s, then written once more at rest.
+		m.set_shader_parameter("appear", clampf(age / RING_DRAW_IN, 0.0, 1.0))
+		m.set_shader_parameter("flash", 1.0 - smoothstep(0.0, 0.32, age))
+		_ring_settled = age >= 0.4
+	if _warm_left <= 0 and not _ring_lit:
+		m.set_shader_parameter("presence", 1.0)
+		_ring_lit = true
+	_ring.visible = true
+
+## Dashes around a ring of `reach` world units: a whole, even number, about DASH_PX of
+## screen per dash period (`scale`: screen pixels per picture pixel, below 1 on a small
+## window, so the period stays DASH_PX on the real screen); at least 12, so a melee reach
+## (40-95 px) gets a finer dash instead of a few fat pills.
+static func ring_dashes(reach: float, scale: float = 1.0) -> float:
+	var around := TAU * reach * 37.6 * 0.82 * scale
+	return float(maxi(12, int(round(around / DASH_PX / 2.0)) * 2))
+
+## The starlight-burst aim (2026-10-19, F6). The screen calls this every frame while the
+## blast is armed: `at` the logical ground point under the finger or cursor, `radius` the
+## damage radius in logical units (sim.blast_radius()), `valid` whether the star may fall
+## there, `shown` false once aiming ends. Valid is gold: the struck area filled, its edge
+## solid, eight lock-on arrowheads waiting at 1.35 R and a star at the centre. Invalid is
+## red-grey dashes with a cross. When the cast lands (arena_blast within a moment of the
+## aim closing, see _aim_cast) the arrowheads close onto R and the ring hands over to the cast's
+## own sigil, which starts at 1.35 R and settles on R (StellarVfx, vfx_skill part 1); a
+## cancel just fades.
+func set_aim(at: Vector2, radius: float, valid: bool, shown: bool) -> void:
+	var now := Time.get_ticks_msec() * 0.001
+	var state := _aim_state
+	if shown and at.is_finite():
+		if not bool(state["shown"]): state["born"] = now
+		state["shown"] = true
+		state["at"] = at
+		state["radius"] = radius
+		state["valid"] = valid
+		state["locked"] = -10.0
+	elif bool(state["shown"]):
+		state["shown"] = false
+		state["hidden"] = now
+		set_process(true)
+	_draw_aim(now)
+
+## Pose the aim quad for this moment.
+func _draw_aim(now: float) -> void:
+	var state := _aim_state
+	var at: Vector2 = state["at"]
+	var shown := bool(state["shown"])
+	var locking := now - float(state["locked"]) < AIM_LOCK
+	var fading := not shown and now - float(state["hidden"]) < AIM_FADE
+	if not at.is_finite() or not (shown or locking or fading):
+		if _warm_left <= 0: _aim.visible = false
+		return
+	var reach := maxf(float(state["radius"]) / UNIT, 0.2)
+	var valid := bool(state["valid"])
+	_aim.position = world(at, AIM_HEIGHT)
+	var extent := reach * 1.55 + 0.45
+	_aim.scale = Vector3(extent, 1.0, extent)
+	var m := _aim_material
+	_sync_screen_k()
+	m.set_shader_parameter("mode", 1 if valid else 2)
+	m.set_shader_parameter("radius", reach)
+	m.set_shader_parameter("foot", 0.0)
+	m.set_shader_parameter("color", AIM_GOLD if valid else AIM_BAD)
+	m.set_shader_parameter("halo_color", RING_HALO if valid else AIM_BAD_HALO)
+	m.set_shader_parameter("stroke_px", 4.2 if valid else 3.4)
+	m.set_shader_parameter("fill", 0.15 if valid else 0.07)
+	m.set_shader_parameter("dashes", 0.0 if valid else ring_dashes(reach, 1.0 / _screen_k))
+	m.set_shader_parameter("dash_on", 0.55)
+	m.set_shader_parameter("appear", clampf((now - float(state["born"])) / AIM_DRAW_IN, 0.0, 1.0))
+	m.set_shader_parameter("spin", now * 0.9)
+	var lock := clampf((now - float(state["locked"])) / AIM_LOCK, 0.0, 1.0) if locking else 0.0
+	m.set_shader_parameter("lock", lock)
+	m.set_shader_parameter("flash", 0.8 * sin(PI * lock) if locking else 0.0)
+	var presence := 1.0
+	if locking: presence = 1.0 - smoothstep(0.35, 1.0, lock)
+	elif fading: presence = 1.0 - (now - float(state["hidden"])) / AIM_FADE
+	if _warm_left <= 0: m.set_shader_parameter("presence", presence)
+	_aim.visible = true
 
 func event(e: Dictionary) -> void:
 	var type := String(e.get("t", ""))
@@ -409,7 +759,34 @@ func event(e: Dictionary) -> void:
 			super.event({"t": "leak", "p": Balance.ARENA_CENTER, "c": Look.RED, "r": 42.0})
 		return
 	if type in ["arena_blast", "arena_freeze", "arena_ward", "arena_boss_warning", "arena_boss",
-			"arena_stage", "arena_stage_clear", "arena_revive"]:
+			"arena_stage", "arena_stage_clear", "arena_revive", "arena_levelup",
+			"arena_wave", "arena_wave_clear", "arena_elite", "arena_heal"]:
+		match type:
+			"arena_blast":
+				# The trees answer the starfall when it lands (BLAST_FALL after the cast).
+				pulse_wind_later(StellarVfx.BLAST_FALL, GUST_BLAST)
+				_aim_cast(Vector2(e.get("p", Vector2.INF)))
+			"arena_boss":
+				pulse_wind_later(0.05, GUST_BOSS)
+			"arena_elite":
+				pulse_wind_later(0.05, GUST_ELITE)
+			"arena_revive":
+				pulse_wind_later(StellarVfx.REVIVE_FLASH, GUST_REVIVE)
 		vfx.arena_event(e)
 		return
 	super.event(e)
+
+## The star was cast: if the aim was up a moment ago over that point, its arrowheads close onto
+## the struck radius while the cast's own lock-on sigil takes over.
+func _aim_cast(p: Vector2) -> void:
+	var state := _aim_state
+	var at: Vector2 = state["at"]
+	if not at.is_finite() or not p.is_finite() or at.distance_to(p) > 60.0: return
+	var now := Time.get_ticks_msec() * 0.001
+	if not bool(state["shown"]) and now - float(state["hidden"]) > 0.30: return
+	state["shown"] = false
+	state["hidden"] = now
+	state["locked"] = now
+	state["valid"] = true
+	set_process(true)
+	_draw_aim(now)

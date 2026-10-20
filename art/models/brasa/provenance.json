@@ -28,8 +28,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/brasa/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/brasa/game.blend",
   "height": 1.68,
-  "glb_bytes": 781696,
-  "glb_sha256": "f2a4a7e27efe5a4fc71c5a7d7cf553b0ef2802d54b3800fd5780c4a51146e669",
+  "glb_bytes": 810224,
+  "glb_sha256": "9d55c9403329d04bf518fb5632ac7e2a14a558667721f42138356bdec8939c82",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -69,14 +69,24 @@
     ]
   },
   "motion": {
-    "version": 2,
+    "version": 3,
     "tool": "tools/3d/author_native_motion.py",
-    "authored_utc": "2026-10-10T09:36:25Z",
+    "authored_utc": "2026-10-18T13:33:40Z",
     "clips": {
       "IdleLoop": 6.0,
       "WalkLoop": 1.0,
       "Attack": 1.5,
       "attack_release_time": 1.0
+    },
+    "beats": {
+      "hold_start": 0.8,
+      "hold_dip_h": 0.025,
+      "breath_h": 0.015,
+      "sway_h": 0.025,
+      "fidget_window": [
+        3.0,
+        3.6
+      ]
     },
     "stride": 1.3,
     "leg_swing": 0.4,
@@ -85,9 +95,9 @@
     "lead": "R",
     "kind": "cast",
     "bounce_scale": 0.85,
-    "previous_glb_sha256": "268eb8a3623cdd366fe006dc4bbdcd33b427dc5dfaf28d4612fa5b9df7f26172",
+    "previous_glb_sha256": "af1a231c08e1f7dc77dfa0efc4308f4d0150249452fe46b0dd991786632f1d49",
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/brasa/game.motion-v1.blend",
-    "geometry_base_sha256": "1a9e4fba5d440a0f2890eebe8506d37ba104f39285d5321bdb679e2fca96a0d7",
+    "geometry_base_sha256": "af1a231c08e1f7dc77dfa0efc4308f4d0150249452fe46b0dd991786632f1d49",
     "geometry_bytes_preserved": true
   },
   "mobile_lod": {
@@ -174,5 +184,243 @@
     "removed_extracted_textures": [],
     "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/brasa/brasa.glb",
     "editable_lod_source": "build/character-3d/source/brasa/game-lod.blend"
+  },
+  "albedo_grade": {
+    "date": "2026-10-18",
+    "request": "user 2026-10-18: the characters read as a cheap AI-made 3D game; casual overhaul plan \"Lantern Stage\" WP-A \u2014 painted albedos that carry their own light, geometry untouched",
+    "tool": "tools/3d/optimize_native_lod.py --retexture + tools/3d/grade_native_albedo.py; records by tools/3d/publish_native_lod.py",
+    "method": "game-lod.blend opened as the bake target (geometry, UVs, weights, rig, clips, sockets and height untouched), game.blend surfaces appended as bake sources (visible faces first, all sheets as fallback), Cycles EMIT colour bake, AO bake of the reduced mesh alone and a height pass, then the painted grade inside the chart mask: de-speckle, chart-flatten (charts >= 48 texels), light posterise, levels, OKLab chroma with a skin cap, painted light from AO + height, cool shade, edge light, face paint-back; nearest fill, box downsample; clip bytes grafted from the shipped GLB",
+    "grade_version": "2026-10-18.7",
+    "parameters": {
+      "median": 3,
+      "bilateral_radius": 3,
+      "bilateral_sigma_s": 1.6,
+      "bilateral_sigma_r": 0.1,
+      "bilateral_passes": 2,
+      "seam_lambda": 0.3,
+      "seam_gain_min": 0.7,
+      "seam_gain_max": 1.4,
+      "seam_floor": 0.02,
+      "seam_chroma_sigma": 0.08,
+      "seam_small_chart": 96.0,
+      "seam_ratio_sigma": 0.6,
+      "flatten_min_width": 48,
+      "flatten_blur": 24,
+      "flatten_blend": 0.4,
+      "posterize_levels": 6,
+      "posterize_blend": 0.3,
+      "levels_lift": 0.09,
+      "levels_gain": 0.88,
+      "levels_gamma": 0.9,
+      "p10_floor": 0.17,
+      "p50_target": 0.5,
+      "p50_pull": 0.8,
+      "p50_gain_max": 2.2,
+      "dark_additive_lo": 0.04,
+      "dark_additive_hi": 0.16,
+      "lift_saturation_damp": 0.15,
+      "knee_start": 0.78,
+      "knee_slope": 0.45,
+      "knee_saturated_drop": 0.1,
+      "chroma_hero": 1.2,
+      "chroma_monster": 1.15,
+      "chroma_skin": 1.0,
+      "skin_s_cap": 0.5,
+      "s_cap": 0.86,
+      "ao_floor": 0.65,
+      "ao_gamma": 0.8,
+      "ao_smooth": 1.5,
+      "height_low": 0.82,
+      "height_high": 1.12,
+      "height_lo": 0.05,
+      "height_hi": 0.7,
+      "cool_shade": [
+        0.85,
+        0.9,
+        1.12
+      ],
+      "cool_amount": 0.5,
+      "edge_light": 0.06,
+      "edge_lo": 0.92,
+      "skin_hue": [
+        8.0,
+        38.0
+      ],
+      "skin_s": [
+        0.15,
+        0.6
+      ],
+      "skin_v": [
+        0.35,
+        0.98
+      ],
+      "skin_chart_fraction": 0.6,
+      "skin_chart_mixed": 0.3,
+      "skin_chart_s_median_max": 0.55,
+      "skin_chart_s_p90_max": 0.72,
+      "face_contrast": 1.3,
+      "face_dark_fraction": 0.04,
+      "face_dark_lstar": 15.0,
+      "face_blur": 4.0,
+      "face_mark_desaturate": 0.8,
+      "face_mark_lum": 0.35
+    },
+    "override": {},
+    "grade_info": {
+      "charts": 722,
+      "skin_charts_excluded": 8,
+      "seams": {
+        "pairs": 1279,
+        "samples": 8304,
+        "gain_min": 0.7,
+        "gain_max": 1.4,
+        "gain_std": 0.09
+      },
+      "flattened_charts": 126,
+      "levels": {
+        "lum_mean_after_remap": 0.4255,
+        "p50_gain": 1.428,
+        "p10_before": 0.1802,
+        "p10_lift": 0.0,
+        "remap": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.18,
+            0.18
+          ],
+          [
+            0.326,
+            0.465
+          ],
+          [
+            0.621,
+            0.621
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ]
+      },
+      "skin_texels": 2367,
+      "ao_mean": 0.7172,
+      "ao_p10": 0.2865,
+      "face": {
+        "head_texels": 91014,
+        "head_charts": 295,
+        "dark_threshold": 0.1386,
+        "mark_texels": 4060
+      }
+    },
+    "ao": {
+      "distance_m": 0.42,
+      "samples": 64,
+      "margin": 8
+    },
+    "head_start": 0.675,
+    "clip_donor": "art/models/brasa/brasa.glb",
+    "before": {
+      "glb_sha256": "848807011fc2d21ef7a908e765373f9c9ac1cab10592733f985aebc521504b62",
+      "glb_bytes": 804052,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "atlas_stats": {
+        "used_texels": 68891,
+        "charts": 687,
+        "mean_lstar": 33.61,
+        "lum_mean": 0.2818,
+        "lum_p10": 0.1083,
+        "lum_p50": 0.2156,
+        "lum_p90": 0.5494,
+        "lstar_p10": 10.67,
+        "near_black_fraction": 0.242,
+        "sat_mean": 0.6269,
+        "sat_p90": 0.8934,
+        "micro_contrast_255": 11.73,
+        "laplacian_mean": 0.0443,
+        "dominant_hues": [
+          {
+            "hue_deg": 22.5,
+            "mass": 0.284
+          }
+        ],
+        "dominant_hue_count": 1,
+        "skin": {
+          "texels": 517,
+          "mean_lstar": 60.14,
+          "sat_mean": 0.4717,
+          "sat_p90": 0.5487,
+          "sat_max": 0.85
+        }
+      }
+    },
+    "after": {
+      "glb_sha256": "9d55c9403329d04bf518fb5632ac7e2a14a558667721f42138356bdec8939c82",
+      "glb_bytes": 810224,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      },
+      "atlas_stats": {
+        "used_texels": 68891,
+        "charts": 687,
+        "mean_lstar": 46.15,
+        "lum_mean": 0.3798,
+        "lum_p10": 0.1572,
+        "lum_p50": 0.3759,
+        "lum_p90": 0.5698,
+        "lstar_p10": 17.8,
+        "near_black_fraction": 0.0874,
+        "sat_mean": 0.6531,
+        "sat_p90": 0.8598,
+        "micro_contrast_255": 9.35,
+        "laplacian_mean": 0.0293,
+        "dominant_hues": [
+          {
+            "hue_deg": 22.5,
+            "mass": 0.244
+          }
+        ],
+        "dominant_hue_count": 1,
+        "skin": {
+          "texels": 537,
+          "mean_lstar": 59.34,
+          "sat_mean": 0.4149,
+          "sat_p90": 0.4953,
+          "sat_max": 0.5578
+        }
+      }
+    },
+    "geometry_sha256": "e4e1b0c336d3757e8959d514bce356cd4465908da515a9061953b686f31abf13",
+    "geometry_bytes_preserved": true,
+    "bake": {
+      "size": 1024,
+      "covered_texels": 292618,
+      "missed_texels": 772,
+      "interior_fallback_texels": 433,
+      "miss_fraction": 0.0026382519188840057
+    },
+    "visible_faces": {
+      "removed_faces": 33205,
+      "kept_faces": 21794
+    },
+    "removed_extracted_textures": [
+      "brasa_brasa_lod_albedo.png"
+    ],
+    "editable_lod_source": "build/character-3d/source/brasa/game-lod.blend",
+    "evidence": "build/character-3d/lod-2026-10-18/brasa"
   }
 }

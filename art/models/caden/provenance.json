@@ -29,8 +29,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/caden/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/caden/game.blend",
   "height": 1.65,
-  "glb_bytes": 792316,
-  "glb_sha256": "8ca3dfcd07ba6a06c65150634aac920f287dbefed153bcb76ba80e9537608036",
+  "glb_bytes": 815448,
+  "glb_sha256": "5b4f4971879ad363e7614ed3dc3918bcd0d393e1c31091a90edcd1cac20628ea",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -71,14 +71,24 @@
     "artist_note": "Direct actual Godot two-resolution galleries, continuous idle/attack contact frames,0/4/9 and actual awakened model,12unique hero mixedbattle inspected. Preserve Lugh green canister/beard purpleworkwear, Galene navy coat/brown cylinders, Zero ivory automaton/chain, Phantom white ponytail/swordL, Caden purplehair/lime armor/swordR, Estoque brown hair/glasses/gold-redworkwear/swordR, Nerea white hair/navyarmor/bigbackslab/cyanbladeR and Glaukos greenhair/cyanworkgear/largecleaverL. Feet fixed, cuffs/waist continuous, coherent retained UV matte surfaces and weapon shape throughout strike/recovery. No deviceFPS claim."
   },
   "motion": {
-    "version": 2,
+    "version": 4,
     "tool": "tools/3d/author_native_motion.py",
-    "authored_utc": "2026-10-10T09:36:58Z",
+    "authored_utc": "2026-10-19T07:03:35Z",
     "clips": {
       "IdleLoop": 6.0,
       "WalkLoop": 1.0,
       "Attack": 1.5,
       "attack_release_time": 1.0
+    },
+    "beats": {
+      "hold_start": 0.78,
+      "hold_dip_h": 0.025,
+      "breath_h": 0.015,
+      "sway_h": 0.025,
+      "fidget_window": [
+        3.0,
+        3.6
+      ]
     },
     "stride": 1.4457,
     "leg_swing": 0.62,
@@ -87,9 +97,57 @@
     "lead": "R",
     "kind": "sword",
     "bounce_scale": 1.0,
-    "previous_glb_sha256": "7e27870e7a4a9cc81b8dda85c1cf15ff7fb6b737b1177d33523d500723613cb8",
+    "arms": {
+      "solver": "hinge two-bone IK, forearm-relative wrists (soft limits 80/88 deg), bow rides the hand",
+      "hinge": {
+        "L": [
+          0.7875,
+          -0.6163,
+          0.0
+        ],
+        "R": [
+          0.7875,
+          0.6163,
+          0.0
+        ]
+      },
+      "wrist_pivot_offset_m": {
+        "L": 0.092,
+        "R": 0.193
+      },
+      "attack_wrist_limit_excess_deg": {
+        "R": 1.2
+      },
+      "socket_forward_dot": {
+        "0:hold": -0.8162,
+        "0:release": -0.8162,
+        "0:release+65ms": 0.636
+      },
+      "sword_guard": "front",
+      "sword_guard_skin": {
+        "front": {
+          "cost": 713.044,
+          "edges": 964
+        },
+        "side": {
+          "cost": 205.452,
+          "edges": 186
+        }
+      },
+      "attack_skin_web_edges": {
+        "L": {
+          "max": 4,
+          "mean": 2.6
+        },
+        "R": {
+          "max": 252,
+          "mean": 107.4
+        }
+      }
+    },
+    "previous_glb_sha256": "995d7137c67d6023911c1b92b79cf8aba6227e3f44cf32ba0936cf27ee6f0a13",
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/caden/game.motion-v1.blend",
-    "geometry_base_sha256": "7e27870e7a4a9cc81b8dda85c1cf15ff7fb6b737b1177d33523d500723613cb8",
+    "geometry_base_sha256": "6b6587dba1285246d84d412ca23320b69dbfa72506071332de0a753d653950ac",
     "geometry_bytes_preserved": true
   },
   "mobile_lod": {
@@ -178,5 +236,263 @@
     ],
     "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/caden/caden.glb",
     "editable_lod_source": "build/character-3d/source/caden/game-lod.blend"
+  },
+  "albedo_grade": {
+    "date": "2026-10-18",
+    "request": "user 2026-10-18: the characters read as a cheap AI-made 3D game; casual overhaul plan \"Lantern Stage\" WP-A \u2014 painted albedos that carry their own light, geometry untouched",
+    "tool": "tools/3d/optimize_native_lod.py --retexture + tools/3d/grade_native_albedo.py; records by tools/3d/publish_native_lod.py",
+    "method": "game-lod.blend opened as the bake target (geometry, UVs, weights, rig, clips, sockets and height untouched), game.blend surfaces appended as bake sources (visible faces first, all sheets as fallback), Cycles EMIT colour bake, AO bake of the reduced mesh alone and a height pass, then the painted grade inside the chart mask: de-speckle, chart-flatten (charts >= 48 texels), light posterise, levels, OKLab chroma with a skin cap, painted light from AO + height, cool shade, edge light, face paint-back; nearest fill, box downsample; clip bytes grafted from the shipped GLB",
+    "grade_version": "2026-10-18.7",
+    "parameters": {
+      "median": 3,
+      "bilateral_radius": 3,
+      "bilateral_sigma_s": 1.6,
+      "bilateral_sigma_r": 0.1,
+      "bilateral_passes": 2,
+      "seam_lambda": 0.3,
+      "seam_gain_min": 0.7,
+      "seam_gain_max": 1.4,
+      "seam_floor": 0.02,
+      "seam_chroma_sigma": 0.08,
+      "seam_small_chart": 96.0,
+      "seam_ratio_sigma": 0.6,
+      "flatten_min_width": 48,
+      "flatten_blur": 24,
+      "flatten_blend": 0.4,
+      "posterize_levels": 6,
+      "posterize_blend": 0.3,
+      "levels_lift": 0.09,
+      "levels_gain": 0.88,
+      "levels_gamma": 0.9,
+      "p10_floor": 0.17,
+      "p50_target": 0.5,
+      "p50_pull": 0.8,
+      "p50_gain_max": 2.2,
+      "dark_additive_lo": 0.04,
+      "dark_additive_hi": 0.16,
+      "lift_saturation_damp": 0.15,
+      "knee_start": 0.78,
+      "knee_slope": 0.45,
+      "knee_saturated_drop": 0.1,
+      "chroma_hero": 1.2,
+      "chroma_monster": 1.15,
+      "chroma_skin": 1.0,
+      "skin_s_cap": 0.5,
+      "s_cap": 0.86,
+      "ao_floor": 0.65,
+      "ao_gamma": 0.8,
+      "ao_smooth": 1.5,
+      "height_low": 0.82,
+      "height_high": 1.12,
+      "height_lo": 0.05,
+      "height_hi": 0.7,
+      "cool_shade": [
+        0.85,
+        0.9,
+        1.12
+      ],
+      "cool_amount": 0.5,
+      "edge_light": 0.06,
+      "edge_lo": 0.92,
+      "skin_hue": [
+        8.0,
+        38.0
+      ],
+      "skin_s": [
+        0.15,
+        0.6
+      ],
+      "skin_v": [
+        0.35,
+        0.98
+      ],
+      "skin_chart_fraction": 0.6,
+      "skin_chart_mixed": 0.3,
+      "skin_chart_s_median_max": 0.55,
+      "skin_chart_s_p90_max": 0.72,
+      "face_contrast": 1.3,
+      "face_dark_fraction": 0.04,
+      "face_dark_lstar": 15.0,
+      "face_blur": 4.0,
+      "face_mark_desaturate": 0.8,
+      "face_mark_lum": 0.35
+    },
+    "override": {},
+    "grade_info": {
+      "charts": 618,
+      "skin_charts_excluded": 4,
+      "seams": {
+        "pairs": 1072,
+        "samples": 7712,
+        "gain_min": 0.738,
+        "gain_max": 1.4,
+        "gain_std": 0.081
+      },
+      "flattened_charts": 140,
+      "levels": {
+        "lum_mean_after_remap": 0.4884,
+        "p50_gain": 1.05,
+        "p10_before": 0.2476,
+        "p10_lift": 0.0,
+        "remap": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.248,
+            0.248
+          ],
+          [
+            0.471,
+            0.494
+          ],
+          [
+            0.763,
+            0.763
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ]
+      },
+      "skin_texels": 5664,
+      "ao_mean": 0.7131,
+      "ao_p10": 0.2869,
+      "face": {
+        "head_texels": 74741,
+        "head_charts": 205,
+        "dark_threshold": 0.2499,
+        "mark_texels": 3246
+      }
+    },
+    "ao": {
+      "distance_m": 0.4125,
+      "samples": 64,
+      "margin": 8
+    },
+    "head_start": 0.675,
+    "clip_donor": "art/models/caden/caden.glb",
+    "before": {
+      "glb_sha256": "b18b5410b9626c20064062b9747450249a56f6a091aa1798b2c85665bb3cdfb9",
+      "glb_bytes": 815168,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "atlas_stats": {
+        "used_texels": 68141,
+        "charts": 644,
+        "mean_lstar": 41.8,
+        "lum_mean": 0.3865,
+        "lum_p10": 0.1331,
+        "lum_p50": 0.3854,
+        "lum_p90": 0.6335,
+        "lstar_p10": 13.93,
+        "near_black_fraction": 0.1437,
+        "sat_mean": 0.5447,
+        "sat_p90": 0.7321,
+        "micro_contrast_255": 10.46,
+        "laplacian_mean": 0.0405,
+        "dominant_hues": [
+          {
+            "hue_deg": 82.5,
+            "mass": 0.155
+          },
+          {
+            "hue_deg": 22.5,
+            "mass": 0.118
+          },
+          {
+            "hue_deg": 277.5,
+            "mass": 0.064
+          },
+          {
+            "hue_deg": 232.5,
+            "mass": 0.057
+          }
+        ],
+        "dominant_hue_count": 4,
+        "skin": {
+          "texels": 518,
+          "mean_lstar": 60.78,
+          "sat_mean": 0.5487,
+          "sat_p90": 0.5735,
+          "sat_max": 0.5941
+        }
+      }
+    },
+    "after": {
+      "glb_sha256": "6b6587dba1285246d84d412ca23320b69dbfa72506071332de0a753d653950ac",
+      "glb_bytes": 815440,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      },
+      "atlas_stats": {
+        "used_texels": 68141,
+        "charts": 644,
+        "mean_lstar": 49.54,
+        "lum_mean": 0.4526,
+        "lum_p10": 0.226,
+        "lum_p50": 0.4586,
+        "lum_p90": 0.6992,
+        "lstar_p10": 25.08,
+        "near_black_fraction": 0.0298,
+        "sat_mean": 0.6277,
+        "sat_p90": 0.8616,
+        "micro_contrast_255": 7.77,
+        "laplacian_mean": 0.0262,
+        "dominant_hues": [
+          {
+            "hue_deg": 82.5,
+            "mass": 0.155
+          },
+          {
+            "hue_deg": 37.5,
+            "mass": 0.115
+          },
+          {
+            "hue_deg": 247.5,
+            "mass": 0.075
+          }
+        ],
+        "dominant_hue_count": 3,
+        "skin": {
+          "texels": 1312,
+          "mean_lstar": 48.95,
+          "sat_mean": 0.4369,
+          "sat_p90": 0.4955,
+          "sat_max": 0.5795
+        }
+      }
+    },
+    "geometry_sha256": "3837f80e153badad6844a284550d61f0235d9b4764d2adca61fa9d8c19ed6f22",
+    "geometry_bytes_preserved": true,
+    "bake": {
+      "size": 1024,
+      "covered_texels": 288988,
+      "missed_texels": 509,
+      "interior_fallback_texels": 177,
+      "miss_fraction": 0.0017613188090854985
+    },
+    "visible_faces": {
+      "removed_faces": 33427,
+      "kept_faces": 21572
+    },
+    "removed_extracted_textures": [
+      "caden_caden_lod_albedo.png"
+    ],
+    "editable_lod_source": "build/character-3d/source/caden/game-lod.blend",
+    "evidence": "build/character-3d/lod-2026-10-18/caden"
   }
 }

@@ -29,8 +29,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/chispa/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/chispa/game.blend",
   "height": 1.65,
-  "glb_bytes": 763528,
-  "glb_sha256": "066ee75723c32a412e5ca86d330231b83e19408b3c5016afa49b19d82181bcf9",
+  "glb_bytes": 809152,
+  "glb_sha256": "0c3d9e620dc383e691ec075620c70d45379067d22eef29c4190d7e4afaa16615",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -71,14 +71,24 @@
     "artist_note": "Original identity/color/held gear preserved. Direct native multiple-view, clean sole and continuous prepare/release/recovery inspected. Chispa levels gray weapon forward; Lind cyan chain/cells remain coherent; Brigid complete bow/string and quiver do not tear. Both real game resolutions preserve silhouette and grade/awakening detail."
   },
   "motion": {
-    "version": 2,
+    "version": 4,
     "tool": "tools/3d/author_native_motion.py",
-    "authored_utc": "2026-10-10T09:36:25Z",
+    "authored_utc": "2026-10-19T02:42:59Z",
     "clips": {
       "IdleLoop": 6.0,
       "WalkLoop": 1.0,
       "Attack": 1.5,
       "attack_release_time": 1.0
+    },
+    "beats": {
+      "hold_start": 0.25,
+      "hold_dip_h": 0.025,
+      "breath_h": 0.015,
+      "sway_h": 0.025,
+      "fidget_window": [
+        3.0,
+        3.6
+      ]
     },
     "stride": 1.4457,
     "leg_swing": 0.62,
@@ -87,9 +97,44 @@
     "lead": "R",
     "kind": "rifle",
     "bounce_scale": 1.0,
-    "previous_glb_sha256": "214264ce512cb4e1044d10a375262358847f5e24635bd90fe4bb018f7e20a489",
+    "arms": {
+      "solver": "hinge two-bone IK, forearm-relative wrists (soft limits 80/88 deg), bow rides the hand",
+      "hinge": {
+        "L": [
+          0.7875,
+          -0.6163,
+          0.0
+        ],
+        "R": [
+          0.7875,
+          0.6163,
+          0.0
+        ]
+      },
+      "wrist_pivot_offset_m": {
+        "L": 0.152,
+        "R": 0.248
+      },
+      "attack_wrist_limit_excess_deg": {
+        "R": 8.3,
+        "L": 45.5
+      },
+      "socket_forward_dot": {
+        "0:hold": 0.993,
+        "0:release": 0.993,
+        "0:release+65ms": 0.987
+      },
+      "gun_hold_offset_h": {
+        "R": [
+          -0.11,
+          -0.07,
+          -0.14
+        ]
+      }
+    },
+    "previous_glb_sha256": "97e258e2caaaecc53267bb789f3bb7d74b4b60b40f2785c3f1a7cdaf51c668ed",
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/chispa/game.motion-v1.blend",
-    "geometry_base_sha256": "214264ce512cb4e1044d10a375262358847f5e24635bd90fe4bb018f7e20a489",
+    "geometry_base_sha256": "97e258e2caaaecc53267bb789f3bb7d74b4b60b40f2785c3f1a7cdaf51c668ed",
     "geometry_bytes_preserved": true
   },
   "mobile_lod": {
@@ -178,5 +223,243 @@
     ],
     "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/chispa/chispa.glb",
     "editable_lod_source": "build/character-3d/source/chispa/game-lod.blend"
+  },
+  "albedo_grade": {
+    "date": "2026-10-18",
+    "request": "user 2026-10-18: the characters read as a cheap AI-made 3D game; casual overhaul plan \"Lantern Stage\" WP-A \u2014 painted albedos that carry their own light, geometry untouched",
+    "tool": "tools/3d/optimize_native_lod.py --retexture + tools/3d/grade_native_albedo.py; records by tools/3d/publish_native_lod.py",
+    "method": "game-lod.blend opened as the bake target (geometry, UVs, weights, rig, clips, sockets and height untouched), game.blend surfaces appended as bake sources (visible faces first, all sheets as fallback), Cycles EMIT colour bake, AO bake of the reduced mesh alone and a height pass, then the painted grade inside the chart mask: de-speckle, chart-flatten (charts >= 48 texels), light posterise, levels, OKLab chroma with a skin cap, painted light from AO + height, cool shade, edge light, face paint-back; nearest fill, box downsample; clip bytes grafted from the shipped GLB",
+    "grade_version": "2026-10-18.7",
+    "parameters": {
+      "median": 3,
+      "bilateral_radius": 3,
+      "bilateral_sigma_s": 1.6,
+      "bilateral_sigma_r": 0.1,
+      "bilateral_passes": 2,
+      "seam_lambda": 0.3,
+      "seam_gain_min": 0.7,
+      "seam_gain_max": 1.4,
+      "seam_floor": 0.02,
+      "seam_chroma_sigma": 0.08,
+      "seam_small_chart": 96.0,
+      "seam_ratio_sigma": 0.6,
+      "flatten_min_width": 48,
+      "flatten_blur": 24,
+      "flatten_blend": 0.4,
+      "posterize_levels": 6,
+      "posterize_blend": 0.3,
+      "levels_lift": 0.09,
+      "levels_gain": 0.88,
+      "levels_gamma": 0.9,
+      "p10_floor": 0.17,
+      "p50_target": 0.5,
+      "p50_pull": 0.8,
+      "p50_gain_max": 2.2,
+      "dark_additive_lo": 0.04,
+      "dark_additive_hi": 0.16,
+      "lift_saturation_damp": 0.15,
+      "knee_start": 0.78,
+      "knee_slope": 0.45,
+      "knee_saturated_drop": 0.1,
+      "chroma_hero": 1.2,
+      "chroma_monster": 1.15,
+      "chroma_skin": 1.0,
+      "skin_s_cap": 0.5,
+      "s_cap": 0.86,
+      "ao_floor": 0.65,
+      "ao_gamma": 0.8,
+      "ao_smooth": 1.5,
+      "height_low": 0.82,
+      "height_high": 1.12,
+      "height_lo": 0.05,
+      "height_hi": 0.7,
+      "cool_shade": [
+        0.85,
+        0.9,
+        1.12
+      ],
+      "cool_amount": 0.5,
+      "edge_light": 0.06,
+      "edge_lo": 0.92,
+      "skin_hue": [
+        8.0,
+        38.0
+      ],
+      "skin_s": [
+        0.15,
+        0.6
+      ],
+      "skin_v": [
+        0.35,
+        0.98
+      ],
+      "skin_chart_fraction": 0.6,
+      "skin_chart_mixed": 0.3,
+      "skin_chart_s_median_max": 0.55,
+      "skin_chart_s_p90_max": 0.72,
+      "face_contrast": 1.3,
+      "face_dark_fraction": 0.04,
+      "face_dark_lstar": 15.0,
+      "face_blur": 4.0,
+      "face_mark_desaturate": 0.8,
+      "face_mark_lum": 0.35
+    },
+    "override": {},
+    "grade_info": {
+      "charts": 776,
+      "skin_charts_excluded": 6,
+      "seams": {
+        "pairs": 1532,
+        "samples": 10390,
+        "gain_min": 0.739,
+        "gain_max": 1.361,
+        "gain_std": 0.063
+      },
+      "flattened_charts": 130,
+      "levels": {
+        "lum_mean_after_remap": 0.3832,
+        "p50_gain": 1.704,
+        "p10_before": 0.1838,
+        "p10_lift": 0.0,
+        "remap": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.184,
+            0.184
+          ],
+          [
+            0.266,
+            0.453
+          ],
+          [
+            0.454,
+            0.493
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ]
+      },
+      "skin_texels": 3827,
+      "ao_mean": 0.7189,
+      "ao_p10": 0.3224,
+      "face": {
+        "head_texels": 103284,
+        "head_charts": 276,
+        "dark_threshold": 0.162,
+        "mark_texels": 4143
+      }
+    },
+    "ao": {
+      "distance_m": 0.4125,
+      "samples": 64,
+      "margin": 8
+    },
+    "head_start": 0.675,
+    "clip_donor": "art/models/chispa/chispa.glb",
+    "before": {
+      "glb_sha256": "2d4d08eeece1380672326cb78c11103b6217e31f6f404f26a6115e0655896d45",
+      "glb_bytes": 799284,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "atlas_stats": {
+        "used_texels": 62597,
+        "charts": 792,
+        "mean_lstar": 26.43,
+        "lum_mean": 0.2061,
+        "lum_p10": 0.0935,
+        "lum_p50": 0.1631,
+        "lum_p90": 0.3535,
+        "lstar_p10": 11.47,
+        "near_black_fraction": 0.4373,
+        "sat_mean": 0.7537,
+        "sat_p90": 0.9881,
+        "micro_contrast_255": 4.94,
+        "laplacian_mean": 0.0197,
+        "dominant_hues": [
+          {
+            "hue_deg": 7.5,
+            "mass": 0.388
+          }
+        ],
+        "dominant_hue_count": 1,
+        "skin": {
+          "texels": 78,
+          "mean_lstar": 55.31,
+          "sat_mean": 0.5472,
+          "sat_p90": 0.5644,
+          "sat_max": 0.8138
+        }
+      }
+    },
+    "after": {
+      "glb_sha256": "97e258e2caaaecc53267bb789f3bb7d74b4b60b40f2785c3f1a7cdaf51c668ed",
+      "glb_bytes": 808676,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      },
+      "atlas_stats": {
+        "used_texels": 62597,
+        "charts": 792,
+        "mean_lstar": 44.6,
+        "lum_mean": 0.3437,
+        "lum_p10": 0.1677,
+        "lum_p50": 0.3637,
+        "lum_p90": 0.4738,
+        "lstar_p10": 21.75,
+        "near_black_fraction": 0.0744,
+        "sat_mean": 0.6997,
+        "sat_p90": 0.8634,
+        "micro_contrast_255": 5.02,
+        "laplacian_mean": 0.0164,
+        "dominant_hues": [
+          {
+            "hue_deg": 7.5,
+            "mass": 0.348
+          }
+        ],
+        "dominant_hue_count": 1,
+        "skin": {
+          "texels": 865,
+          "mean_lstar": 62.98,
+          "sat_mean": 0.477,
+          "sat_p90": 0.4978,
+          "sat_max": 0.5754
+        }
+      }
+    },
+    "geometry_sha256": "7336f1c2c01e9c362a12238628acb72736920f9ab96488ac3c52620e7088e564",
+    "geometry_bytes_preserved": true,
+    "bake": {
+      "size": 1024,
+      "covered_texels": 268452,
+      "missed_texels": 713,
+      "interior_fallback_texels": 544,
+      "miss_fraction": 0.002655968292283164
+    },
+    "visible_faces": {
+      "removed_faces": 30106,
+      "kept_faces": 24893
+    },
+    "removed_extracted_textures": [
+      "chispa_chispa_lod_albedo.png"
+    ],
+    "editable_lod_source": "build/character-3d/source/chispa/game-lod.blend",
+    "evidence": "build/character-3d/lod-2026-10-18/chispa"
   }
 }

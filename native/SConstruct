@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+# stellar_native: the C++ kernels of Stellar Defense (docs/PERF_NATIVE.md).
+#
+#   tools/native/build.sh [linux|android|all]      (fetches godot-cpp, then runs this)
+#   scons -C native platform=linux arch=arm64 target=template_release
+#
+# godot-cpp lives in build/native/godot-cpp (pinned by tools/native/build.sh, not in Git).
+# The build profile keeps the bindings to the handful of engine classes the kernels touch,
+# so a fresh godot-cpp build takes about a minute instead of ten.
+import os
+import platform as host_platform
+
+GODOT_CPP = os.path.join(Dir("#").abspath, "..", "build", "native", "godot-cpp")
+if not os.path.isfile(os.path.join(GODOT_CPP, "SConstruct")):
+    raise SystemExit("godot-cpp is missing: run tools/native/build.sh (it fetches the pinned commit)")
+
+SConsignFile(os.path.join(Dir("#").abspath, "..", "build", "native", "sconsign"))
+# No fused multiply-add: the kernels must round exactly like the engine's own Vector2 and
+# Vector3 code (tests compare them to the GDScript reference to the last bit, and a
+# road test at the kerb flipped with contraction on).
+env = Environment(tools=["default"], PLATFORM="")
+env.Append(CCFLAGS=["-ffp-contract=off"])
+env = SConscript(os.path.join(GODOT_CPP, "SConstruct"), {
+    "env": env,
+    "api_version": "4.7",
+    "build_profile": os.path.join(Dir("#").abspath, "build_profile.json"),
+})
+
+# This machine's NDK clang is the x86_64 release under qemu-user (tools/native/build.sh):
+# it compiles, but cannot start its own linker, so the link runs through our helper.
+if env["platform"] == "android" and host_platform.machine() in ("aarch64", "arm64"):
+    helper = os.path.join(Dir("#").abspath, "..", "tools", "native", "android_link.py")
+    env["SHLINKCOM"] = "python3 " + helper + " $SHLINK -o $TARGET $SHLINKFLAGS $__SHLIBVERSIONFLAGS $__RPATH $SOURCES $_LIBDIRFLAGS $_LIBFLAGS"
+
+variant = os.path.join("..", "build", "native", "obj", env["platform"] + "." + env["arch"])
+VariantDir(variant, "src", duplicate=False)
+env.Append(CPPPATH=["src/"])
+sources = Glob(os.path.join(variant, "*.cpp"))
+
+library = env.SharedLibrary(
+    os.path.join("..", "addons", "stellar_native", "bin", "libstellar_native" + env["suffix"] + env["SHLIBSUFFIX"]),
+    source=sources,
+)
+env.NoCache(library)
+Default(library)

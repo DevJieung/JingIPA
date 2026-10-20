@@ -70,6 +70,24 @@ const LIFT_RUN := 0.6           # extra clearance at the full run (knee lift)
 const FLIGHT_LEG := 0.10        # flight apex at a full-length flight (both feet off 17 % of the cycle)
 const SETTLE_LEG := 0.025       # weight settle right after the heel strike
 const NOD := 0.03               # torso nod (rad) at the strike
+## Start/stop lean (2026-10-18, motion beats): a second-order spring trails the smoothed
+## ground speed and the torso leans by the LAG between the two (forward while gaining
+## speed, back while braking, nothing at a steady pace — the steady run lean is
+## gait_lean()). r is 0 on purpose: an initial response > 0 makes the spring lead the
+## speed during the 0.06 s ramp, so the lag flips sign and the body jerks back while it
+## is still accelerating. At 3.5 Hz / zeta 0.45 the brake leans back 0.17 rad within
+## 0.15 s and swings once past upright before it settles (< 0.4 s).
+const LEAN_GAIN := 0.9
+const LEAN_F := 3.5
+const LEAN_ZETA := 0.45
+const LEAN_PITCH_MIN := -0.20
+const LEAN_PITCH_MAX := 0.25
+## Turn bank: the roll target follows the yaw rate (0.02 s of yaw per radian of roll,
+## clamped) and goes through the same spring so a turn banks in and swings back once.
+const BANK_GAIN := 0.02
+const BANK_MAX := 0.18
+const BANK_F := 3.0
+const BANK_ZETA := 0.5
 
 var stride := 1.5               # authored clip stride (manifest); kept for stride_scale()
 var leg := 0.48                 # hip pivot height above the sole (model units)
@@ -95,6 +113,8 @@ var _back := 0.71
 var _duty := 0.5
 var _cycle := 1.3
 var _toe_share := TOE_ROCKER
+var _lean_spring := Vector3.ZERO    # sod_step state for the speed spring (y, y', last x)
+var _bank_spring := Vector3.ZERO    # sod_step state for the roll spring
 
 func _init() -> void:
 	_update_gait()
@@ -325,9 +345,38 @@ func sync_yaw(value: float) -> void:
 func _relax(step: float) -> void:
 	if step <= 0.0: return
 	var k := 1.0 - exp(-step / 0.08)
-	lean_roll = lerpf(lean_roll, clampf(-yaw_rate * 0.012, -0.12, 0.12) * clampf(speed / WALK_FULL_SPEED, 0.35, 1.0), k)
-	lean_pitch = lerpf(lean_pitch, clampf(_accel * 0.012, -0.08, 0.10), k)
+	# Lag lean: the spring follows the speed; the torso leans by what the spring still
+	# owes (see LEAN_*). Advanced only by a positive step, so paused redraws hold.
+	_lean_spring = sod_step(_lean_spring, speed, step, LEAN_F, LEAN_ZETA, 0.0)
+	var pitch_target := clampf(LEAN_GAIN * (speed - _lean_spring.x) / WALK_FULL_SPEED, LEAN_PITCH_MIN, LEAN_PITCH_MAX)
+	lean_pitch = lerpf(lean_pitch, pitch_target, k)
+	# Turn bank through the spring: banks into the turn, swings back once as it ends.
+	var roll_target := clampf(-yaw_rate * BANK_GAIN, -BANK_MAX, BANK_MAX) * clampf(speed / WALK_FULL_SPEED, 0.35, 1.0)
+	_bank_spring = sod_step(_bank_spring, roll_target, step, BANK_F, BANK_ZETA, 0.0)
+	lean_roll = clampf(_bank_spring.x, -BANK_MAX * 1.25, BANK_MAX * 1.25)
+	if absf(lean_roll) < 0.0005 and absf(roll_target) < 0.0005 and absf(_bank_spring.y) < 0.002:
+		lean_roll = 0.0
+		_bank_spring = Vector3(0.0, 0.0, roll_target)
 	_accel = lerpf(_accel, 0.0, k)
+
+## One semi-implicit Euler step of a second-order system (t3ssel8r's "second order
+## dynamics"): `state` is (y, y', previous target), f the natural frequency in Hz, zeta
+## the damping ratio (< 1 overshoots once, 1 none), r the initial response (0 = none,
+## > 0 leads the input, < 0 anticipates against it). dt-stable: the stiffness term is
+## raised to the semi-implicit bound for this dt, so a large simulated step never
+## explodes. Returns the new state; a zero or negative dt returns the state unchanged.
+static func sod_step(state: Vector3, target: float, dt: float, f: float = 4.0, zeta: float = 0.5, r: float = 1.5) -> Vector3:
+	if dt <= 0.0: return state
+	var hz := maxf(f, 0.01)
+	var w := TAU * hz
+	var k1 := zeta / (PI * hz)
+	var k2 := 1.0 / (w * w)
+	var k3 := r * zeta / w
+	var xd := (target - state.z) / dt
+	var k2_stable := maxf(k2, 1.1 * (dt * dt / 4.0 + dt * k1 / 2.0))
+	var y := state.x + dt * state.y
+	var yd := state.y + dt * (target + k3 * xd - y - k1 * state.y) / k2_stable
+	return Vector3(y, yd, target)
 
 ## Previews and formation screens show a calm, untwisted body.
 func clear_battle() -> void:
@@ -338,4 +387,6 @@ func clear_battle() -> void:
 	lean_roll = 0.0
 	lean_pitch = 0.0
 	_accel = 0.0
+	_lean_spring = Vector3.ZERO
+	_bank_spring = Vector3.ZERO
 	_update_gait()

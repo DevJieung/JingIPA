@@ -30,8 +30,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/flame_dragon/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/flame_dragon/game.blend",
-  "glb_sha256": "ef74be110646802722c98ccb36aa135f8c0f40727468658a4bcae92592e6f79f",
-  "glb_bytes": 839160,
+  "glb_sha256": "5cdfc908dc803ab1c1c74bd10f3add03d42a375b653df7d56d3bc45266f04905",
+  "glb_bytes": 860580,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -192,5 +192,237 @@
     ],
     "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/monsters/flame_dragon/flame_dragon.glb",
     "editable_lod_source": "build/character-3d/monster-source/flame_dragon/game-lod.blend"
+  },
+  "albedo_grade": {
+    "date": "2026-10-18",
+    "request": "user 2026-10-18: the characters read as a cheap AI-made 3D game; casual overhaul plan \"Lantern Stage\" WP-A \u2014 painted albedos that carry their own light, geometry untouched",
+    "tool": "tools/3d/optimize_native_lod.py --retexture + tools/3d/grade_native_albedo.py; records by tools/3d/publish_native_lod.py",
+    "method": "game-lod.blend opened as the bake target (geometry, UVs, weights, rig, clips, sockets and height untouched), game.blend surfaces appended as bake sources (visible faces first, all sheets as fallback), Cycles EMIT colour bake, AO bake of the reduced mesh alone and a height pass, then the painted grade inside the chart mask: de-speckle, chart-flatten (charts >= 48 texels), light posterise, levels, OKLab chroma with a skin cap, painted light from AO + height, cool shade, edge light, face paint-back; nearest fill, box downsample; clip bytes grafted from the shipped GLB",
+    "grade_version": "2026-10-18.6",
+    "parameters": {
+      "median": 3,
+      "bilateral_radius": 3,
+      "bilateral_sigma_s": 1.6,
+      "bilateral_sigma_r": 0.1,
+      "bilateral_passes": 2,
+      "seam_lambda": 0.3,
+      "seam_gain_min": 0.7,
+      "seam_gain_max": 1.4,
+      "seam_floor": 0.02,
+      "seam_chroma_sigma": 0.08,
+      "seam_small_chart": 96.0,
+      "seam_ratio_sigma": 0.6,
+      "flatten_min_width": 48,
+      "flatten_blur": 24,
+      "flatten_blend": 0.4,
+      "posterize_levels": 6,
+      "posterize_blend": 0.3,
+      "levels_lift": 0.06,
+      "levels_gain": 0.88,
+      "levels_gamma": 0.9,
+      "p10_floor": 0.17,
+      "p50_target": 0.42,
+      "p50_pull": 0.5,
+      "p50_gain_max": 1.5,
+      "dark_additive_lo": 0.04,
+      "dark_additive_hi": 0.16,
+      "lift_saturation_damp": 0.5,
+      "knee_start": 0.78,
+      "knee_slope": 0.45,
+      "knee_saturated_drop": 0.1,
+      "chroma_hero": 1.2,
+      "chroma_monster": 1.15,
+      "chroma_skin": 1.0,
+      "skin_s_cap": 0.5,
+      "s_cap": 0.86,
+      "ao_floor": 0.55,
+      "ao_gamma": 0.8,
+      "ao_smooth": 1.5,
+      "height_low": 0.82,
+      "height_high": 1.12,
+      "height_lo": 0.05,
+      "height_hi": 0.7,
+      "cool_shade": [
+        0.85,
+        0.9,
+        1.12
+      ],
+      "cool_amount": 0.5,
+      "edge_light": 0.06,
+      "edge_lo": 0.92,
+      "skin_hue": [
+        8.0,
+        38.0
+      ],
+      "skin_s": [
+        0.15,
+        0.6
+      ],
+      "skin_v": [
+        0.35,
+        0.98
+      ],
+      "skin_chart_fraction": 0.6,
+      "skin_chart_mixed": 0.3,
+      "skin_chart_s_median_max": 0.55,
+      "skin_chart_s_p90_max": 0.72,
+      "face_contrast": 1.3,
+      "face_dark_fraction": 0.04,
+      "face_dark_lstar": 15.0,
+      "face_blur": 4.0,
+      "face_mark_desaturate": 0.8,
+      "face_mark_lum": 0.35
+    },
+    "override": {},
+    "grade_info": {
+      "charts": 579,
+      "skin_charts_excluded": 116,
+      "seams": {
+        "pairs": 777,
+        "samples": 7551,
+        "gain_min": 0.7,
+        "gain_max": 1.253,
+        "gain_std": 0.058
+      },
+      "flattened_charts": 114,
+      "levels": {
+        "lum_mean_after_remap": 0.2993,
+        "p50_gain": 1.456,
+        "p10_before": 0.1429,
+        "p10_lift": 0.0271,
+        "remap": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.143,
+            0.17
+          ],
+          [
+            0.22,
+            0.32
+          ],
+          [
+            0.541,
+            0.541
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ]
+      },
+      "skin_texels": 30706,
+      "ao_mean": 0.8041,
+      "ao_p10": 0.5267
+    },
+    "ao": {
+      "distance_m": 0.486,
+      "samples": 64,
+      "margin": 8
+    },
+    "head_start": 0.675,
+    "clip_donor": "art/models/monsters/flame_dragon/flame_dragon.glb",
+    "before": {
+      "glb_sha256": "b48f1d053759897c3dbbf6673dcfb1f4d050302c5d4507bf26a83619769fa077",
+      "glb_bytes": 904104,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "atlas_stats": {
+        "used_texels": 71994,
+        "charts": 509,
+        "mean_lstar": 28.29,
+        "lum_mean": 0.2065,
+        "lum_p10": 0.0811,
+        "lum_p50": 0.1501,
+        "lum_p90": 0.5233,
+        "lstar_p10": 11.09,
+        "near_black_fraction": 0.4999,
+        "sat_mean": 0.7105,
+        "sat_p90": 0.9519,
+        "micro_contrast_255": 5.22,
+        "laplacian_mean": 0.0147,
+        "dominant_hues": [
+          {
+            "hue_deg": 7.5,
+            "mass": 0.424
+          }
+        ],
+        "dominant_hue_count": 1,
+        "skin": {
+          "texels": 9413,
+          "mean_lstar": 54.93,
+          "sat_mean": 0.2808,
+          "sat_p90": 0.2798,
+          "sat_max": 0.9608
+        }
+      }
+    },
+    "after": {
+      "glb_sha256": "5cdfc908dc803ab1c1c74bd10f3add03d42a375b653df7d56d3bc45266f04905",
+      "glb_bytes": 860580,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      },
+      "atlas_stats": {
+        "used_texels": 71994,
+        "charts": 509,
+        "mean_lstar": 40.76,
+        "lum_mean": 0.2929,
+        "lum_p10": 0.1472,
+        "lum_p50": 0.2795,
+        "lum_p90": 0.5067,
+        "lstar_p10": 19.63,
+        "near_black_fraction": 0.1044,
+        "sat_mean": 0.661,
+        "sat_p90": 0.8647,
+        "micro_contrast_255": 5.1,
+        "laplacian_mean": 0.0132,
+        "dominant_hues": [
+          {
+            "hue_deg": 7.5,
+            "mass": 0.342
+          }
+        ],
+        "dominant_hue_count": 1,
+        "skin": {
+          "texels": 7079,
+          "mean_lstar": 57.28,
+          "sat_mean": 0.2568,
+          "sat_p90": 0.2763,
+          "sat_max": 0.5878
+        }
+      }
+    },
+    "geometry_sha256": "d278b509686b232cb63d5f19e8cc974a241b1855186cada20bbb04f321a4de5c",
+    "geometry_bytes_preserved": true,
+    "bake": {
+      "size": 1024,
+      "covered_texels": 304421,
+      "missed_texels": 542,
+      "interior_fallback_texels": 12,
+      "miss_fraction": 0.0017804290768376689
+    },
+    "visible_faces": {
+      "removed_faces": 54172,
+      "kept_faces": 10826
+    },
+    "removed_extracted_textures": [
+      "flame_dragon_flame_dragon_lod_albedo.png"
+    ],
+    "editable_lod_source": "build/character-3d/monster-source/flame_dragon/game-lod.blend",
+    "evidence": "build/character-3d/lod-2026-10-18/flame_dragon"
   }
 }

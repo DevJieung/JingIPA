@@ -310,12 +310,15 @@ func _test_storage() -> void:
 	check(store.best_of(first_unit) == Balance.TIER_MAX and not store.unit_best.has("") and store.best_tier == high,
 			"도감 등급은 등급 표 안으로 제한하고 뽑기 기록과 섞지 않음")
 	check(store.best_of("없는_캐릭터") == -1, "기록 없는 캐릭터의 최고 등급은 -1")
+	store.stage_unlocked = 5
+	store.stage_cleared = 4
 	check(store.save_file(), "도감 저장")
 	var reopened = load("res://core/save.gd").new()
 	reopened.storage_path = path
 	reopened.load_file()
 	check(not reopened.recovered_backup and reopened.best_of(first_unit) == Balance.TIER_MAX and reopened.best_tier == high
 			and reopened.seen_tiers == store.seen_tiers and reopened.seen_units.has(first_unit), "도감과 최고 등급 저장/복구")
+	check(reopened.stage_unlocked == 5 and reopened.stage_cleared == 4, "사다리 해금 기록 저장/복구")
 	# 포커 시절에 쓴 파일(열쇠 best_hand · hands · card_mode, 등급 도감 없음)도 평생 기록은 그대로 읽는다.
 	# 하던 판만 버린다 — 카드 다섯 장과 문장 값이 지금 규칙에 없다.
 	var old := ConfigFile.new()
@@ -334,6 +337,8 @@ func _test_storage() -> void:
 	reopened.load_file()
 	check(not reopened.recovered_backup and reopened.best_wave == 77 and reopened.runs == 9 and reopened.clears == 1
 			and reopened.total_kills == 1234 and reopened.language == "en", "포커 시절 파일의 평생 기록과 설정 보존")
+	check(reopened.stage_unlocked == 1 and reopened.stage_cleared == 0 and reopened.last_clear.is_empty() and reopened.hell_best_wave == 0 and reopened.hell_squad.is_empty(),
+			"사다리 기록이 없는 옛 파일은 STAGE 1 부터 (예전 기록을 해금으로 옮기지 않음)")
 	check(reopened.best_tier == 6 and reopened.seen_tiers == {0: 5, 6: 1} and reopened.seen_units.has(first_unit),
 			"옛 최고 족보 번호와 도감은 같은 0~9 칸으로 이어짐")
 	check(reopened.cur_run.is_empty() and not reopened.has_run() and reopened.run_wave() == 0, "포커 시절에 하던 판은 이어하지 않음")

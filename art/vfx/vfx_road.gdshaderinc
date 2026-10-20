@@ -15,6 +15,10 @@
 uniform float birth = -100.0;
 uniform float vfx_time = 0.0;
 uniform float field_radius = 12.0;
+// 1 for a new battlefield (the scan marks each road as it passes); 0 for a wave start
+// (2026-10-19): StellarVfx starts the ribbon ARR into its timeline so the runners leave
+// the gates at once, and only the mouths and the runners' tails are marked.
+uniform float scan_marks = 1.0;
 
 const float ARR = 0.75;
 const float SPEED = 30.0;
@@ -27,7 +31,7 @@ vec3 road_light(float along, float across, float rad, float total, float age) {
 	// Lit by the scan from the crystal as it passes; the mouth takes over from the HUD's
 	// marks as soon as time runs.
 	float scan = mix(PLAZA, field_radius, 1.0 - pow(1.0 - clamp(age / ARR, 0.0, 1.0), 1.5));
-	float lit = (1.0 - smoothstep(scan - 0.6, scan, rad)) * smoothstep(0.0, 0.14, age);
+	float lit = (1.0 - smoothstep(scan - 0.6, scan, rad)) * smoothstep(0.0, 0.14, age) * scan_marks;
 	float mouth = (1.0 - smoothstep(2.8, 6.5, along)) * smoothstep(0.0, 0.14, age);
 	float head = (age - ARR) * SPEED;
 	float behind = head - along;

@@ -40,3 +40,8 @@ override.cfg
 
 # Large 3D modeling source files; the runtime model manifest and scenes are included.
 /art/models/sources/
+
+# stellar_native (docs/PERF_NATIVE.md): godot-cpp and the built libraries are made by
+# tools/native/build.sh; only native/ (sources) and the .gdextension file are committed.
+/addons/stellar_native/bin/
+/native/.sconsign.dblite

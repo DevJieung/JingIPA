@@ -29,8 +29,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/eira/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/eira/game.blend",
   "height": 1.65,
-  "glb_bytes": 791872,
-  "glb_sha256": "33c699a300de01907a017a0e6f0984f4d5a7cf7747da2cc18d824baa56fb67ea",
+  "glb_bytes": 810760,
+  "glb_sha256": "0fc7081dee70191e6431c36e409b5960ffbb746c0cb282d9ff94243fbcfa8673",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -71,14 +71,24 @@
     "artist_note": "Actual native rest and attack multiview plus both two-resolution galleries/40frame attack contacts/grades0,4,9,awakening and selected 12unique hero battle directly inspected. Whole bows/string and hands move together, boots remain fixed, back quivers/cloaks retain their original silhouettes. Eira measured lower gray bow frame is bound to weapon, separate from boot/Body; no trailing black stretched connection. Matte game palette/face readable, no device FPS assertion."
   },
   "motion": {
-    "version": 2,
+    "version": 4,
     "tool": "tools/3d/author_native_motion.py",
-    "authored_utc": "2026-10-10T09:37:14Z",
+    "authored_utc": "2026-10-19T02:21:25Z",
     "clips": {
       "IdleLoop": 6.0,
       "WalkLoop": 1.0,
       "Attack": 1.5,
       "attack_release_time": 1.0
+    },
+    "beats": {
+      "hold_start": 0.78,
+      "hold_dip_h": 0.025,
+      "breath_h": 0.015,
+      "sway_h": 0.025,
+      "fidget_window": [
+        3.0,
+        3.6
+      ]
     },
     "stride": 1.5256,
     "leg_swing": 0.66,
@@ -87,9 +97,36 @@
     "lead": "L",
     "kind": "bow",
     "bounce_scale": 1.0,
-    "previous_glb_sha256": "092e7e4c1b23c3e30c2940a59ab3f10c2ea160e13443589e8e762eb60ec975bd",
+    "arms": {
+      "solver": "hinge two-bone IK, forearm-relative wrists (soft limits 80/88 deg), bow rides the hand",
+      "hinge": {
+        "L": [
+          0.9631,
+          -0.2689,
+          0.0112
+        ],
+        "R": [
+          0.8087,
+          0.5882,
+          0.0
+        ]
+      },
+      "wrist_pivot_offset_m": {
+        "L": 0.087,
+        "R": 0.177
+      },
+      "attack_wrist_limit_excess_deg": {
+        "L": 0.6
+      },
+      "socket_forward_dot": {
+        "0:hold": 1.0,
+        "0:release": 1.0,
+        "0:release+65ms": 0.9975
+      }
+    },
+    "previous_glb_sha256": "0fc7081dee70191e6431c36e409b5960ffbb746c0cb282d9ff94243fbcfa8673",
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/eira/game.motion-v1.blend",
-    "geometry_base_sha256": "092e7e4c1b23c3e30c2940a59ab3f10c2ea160e13443589e8e762eb60ec975bd",
+    "geometry_base_sha256": "cf2d7c3397d1fd93b7ba216c9af140e3c52317e67b8b5acc6b96c70e978fc2b5",
     "geometry_bytes_preserved": true
   },
   "mobile_lod": {
@@ -178,5 +215,251 @@
     ],
     "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/eira/eira.glb",
     "editable_lod_source": "build/character-3d/source/eira/game-lod.blend"
+  },
+  "albedo_grade": {
+    "date": "2026-10-18",
+    "request": "user 2026-10-18: the characters read as a cheap AI-made 3D game; casual overhaul plan \"Lantern Stage\" WP-A \u2014 painted albedos that carry their own light, geometry untouched",
+    "tool": "tools/3d/optimize_native_lod.py --retexture + tools/3d/grade_native_albedo.py; records by tools/3d/publish_native_lod.py",
+    "method": "game-lod.blend opened as the bake target (geometry, UVs, weights, rig, clips, sockets and height untouched), game.blend surfaces appended as bake sources (visible faces first, all sheets as fallback), Cycles EMIT colour bake, AO bake of the reduced mesh alone and a height pass, then the painted grade inside the chart mask: de-speckle, chart-flatten (charts >= 48 texels), light posterise, levels, OKLab chroma with a skin cap, painted light from AO + height, cool shade, edge light, face paint-back; nearest fill, box downsample; clip bytes grafted from the shipped GLB",
+    "grade_version": "2026-10-18.7",
+    "parameters": {
+      "median": 3,
+      "bilateral_radius": 3,
+      "bilateral_sigma_s": 1.6,
+      "bilateral_sigma_r": 0.1,
+      "bilateral_passes": 2,
+      "seam_lambda": 0.3,
+      "seam_gain_min": 0.7,
+      "seam_gain_max": 1.4,
+      "seam_floor": 0.02,
+      "seam_chroma_sigma": 0.08,
+      "seam_small_chart": 96.0,
+      "seam_ratio_sigma": 0.6,
+      "flatten_min_width": 48,
+      "flatten_blur": 24,
+      "flatten_blend": 0.4,
+      "posterize_levels": 6,
+      "posterize_blend": 0.3,
+      "levels_lift": 0.09,
+      "levels_gain": 0.88,
+      "levels_gamma": 0.9,
+      "p10_floor": 0.17,
+      "p50_target": 0.5,
+      "p50_pull": 0.8,
+      "p50_gain_max": 2.2,
+      "dark_additive_lo": 0.04,
+      "dark_additive_hi": 0.16,
+      "lift_saturation_damp": 0.15,
+      "knee_start": 0.78,
+      "knee_slope": 0.45,
+      "knee_saturated_drop": 0.1,
+      "chroma_hero": 1.2,
+      "chroma_monster": 1.15,
+      "chroma_skin": 1.0,
+      "skin_s_cap": 0.5,
+      "s_cap": 0.86,
+      "ao_floor": 0.65,
+      "ao_gamma": 0.8,
+      "ao_smooth": 1.5,
+      "height_low": 0.82,
+      "height_high": 1.12,
+      "height_lo": 0.05,
+      "height_hi": 0.7,
+      "cool_shade": [
+        0.85,
+        0.9,
+        1.12
+      ],
+      "cool_amount": 0.5,
+      "edge_light": 0.06,
+      "edge_lo": 0.92,
+      "skin_hue": [
+        8.0,
+        38.0
+      ],
+      "skin_s": [
+        0.15,
+        0.6
+      ],
+      "skin_v": [
+        0.35,
+        0.98
+      ],
+      "skin_chart_fraction": 0.6,
+      "skin_chart_mixed": 0.3,
+      "skin_chart_s_median_max": 0.55,
+      "skin_chart_s_p90_max": 0.72,
+      "face_contrast": 1.3,
+      "face_dark_fraction": 0.04,
+      "face_dark_lstar": 15.0,
+      "face_blur": 4.0,
+      "face_mark_desaturate": 0.8,
+      "face_mark_lum": 0.35
+    },
+    "override": {},
+    "grade_info": {
+      "charts": 630,
+      "skin_charts_excluded": 37,
+      "seams": {
+        "pairs": 946,
+        "samples": 8049,
+        "gain_min": 0.7,
+        "gain_max": 1.249,
+        "gain_std": 0.065
+      },
+      "flattened_charts": 134,
+      "levels": {
+        "lum_mean_after_remap": 0.503,
+        "p50_gain": 1.074,
+        "p10_before": 0.2587,
+        "p10_lift": 0.0,
+        "remap": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.259,
+            0.259
+          ],
+          [
+            0.457,
+            0.491
+          ],
+          [
+            0.794,
+            0.794
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ]
+      },
+      "skin_texels": 26197,
+      "ao_mean": 0.7034,
+      "ao_p10": 0.2269,
+      "face": {
+        "head_texels": 70761,
+        "head_charts": 121,
+        "dark_threshold": 0.3832,
+        "mark_texels": 2831
+      }
+    },
+    "ao": {
+      "distance_m": 0.4125,
+      "samples": 64,
+      "margin": 8
+    },
+    "head_start": 0.675,
+    "clip_donor": "art/models/eira/eira.glb",
+    "before": {
+      "glb_sha256": "29ac4e6ed2941ea1566906a10cc90fa6d5380cbfe1bcaccbfdf4564cfb6cd412",
+      "glb_bytes": 810192,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "atlas_stats": {
+        "used_texels": 71482,
+        "charts": 528,
+        "mean_lstar": 45.37,
+        "lum_mean": 0.4175,
+        "lum_p10": 0.1553,
+        "lum_p50": 0.389,
+        "lum_p90": 0.7323,
+        "lstar_p10": 16.78,
+        "near_black_fraction": 0.094,
+        "sat_mean": 0.4213,
+        "sat_p90": 0.9556,
+        "micro_contrast_255": 10.02,
+        "laplacian_mean": 0.0314,
+        "dominant_hues": [
+          {
+            "hue_deg": 202.5,
+            "mass": 0.344
+          },
+          {
+            "hue_deg": 22.5,
+            "mass": 0.103
+          }
+        ],
+        "dominant_hue_count": 2,
+        "skin": {
+          "texels": 2230,
+          "mean_lstar": 62.46,
+          "sat_mean": 0.3667,
+          "sat_p90": 0.4948,
+          "sat_max": 0.973
+        }
+      }
+    },
+    "after": {
+      "glb_sha256": "cf2d7c3397d1fd93b7ba216c9af140e3c52317e67b8b5acc6b96c70e978fc2b5",
+      "glb_bytes": 809120,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      },
+      "atlas_stats": {
+        "used_texels": 71482,
+        "charts": 528,
+        "mean_lstar": 52.18,
+        "lum_mean": 0.479,
+        "lum_p10": 0.2365,
+        "lum_p50": 0.487,
+        "lum_p90": 0.7474,
+        "lstar_p10": 26.2,
+        "near_black_fraction": 0.0428,
+        "sat_mean": 0.4151,
+        "sat_p90": 0.8663,
+        "micro_contrast_255": 7.49,
+        "laplacian_mean": 0.0211,
+        "dominant_hues": [
+          {
+            "hue_deg": 202.5,
+            "mass": 0.321
+          },
+          {
+            "hue_deg": 22.5,
+            "mass": 0.064
+          }
+        ],
+        "dominant_hue_count": 2,
+        "skin": {
+          "texels": 6084,
+          "mean_lstar": 44.41,
+          "sat_mean": 0.2902,
+          "sat_p90": 0.4187,
+          "sat_max": 0.5814
+        }
+      }
+    },
+    "geometry_sha256": "05e5a37f723f1f31c9f7b7bddb496e0356bde7fb2e966237215f334b8cbf263b",
+    "geometry_bytes_preserved": true,
+    "bake": {
+      "size": 1024,
+      "covered_texels": 302567,
+      "missed_texels": 566,
+      "interior_fallback_texels": 400,
+      "miss_fraction": 0.0018706600521537378
+    },
+    "visible_faces": {
+      "removed_faces": 28627,
+      "kept_faces": 26373
+    },
+    "removed_extracted_textures": [
+      "eira_eira_lod_albedo.png"
+    ],
+    "editable_lod_source": "build/character-3d/source/eira/game-lod.blend",
+    "evidence": "build/character-3d/lod-2026-10-18/eira"
   }
 }

@@ -2,8 +2,19 @@ extends RefCounted
 class_name ArenaValidation
 
 ## Reject malformed saves before touching a running battlefield.
-## Version of the arena run snapshot (ArenaRun.snapshot writes it). 3 = stage chain.
-const SAVE_V := 3
+## Version of the arena run snapshot (ArenaRun.snapshot writes it). 3 = stage chain,
+## 4 = growth by experience and constellation nodes instead of the gold shop (2026-10-17),
+## 5 = the stage ladder fought in waves with preparation phases (2026-10-19). Later keys of the
+## 2026-10-19 plan join v5 as optional keys; the version is raised once.
+const SAVE_V := 5
+## Fixed caps for numbers whose real limit is a tuning value (2026-10-19): a value moved in the DB (a shorter
+## preparation, fewer revivals, fewer cards …) must not turn a run in progress into a rejected save. Restore
+## brings such a number back inside the current limit (ArenaRun.restore, ArenaSim.restore_arena).
+const STAGE_CAP := 1000
+const COUNT_CAP := 1000
+const OFFER_CAP := 12
+const PREP_CAP := 600.0
+const CRYSTAL_CAP := 10000000.0
 static func number(value: Variant, low: float = 0.0, high: float = INF) -> bool:
 	return (value is int or value is float) and is_finite(float(value)) and float(value) >= low and float(value) <= high
 
@@ -22,11 +33,14 @@ static func numbers(data: Dictionary, keys: Array, low: float = 0.0) -> bool:
 static func source(value: Variant, count: int) -> bool:
 	return value is int and value >= -1 and value < count
 
-## Runs saved before the stage chain (2026-10-13) cannot be continued: one battlefield
-## for the whole run and flat monster strength have no counterpart in the new rules.
-## Save keeps the lifetime records and drops only such a run (Save._load_checked).
+## Runs saved under older rules cannot be continued: the single battlefield of v1-2, the gold shop
+## of v3, and the ten-stage chain without waves of v4 (2026-10-19) have no counterpart in the
+## current rules. Save keeps the lifetime records and drops only such a run (Save._load_checked).
+## A v5 run without a jewel box (saved for a few hours of 2026-10-19 with the star rite) goes the same way.
 static func outdated(data: Dictionary) -> bool:
-	return data.get("mode") == "arena" and data.get("v") is int and int(data["v"]) < SAVE_V
+	if data.get("mode") != "arena" or not data.get("v") is int:
+		return false
+	return int(data["v"]) < SAVE_V or (int(data["v"]) == SAVE_V and not data.has("box"))
 
 ## Monster positions are checked against the saved battlefield's roads, so the layout
 ## is switched for the check and put back afterwards.
@@ -42,27 +56,24 @@ static func _valid(data: Dictionary) -> bool:
 	for key in ["seed", "rng", "phase", "theme_index", "selected", "gold", "lives", "kills", "best_tier", "summon_count", "stage", "wave"]:
 		if not data.get(key) is int:
 			return false
-	if data["stage"] < 1 or data["stage"] > Balance.ARENA_STAGES or data["wave"] != data["stage"]:
+	# A ladder stage. Its battlefield is any valid theme: tools may choose one (choose_theme), so it is
+	# not held to the ladder's order.
+	if data["stage"] < 1 or data["stage"] > STAGE_CAP or data["wave"] != data["stage"]:
 		return false
-	if not data.get("themes") is Array or data["themes"].size() != Balance.ARENA_STAGES:
+	if data["theme_index"] < 0 or data["theme_index"] >= Roster.THEMES.size():
 		return false
-	for index in data["themes"]:
-		if not index is int or index < 0 or index >= Roster.THEMES.size():
-			return false
-	if data["phase"] not in [1, 2, 3, 6] or data.get("modal") not in ["stage", "rite", "shop", "bench", ""]:
+	if data["phase"] not in [1, 2, 3, 6] or data.get("modal") not in ["stage", "box", "talent", "bench", ""]:
 		return false
-	if data["modal"] != "rite" and data["phase"] != {"stage":1, "shop":3, "bench":6, "":2}[data["modal"]]:
+	if data["modal"] != "box" and data["phase"] != {"stage":1, "talent":3, "bench":6, "":2}[data["modal"]]:
 		return false
-	if data["gold"] < 0 or data["kills"] < 0 or data["summon_count"] < 0 or data["lives"] < 1 or data["lives"] > Balance.MAX_LIVES:
+	if data["gold"] < 0 or data["kills"] < 0 or data["summon_count"] < 0 or data["lives"] < 1 or data["lives"] > COUNT_CAP:
 		return false
 	if data["best_tier"] < -1 or data["best_tier"] > Balance.TIER_MAX:
-		return false
-	if data["theme_index"] != data["themes"][data["stage"] - 1]:
 		return false
 	ArenaGeometry.use_layout(ArenaGeometry.layout_for_theme(data["theme_index"]))
 	var ids := {}
 	for group in ["heroes", "bench"]:
-		if not data.get(group) is Array or data[group].size() > (Balance.ARENA_HERO_LIMIT if group == "heroes" else Roster.UNITS.size()):
+		if not data.get(group) is Array or data[group].size() > Roster.UNITS.size():
 			return false
 		for hero in data[group]:
 			if not hero is Dictionary or not hero.get("u") is String or Roster.unit_by_id(hero["u"]).is_empty() or ids.has(hero["u"]):
@@ -74,8 +85,6 @@ static func _valid(data: Dictionary) -> bool:
 			if tier < 0 or tier > Balance.TIER_MAX or hero["points"] < 0:
 				return false
 			if tier == Balance.TIER_MAX and hero["points"] != 0:
-				return false
-			if tier < Balance.TIER_MAX and hero["points"] >= Balance.ARENA_GROWTH_BASE + tier * Balance.ARENA_GROWTH_STEP:
 				return false
 	if data["selected"] < 0 or data["selected"] >= maxi(1, data["heroes"].size()):
 		return false
@@ -91,9 +100,9 @@ static func _valid(data: Dictionary) -> bool:
 		var upgrade := Balance.upgrade_by_id(id)
 		if upgrade.is_empty() or not data["levels"][id] is int or data["levels"][id] < 0:
 			return false
-		if int(upgrade["cap"]) > 0 and data["levels"][id] > int(upgrade["cap"]):
+		if data["levels"][id] > COUNT_CAP:
 			return false
-	for key in ["passives", "owned_passives", "offer"]:
+	for key in ["passives", "owned_passives"]:
 		if not data.get(key) is Array:
 			return false
 		var seen := {}
@@ -101,18 +110,50 @@ static func _valid(data: Dictionary) -> bool:
 			if not id is String or Balance.passive_by_id(id).is_empty() or seen.has(id):
 				return false
 			seen[id] = true
-	if data["passives"].size() > Balance.PASSIVE_SLOTS:
+	# Passives come from constellation nodes, every one of them active: no slot cap.
+	if data["passives"].size() > Balance.PASSIVES.size():
 		return false
 	for id in data["passives"]:
 		if not data["owned_passives"].has(id):
 			return false
-	if not data.get("rite") is Dictionary or not data["rite"].get("orbit") is Array or not data.get("summon_result") is Dictionary:
+	# Experience, level and the constellation nodes taken (id -> times), plus the pending offer.
+	if not number(data.get("xp")) or not data.get("level") is int or data["level"] < 0:
 		return false
-	for key in ["spins", "paid"]:
-		if not data["rite"].get(key) is int or data["rite"][key] < 0:
+	if not data.get("pending_levels") is int or data["pending_levels"] < 0 or data["pending_levels"] > data["level"]:
+		return false
+	if not data.get("talents") is Dictionary or not data.get("talent_offer") is Array:
+		return false
+	var picks := 0
+	for id in data["talents"]:
+		var node := Balance.talent_by_id(String(id))
+		if node.is_empty() or not data["talents"][id] is int or data["talents"][id] < 1 or data["talents"][id] > COUNT_CAP:
 			return false
-	if data["modal"] == "rite":
-		if data["phase"] not in [1, 6] or not Rite.valid(data["rite"]["orbit"]):
+		picks += int(data["talents"][id])
+	# Levels without a node are still pending or were paid out in gold; never more picks than levels.
+	if picks > data["level"]:
+		return false
+	if data["talent_offer"].size() > OFFER_CAP:
+		return false
+	var offered := {}
+	for id in data["talent_offer"]:
+		if not id is String or Balance.talent_by_id(id).is_empty() or offered.has(id):
+			return false
+		offered[id] = true
+	# A pending offer is only shown by the talent modal, and only while a level is unspent.
+	if not data["talent_offer"].is_empty() and (data["modal"] != "talent" or data["pending_levels"] < 1):
+		return false
+	# The jewel box (2026-10-19): open while choosing (phase 1) and while its pick is shown (phase 6).
+	if not data.get("summon_result") is Dictionary:
+		return false
+	var maxed := {}
+	for group in ["heroes", "bench"]:
+		for hero in data[group]:
+			if int(hero["t"]) >= Balance.TIER_MAX: maxed[hero["u"]] = true
+	var choosing: bool = data["modal"] == "box" and data["phase"] == 1
+	if not JewelBox.valid(data.get("box"), maxed, choosing):
+		return false
+	if data["modal"] == "box":
+		if data["phase"] not in [1, 6] or data["box"]["cards"].is_empty():
 			return false
 		if data["phase"] == 6 and data["summon_result"].is_empty():
 			return false
@@ -125,11 +166,43 @@ static func _valid(data: Dictionary) -> bool:
 		for key in ["tier", "after_tier", "added_points", "growth_points", "slot", "stars"]:
 			if not result.get(key) is int or result[key] < 0:
 				return false
-		if result["tier"] > Balance.TIER_MAX or result["after_tier"] > Balance.TIER_MAX or not result.get("maxed") is bool:
+		if result["tier"] > Balance.TIER_MAX or result["after_tier"] > Balance.TIER_MAX or result["stars"] > JewelBox.MAX_STARS or not result.get("maxed") is bool:
 			return false
+		# What the box adds to a pick: its grade, the card, the guarantee and the two fortune nodes.
+		for key in ["box", "card", "growth_needed"]:
+			if result.has(key) and (not result[key] is int or result[key] < 0):
+				return false
+		for key in ["guaranteed", "bumped", "joker"]:
+			if result.has(key) and not result[key] is bool:
+				return false
+	# Hellbound (2026-10-19): an optional flag and the squad taken in — known ids, each once, at most
+	# ARENA_HELL_SQUAD, never empty in Hellbound. Saves made before it have neither.
+	if data.has("hell") and not data["hell"] is bool:
+		return false
+	if data.has("squad"):
+		if not data["squad"] is Array or data["squad"].size() > Roster.UNITS.size():
+			return false
+		var taken := {}
+		for id in data["squad"]:
+			if not id is String or Roster.unit_by_id(id).is_empty() or taken.has(id):
+				return false
+			taken[id] = true
+	if data.get("hell", false) == true and (not data.get("squad") is Array or data["squad"].is_empty()):
+		return false
+	# The last revival's hero (the DLC's revival tickets): a hero of this run at a valid grade. Its place may
+	# have changed since (the player moves heroes), so only its shape is held.
+	if data.has("revive_gift"):
+		if not data["revive_gift"] is Dictionary:
+			return false
+		var gift: Dictionary = data["revive_gift"]
+		if not gift.is_empty():
+			if not gift.get("u") is String or not ids.has(gift["u"]) or not gift.get("t") is int or gift["t"] < 0 or gift["t"] > Balance.TIER_MAX:
+				return false
+			if gift.get("where") not in ["field", "bench"] or not gift.get("slot") is int or gift["slot"] < 0:
+				return false
 	if not data.get("sim") is Dictionary:
 		return false
-	# The first battlefield card comes before the first rite: nobody has been summoned yet.
+	# The battlefield card comes before the stage's first box: nobody has been summoned yet.
 	if data["summon_count"] == 0 and not (data["heroes"].is_empty() and data["bench"].is_empty()):
 		return false
 	if data["modal"] == "" and data["heroes"].is_empty():
@@ -141,7 +214,7 @@ static func _valid(data: Dictionary) -> bool:
 		return false
 	# Revivals used: a count, or the flag of saves made while the blessing revived once.
 	if sim.has("revives"):
-		if not sim["revives"] is int or sim["revives"] < 0 or sim["revives"] > Balance.ARENA_REVIVE_USES:
+		if not sim["revives"] is int or sim["revives"] < 0 or sim["revives"] > COUNT_CAP:
 			return false
 	elif not sim.get("revived") is bool:
 		return false
@@ -149,14 +222,20 @@ static func _valid(data: Dictionary) -> bool:
 	for key in ["clear_t", "invuln_t"]:
 		if not number(sim.get(key), 0.0, 60.0):
 			return false
-	for key in ["elapsed", "crystal_hp", "shield", "shield_t", "spawn_t", "curse_t", "surge", "surge_t"]:
+	for key in ["elapsed", "crystal_hp", "shield", "shield_t", "curse_t", "surge", "surge_t"]:
 		if not number(sim.get(key)):
 			return false
+	# The spawn countdown: saves made before the LA4 fix may hold it below zero once a wave's list was out.
+	if not number(sim.get("spawn_t"), -1000000.0):
+		return false
 	if not numbers(sim, ["accumulator", "kills", "gold", "nav_version"]):
 		return false
 	if not sim.get("boss_spawned") is bool or not sim.get("boss_alive") is bool or not sim.get("rng") is int or not sim.get("serial") is int:
 		return false
-	if sim["crystal_hp"] <= 0.0 or sim["crystal_hp"] > Balance.ARENA_CRYSTAL_HP or not sim.get("cooldowns") is Dictionary:
+	if sim.has("crystal_max") and not number(sim["crystal_max"], 1.0, CRYSTAL_CAP):
+		return false
+	var crystal_cap: float = float(sim.get("crystal_max", CRYSTAL_CAP))
+	if sim["crystal_hp"] <= 0.0 or sim["crystal_hp"] > crystal_cap + 0.001 or not sim.get("cooldowns") is Dictionary:
 		return false
 	for id in ["blast", "freeze", "ward"]:
 		if not number(sim["cooldowns"].get(id)):
@@ -166,13 +245,26 @@ static func _valid(data: Dictionary) -> bool:
 		if not sim["uses"].get(id) is int or sim["uses"][id] < 0: return false
 	if not sim.get("boss_warned") is bool: return false
 	if not sim.get("boss_lane") is int or sim["boss_lane"] < -1 or sim["boss_lane"] >= ArenaGeometry.route_count(): return false
+	# The wave and its place in it (2026-10-19). The counts are held to fixed caps only: restore fits the wave
+	# to the stage's last wave (endless waves have none) and the spawned count to the wave's list.
+	if not sim.get("wave_no") is int or sim["wave_no"] < 1 or sim["wave_no"] > COUNT_CAP:
+		return false
+	if not sim.get("in_prep") is bool or not number(sim.get("wave_t")):
+		return false
+	if not number(sim.get("prep_t"), 0.0, PREP_CAP):
+		return false
+	if not sim.get("wave_spawned") is int or sim["wave_spawned"] < 0 or sim["wave_spawned"] > COUNT_CAP:
+		return false
+	# Nothing of a wave spawns before its preparation ends.
+	if sim["in_prep"] and sim["wave_spawned"] != 0:
+		return false
 	for key in ["monsters", "bullets", "zones", "pending", "heroes"]:
 		if not sim.get(key) is Array or sim[key].size() > 10000:
 			return false
 		for entry in sim[key]:
 			if not entry is Dictionary:
 				return false
-	if sim["heroes"].size() != data["heroes"].size() or sim["monsters"].size() > Balance.ARENA_POPULATION_MAX + 1:
+	if sim["heroes"].size() != data["heroes"].size():
 		return false
 	var hero_count: int = sim["heroes"].size()
 	for hero in sim["heroes"]:
@@ -191,6 +283,13 @@ static func _valid(data: Dictionary) -> bool:
 			if not number(mo.get(key), -1000000.0):
 				return false
 		if mo.get("kind") not in Balance.MKIND or mo.get("body") not in Balance.MBODY or not vector(mo.get("vel")):
+			return false
+		if mo.has("fly") and not mo["fly"] is bool:
+			return false
+		# The elite mark and the seconds stood blocked (the deadlock break, ARENA_BLOCK_BREAK).
+		if mo.has("elite") and not mo["elite"] is bool:
+			return false
+		if mo.has("block_t") and not number(mo["block_t"]):
 			return false
 		if not mo["m"].get("id") is String or Roster.monster_by_id(mo["m"]["id"]).is_empty():
 			return false

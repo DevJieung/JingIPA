@@ -8,11 +8,19 @@ var _audit_count := 0
 ## (the GPU display of the login session), the game draws into this viewport and every
 ## capture reads it. Without it the game draws into the window as before (Xvfb).
 var film: SubViewport
+## What the preview is doing (for the watchdog's report).
+var _doing := "start"
 
+## Since 2026-10-19 (docs/STAGE_LADDER_2026-10-19.md, docs/JEWEL_BOX.md) a stage opens on its card,
+## the card opens the free first jewel box (modal "box"), and the stage starts in a preparation
+## where common skills are refused: scenes that cast skills sit in the middle of a wave
+## (_mid_wave), the boss comes through the wave machine (jump_to_boss). `--box-only` replaces the
+## old `--rite-only` (still accepted). `--watchdog SEC` (default 1800) fails a stalled run.
 func _ready() -> void:
 	if not require_no_save(): return
 	out_dir = arg("--out", out_dir)
 	DirAccess.make_dir_recursive_absolute(out_dir)
+	_watchdog()
 	_open_film()
 	if has_arg("--biome-only"):
 		await _biome_only()
@@ -44,28 +52,32 @@ func _ready() -> void:
 	if has_arg("--polish-only"):
 		await _polish_only()
 		return
-	if has_arg("--rite-only"):
-		await _rite_only()
+	if has_arg("--box-only") or has_arg("--rite-only"):
+		await _box_only()
 		return
 	for locale in ["ko", "en"]:
 		I18n.set_locale(locale)
-		Arena.start_run(20261009)
+		_fresh_ladder()
+		Arena.start_run(20261009, 1)
 		main = load("res://game/main.gd").new()
 		_mount(main)
 		await frames(3)
 		main.show_arena()
 		screen = main.screen
 		screen.set_process(false)
-		# A run opens on the battlefield card of its first stage (no chooser since 2026-10-13).
+		# A run opens on the battlefield card of its stage (no chooser since 2026-10-13).
 		check(Arena.modal == "stage", "run opens on the stage 1 battlefield card")
 		await _capture(locale + "_stage_card")
-		check(tap(screen, "stage:start"), "battlefield card starts the free ritual")
-		screen._rite_age = 9
-		await _capture(locale + "_rite_free")
-		check(tap(screen, "rite:confirm"), "ritual accepts first hero")
+		check(tap(screen, "stage:start") and Arena.modal == "box", "battlefield card opens the free first box")
+		await _capture(locale + "_box_free")
+		await _act("box:pick:%d" % JewelBox.best(Arena.box_cards), func() -> void: Arena.pick_card(JewelBox.best(Arena.box_cards)))
+		check(not Arena.summon_result.is_empty(), "the box gives the first hero")
 		await _capture(locale + "_summon_new")
-		check(tap(screen, "close"), "new hero result resumes battle")
+		await _act("close", func() -> void: Arena.close_modal())
+		check(Arena.modal.is_empty(), "new hero result resumes the stage")
 		_prepare_field()
+		_no_levelups()
+		_mid_wave(1)
 		screen.view_3d._follow_offset = Vector3.ZERO
 		screen.view_3d._camera_initialized = false
 		await _capture(locale + "_field_six")
@@ -107,16 +119,18 @@ func _ready() -> void:
 			await _capture(locale + "_limne_move_%02d" % n)
 		finger.pressed = false
 		screen._input(finger)
+		Arena.gold = 99999
 		for skill in ["blast", "freeze", "ward"]:
 			Arena.sim.skill_cooldowns[skill] = 0.0
 			await paint(screen)
-			check(tap(screen, "skill:" + skill), "manual common skill button " + skill)
+			check(await _tap_skill(skill), "manual common skill button " + skill)
 			await _capture(locale + "_skill_" + skill)
 			for n in range(4):
 				screen._process(1.0 / 30)
 				await _capture(locale + "_skill_" + skill + "_%02d" % n)
-		Arena.gold = 99999
-		check(Arena.begin_summon(), "paid ritual opens")
+		# Boxes open only in a preparation: hold the wave first.
+		_back_to_prep()
+		check(Arena.begin_summon(), "paid box opens in the preparation")
 		var hero: Dictionary = Arena.heroes[0]
 		var old_tier := int(hero["tier"])
 		var result := Arena.gain_hero(hero["unit"], 5)
@@ -132,16 +146,15 @@ func _ready() -> void:
 		check(bool(Arena.summon_result["maxed"]), "maximum growth is shown as complete")
 		check(not Arena.eligible_units().any(func(u): return u["id"] == hero["unit"]["id"]), "fully grown identity leaves the summon candidates")
 		Arena.close_modal()
-		Arena.open_modal("shop")
-		await _capture(locale + "_upgrades")
+		# Growth is the constellation since 2026-10-17 (the gold shop is gone): its viewer pauses the field.
+		check(Arena.open_modal("talent"), "the constellation viewer opens")
+		await _capture(locale + "_talents")
 		var clock_before := Arena.sim.elapsed
 		var positions := _positions()
 		screen._process(0.2)
 		Arena.sim.step(0.2)
 		check(is_equal_approx(Arena.sim.elapsed, clock_before), "growth modal pauses battle clock")
 		check(_positions() == positions, "growth modal pauses all actor positions")
-		check(tap(screen, "shop:tab:passives"), "passive tab is touch accessible")
-		await _capture(locale + "_passives")
 		Arena.close_modal()
 		for id in ["saeta", "glaukos", "jokull"]:
 			Arena.gain_hero(Roster.unit_by_id(id), 9)
@@ -169,7 +182,7 @@ func _ready() -> void:
 		main.show_title()
 		await paint(main.screen)
 		await snap(out_dir + "/" + locale + "_title.png")
-		Save.cur_run = {"mode": "arena", "wave": 1, "sim": {"elapsed": 187.0}}
+		Save.cur_run = {"mode": "arena", "wave": 7, "stage": 7, "sim": {"elapsed": 187.0}}
 		await paint(main.screen)
 		check(zone_of(main.screen, "resume").size() > 0, "title has arena continue button")
 		await snap(out_dir + "/" + locale + "_title_resume.png")
@@ -182,7 +195,7 @@ func _ready() -> void:
 		main.screen.collection.close()
 		await paint(main.screen)
 		main.menu.open()
-		for menu_page in ["menu", "rite", "elements"]:
+		for menu_page in MENU_PAGES:
 			main.menu.page = menu_page
 			await _capture_canvas(main.menu, locale + "_menu_" + menu_page)
 		main.menu.close()
@@ -207,7 +220,7 @@ func _ready() -> void:
 func _motion_only() -> void:
 	for locale in ["ko", "en"]:
 		I18n.set_locale(locale)
-		Arena.start_run(20261010)
+		Arena.start_run(20261010, 1)
 		main = load("res://game/main.gd").new()
 		_mount(main)
 		await frames(3)
@@ -227,6 +240,7 @@ func _motion_only() -> void:
 		Arena.sim.monsters.clear()
 		Arena.selected = 0
 		Arena.gold = 69
+		_no_levelups()
 		var pool := Roster.theme_pool(Arena.theme_for(1))
 		for n in range(14):
 			Arena.sim._spawn(pool[n % pool.size()])
@@ -244,6 +258,8 @@ func _motion_only() -> void:
 			mo["max"] = 1000000.0
 		Arena.sim._rebuild_navigation()
 		Arena.sim._cache_positions()
+		# Mid-wave: the starburst at frame 30 is refused in a preparation.
+		_mid_wave(1)
 		await _capture(locale + "_motion_start")
 		# The first draw creates the 3D view; pin the camera afterwards so the
 		# whole field stays in frame while the selected archer walks.
@@ -261,7 +277,7 @@ func _motion_only() -> void:
 			if n == 30:
 				Arena.sim.skill_cooldowns["blast"] = 0.0
 				await paint(screen)
-				check(tap(screen, "skill:blast"), "starburst fires during the motion capture")
+				check(await _tap_skill("blast"), "starburst fires during the motion capture")
 			await _capture(locale + "_motion_%02d" % n)
 		check(Arena.sim.monsters.size() < 16, "weak monsters actually died on camera")
 		check(screen.view_3d.world.hero_nodes.size() == 6, "six mixed-weapon heroes stayed live")
@@ -281,7 +297,7 @@ func _spiral_only() -> void:
 	var boss_tops: Array = []
 	for locale in ["ko", "en"]:
 		I18n.set_locale(locale)
-		Arena.start_run(20261012)
+		Arena.start_run(20261012, 1)
 		main = load("res://game/main.gd").new()
 		_mount(main)
 		await frames(3)
@@ -292,6 +308,8 @@ func _spiral_only() -> void:
 		Arena.confirm_summon()
 		Arena.close_modal()
 		_prepare_field()
+		_no_levelups()
+		_mid_wave(1)
 		Arena.gold = 480
 		screen.set_speed(1.0)
 		screen.view_3d._follow_offset = Vector3.ZERO
@@ -332,9 +350,11 @@ func _spiral_only() -> void:
 		check(not tap(screen, "skill:ward"), "exhausted ward button is disabled")
 		check(tap(screen, "skill:freeze") and Arena.sim.skill_uses_left("freeze") == 0, "last freeze cast spends the final use")
 		await _capture(locale + "_uses_200")
-		# Boss warning 4 → 1, then the entrance: 24 frames at 15 fps around the spawn.
+		# Boss warning 4 → 1 (the boss wave's preparation), then the entrance: frames at 15 fps.
 		Arena.sim.monsters.clear()
-		Arena.sim.elapsed = Balance.ARENA_BOSS_AT - Balance.ARENA_BOSS_WARNING - 0.02
+		_no_levelups()
+		Arena.sim.jump_to_boss()
+		Arena.sim.prep_t = Balance.ARENA_BOSS_WARNING + 0.02
 		screen._process(0.05)
 		check(Arena.sim.boss_warned and not Arena.sim.boss_spawned, "warning raised four seconds before the boss")
 		await _capture(locale + "_boss_warn_04")
@@ -377,7 +397,7 @@ func _road_only() -> void:
 	var trajectories: Array = []
 	for locale in ["ko", "en"]:
 		I18n.set_locale(locale)
-		Arena.start_run(20261010)
+		Arena.start_run(20261010, 1)
 		main = load("res://game/main.gd").new()
 		_mount(main)
 		await frames(3)
@@ -469,7 +489,7 @@ func _road_progress(at: Vector2, path: PackedVector2Array) -> float:
 func _hud_only() -> void:
 	for locale in ["ko", "en"]:
 		I18n.set_locale(locale)
-		Arena.start_run(20261009)
+		Arena.start_run(20261009, 1)
 		main = load("res://game/main.gd").new()
 		_mount(main)
 		await frames(3)
@@ -510,11 +530,13 @@ func _hud_only() -> void:
 		Arena.gold = 99999
 		await _capture(locale + "_field_six")
 		for zone in screen.ui.zones:
-			# Battle speed chips live in the top strip (user: "배속설정은 상단으로"); every
-			# other command stays in the right rail.
+			# Battle speed chips live in the top strip (user: "배속설정은 상단으로"), and so does the
+			# wave HUD's 「바로 시작」 (2026-10-19, PLAN M4: the preparation's countdown is drawn there);
+			# every other command stays in the right rail.
 			var strip := Rect2(0, 0, Hud.MENU_RECT.position.x, 70)
-			var allowed: bool = ArenaScreen.SIDEBAR.encloses(Rect2(zone["rect"])) or (String(zone["id"]).begins_with("speed:") and strip.encloses(Rect2(zone["rect"])))
-			check(allowed, "all battle commands remain in the right HUD or the top strip")
+			var in_strip: bool = String(zone["id"]).begins_with("speed:") or String(zone["id"]) == "wave:start"
+			var allowed: bool = ArenaScreen.SIDEBAR.encloses(Rect2(zone["rect"])) or (in_strip and strip.encloses(Rect2(zone["rect"])))
+			check(allowed, "all battle commands remain in the right HUD or the top strip (%s at %s)" % [String(zone["id"]), str(Rect2(zone["rect"]))])
 		var last := zone_of(screen, "hero:5")
 		_window_touch(Rect2(last["rect"]).get_center(), true)
 		_window_touch(Rect2(last["rect"]).get_center(), false)
@@ -537,21 +559,23 @@ func _hud_only() -> void:
 			for height in [0.08, 1.95]:
 				check(ArenaScreen.BATTLEFIELD.has_point(screen.view_3d.project(Balance.ARENA_CENTER, height)), "crystal remains clear of right HUD")
 			check(ArenaScreen.BATTLEFIELD.has_point(screen.view_3d.project(at, 0.5)), "selected native hero remains clear of right HUD")
+		_no_levelups()
+		_mid_wave(1)
 		for skill in ["blast", "freeze", "ward"]:
 			Arena.sim.skill_cooldowns[skill] = 0.0
 			await paint(screen)
-			check(tap(screen, "skill:" + skill), "right skill action remains active")
+			check(await _tap_skill(skill), "right skill action remains active")
 			await _capture(locale + "_skill_" + skill)
-		Arena.open_modal("shop")
-		await _capture(locale + "_upgrades")
+		check(Arena.open_modal("talent"), "the constellation viewer opens")
+		await _capture(locale + "_talents")
 		Arena.close_modal()
 		Arena.gain_hero(Roster.unit_by_id("saeta"), 9)
 		Arena.open_modal("bench")
 		await _capture(locale + "_reserves_selected")
 		Arena.close_modal()
-		Arena.begin_summon()
-		screen._rite_age = 9
-		await _capture(locale + "_rite_free")
+		_back_to_prep()
+		check(Arena.begin_summon(), "a paid box opens in the preparation")
+		await _capture(locale + "_box_paid")
 		main.queue_free()
 		main = null
 		screen = null
@@ -564,7 +588,7 @@ func _hud_only() -> void:
 func _circle_only() -> void:
 	for locale in ["ko", "en"]:
 		I18n.set_locale(locale)
-		Arena.start_run(20261009)
+		Arena.start_run(20261009, 1)
 		main = load("res://game/main.gd").new()
 		_mount(main)
 		await frames(3)
@@ -638,8 +662,8 @@ func _circle_only() -> void:
 		await _capture_canvas(main.menu, locale + "_help")
 		check(screen._joy_pointer == -99, "menu opening cancels movement while screen processing is disabled")
 		main.menu.close()
-		Arena.open_modal("shop")
-		await _capture(locale + "_upgrades")
+		check(Arena.open_modal("talent"), "the constellation viewer opens")
+		await _capture(locale + "_talents")
 		Arena.close_modal()
 		for id in ["saeta", "glaukos", "jokull"]: Arena.gain_hero(Roster.unit_by_id(id), 9)
 		Arena.open_modal("bench")
@@ -661,7 +685,7 @@ func _circle_only() -> void:
 func _look_only() -> void:
 	for locale in ["ko", "en"]:
 		I18n.set_locale(locale)
-		Arena.start_run(20261009)
+		Arena.start_run(20261009, 1)
 		main = load("res://game/main.gd").new()
 		_mount(main)
 		await frames(3)
@@ -721,28 +745,30 @@ func _look_only() -> void:
 		screen.view_3d._follow_offset = Vector3.ZERO
 		screen.view_3d._camera_initialized = false
 		await _capture(locale + "_field_six")
-		Arena.open_modal("shop")
-		await _capture(locale + "_upgrades")
-		screen._shop_tab = "passives"
-		await _capture(locale + "_passives")
+		check(Arena.open_modal("talent"), "the constellation viewer opens")
+		await _capture(locale + "_talents")
 		Arena.close_modal()
 		for id in ["saeta", "glaukos", "jokull"]: Arena.gain_hero(Roster.unit_by_id(id), 9)
 		Arena.open_modal("bench")
 		await _capture(locale + "_reserves_selected")
 		Arena.close_modal()
+		_no_levelups()
+		_mid_wave(1)
+		Arena.gold = 99999
 		for skill in ["blast", "freeze", "ward"]:
 			Arena.sim.skill_cooldowns[skill] = 0.0
 			await paint(screen)
-			check(tap(screen, "skill:" + skill), "restyled skill button remains active")
+			check(await _tap_skill(skill), "restyled skill button remains active")
 			await _capture(locale + "_skill_" + skill)
 		main.menu.open()
 		main.menu.page = "rules"
 		await _capture_canvas(main.menu, locale + "_help")
 		main.menu.close()
 		Arena.gold = 99999
-		Arena.begin_summon()
-		screen._rite_age = 9
-		await _capture(locale + "_rite_free")
+		_back_to_prep()
+		check(Arena.begin_summon(), "a paid box opens in the preparation")
+		await _capture(locale + "_box_paid")
+		Arena.confirm_summon()
 		Arena.close_modal()
 		Arena.modal = ""
 		Arena.phase = Arena.Phase.BATTLE
@@ -761,7 +787,8 @@ func _look_only() -> void:
 func _style_only() -> void:
 	for locale in ["ko", "en"]:
 		I18n.set_locale(locale)
-		Arena.start_run(20261009)
+		_fresh_ladder()
+		Arena.start_run(20261009, 1)
 		main = load("res://game/main.gd").new()
 		_mount(main)
 		await frames(3)
@@ -778,7 +805,7 @@ func _style_only() -> void:
 		main.screen.collection.close()
 		await paint(main.screen)
 		main.menu.open()
-		for menu_page in ["menu", "rite", "elements"]:
+		for menu_page in MENU_PAGES:
 			main.menu.page = menu_page
 			await _capture_canvas(main.menu, locale + "_menu_" + menu_page)
 		main.menu.close()
@@ -788,9 +815,8 @@ func _style_only() -> void:
 		await _capture(locale + "_stage_card")
 		Arena.choose_theme(0)
 		screen._track_modal()
-		screen._rite_age = 9
-		await _capture(locale + "_rite_free")
-		check(zone_of(screen, "rite:pull").is_empty(), "no advertising action on the ritual")
+		await _capture(locale + "_box_free")
+		check(zone_of(screen, "box:pull").is_empty() and zone_of(screen, "rite:pull").is_empty(), "no advertising action on the box")
 		Arena.confirm_summon()
 		await _capture(locale + "_summon_new")
 		Arena.close_modal()
@@ -799,16 +825,14 @@ func _style_only() -> void:
 		screen.view_3d._camera_initialized = false
 		await _capture(locale + "_field_six")
 		Arena.gold = 99999
-		Arena.open_modal("shop")
-		await _capture(locale + "_upgrades")
-		screen._shop_tab = "passives"
-		await _capture(locale + "_passives")
+		check(Arena.open_modal("talent"), "the constellation viewer opens")
+		await _capture(locale + "_talents")
 		Arena.close_modal()
 		for id in ["saeta", "glaukos", "jokull"]:
 			Arena.gain_hero(Roster.unit_by_id(id), 9)
 		Arena.open_modal("bench")
 		screen._track_modal()
-		screen._bench_choice = 0
+		screen.set("_bench_choice", 0)
 		await _capture(locale + "_reserves_selected")
 		Arena.close_modal()
 		Arena.sim.done = true
@@ -829,7 +853,7 @@ func _style_only() -> void:
 func _help_only() -> void:
 	for locale in ["ko", "en"]:
 		I18n.set_locale(locale)
-		Arena.start_run(20261009)
+		Arena.start_run(20261009, 1)
 		main = load("res://game/main.gd").new()
 		_mount(main)
 		await frames(3)
@@ -861,7 +885,7 @@ func _help_only() -> void:
 func _polish_only() -> void:
 	for locale in ["ko", "en"]:
 		I18n.set_locale(locale)
-		Arena.start_run(20261009)
+		Arena.start_run(20261009, 1)
 		main = load("res://game/main.gd").new()
 		_mount(main)
 		await frames(3)
@@ -870,17 +894,14 @@ func _polish_only() -> void:
 		screen.set_process(false)
 		Arena.choose_theme(0)
 		screen._track_modal()
-		screen._rite_age = 9
-		await _capture(locale + "_rite_free")
-		var respin_box: Rect2 = zone_of(screen, "rite:respin")["rect"]
-		var spins_before := Arena.spins
-		_window_touch(respin_box.get_center(), true)
-		_window_touch(respin_box.get_center(), false)
-		check(Arena.spins > spins_before, "window pixel touch reaches the stretched ritual button")
-		screen._rite_age = 9
+		await _capture(locale + "_box_free")
+		await _reroll_by_window_touch()
 		Arena.confirm_summon()
 		Arena.close_modal()
 		_prepare_field()
+		_no_levelups()
+		_mid_wave(1)
+		Arena.gold = 99999
 		for i in range(Balance.ARENA_HERO_LIMIT):
 			await paint(screen)
 			check(tap(screen, "hero:%d" % i), "each of six hero cards accepts selection")
@@ -902,7 +923,7 @@ func _polish_only() -> void:
 		for skill in ["blast", "freeze", "ward"]:
 			Arena.sim.skill_cooldowns[skill] = 0.0
 			await paint(screen)
-			check(tap(screen, "skill:" + skill), "manual common skill button " + skill)
+			check(await _tap_skill(skill), "manual common skill button " + skill)
 			await _capture(locale + "_skill_" + skill)
 			for n in range(4):
 				screen._process(1.0 / 30)
@@ -916,10 +937,16 @@ func _polish_only() -> void:
 	file = null
 	finish("Arena ritual and skill clarity")
 
-func _rite_only() -> void:
+## The jewel box over the paused field (modal "box", D1's ceremony in ArenaBoxView): the free
+## first box, a reroll through a window-pixel touch on the stretched button, the ceremony's
+## frames (the battle clock must not move under it), the box once every free reroll is spent
+## (its reroll button off), then a window-pixel touch selecting the sixth hero and moving it.
+## The box's own zones (box:reroll, box:pick:<i>) arrive with LB1; until then the touches that
+## need them are skipped and noted.
+func _box_only() -> void:
 	for locale in ["ko", "en"]:
 		I18n.set_locale(locale)
-		Arena.start_run(20261009)
+		Arena.start_run(20261009, 1)
 		main = load("res://game/main.gd").new()
 		_mount(main)
 		await frames(3)
@@ -928,24 +955,25 @@ func _rite_only() -> void:
 		screen.set_process(false)
 		Arena.choose_theme(0)
 		screen._track_modal()
-		screen._rite_age = 9
-		await _capture(locale + "_rite_free")
-		var spins_before := Arena.spins
-		var respin_box: Rect2 = zone_of(screen, "rite:respin")["rect"]
-		_window_touch(respin_box.get_center(), true)
-		_window_touch(respin_box.get_center(), false)
-		check(Arena.spins > spins_before, "window pixel touch reaches the stretched ritual button")
-		screen._rite_age = 9
-		check(zone_of(screen, "rite:pull").is_empty(), "ritual exposes no rewarded pull action")
+		check(Arena.modal == "box" and not Arena.box_cards.is_empty(), "the card opens the free first box")
+		await _capture(locale + "_box_free")
+		await _reroll_by_window_touch()
+		check(zone_of(screen, "box:pull").is_empty() and zone_of(screen, "rite:pull").is_empty(), "the box exposes no rewarded pull action")
 		var clock: float = Arena.sim.elapsed
 		for n in range(4):
 			screen._process(0.15)
-			await _capture(locale + "_rite_spin_%02d" % n)
-		check(is_equal_approx(clock, Arena.sim.elapsed), "ritual animation preserves paused battle time")
-		Arena.orbit = RiteBoard.sample_orbit(Rite.MAX_STARS)
-		await _capture(locale + "_rite_full")
-		check(not bool(zone_of(screen, "rite:respin").get("on", true)), "respin disables when all stars are in the gate")
+			await _capture(locale + "_box_open_%02d" % n)
+		check(is_equal_approx(clock, Arena.sim.elapsed), "the box ceremony preserves paused battle time")
+		var guard := 0
+		while Arena.can_respin() and guard < 12:
+			Arena.respin()
+			guard += 1
+		await _capture(locale + "_box_spent")
+		var reroll := zone_of(screen, "box:reroll")
+		if not reroll.is_empty():
+			check(not bool(reroll.get("on", true)), "the reroll button is off once every free reroll is spent")
 		Arena.confirm_summon()
+		await _capture(locale + "_box_result")
 		Arena.close_modal()
 		_prepare_field()
 		await paint(screen)
@@ -968,10 +996,25 @@ func _rite_only() -> void:
 		main = null
 		screen = null
 		await frames(4)
-	var file := FileAccess.open(out_dir + "/rite-report.json", FileAccess.WRITE)
+	var file := FileAccess.open(out_dir + "/box-report.json", FileAccess.WRITE)
 	file.store_string(JSON.stringify({"checks": checks, "failures": failures}, "  ") + "\n")
 	file = null
-	finish("Arena ritual presentation")
+	finish("Arena jewel box presentation")
+
+## The reroll of the open box through a touch on the window's pixels (the picture is stretched
+## to the window size): it must reach the box view's button. Skipped (and said) while the box
+## view registers no reroll zone yet.
+func _reroll_by_window_touch() -> void:
+	await paint(screen)
+	var zone := zone_of(screen, "box:reroll")
+	if zone.is_empty() or not bool(zone.get("on", false)):
+		print("   (no box:reroll zone drawn yet: the window-pixel reroll touch is skipped)")
+		return
+	var spins_before := Arena.spins
+	var at: Vector2 = Rect2(zone["rect"]).get_center()
+	_window_touch(at, true)
+	_window_touch(at, false)
+	check(Arena.spins > spins_before, "window pixel touch reaches the stretched reroll button")
 
 # --------------------------------------------------------------------------- #
 # Battlefield biomes (2026-10-13): fields by biome and rank, the five road shapes,
@@ -984,6 +1027,10 @@ const BIOME_FIELDS := ["calm_lake", "tidal_flats", "maelstrom_sea",
 	"gravel_hills", "broken_wall", "rift_chasm",
 	"first_snow_hills", "drift_ice_sea", "polar_night"]
 const REVIEW_SEED := 20261013
+## The ladder stage the battlefield reviews play: past Balance.ARENA_MIX_STAGE every kind of
+## monster (swarm, runner, heavy, caster, flyer, immune bodies) is in a stage's waves, as the
+## old ten-stage run's first stage had them. Its battlefield is the one under review.
+const REVIEW_STAGE := 41
 
 func _theme_index(id: String) -> int:
 	for i in range(Roster.THEMES.size()):
@@ -999,7 +1046,7 @@ func _biome_only() -> void:
 	Save.sfx = false
 	var sets := arg("--sets", "fields,shapes,detail,switch,timing").split(",", false)
 	var report := {"fields": {}, "shapes": {}, "detail": [], "switch": {}, "timing": {}}
-	Arena.start_run(REVIEW_SEED)
+	Arena.start_run(REVIEW_SEED, REVIEW_STAGE)
 	main = load("res://game/main.gd").new()
 	_mount(main)
 	await frames(3)
@@ -1055,7 +1102,7 @@ func _biome_only() -> void:
 			for skill in ["blast", "freeze", "ward"]:
 				Arena.sim.skill_cooldowns[skill] = 0.0
 				await paint(screen)
-				check(tap(screen, "skill:" + skill), "skill %s cast on %s" % [skill, id])
+				check(await _tap_skill(skill), "skill %s cast on %s" % [skill, id])
 				for n in range(4):
 					for tick in range(9):
 						screen._process(1.0 / 30)
@@ -1077,7 +1124,7 @@ func _biome_only() -> void:
 ## Start a run on `index` (tool API: no chooser exists) and stand a review squad on it.
 ## `layout` previews another road shape on the same battlefield.
 func _enter_field(index: int, layout: String = "", crowd: bool = true) -> void:
-	Arena.start_run(REVIEW_SEED)
+	Arena.start_run(REVIEW_SEED, REVIEW_STAGE)
 	# A restarted run counts its monsters from one again; the world keys bodies by that
 	# number, so bodies of the previous field must not be taken for the new ones.
 	var live: ArenaWorld = screen.view_3d.world as ArenaWorld
@@ -1085,12 +1132,16 @@ func _enter_field(index: int, layout: String = "", crowd: bool = true) -> void:
 		for node in live.monster_nodes.values(): node.free()
 		live.monster_nodes.clear()
 		live._dying.clear()
+		live._monster_status.clear()
 	check(Arena.choose_theme(index), "tool API puts the battlefield on stage 1")
 	Arena.confirm_summon()
 	Arena.close_modal()
 	if not layout.is_empty() and ArenaGeometry.use_layout(layout):
 		Arena.sim._build_navigation()
 	_review_squad()
+	_no_levelups()
+	# In the middle of wave 1 (skills are refused in a preparation; no countdown, no banner).
+	_mid_wave(1)
 	screen.speed = 1.0
 	screen.view_3d._follow_offset = Vector3.ZERO
 	screen.view_3d._camera_initialized = false
@@ -1120,9 +1171,14 @@ func _review_squad() -> void:
 	Arena.sim.crystal_hp = Arena.sim.crystal_max * 0.8
 	Arena.sim._spawn_t = 1.0e9
 
-## The stage's own monster mix spread along every road from the gate to the plaza.
+## The stage's own monster mix (the regular rows of all its waves: swarms, runners, heavies,
+## casters, flyers) spread along every road from the gate to the plaza.
 func _review_crowd() -> void:
-	var spawns: Array = Arena.stage_spawns(Arena.stage, 0)
+	var spawns: Array = []
+	for w in range(1, Balance.ARENA_WAVES):
+		for entry in Arena.wave_spawns(Arena.stage, w):
+			if String(entry["m"]["kind"]) != "boss": spawns.append(entry["m"])
+	if spawns.is_empty(): spawns = Roster.theme_pool(Arena.theme_for(1))
 	var lanes := ArenaGeometry.route_count()
 	var per_lane := maxi(5, 24 / lanes)
 	var n := 0
@@ -1230,14 +1286,28 @@ func _detail_shots(label: String) -> Array:
 		joins += 1
 	return made
 
-## One real stage change: the boss of stage 1 falls, the clear delay runs, the next
-## battlefield opens under its card, the card is confirmed and the first monsters of
-## stage 2 come through the new gates.
+## The staged kills feed the run's experience; a level-up would open the talent offer (a
+## modal that pauses the field until a pick, and opens whenever a preparation begins). Sink
+## the experience so it never comes, and close an offer that is already open.
+func _no_levelups() -> void:
+	var run = Arena.sim.run if Arena.sim != null else null
+	if run == null: return
+	if "pending_levels" in run: run.pending_levels = 0
+	if "xp" in run: run.xp = -1.0e9
+	if "talent_offer" in run and not run.talent_offer.is_empty():
+		run.talent_offer.clear()
+		if String(run.modal) == "talent": run.close_modal()
+
+## One real stage change on the same screen (2026-10-19 ladder): the boss of STAGE 1 falls, the
+## clear beat runs, the victory panel stands, then the run's next stage opens on `to_id` under its
+## card (what the result's 「다음 STAGE」 starts), the card is confirmed, the free first box is
+## taken, the preparation is skipped (「바로 시작」) and the first monsters come through the new gates.
 func _stage_switch(from_id: String, to_id: String) -> Dictionary:
 	await _enter_field(_theme_index(from_id))
-	Arena.stage_themes[1] = _theme_index(to_id)
 	_review_crowd()
-	Arena.sim._spawn(Arena.boss_for(1))
+	# The boss wave (its list held, so the HUD reads WAVE 10), its boss placed in the frame.
+	_mid_wave(Balance.ARENA_WAVES)
+	Arena.sim._spawn(Arena.boss_for(Arena.stage))
 	var boss: Dictionary = Arena.sim.monsters[-1]
 	var path := ArenaGeometry.route_points(0)
 	boss["pos"] = path[int(path.size() * 0.42)]
@@ -1245,34 +1315,48 @@ func _stage_switch(from_id: String, to_id: String) -> Dictionary:
 	boss["vel"] = Vector2.ZERO
 	Arena.sim.boss_spawned = true
 	Arena.sim.boss_warned = true
-	Arena.sim.elapsed = Balance.ARENA_BOSS_AT + 6.0
 	Arena.sim._spawn_t = 1.0e9
 	Arena.sim._rebuild_navigation()
 	Arena.sim._cache_positions()
 	var frame := 0
 	var card_frames := 0
+	var result_frames := 0
 	var after := 0
 	var marks := {}
-	while frame < 150 and after < 46:
+	while frame < 170 and after < 46:
 		if frame == 10:
 			boss["hp"] = 0.0
 			marks["boss_down"] = frame
 		var before_stage := Arena.stage
 		# Fifteen pictures a second up to the card, then two simulated ticks a picture
 		# so the first assault of the new stage fits in the sequence.
-		for tick in range(2 if Arena.stage > 1 and Arena.modal.is_empty() else 1): screen._process(1.0 / 15)
+		for tick in range(2 if Arena.stage > REVIEW_STAGE and Arena.modal.is_empty() else 1): screen._process(1.0 / 15)
+		if Arena.modal == "result" and Arena.stage == REVIEW_STAGE:
+			if result_frames == 0: marks["result"] = frame
+			result_frames += 1
+			if result_frames == 12:
+				# The result's next stage, on the battlefield under review.
+				check(Arena.next_stage(), "the cleared stage opens the next one")
+				Arena.stage_themes[Arena.stage - 1] = _theme_index(to_id)
+				Arena.sim = null
+				Arena._open_stage(Arena.stage)
+				_no_levelups()
+				screen._track_modal()
 		if Arena.stage != before_stage: marks["new_field"] = frame
-		if Arena.modal == "stage" and Arena.stage > 1:
+		if Arena.modal == "stage" and Arena.stage > REVIEW_STAGE:
 			card_frames += 1
 			if card_frames == 18:
 				await paint(screen)
 				check(tap(screen, "stage:start"), "stage card confirms into the new battlefield")
+				Arena.confirm_summon()
+				Arena.close_modal()
+				_no_levelups()
+				Arena.sim.skip_prep()
 				marks["card_closed"] = frame
-				Arena.sim._spawn_t = 0.6
-		elif Arena.stage > 1: after += 1
+		elif Arena.stage > REVIEW_STAGE and Arena.modal.is_empty(): after += 1
 		await _capture("switch_%03d" % frame)
 		frame += 1
-	check(Arena.stage == 2 and String(Arena.theme_for(1)["id"]) == to_id, "stage switch reached the next battlefield")
+	check(Arena.stage == REVIEW_STAGE + 1 and String(Arena.theme_for(1)["id"]) == to_id, "stage switch reached the next battlefield")
 	check(screen.view_3d.world.theme_id == to_id, "world rebuilt for the next battlefield")
 	return {"from": from_id, "to": to_id, "frames": frame, "marks": marks}
 
@@ -1552,6 +1636,7 @@ func _capture(name: String) -> void:
 	await _capture_canvas(screen, name)
 
 func _capture_canvas(canvas: CanvasItem, name: String) -> void:
+	_doing = name
 	Look.text_audit_enabled = true
 	Look.text_audit.clear()
 	Look.raw_text_audit.clear()
@@ -1569,3 +1654,95 @@ func _capture_canvas(canvas: CanvasItem, name: String) -> void:
 		check(I18n.t(String(theme["ko"])) in shown, "current battlefield name is rendered in the HUD")
 	Look.text_audit_enabled = false
 	await snap(out_dir + "/" + name + ".png")
+
+# --------------------------------------------------------------------------- #
+# The 2026-10-19 flow: waves, preparations, the box; the watchdog
+# --------------------------------------------------------------------------- #
+## The guide's tabs (MenuOverlay: "box" is the jewel box page on the title and the battlefield).
+const MENU_PAGES := ["menu", "rules", "box", "elements"]
+
+## Wave `n` in progress: opened (ArenaSim.begin_wave) as if long ago, so no banner is due, and
+## its list held so the staged monsters are the only ones. Common skills can be cast (they are
+## refused in a preparation) and the wave never ends on its own.
+func _mid_wave(n: int) -> void:
+	var sim := Arena.sim
+	sim.begin_wave(n)
+	sim._spawn_t = 1.0e9
+	sim.wave_t = 30.0
+	var events: Array = sim.events
+	for i in range(events.size() - 1, -1, -1):
+		if String(events[i].get("t", "")) == "arena_wave": events.remove_at(i)
+
+## Hold the current wave the real way (the rest of its list steps in and everything on the field
+## falls): the next preparation opens, where boxes and level-up picks are allowed.
+func _back_to_prep() -> void:
+	var sim := Arena.sim
+	_no_levelups()
+	if not sim.in_prep():
+		if sim.is_boss_wave(sim.wave_no): sim.begin_wave(maxi(1, sim.wave_no - 1))
+		while sim._wave_spawned < sim._wave_list.size(): sim._spawn_next()
+		for mo in sim.monsters: mo["hp"] = 0.0
+		sim._cache_positions()
+		sim._reap()
+	_no_levelups()
+	check(sim.in_prep(), "the wave was held: a preparation is open")
+
+## A common skill through its rail button, as a player casts it: the starburst's button arms
+## the aim (F6) and a tap on the battlefield (Harness.tap_at) casts it at `at`, by default on the
+## monster nearest the crystal; frost and ward cast at once. True when a cast was spent.
+func _tap_skill(skill: String, at: Vector2 = Vector2.INF) -> bool:
+	var used := int(Arena.sim.skill_uses.get(skill, 0))
+	var state: Dictionary = Arena.sim.skill_state(skill) if Arena.sim.has_method("skill_state") else {}
+	# A running screen notices a closed window every frame; a held one would only notice it after
+	# the tap (and that notice ends the aim the tap just began).
+	screen._track_modal()
+	await paint(screen)
+	var tapped := tap(screen, "skill:" + skill)
+	var aimed := false
+	if tapped and skill == "blast" and screen.has_method("aiming") and screen.aiming():
+		aimed = true
+		var point := at if at.is_finite() else _blast_point()
+		tap_at(screen, screen.view_3d.project(point, 0.0))
+	var cast := int(Arena.sim.skill_uses.get(skill, 0)) == used + 1
+	if not cast:
+		print("   skill %s not cast: zone %s, aimed %s, state %s" % [skill, "tapped" if tapped else "off/missing", aimed, JSON.stringify(state)])
+	return cast
+
+## Where a player would drop the starburst: on the live monster nearest the crystal (what the
+## simulator's own target was before the aim), else open ground below the crystal.
+func _blast_point() -> Vector2:
+	var best := Vector2.INF
+	for mo in Arena.sim.monsters:
+		if float(mo["hp"]) <= 0.0: continue
+		var point: Vector2 = mo["pos"]
+		if not best.is_finite() or point.distance_to(Balance.ARENA_CENTER) < best.distance_to(Balance.ARENA_CENTER): best = point
+	return best if best.is_finite() else Balance.ARENA_CENTER + Vector2(0, 160)
+
+## A staged victory unlocks the next ladder stage in memory (nothing is written); the title of
+## the next language pass would then read it. Every pass starts from STAGE 1.
+func _fresh_ladder() -> void:
+	Save.stage_unlocked = 1
+	Save.stage_cleared = 0
+	Save.last_clear = {}
+
+## Tap the screen's own zone `id` when it is drawn and on; otherwise (a surface that is not
+## wired yet) do what the zone stands for. True when the real zone answered.
+func _act(id: String, fallback: Callable) -> bool:
+	# A running screen notices a window change every frame; a held one only when asked.
+	screen._track_modal()
+	await paint(screen)
+	if tap(screen, id): return true
+	fallback.call()
+	return false
+
+## A preview that stops making progress (an awaited step that died on a script error) would hang
+## until the driver's timeout. After `--watchdog` seconds of real time it reports and fails.
+func _watchdog() -> void:
+	var limit := arg_float("--watchdog", 1800.0)
+	if limit <= 0.0: return
+	var timer := get_tree().create_timer(limit, true, false, true)
+	timer.timeout.connect(func() -> void:
+		printerr("!! watchdog: no end after %.0f s; last capture: %s" % [limit, _doing])
+		print("판정: 실패")
+		get_tree().quit(2))
+

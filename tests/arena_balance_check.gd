@@ -1,16 +1,34 @@
 extends Harness
 
-## Auto-play of the stage chain, to see how the difficulty curve actually plays:
-## how far a plain strategy gets, where the crystal starts to crack and how long each
-## stage boss stands. The player here is deliberately ordinary: it fills the field,
-## alternates summons and upgrades, posts its heroes where the roads reach the crystal,
-## walks an idle hero over when something hits the crystal out of everyone's reach,
-## never counters elements and casts the three skills on simple cues. A person who
-## walks heroes out to meet the crowd and builds against the battlefield does better.
+## Auto-play of the stage ladder and of Hellbound for the balance pass (2026-10-19 LA4, the 「실측」 part of
+## docs/STAGE_LADDER_2026-10-19.md). The player is meant to be an ordinary person, a little below a real one:
+##   - preparation: opens the boxes its gold buys (from wave 4 on it keeps one skill's gold), spends the free
+##     rerolls hoping the box grade rises by one, takes an anti-air card while nobody shoots the sky and
+##     flyers are coming, otherwise the most stars; fields its six best, posts them where the roads reach the
+##     plaza and starts the wave at once (the time tables add the full preparation back);
+##   - level-ups: a fixed list of plain nodes (attack, speed, crit …);
+##   - during a wave: walks an idle hero to what comes close; the starburst on the best cluster
+##     (cast_skill("blast", point) — a body no fielded hero can hurt, an immune one or a flyer nobody shoots,
+##     weighs more, an elite or the boss most) and at once on a striker of the crystal nobody can hurt or
+##     while the crystal is under half; the frost when the crystal is threatened, the ward when the boss
+##     strikes it; half a box of gold is kept unless it is an emergency;
+##   - never counters elements.
+## Everything follows the run seed: the same code gives the same sample.
 ##
-##   godot --headless --path . res://tests/arena_balance_check.tscn -- --runs 12 --from 0
-##   --blessing    play with the Guardian's blessing (three crystal revivals per run, with gold)
-##   --report      print the per-stage table only, do not judge
+##   godot --headless --path . res://tests/arena_balance_check.tscn -- --runs 4 --stages 1,5,10
+##   --from K        first seed 1000 + K (Hellbound 2000 + K)
+##   --dlc           with the DLC (three free rerolls, revival tickets); --blessing is the old name
+##   --uses N        with the DLC, play as if ARENA_REVIVE_USES were N (to measure a DB proposal)
+##   --speed F       monsters walk F times as fast (to measure a DB proposal on PATH_SPEED / road length)
+##   --blast-r R     the starburst's radius as if ARENA_BLAST_RADIUS were R (to measure a DB proposal)
+##   --hell 3|4      Hellbound with six heroes centred on 3 or 4 stars; --max-wave W stops a run (default 60)
+##   --rows          also print one `ROW {json}` line per run (scratch tools merge parallel samples)
+##   --report        print the tables only, no verdict
+##   --min-win P     verdict: every sampled stage wins at least this share of its runs (default 0.75)
+##   --time A,B      verdict: the median stage time (battle + the full preparation, 1x) lies in A..B seconds
+##   --wall A,B      verdict: the median time with the windows (card, boxes, nodes) lies in A..B seconds
+##   --no-skills     never cast the common skills · --think S  look at the field every S seconds (default 0.5)
+##   --detail        print each wave's length · --trace  print the field every ten seconds
 class Owner extends RefCounted:
 	const NAME := "test"
 	var store: Node
@@ -24,137 +42,323 @@ class Owner extends RefCounted:
 ## Just outside the altar, so a sword reaches whatever is hitting the crystal.
 const POST := 104.0
 const STEP := 1.0 / 30.0
+## How often the player looks at the field during a wave (seconds of battle).
+const THINK := 0.5
+## Monsters this close to the crystal are a threat.
+const NEAR := 220.0
+## A stage that has not ended after this much battle time counts as stalled (a bug, not balance).
+const STALL_SECONDS := 900.0
+## Assumed seconds of the windows a person sits through: the stage card, a level-up node, and a box — its
+## ceremony measured 2.7 s plain up to 7.5 s with rerolls (D1), so 2.7 s plus BOX_REROLL_SECONDS a reroll.
+const CARD_SECONDS := 3.0
+const NODE_SECONDS := 3.0
+const BOX_SECONDS := 2.7
+const BOX_REROLL_SECONDS := 1.6
+const BOX_SECONDS_MAX := 7.5
+## Hellbound's squad: two that shoot the sky, every element, five weapons.
+const HELL_SQUAD := ["limne", "chispa", "lind", "brigid", "pip", "phorkys"]
 var _turn := 0
 
 func _ready() -> void:
 	if not require_no_save(): return
 	Run.running = false
-	var runs := arg_int("--runs", 8)
-	var first := arg_int("--from", 0)
 	var owner := Owner.new()
-	if has_arg("--blessing"): owner.owned = [Store.GUARDIAN]
+	var dlc := has_arg("--dlc") or has_arg("--blessing") or has_arg("--hell")
+	if dlc: owner.owned = [Store.GUARDIAN]
 	Store.use_backend(owner)
-	var reached: Array[int] = []
-	var clears := 0
-	var early_loss := 0.0
-	var stage_damage: Array[float] = []
-	var stage_boss: Array[float] = []
-	var stage_seen: Array[int] = []
-	for n in range(Balance.ARENA_STAGES):
-		stage_damage.append(0.0)
-		stage_boss.append(0.0)
-		stage_seen.append(0)
-	for n in range(runs):
-		var result := _play(1000 + first + n)
-		reached.append(int(result["stage"]))
-		if bool(result["won"]): clears += 1
-		var line := "run %2d  seed %d  %s %2d탄  %s" % [n + 1, 1000 + first + n, "승리" if result["won"] else "패배", result["stage"], result["fields"]]
-		print(line)
-		for record in result["stages"]:
-			var index := int(record["stage"]) - 1
-			stage_seen[index] += 1
-			stage_damage[index] += float(record["damage"])
-			stage_boss[index] += float(record["boss_seconds"])
-			if index < 2: early_loss += float(record["damage"])
-		print("        " + result["detail"])
-	reached.sort()
-	var median: int = reached[reached.size() / 2]
-	print("")
-	print("탄    도달   수정 피해(평균)   보스 처치(초, 평균)   몬스터 체력   처치 골드")
-	for n in range(Balance.ARENA_STAGES):
-		var seen := maxi(1, stage_seen[n])
-		print("%2d   %3d판    %7.0f          %6.1f              %7.0f      %d" % [n + 1, stage_seen[n], stage_damage[n] / seen, stage_boss[n] / seen,
-			Balance.arena_hp(n + 1, clampi(ceili(float(n + 1) * 5.0 / Balance.ARENA_STAGES), 1, 5)), Balance.arena_kill_gold(n + 1, "swarm")])
-	print("")
-	print("도달 탄: 중간값 %d · 최소 %d · 최대 %d · 완주 %d/%d판%s" % [median, reached[0], reached[-1], clears, runs, "  (수호자의 가호 사용)" if has_arg("--blessing") else ""])
+	var ok := true
+	if has_arg("--hell"):
+		_hell_sample()
+	else:
+		ok = _ladder_sample(dlc)
 	Store.use_backend(null)
 	Arena.running = false
-	if has_arg("--report"):
+	Arena.hell = false
+	if has_arg("--report") or has_arg("--hell"):
 		get_tree().quit(0)
 		return
-	check(early_loss / runs < Balance.ARENA_CRYSTAL_HP * 0.05, "1~2탄은 수정이 거의 상하지 않음 (판당 평균 피해 %.0f)" % (early_loss / runs))
-	check(median >= 5, "평범한 자동 플레이가 판의 절반은 넘김 (중간값 %d탄)" % median)
-	check(clears < runs, "뒤 탄이 실제로 어려움: 모든 판을 완주하지는 못함 (%d/%d)" % [clears, runs])
-	var early := (stage_boss[0] + stage_boss[1]) / maxf(1.0, float(stage_seen[0] + stage_seen[1]))
-	var early_damage := (stage_damage[0] + stage_damage[1] + stage_damage[2]) / maxf(1.0, float(stage_seen[0] + stage_seen[1] + stage_seen[2]))
-	var late_seen := 0
-	var late := 0.0
-	var late_damage := 0.0
-	for n in range(6, Balance.ARENA_STAGES):
-		late += stage_boss[n]
-		late_damage += stage_damage[n]
-		late_seen += stage_seen[n]
-	check(late_seen > 0 and late / late_seen > early, "뒤 탄의 보스가 앞 탄의 보스보다 오래 버팀 (%.1f초 > %.1f초)" % [late / maxf(1.0, late_seen), early])
-	check(late_seen > 0 and late_damage / late_seen > early_damage + 40.0, "탄을 거듭할수록 수정이 받는 압박이 커짐 (7~10탄 평균 %.0f > 1~3탄 평균 %.0f)" % [late_damage / maxf(1.0, late_seen), early_damage])
-	finish("연속 수호전 탄별 난이도 (자동 플레이 %d판)" % runs)
+	check(ok, "사다리 표본 판정")
+	finish("수호전 사다리 자동 플레이")
 
-func _play(seed_value: int) -> Dictionary:
-	Arena.start_run(seed_value)
+func _ladder_sample(dlc: bool) -> bool:
+	var runs := arg_int("--runs", 4)
+	var first := arg_int("--from", 0)
+	var stages: Array[int] = []
+	for part in arg("--stages", "1,5,10").split(","):
+		if part.strip_edges().is_valid_int(): stages.append(clampi(int(part), 1, Balance.ARENA_LADDER))
+	var results: Array = []
+	for stage in stages:
+		for n in range(runs):
+			var result := _play(1000 + first + n, stage, [])
+			results.append(result)
+			_print_run(result)
+	print("")
+	_print_table(results)
+	var wins := 0
+	var stalled := 0
+	var times: Array = []
+	var walls: Array = []
+	var battles: Array = []
+	var boxes := 0
+	var casts := 0
+	for result in results:
+		if bool(result["won"]): wins += 1
+		if bool(result["stalled"]): stalled += 1
+		times.append(float(result["stage_time"]))
+		walls.append(float(result["wall"]))
+		battles.append(float(result["battle"]))
+		boxes += int(result["boxes"])
+		casts += int(result["blast"]) + int(result["freeze"]) + int(result["ward"])
+	var played := maxi(1, results.size())
+	var median := _median(times)
+	print("")
+	print("사다리 표본: STAGE %s · 승리 %d/%d판 · 스테이지 시간 중앙값 %s(전투 %s + 정비) · 창 포함 %s · 상자 %.1f · 스킬 %.1f회%s" % [
+		",".join(PackedStringArray(stages.map(func(s: int) -> String: return str(s)))), wins, results.size(), _clock(median),
+		_clock(_median(battles)), _clock(_median(walls)), float(boxes) / played, float(casts) / played, "  (DLC)" if dlc else ""])
+	# The verdict: nothing stalls, every sampled stage wins often enough, the stage takes a sensible time.
+	var ok := stalled == 0 and not results.is_empty()
+	if stalled > 0: printerr("!! 멈춘 판 %d/%d" % [stalled, results.size()])
+	var floor_share := arg_float("--min-win", 0.75)
+	for stage in stages:
+		var plays := 0
+		var won := 0
+		for result in results:
+			if int(result["stage"]) != stage: continue
+			plays += 1
+			if bool(result["won"]): won += 1
+		if plays > 0 and float(won) / float(plays) < floor_share - 0.0001:
+			ok = false
+			printerr("!! STAGE %d 승률 %d/%d — 하한 %.0f%%" % [stage, won, plays, floor_share * 100.0])
+	for check_spec in [["--time", median, "스테이지 시간"], ["--wall", _median(walls), "창 포함 시간"]]:
+		var span := arg(String(check_spec[0]), "")
+		if not span.contains(","): continue
+		var low := float(span.get_slice(",", 0))
+		var high := float(span.get_slice(",", 1))
+		var value := float(check_spec[1])
+		if value < low or value > high:
+			ok = false
+			printerr("!! %s 중앙값 %s — 범위 %s~%s" % [check_spec[2], _clock(value), _clock(low), _clock(high)])
+	return ok
+
+## Hellbound with six heroes centred on 3 or 4 stars (four at it, one a star lower, one a star higher).
+func _hell_sample() -> void:
+	var stars := clampi(arg_int("--hell", 4), 2, 4)
+	var grades: Array = [stars, stars, stars, stars, stars - 1, mini(JewelBox.MAX_STARS, stars + 1)]
+	var kept := {"seen": Save.seen_units.duplicate(), "best": Save.unit_best.duplicate(), "hell": Save.hell_best_wave,
+		"squad": Save.hell_squad.duplicate()}
+	Save.seen_units = {}
+	Save.unit_best = {}
+	for i in range(HELL_SQUAD.size()):
+		Save.seen_units[HELL_SQUAD[i]] = true
+		Save.unit_best[HELL_SQUAD[i]] = JewelBox.tier_of(int(grades[i]))
+	var runs := arg_int("--runs", 4)
+	var first := arg_int("--from", 0)
+	var reached: Array = []
+	for n in range(runs):
+		var result := _play(2000 + first + n, 0, HELL_SQUAD)
+		reached.append(int(result["waves"]))
+		_print_run(result)
+	reached.sort()
+	print("")
+	print("Hellbound 표본: %d성 위주 6명 · 도달 웨이브 중앙값 %.0f (%d~%d) · %d판" % [stars, _median(reached),
+		int(reached[0]) if not reached.is_empty() else 0, int(reached[-1]) if not reached.is_empty() else 0, runs])
+	Save.seen_units = kept["seen"]
+	Save.unit_best = kept["best"]
+	Save.hell_best_wave = kept["hell"]
+	Save.hell_squad = kept["squad"]
+
+## One stage (or one Hellbound run when `squad` is given), played to its end.
+func _play(seed_value: int, stage: int, squad: Array) -> Dictionary:
+	var hell := not squad.is_empty()
+	if hell:
+		Arena.start_hellbound(squad, seed_value)
+	else:
+		Arena.start_run(seed_value, stage)
+	var uses := arg_int("--uses", -1)
+	if uses >= 0 and Arena.sim != null:
+		Arena.sim.revives = clampi(Balance.ARENA_REVIVE_USES - uses, 0, Balance.ARENA_REVIVE_USES)
 	_turn = 0
-	var fields := PackedStringArray()
-	for index in Arena.stage_themes: fields.append(String(Roster.THEMES[index]["main_body"]).substr(0, 2) + String(ArenaGeometry.layout_for_theme(index)).substr(0, 2))
-	var stages: Array = []
-	var record := {}
+	var r := {"stage": Arena.stage, "seed": seed_value, "hell": hell, "dlc": Arena.dlc(), "boxes": 0, "box_best": 0, "rerolls": 0, "box_time": 0.0,
+		"nodes": 0, "gold_box": 0, "gold_skill": 0, "blast": 0, "freeze": 0, "ward": 0,
+		"field": String(Roster.THEMES[Arena.theme_index]["main_body"]).substr(0, 2) + String(ArenaGeometry.layout_for_theme(Arena.theme_index)).substr(0, 2)}
+	var gold_start: int = Arena.gold
+	var max_wave := arg_int("--max-wave", 60)
+	var limit := STALL_SECONDS if not hell else 240.0 * float(max_wave)
 	var think := 0.0
-	var guard := 0
-	var hp_at_start := 0.0
-	var boss_at := -1.0
-	var revives_seen := 0
-	while Arena.running and guard < 2000000:
-		guard += 1
+	var damage := 0.0
+	var prep_time := 0.0
+	var revives_seen: int = Arena.sim.revives if Arena.sim != null else 0
+	var placed_for := -1
+	var stalled := false
+	var capped := false
+	var wave_from := 0.0
+	var wave_times: Array = []
+	var speed := arg_float("--speed", 1.0)
+	var hastened := 0
+	while Arena.running:
 		match Arena.modal:
 			"stage":
 				Arena.confirm_stage()
 				continue
-			"rite":
-				_rite()
+			"box":
+				_box(r)
 				continue
-			"shop", "bench":
+			"talent":
+				if _pick_talent(): r["nodes"] = int(r["nodes"]) + 1
+				continue
+			"bench":
 				Arena.close_modal()
 				continue
 		var sim: ArenaSim = Arena.sim
-		if record.is_empty() or int(record["stage"]) != Arena.stage:
-			if not record.is_empty(): record["dps_end"] = Arena.total_dps()
-			record = {"stage": Arena.stage, "damage": 0.0, "boss_seconds": 0.0, "dps_start": Arena.total_dps(), "heroes": Arena.heroes.size()}
-			stages.append(record)
-			hp_at_start = sim.crystal_hp
-			boss_at = -1.0
-			_place()
+		if hell and sim.wave_no > max_wave:
+			capped = true
+			break
+		if sim.elapsed > limit:
+			stalled = true
+			break
+		if sim.in_prep() and sim.clear_t == 0.0:
+			# Preparation: field the best, buy what the gold allows, post everyone, then start at once.
+			if placed_for != sim.wave_no:
+				placed_for = sim.wave_no
+				_field_best()
+				_place()
+			var keep := 0 if sim.wave_no < 4 else mini(Balance.ARENA_BLAST_GOLD, Balance.ARENA_FREEZE_GOLD)
+			var cost: int = Arena.summon_cost()
+			if Arena.can_summon() and Arena.gold - cost >= keep:
+				if Arena.begin_summon(): r["gold_box"] = int(r["gold_box"]) + cost
+				continue
+			sim.skip_prep()
 		var hp_before: float = sim.crystal_hp
-		var stage_before: int = Arena.stage
+		var prepping := sim.in_prep()
 		sim.step(STEP)
-		# Damage taken (a stage clear mends the crystal; a revival counts as losing it all).
-		if Arena.stage == stage_before and sim.clear_t == 0.0:
+		if prepping: prep_time += STEP
+		# --speed: every newcomer walks faster (spawn ids only grow).
+		if speed != 1.0:
+			for mo in sim.monsters:
+				if int(mo["spawn_id"]) > hastened:
+					mo["spd"] = float(mo["spd"]) * speed
+			for mo in sim.monsters: hastened = maxi(hastened, int(mo["spawn_id"]))
+		# Each wave's length (nothing reads the events here, so they are dropped as they come).
+		for e in sim.events:
+			match String(e.get("t", "")):
+				"arena_wave": wave_from = sim.elapsed
+				"arena_wave_clear": wave_times.append(snappedf(sim.elapsed - wave_from, 0.1))
+		sim.events.clear()
+		# Damage taken (a revival counts as losing it all). A revival's hero may be on the bench.
+		if sim.clear_t == 0.0:
 			if sim.revives > revives_seen:
 				revives_seen = sim.revives
-				record["damage"] = float(record["damage"]) + hp_before
-			elif sim.crystal_hp < hp_before: record["damage"] = float(record["damage"]) + hp_before - sim.crystal_hp
-		if sim.boss_spawned and boss_at < 0.0: boss_at = sim.elapsed
-		if boss_at >= 0.0 and (sim.clear_t > 0.0 or not Arena.running) and float(record["boss_seconds"]) == 0.0:
-			record["boss_seconds"] = sim.elapsed - boss_at
+				damage += hp_before
+				if Arena.running and Arena.modal.is_empty():
+					_field_best()
+					_place()
+			elif sim.crystal_hp < hp_before:
+				damage += hp_before - sim.crystal_hp
 		think += STEP
-		if think >= 1.0 and Arena.running and Arena.modal.is_empty() and sim.clear_t == 0.0:
+		if think >= arg_float("--think", THINK) and Arena.running and Arena.modal.is_empty() and sim.clear_t == 0.0 and not sim.in_prep():
 			think = 0.0
-			_think(sim)
-			if has_arg("--trace") and int(sim.elapsed) % 10 == 0: _trace(sim)
-	record["dps_end"] = Arena.total_dps()
-	var growth := PackedStringArray()
-	for item in stages: growth.append("%d:%.0f" % [item["stage"], float(item.get("dps_end", 0.0))])
-	var tiers := PackedStringArray()
-	for hero in Arena.heroes: tiers.append("%.1f" % ((int(hero["tier"]) + 1) * 0.5))
-	var detail := "별 [%s] 대기 %d  강화 atk%d rate%d crit%d critx%d gold%d  패시브 %s  처치 %d" % [",".join(tiers), Arena.bench.size(),
-		Arena.lv("atk"), Arena.lv("rate"), Arena.lv("crit"), Arena.lv("critx"), Arena.lv("gold"), ",".join(PackedStringArray(Arena.passives)), Arena.kills]
-	detail += "\n        탄 끝 화력 " + " ".join(growth)
-	return {"stage": Arena.stage, "won": Arena.sim.won, "stages": stages, "fields": " ".join(fields), "detail": detail}
+			_think(sim, r)
+			if has_arg("--trace") and int(sim.elapsed * 2.0) % 20 == 0: _trace(sim)
+	var end: ArenaSim = Arena.sim
+	var won: bool = end.won
+	var fought: int = Balance.ARENA_WAVES if won else end.wave_no
+	var battle := end.elapsed - prep_time
+	# The preparations a person would sit through had they never pressed 「바로 시작」.
+	var stage_time := battle
+	for w in range(1, fought + 1): stage_time += Balance.arena_prep(w, 0 if hell else Balance.ARENA_WAVES)
+	r.merge({"won": won, "stalled": stalled, "capped": capped,
+		"waves": end.wave_reached() if hell else fought, "damage": damage, "battle": battle, "prep": prep_time,
+		"stage_time": stage_time, "wall": stage_time + CARD_SECONDS + float(r["box_time"]) + NODE_SECONDS * float(r["nodes"]), "pace": end.pace(),
+		"level": Arena.level, "hero_best": Arena.best_tier, "kills": Arena.kills, "revives": end.revives, "wave_times": wave_times,
+		"gold_in": Arena.gold - gold_start + int(r["gold_box"]) + int(r["gold_skill"])}, true)
+	if hell: Arena.running = false
+	return r
 
-## Every free re-spin, then take what the stars give.
-func _rite() -> void:
+func _print_run(r: Dictionary) -> void:
+	var head := ("HELL %d성" % arg_int("--hell", 4)) if bool(r["hell"]) else "STAGE %3d" % int(r["stage"])
+	var verdict := ("도달 WAVE %d%s" % [int(r["waves"]), " (상한)" if bool(r["capped"]) else ""]) if bool(r["hell"]) \
+		else "%s  WAVE %2d/%d" % ["승리" if bool(r["won"]) else "패배", int(r["waves"]), Balance.ARENA_WAVES]
+	print("%s  seed %d  %s  수정 피해 %4.0f  전투 %5.1f초  정비 포함 %s  창 포함 %s  상자 %d(최고 %d성)  레벨 %d  골드 +%d / 상자 %d / 스킬 %d  폭발 %d 서리 %d 방벽 %d  부활 %d  %s%s" % [
+		head, int(r["seed"]), verdict, float(r["damage"]), float(r["battle"]), _clock(float(r["stage_time"])), _clock(float(r["wall"])),
+		int(r["boxes"]), int(r["box_best"]), int(r["level"]), int(r["gold_in"]), int(r["gold_box"]), int(r["gold_skill"]),
+		int(r["blast"]), int(r["freeze"]), int(r["ward"]), int(r["revives"]), String(r["field"]), "  (멈춤)" if bool(r["stalled"]) else ""])
+	if has_arg("--rows"):
+		print("ROW " + JSON.stringify(r))
+	if has_arg("--detail"):
+		print("    웨이브 길이(초): " + ", ".join(PackedStringArray(Array(r["wave_times"]).map(func(t: float) -> String: return "%.0f" % t))))
+
+func _print_table(results: Array) -> void:
+	print("STAGE  판  승  전투(중앙)  정비 포함  창 포함  수정 피해  진 웨이브  레벨  상자(최고)  골드 수입/상자/스킬  폭발/서리/방벽  부활")
+	var stages: Array = []
+	for result in results:
+		if not stages.has(int(result["stage"])): stages.append(int(result["stage"]))
+	for stage in stages:
+		var rows: Array = results.filter(func(result: Dictionary) -> bool: return int(result["stage"]) == stage)
+		var n := float(rows.size())
+		var won := 0
+		var lost_waves: Array = []
+		var sums := {}
+		var best := 0
+		for key in ["damage", "level", "boxes", "gold_in", "gold_box", "gold_skill", "blast", "freeze", "ward", "revives"]: sums[key] = 0.0
+		for result in rows:
+			if bool(result["won"]): won += 1
+			else: lost_waves.append(int(result["waves"]))
+			for key in sums: sums[key] = float(sums[key]) + float(result[key])
+			best = maxi(best, int(result["box_best"]))
+		print("%5d  %2d  %2d  %9s  %9s  %7s  %9.0f  %9s  %4.1f  %4.1f(%d성)  %6.0f/%4.0f/%4.0f  %4.1f/%4.1f/%4.1f  %4.1f" % [stage, rows.size(), won,
+			_clock(_median(rows.map(func(x: Dictionary) -> float: return float(x["battle"])))),
+			_clock(_median(rows.map(func(x: Dictionary) -> float: return float(x["stage_time"])))),
+			_clock(_median(rows.map(func(x: Dictionary) -> float: return float(x["wall"])))),
+			float(sums["damage"]) / n, ("%.1f" % _median(lost_waves)) if not lost_waves.is_empty() else "-", float(sums["level"]) / n,
+			float(sums["boxes"]) / n, best, float(sums["gold_in"]) / n, float(sums["gold_box"]) / n, float(sums["gold_skill"]) / n,
+			float(sums["blast"]) / n, float(sums["freeze"]) / n, float(sums["ward"]) / n, float(sums["revives"]) / n])
+
+static func _median(values: Array) -> float:
+	if values.is_empty(): return 0.0
+	var sorted := values.duplicate()
+	sorted.sort()
+	var mid := sorted.size() / 2
+	return float(sorted[mid]) if sorted.size() % 2 == 1 else (float(sorted[mid - 1]) + float(sorted[mid])) * 0.5
+
+static func _clock(seconds: float) -> String:
+	var whole := roundi(seconds)
+	return "%d:%02d" % [whole / 60, whole % 60]
+
+## A jewel box: the free rerolls are spent while the box grade has not risen by one (a reroll never lowers
+## it), then the pick.
+func _box(r: Dictionary) -> void:
 	if Arena.phase == Arena.Phase.DRAW:
-		while Arena.can_respin() and Arena.respin_cost() == 0: Arena.respin()
-		Arena.confirm_summon()
+		var opened: int = Arena.box_tier
+		var spun := 0
+		while Arena.can_respin() and Arena.box_tier < mini(opened + 1, JewelBox.MAX_STARS):
+			Arena.respin()
+			spun += 1
+		r["rerolls"] = int(r["rerolls"]) + spun
+		r["box_time"] = float(r["box_time"]) + minf(BOX_SECONDS_MAX, BOX_SECONDS + BOX_REROLL_SECONDS * float(spun))
+		r["boxes"] = int(r["boxes"]) + 1
+		r["box_best"] = maxi(int(r["box_best"]), Arena.box_tier)
+		Arena.confirm_summon(_choice())
 	Arena.close_modal()
 	_field_best()
 	_place()
+
+## Without an anti-air hero on a stage whose waves bring flyers, an anti-air card first (the box guarantees
+## one); otherwise the most stars, a new hero while the field has room, else growth for a fielded hero.
+func _choice() -> int:
+	var wants_air := Arena.anti_air_needed()
+	var best := -1
+	var best_score := -1.0
+	for i in range(Arena.box_cards.size()):
+		var card: Dictionary = Arena.box_cards[i]
+		var preview: Dictionary = Arena.card_preview(i)
+		var score := float(card["stars"]) * 10.0
+		if wants_air and Balance.anti_air(card["unit"]): score += 100.0
+		if String(preview.get("kind", "")) == "new" and String(preview.get("where", "")) == "field": score += 2.0
+		elif String(preview.get("kind", "")) == "growth" and String(preview.get("where", "")) == "field": score += 1.0
+		if score > best_score:
+			best_score = score
+			best = i
+	return best
 
 ## Field the six highest grades.
 func _field_best() -> void:
@@ -218,39 +422,116 @@ func _cover(sim: ArenaSim) -> void:
 				break
 	if moved: sim.refresh_heroes()
 
-func _think(sim: ArenaSim) -> void:
-	# Skills on simple cues.
-	var near := 0
-	var boss := false
-	for mo in sim.monsters:
-		if Vector2(mo["pos"]).distance_to(Balance.ARENA_CENTER) < 220.0: near += 1
-		if String(mo["kind"]) == "boss": boss = true
-	if sim.crystal_hp < sim.crystal_max * 0.7 and near >= 3 and sim.shield <= 0.0: sim.cast_skill("ward")
-	if near >= 8 or (boss and near >= 3): sim.cast_skill("freeze")
-	if near >= 6 or boss: sim.cast_skill("blast")
+func _think(sim: ArenaSim, r: Dictionary) -> void:
+	if not has_arg("--no-skills"): _skills(sim, r)
 	_cover(sim)
-	# Spend: fill the field first, then alternate summons with upgrades and buy a
-	# passive whenever one on offer is affordable with gold to spare.
 	_turn += 1
-	if Arena.heroes.size() < Balance.ARENA_HERO_LIMIT:
-		if Arena.gold >= Arena.summon_cost() and not Arena.eligible_units().is_empty(): Arena.begin_summon()
-		return
-	if _turn % 6 == 0 and Arena.owned_passives.size() < Balance.PASSIVE_SLOTS and Arena.open_modal("shop"):
-		for id in Arena.shop_offer.duplicate():
-			var cost := int(Balance.passive_by_id(id)["cost"])
-			if Arena.gold >= cost + 60 and Arena.owned_passives.size() < Balance.PASSIVE_SLOTS: Arena.buy_passive(id)
+
+## The three common skills during a wave, each within a gold budget: half a box is kept for the next
+## preparation unless it is an emergency (the boss near, the crystal under half).
+func _skills(sim: ArenaSim, r: Dictionary) -> void:
+	if has_arg("--blast-r"):
+		Arena.mods["blast_r"] = Talents.mult(Talents.effects(Arena.talents), "blast_r") * arg_float("--blast-r", Balance.ARENA_BLAST_RADIUS) / Balance.ARENA_BLAST_RADIUS
+	var siege_r := Balance.ALTAR_R + Balance.ARENA_MONSTER_RADIUS + 12.0
+	var near := 0
+	var siege := 0
+	var boss_near := false
+	var boss_siege := false
+	for mo in sim.monsters:
+		if float(mo["hp"]) <= 0.0: continue
+		var d := Vector2(mo["pos"]).distance_to(Balance.ARENA_CENTER)
+		var boss := String(mo["kind"]) == "boss"
+		if d < NEAR:
+			near += 1
+			if boss: boss_near = true
+		if d <= siege_r:
+			siege += 1
+			if boss: boss_siege = true
+	var crystal := sim.crystal_hp / maxf(1.0, sim.crystal_max)
+	var keep := roundi(float(Arena.summon_cost()) * 0.5)
+	# A body striking the crystal that no fielded hero can hurt (an immune body, a flyer nobody shoots), or
+	# any striker once the crystal is under half: the starburst falls on it at once.
+	for mo in sim.monsters:
+		if float(mo["hp"]) <= 0.0 or Vector2(mo["pos"]).distance_to(Balance.ARENA_CENTER) > siege_r: continue
+		if crystal < 0.5 or not _hurtable(mo):
+			_cast(sim, r, "blast", Vector2(mo["pos"]), 0)
+			break
+	# The ward when the boss strikes the crystal, or three bodies do while it is under half.
+	if sim.shield <= 0.0 and (boss_siege or (siege >= 3 and crystal < 0.5)):
+		_cast(sim, r, "ward", Vector2.INF, 0)
+	# The frost when the crystal is threatened.
+	if near >= 6 or boss_near or (siege >= 2 and crystal < 0.6):
+		_cast(sim, r, "freeze", Vector2.INF, 0 if boss_near or crystal < 0.5 else keep)
+	# The starburst on the best cluster, or on a boss, an elite or an unanswered flyer.
+	var aim := _blast_aim(sim)
+	if float(aim["score"]) >= 6.0 or (bool(aim["vip"]) and float(aim["score"]) >= 3.0):
+		_cast(sim, r, "blast", aim["at"], 0 if bool(aim["urgent"]) else keep)
+
+func _cast(sim: ArenaSim, r: Dictionary, id: String, at: Vector2, keep: int) -> bool:
+	var state := sim.skill_state(id)
+	if not bool(state["ready"]) or Arena.gold - int(state["cost"]) < keep:
+		return false
+	if not sim.cast_skill(id, at):
+		return false
+	r["gold_skill"] = int(r["gold_skill"]) + int(state["cost"])
+	r[id] = int(r[id]) + 1
+	return true
+
+## Whether some fielded hero can hurt this monster (its element is not immune; a flyer needs a gun or a bow).
+func _hurtable(mo: Dictionary) -> bool:
+	var flying := bool(mo.get("fly", false))
+	for hero in Arena.heroes:
+		if flying and not Balance.anti_air(hero["unit"]): continue
+		if Balance.elem_mult(String(hero["unit"].get("elem", "none")), String(mo["body"])) > 0.0: return true
+	return false
+
+## Where the starburst does most: every live monster is a candidate centre; a body counts 1, one no fielded
+## hero can hurt 4 (an immune body, an unanswered flyer), an elite 4, the boss 5, and anything near the
+## crystal half again as much.
+func _blast_aim(sim: ArenaSim) -> Dictionary:
+	var radius := sim.blast_radius()
+	var alive: Array = sim.monsters.filter(func(mo: Dictionary) -> bool: return float(mo["hp"]) > 0.0)
+	var best := {"at": Vector2.INF, "score": 0.0, "vip": false, "urgent": false}
+	for centre in alive:
+		var at: Vector2 = centre["pos"]
+		var score := 0.0
+		var vip := false
+		var urgent := false
+		for mo in alive:
+			if at.distance_to(mo["pos"]) > radius + BattleSim.hit_radius(mo): continue
+			var weight := 1.0
+			var close := Vector2(mo["pos"]).distance_to(Balance.ARENA_CENTER) < NEAR
+			var special := false
+			if not _hurtable(mo):
+				weight += 3.0
+				special = true
+			if bool(mo.get("elite", false)):
+				weight += 3.0
+				special = true
+			if String(mo["kind"]) == "boss":
+				weight += 4.0
+				special = true
+			if special:
+				vip = true
+				if close: urgent = true
+			score += weight * (1.5 if close else 1.0)
+		if score > float(best["score"]):
+			best = {"at": at, "score": score, "vip": vip, "urgent": urgent}
+	return best
+
+## A plain player's pick: raw attack and attack speed first, then crit, then whatever
+## the first card is. Never reads the deeper tree.
+const WANTS := ["fury_edge", "fury_blaze", "tempo_quick", "tempo_rush", "fury_wrath", "tempo_storm", "prec_aim", "prec_deadly",
+	"tempo_repeat", "fury_heavy", "guard_hp", "arms_air", "fate_insight"]
+
+func _pick_talent() -> bool:
+	if Arena.talent_offer.is_empty():
 		Arena.close_modal()
-		return
-	var wants := ["atk", "summon", "rate", "summon", "crit", "atk", "summon", "critx", "gold"]
-	var want: String = wants[_turn % wants.size()]
-	if want == "summon":
-		if Arena.gold >= Arena.summon_cost() and not Arena.eligible_units().is_empty(): Arena.begin_summon()
-		return
-	var cost := Balance.upgrade_cost(want, Arena.lv(want))
-	if Balance.upgrade_maxed(want, Arena.lv(want)) or Arena.gold < cost: return
-	if Arena.open_modal("shop"):
-		Arena.buy_upgrade(want)
-		Arena.close_modal()
+		return false
+	for want in WANTS:
+		if Arena.talent_offer.has(want):
+			return Arena.pick_talent(want)
+	return Arena.pick_talent(String(Arena.talent_offer[0]))
 
 
 func _trace(sim: ArenaSim) -> void:
@@ -266,4 +547,4 @@ func _trace(sim: ArenaSim) -> void:
 		for mo in sim.monsters:
 			if Vector2(hero["pos"]).distance_to(mo["pos"]) <= float(hero["range"]): reach += 1
 		party.append("%s/%s/%s r%.0f t%d in%d dmg%.0f" % [unit["id"], unit.get("elem", "?"), unit.get("weapon", "?"), float(hero["range"]), int(hero["h"]["tier"]), reach, float(hero["dmg"])])
-	print("  %d탄 t=%3.0f 수정 %4.0f 골드 %3d 몹 %2d (공성 %d·막힘 %d) | %s" % [sim.stage, sim.elapsed, sim.crystal_hp, Arena.gold, sim.monsters.size(), siege, blocked, "  ".join(party)])
+	print("  STAGE %d WAVE %d t=%3.0f 수정 %4.0f 골드 %3d 몹 %2d (공성 %d·막힘 %d) | %s" % [sim.stage, sim.wave_no, sim.elapsed, sim.crystal_hp, Arena.gold, sim.monsters.size(), siege, blocked, "  ".join(PackedStringArray(party))])

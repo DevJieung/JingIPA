@@ -438,7 +438,14 @@ static func attack_target(u: Dictionary) -> String:
 	var count := int(spec.get("pierce", 1)) + (1 if Run.has("pierce") else 0)
 	if Balance.is_melee(u):
 		return "근접 · 부채꼴 안 최대 %d명을 벤다" % count if count > 1 else "근접 · 칼이 닿는 적 1명을 벤다"
-	return "다중 · 최대 %d명 관통" % count if count > 1 else "단일 · 적 1명에게 발사"
+	var shot := "다중 · 최대 %d명 관통" % count if count > 1 else "단일 · 적 1명에게 발사"
+	return shot + " · " + air_note(u)
+
+
+## Whether the weapon reaches flying monsters: guns and bows do, everything else hits
+## the ground only (Balance.anti_air).
+static func air_note(u: Dictionary) -> String:
+	return "대공" if Balance.anti_air(u) else "지상 공격"
 
 
 static func innate_passive(u: Dictionary) -> String:
@@ -470,7 +477,7 @@ static func innate_passive(u: Dictionary) -> String:
 ##   (Run.hero_stats(hero)["range"])와 같은 값이 된다. 캐릭터만 보여 주는 자리(도감)는
 ##   생략하면 1성으로 계산한다.
 static func attack_note(unit: Dictionary, tier: int = -1) -> String:
-	return "사거리 %d · 범위 안의 가까운 적 우선" % int(Balance.attack_range(unit, tier))
+	return ("사거리 %d · 범위 안의 가까운 적 우선" % int(Balance.attack_range(unit, tier))) + " · " + air_note(unit)
 
 
 func draw_info(ci: CanvasItem, ui: Ui) -> void:

@@ -29,8 +29,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/solana/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/solana/game.blend",
   "height": 1.65,
-  "glb_bytes": 758472,
-  "glb_sha256": "515758fc6d4a5ab2bfa6e9177ebf839d766a9dc5962898091e094fffa6c600fe",
+  "glb_bytes": 802088,
+  "glb_sha256": "03e66cf7e90f2e19145603e48cbc32a9fc6c268b15bbf0737cbd79de3773afea",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -71,14 +71,24 @@
     "artist_note": "Artist directly inspected original identity and actual studio multi-view, both-size Godot gallery/idle/attack contacts/grades/awakening/mixed battle. Complete bow/ice blade and relaxed arm/gauntlet shapes remain coherent; Phorkys cylinder equipment and rifle aim use measured native landmarks, <0.1mm sole displacement; no visible gear tears or detached garment. Mobile FPS not measured."
   },
   "motion": {
-    "version": 2,
+    "version": 4,
     "tool": "tools/3d/author_native_motion.py",
-    "authored_utc": "2026-10-10T09:36:29Z",
+    "authored_utc": "2026-10-19T02:21:31Z",
     "clips": {
       "IdleLoop": 6.0,
       "WalkLoop": 1.0,
       "Attack": 1.5,
       "attack_release_time": 1.0
+    },
+    "beats": {
+      "hold_start": 0.78,
+      "hold_dip_h": 0.025,
+      "breath_h": 0.015,
+      "sway_h": 0.025,
+      "fidget_window": [
+        3.0,
+        3.6
+      ]
     },
     "stride": 1.5256,
     "leg_swing": 0.66,
@@ -87,9 +97,36 @@
     "lead": "L",
     "kind": "bow",
     "bounce_scale": 1.0,
-    "previous_glb_sha256": "27db2cdf3b3da5668b0cc4c64d88e756a2f39fdbc547bfac35bc4f821ba7fe1d",
+    "arms": {
+      "solver": "hinge two-bone IK, forearm-relative wrists (soft limits 80/88 deg), bow rides the hand",
+      "hinge": {
+        "L": [
+          0.8236,
+          -0.5672,
+          0.0
+        ],
+        "R": [
+          0.8236,
+          0.5672,
+          0.0
+        ]
+      },
+      "wrist_pivot_offset_m": {
+        "L": 0.164,
+        "R": 0.201
+      },
+      "attack_wrist_limit_excess_deg": {
+        "L": 3.0
+      },
+      "socket_forward_dot": {
+        "0:hold": 0.9997,
+        "0:release": 0.9997,
+        "0:release+65ms": 0.9977
+      }
+    },
+    "previous_glb_sha256": "03e66cf7e90f2e19145603e48cbc32a9fc6c268b15bbf0737cbd79de3773afea",
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/solana/game.motion-v1.blend",
-    "geometry_base_sha256": "27db2cdf3b3da5668b0cc4c64d88e756a2f39fdbc547bfac35bc4f821ba7fe1d",
+    "geometry_base_sha256": "82612419af9abb1786288d12e16f66e5b78d055b7e41b2088909696e4691e393",
     "geometry_bytes_preserved": true
   },
   "mobile_lod": {
@@ -178,5 +215,243 @@
     ],
     "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/solana/solana.glb",
     "editable_lod_source": "build/character-3d/source/solana/game-lod.blend"
+  },
+  "albedo_grade": {
+    "date": "2026-10-18",
+    "request": "user 2026-10-18: the characters read as a cheap AI-made 3D game; casual overhaul plan \"Lantern Stage\" WP-A \u2014 painted albedos that carry their own light, geometry untouched",
+    "tool": "tools/3d/optimize_native_lod.py --retexture + tools/3d/grade_native_albedo.py; records by tools/3d/publish_native_lod.py",
+    "method": "game-lod.blend opened as the bake target (geometry, UVs, weights, rig, clips, sockets and height untouched), game.blend surfaces appended as bake sources (visible faces first, all sheets as fallback), Cycles EMIT colour bake, AO bake of the reduced mesh alone and a height pass, then the painted grade inside the chart mask: de-speckle, chart-flatten (charts >= 48 texels), light posterise, levels, OKLab chroma with a skin cap, painted light from AO + height, cool shade, edge light, face paint-back; nearest fill, box downsample; clip bytes grafted from the shipped GLB",
+    "grade_version": "2026-10-18.7",
+    "parameters": {
+      "median": 3,
+      "bilateral_radius": 3,
+      "bilateral_sigma_s": 1.6,
+      "bilateral_sigma_r": 0.1,
+      "bilateral_passes": 2,
+      "seam_lambda": 0.3,
+      "seam_gain_min": 0.7,
+      "seam_gain_max": 1.4,
+      "seam_floor": 0.02,
+      "seam_chroma_sigma": 0.08,
+      "seam_small_chart": 96.0,
+      "seam_ratio_sigma": 0.6,
+      "flatten_min_width": 48,
+      "flatten_blur": 24,
+      "flatten_blend": 0.4,
+      "posterize_levels": 6,
+      "posterize_blend": 0.3,
+      "levels_lift": 0.09,
+      "levels_gain": 0.88,
+      "levels_gamma": 0.9,
+      "p10_floor": 0.17,
+      "p50_target": 0.5,
+      "p50_pull": 0.8,
+      "p50_gain_max": 2.2,
+      "dark_additive_lo": 0.04,
+      "dark_additive_hi": 0.16,
+      "lift_saturation_damp": 0.15,
+      "knee_start": 0.78,
+      "knee_slope": 0.45,
+      "knee_saturated_drop": 0.1,
+      "chroma_hero": 1.2,
+      "chroma_monster": 1.15,
+      "chroma_skin": 1.0,
+      "skin_s_cap": 0.5,
+      "s_cap": 0.86,
+      "ao_floor": 0.65,
+      "ao_gamma": 0.8,
+      "ao_smooth": 1.5,
+      "height_low": 0.82,
+      "height_high": 1.12,
+      "height_lo": 0.05,
+      "height_hi": 0.7,
+      "cool_shade": [
+        0.85,
+        0.9,
+        1.12
+      ],
+      "cool_amount": 0.5,
+      "edge_light": 0.06,
+      "edge_lo": 0.92,
+      "skin_hue": [
+        8.0,
+        38.0
+      ],
+      "skin_s": [
+        0.15,
+        0.6
+      ],
+      "skin_v": [
+        0.35,
+        0.98
+      ],
+      "skin_chart_fraction": 0.6,
+      "skin_chart_mixed": 0.3,
+      "skin_chart_s_median_max": 0.55,
+      "skin_chart_s_p90_max": 0.72,
+      "face_contrast": 1.3,
+      "face_dark_fraction": 0.04,
+      "face_dark_lstar": 15.0,
+      "face_blur": 4.0,
+      "face_mark_desaturate": 0.8,
+      "face_mark_lum": 0.35
+    },
+    "override": {},
+    "grade_info": {
+      "charts": 737,
+      "skin_charts_excluded": 40,
+      "seams": {
+        "pairs": 1161,
+        "samples": 7972,
+        "gain_min": 0.713,
+        "gain_max": 1.375,
+        "gain_std": 0.076
+      },
+      "flattened_charts": 146,
+      "levels": {
+        "lum_mean_after_remap": 0.371,
+        "p50_gain": 1.753,
+        "p10_before": 0.1353,
+        "p10_lift": 0.0347,
+        "remap": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.135,
+            0.17
+          ],
+          [
+            0.258,
+            0.452
+          ],
+          [
+            0.501,
+            0.501
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ]
+      },
+      "skin_texels": 24442,
+      "ao_mean": 0.6696,
+      "ao_p10": 0.1827,
+      "face": {
+        "head_texels": 58799,
+        "head_charts": 149,
+        "dark_threshold": 0.2464,
+        "mark_texels": 2352
+      }
+    },
+    "ao": {
+      "distance_m": 0.4125,
+      "samples": 64,
+      "margin": 8
+    },
+    "head_start": 0.675,
+    "clip_donor": "art/models/solana/solana.glb",
+    "before": {
+      "glb_sha256": "d0f187f3104d5984e9617d8a1bbce70a7cfd2e6eab079f60ac765905abb5bc03",
+      "glb_bytes": 787028,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "atlas_stats": {
+        "used_texels": 65112,
+        "charts": 704,
+        "mean_lstar": 23.92,
+        "lum_mean": 0.1914,
+        "lum_p10": 0.052,
+        "lum_p50": 0.1547,
+        "lum_p90": 0.4032,
+        "lstar_p10": 4.26,
+        "near_black_fraction": 0.4817,
+        "sat_mean": 0.7139,
+        "sat_p90": 0.9701,
+        "micro_contrast_255": 6.78,
+        "laplacian_mean": 0.0232,
+        "dominant_hues": [
+          {
+            "hue_deg": 22.5,
+            "mass": 0.332
+          }
+        ],
+        "dominant_hue_count": 1,
+        "skin": {
+          "texels": 1198,
+          "mean_lstar": 55.88,
+          "sat_mean": 0.5145,
+          "sat_p90": 0.5611,
+          "sat_max": 0.9778
+        }
+      }
+    },
+    "after": {
+      "glb_sha256": "82612419af9abb1786288d12e16f66e5b78d055b7e41b2088909696e4691e393",
+      "glb_bytes": 800440,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      },
+      "atlas_stats": {
+        "used_texels": 65112,
+        "charts": 704,
+        "mean_lstar": 40.46,
+        "lum_mean": 0.3238,
+        "lum_p10": 0.1464,
+        "lum_p50": 0.3065,
+        "lum_p90": 0.4857,
+        "lstar_p10": 15.41,
+        "near_black_fraction": 0.113,
+        "sat_mean": 0.6142,
+        "sat_p90": 0.8611,
+        "micro_contrast_255": 5.77,
+        "laplacian_mean": 0.0192,
+        "dominant_hues": [
+          {
+            "hue_deg": 7.5,
+            "mass": 0.314
+          }
+        ],
+        "dominant_hue_count": 1,
+        "skin": {
+          "texels": 5509,
+          "mean_lstar": 42.69,
+          "sat_mean": 0.477,
+          "sat_p90": 0.5059,
+          "sat_max": 0.6372
+        }
+      }
+    },
+    "geometry_sha256": "6ada82b52399474ab0994fc296a0b39ccff55a2c7d4a8d5a1c412be4ce750c26",
+    "geometry_bytes_preserved": true,
+    "bake": {
+      "size": 1024,
+      "covered_texels": 279832,
+      "missed_texels": 819,
+      "interior_fallback_texels": 311,
+      "miss_fraction": 0.0029267560536321794
+    },
+    "visible_faces": {
+      "removed_faces": 40613,
+      "kept_faces": 14386
+    },
+    "removed_extracted_textures": [
+      "solana_solana_lod_albedo.png"
+    ],
+    "editable_lod_source": "build/character-3d/source/solana/game-lod.blend",
+    "evidence": "build/character-3d/lod-2026-10-18/solana"
   }
 }

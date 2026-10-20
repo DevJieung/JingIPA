@@ -34,6 +34,12 @@ func finish(title: String) -> void:
 ## 통과하면 참, 아니면 `code` 로 끝내고 거짓.
 func require_no_save(code: int = 1) -> bool:
 	if OS.get_environment("STELLARDEFENSE_NO_SAVE") == "1":
+		# Save still reads the developer's real save.cfg (it only never writes). Its ladder progress must
+		# not decide which stage `Arena.start_run(seed)` opens in a check: every check starts at STAGE 1.
+		Save.stage_unlocked = 1
+		Save.stage_cleared = 0
+		Save.last_clear = {}
+		Save.stage_seeds = {}
 		return true
 	printerr("STELLARDEFENSE_NO_SAVE=1로 실행하세요. 실제 기록을 보호합니다.")
 	get_tree().quit(code)
@@ -112,6 +118,13 @@ static func tap(screen: Node, id: String) -> bool:
 	mouse(screen, at, true)
 	mouse(screen, at, false)
 	return true
+
+
+## 화면의 한 점을 **눌렀다 뗀다**(마우스 왼쪽 단추) — 존이 아닌 곳도: 별빛 폭발 조준의 전장 탭,
+## 전장의 가변 스틱. 전장의 논리 좌표 p 는 `screen.view_3d.project(p)` 가 화면 점이다.
+static func tap_at(screen: Node, at: Vector2) -> void:
+	mouse(screen, at, true)
+	mouse(screen, at, false)
 
 
 ## 그 자리를 **누르기만** 한다(떼지 않는다). 단추는 누르는 순간 처리되므로 이것으로 충분하다.

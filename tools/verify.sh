@@ -97,6 +97,17 @@ gamedb_rc=$?
 sed 's/^/   /' "$TMP/gamedb.log"
 check $gamedb_rc "게임 파일의 데이터가 DB 와 어긋나지 않음"
 
+step "0-3. 네이티브 커널이 빌드되어 있는가 (addons/stellar_native)"
+# 도로 판정·길찾기·몬스터 자세 샘플러의 C++ 판(docs/PERF_NATIVE.md). 없으면 게임은 GDScript 로
+# 돌지만, 검사는 실제로 폰에 실리는 쪽을 봐야 하므로 여기서 이 머신의 라이브러리를 만든다
+# (godot-cpp 는 처음 한 번만 받아 build/native/ 에 둔다). 4-2 의 native_parity_check 가
+# 두 길이 같은 답을 내는지 본다.
+if bash tools/native/build.sh linux > "$TMP/native.log" 2>&1; then
+	echo "   ok: stellar_native ($(ls addons/stellar_native/bin/*.so | xargs -n1 basename | tr '\n' ' '))"
+else
+	echo "!! 실패: 네이티브 커널 빌드"; tail -15 "$TMP/native.log"; fail=1
+fi
+
 step "1. 캐릭터 표가 최신인가 (tools/roster.json → core/roster.gd)"
 python3 tools/gen_roster.py --check > "$TMP/genroster.log" 2>&1
 check $? "로스터 일치 (파일 수정 없음)"
@@ -169,8 +180,23 @@ else
 fi
 
 step "4-2. 저장 · 보상 · 메뉴 · 거래 회귀 검사"
+godot_run 300 "$TMP/native-parity.log" res://tests/native_parity_check.tscn
+expect "네이티브 커널 일치" "판정: 정상" "$TMP/native-parity.log"
 godot_run 120 "$TMP/arena.log" res://tests/arena_check.tscn
 expect "연속 수호전 규칙·저장" "판정: 정상" "$TMP/arena.log"
+godot_run 180 "$TMP/arena-wave.log" res://tests/arena_wave_check.tscn
+expect "웨이브·정비·정예·사다리" "판정: 정상" "$TMP/arena-wave.log"
+godot_run 180 "$TMP/jewel-box.log" res://tests/jewel_box_check.tscn
+expect "보석상자 규칙·다시 뽑기·고르기·저장" "판정: 정상" "$TMP/jewel-box.log"
+godot_run 120 "$TMP/d3-contract.log" res://tests/3d/d3_contract_check.tscn
+expect "사거리·조준 링·정예·5성 도착 계약" "판정: 정상" "$TMP/d3-contract.log"
+# 2026-10-19 B1: 칼·활·도구·소총 영웅 30명의 팔꿈치·손목 비틀림 관문(기준선 tools/3d/twist_baseline.json)
+python3 tools/3d/audit_native_twist.py --quiet > "$TMP/twist.log" 2>&1
+check $? "영웅 팔 비틀림 관문"
+godot_run 120 "$TMP/arena-skill.log" res://tests/arena_skill_check.tscn
+expect "공통 스킬·골드·판정·조준 폭발" "판정: 정상" "$TMP/arena-skill.log"
+godot_run 180 "$TMP/hellbound.log" res://tests/hellbound_check.tscn
+expect "Hellbound: DLC·도감 스쿼드·끝없는 웨이브·저장·기록" "판정: 정상" "$TMP/hellbound.log"
 godot_run 120 "$TMP/arena-camera.log" res://tests/arena_camera_check.tscn
 expect "확장 전장·추적 카메라·미니맵" "판정: 정상" "$TMP/arena-camera.log"
 godot_run 120 "$TMP/arena-route.log" res://tests/arena_route_check.tscn
@@ -183,8 +209,16 @@ godot_run 180 "$TMP/arena-facing.log" res://tests/arena_idle_facing_check.tscn
 expect "정지·막힘 뒤 바라보는 방향 유지" "판정: 정상" "$TMP/arena-facing.log"
 godot_run 240 "$TMP/speed-melee.log" res://tests/hero_speed_melee_check.tscn
 expect "영웅별 이동 속도·검 근접 타격" "판정: 정상" "$TMP/speed-melee.log"
+godot_run 240 "$TMP/arena-air.log" res://tests/arena_air_check.tscn
+expect "공중 몬스터·대공 규칙·별자리 효과" "판정: 정상" "$TMP/arena-air.log"
 godot_run 180 "$TMP/arena-play.log" res://tests/arena_play_check.tscn
 expect "연속 수호전 실제 UI 흐름" "판정: 정상" "$TMP/arena-play.log"
+godot_run 240 "$TMP/title-return.log" res://tests/title_return_check.tscn
+expect "타이틀 복귀 배경 (패배·승리·메뉴)" "판정: 정상" "$TMP/title-return.log"
+godot_run 120 "$TMP/startup-loading.log" res://tests/startup_loading_check.tscn
+expect "첫 실행 로고·로딩 덮개·입력 차단" "판정: 정상" "$TMP/startup-loading.log"
+godot_run 240 "$TMP/title-flow.log" res://tests/title_flow_check.tscn
+expect "타이틀 흐름 (시작·스테이지 선택·직전 클리어·Hellbound)" "판정: 정상" "$TMP/title-flow.log"
 godot_run 120 "$TMP/store.log" res://tests/store_check.tscn
 expect "상점·무료 배속·수호자의 가호·플랫폼 연동" "판정: 정상" "$TMP/store.log"
 godot_run 90 "$TMP/stellar-identity.log" res://tests/stellar_identity_check.tscn
@@ -259,15 +293,17 @@ expect "화면 한 바퀴" "판정: 정상" "$TMP/play.log"
 # 부팅과 같은 이유로 여기서도 본다 — 전투·편성 판은 부팅만으로는 한 번도 안 그려진다.
 forbid "화면 한 바퀴" "triangulation failed" "$TMP/play.log"
 
-step "7-0. 연속 수호전 탄별 난이도 (자동 플레이로 열 탄)"
-# 탄마다 전장·길·보스가 바뀌고 몬스터가 두꺼워진다(Balance.ARENA_STAGE_HP_GROW).
-# 평범한 자동 플레이가 앞 탄은 무사히 넘기고 뒤 탄에서 실제로 밀리는지를 본다.
-# 한 판에 35초쯤 걸린다. 판 수가 적어 판정은 넓게 잡았다(tests/arena_balance_check.gd).
-ARENA_RUNS=6
-[ $QUICK -eq 1 ] && ARENA_RUNS=3
-godot_run 900 "$TMP/arena-bal.log" res://tests/arena_balance_check.tscn -- --runs $ARENA_RUNS
-expect "연속 수호전 탄별 난이도" "판정: 정상" "$TMP/arena-bal.log"
-grep -E "^도달 탄" "$TMP/arena-bal.log" | sed 's/^/   /'
+step "7-0. 수호전 사다리 표본 (자동 플레이 — STAGE 1·5·10)"
+# 2026-10-19: 스테이지는 새 파티로 시작하는 10웨이브 판이다(docs/STAGE_LADDER_2026-10-19.md 「실측」).
+# 평범한 자동 플레이(상자 · 노드 · 조준 폭발 · 서리 · 방벽)가 STAGE 1 · 5 · 10(코일 — 가장 긴 길)을 끝까지 돈다.
+# 판정: 멈춘 판이 없고, 스테이지마다 승률 75% 이상(봇 실측 88~100%), 스테이지 시간 중앙값(전투 + 정비 전부,
+# 1배속)이 3~5분, 창 포함 시간(전장 카드 3초 · 상자 2.7~7.5초 · 노드 3초) 중앙값이 3분 30초~5분 45초.
+# 한 판에 1~2초라 quick 도 몇 초면 끝난다. 사다리 전체 곡선은 문서의 실측 절 명령으로 잰다.
+ARENA_RUNS=4
+[ $QUICK -eq 1 ] && ARENA_RUNS=2
+godot_run 600 "$TMP/arena-bal.log" res://tests/arena_balance_check.tscn -- --runs $ARENA_RUNS --stages 1,5,10 --min-win 0.75 --time 180,300 --wall 210,345
+expect "수호전 사다리 자동 플레이" "판정: 정상" "$TMP/arena-bal.log"
+grep -E "^사다리 표본" "$TMP/arena-bal.log" | sed 's/^/   /'
 
 step "7. 자동 플레이로 밸런스 (100탄까지)"
 RUNS=12

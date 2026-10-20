@@ -6,14 +6,16 @@
     python3 tests/3d/moments_review.py --theme 0 --next-theme 18 --moment stage --speed 3
 
 The moments (tests/3d/vfx_visual_preview.tscn --moments): a fresh run's first battlefield
-(its reveal under the first card and the first rite, then running as the battle starts),
+(its reveal under the first card and the free first jewel box, then running as the stage's
+first preparation starts),
 the escort of a fallen stage boss fleeing in step with its haze (scatter), the crystal's revival
 (arena_revive: in battle, taken back from the defeat screen, resumed from a save inside
-the untouchable window, and carried over a stage change), a stage clear (arena_stage_clear
-with the scattering escort), the next battlefield's reveal under and after its card
-(arena_stage, with leftovers planted before the change to prove none survive), and the
-final boss: its entrance (arena_boss_warning / arena_boss with final), its fall
-(arena_stage_clear with final) and the still that the result panel freezes.
+the untouchable window; since 2026-10-19 the next stage is a fresh run and starts without
+it), a stage clear (arena_stage_clear with the scattering escort: every ladder boss ends
+its stage), the next stage's reveal under and after its card (opened from the victory
+panel, arena_stage, with leftovers planted before the change to prove none survive), and
+a chapter boss (STAGE 10): its entrance (arena_boss_warning / arena_boss with final), its
+fall (arena_stage_clear with final) and the still that the result panel freezes.
 The default fields are a dark and the brightest floor of the fifty: the volcano crater
 (18, CIE L* 45, ground_wash 0) and the calm lake (0, L* 65, ground_wash 0.90).
 The reveal is filmed on the battlefield that opens after the clear (theme + 29, or
@@ -22,7 +24,8 @@ Other fields worth a look: the dark water of the deep trench (8) and the bright 
 the broken wall (34), where the old per-biome brightness rule was wrong.
 
 Godot runs on the login session's GPU X display when there is one (a 96x60 window; the
-game is drawn into an off-screen viewport of the requested size), otherwise on Xvfb
+game is drawn into an off-screen viewport of the requested size; runs wait for
+build/casual-overhaul/gpu.lock, shared with every GPU capture), otherwise on Xvfb
 software GL (slow). MOMENTS_DISPLAY=xvfb forces the fallback.
 
 Outputs under --out-root/<theme>/<res>/ (default build/vfx-stage):
@@ -34,11 +37,12 @@ Outputs under --out-root/<theme>/<res>/ (default build/vfx-stage):
                        the run from the crystal and the thinning (scatterkill_* is the same
                        crowd dying the ordinary way, for comparison)
   first_card.png       a fresh run's first battlefield under its card (first_field.png: the 3D
-                       picture alone; first_rite.png: the first rite over it); first_NNN is the
-                       reveal running as the first battle starts
+                       picture alone; first_box.png: the free first jewel box over it); first_NNN
+                       is the reveal running as the stage's first preparation starts
   stage_card.png       the paused first frame of a new battlefield under its card
   stage_field.png      the same frame's 3D picture without the 2D overlay
-  resume_stage_card.png  a stage change while the revival's aegis is still running
+  resume_stage_card.png  the next stage's card after a stage won inside the revival's window
+                       (a fresh run: no aegis may carry over)
   final_result.png     the won run frozen under the result panel; final_rest_field.png is
                        its 3D picture alone, final_settle.png the same after a hitch,
                        final_retry_card.png the first card of the next run (nothing left)
@@ -206,6 +210,10 @@ def run(theme: int, res: str, args: argparse.Namespace) -> bool:
         command += ["--film", res]
     if args.next_theme >= 0:
         command += ["--next-theme", str(args.next_theme)]
+    if film:
+        lock = ROOT / "build/casual-overhaul/gpu.lock"
+        lock.parent.mkdir(parents=True, exist_ok=True)
+        command = ["flock", str(lock), *command]
     with context as env:
         result = subprocess.run(command, env=env, capture_output=True, text=True, timeout=3600)
     log = result.stdout + "\n" + result.stderr

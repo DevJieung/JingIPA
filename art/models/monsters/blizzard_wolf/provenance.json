@@ -28,8 +28,8 @@
   "embedded_images": 1,
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/blizzard_wolf/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/monster-source/blizzard_wolf/game.blend",
-  "glb_sha256": "bc132388beb5fe2366093ab1d440db1d30a7357cb48ced1eef683384f03278c8",
-  "glb_bytes": 398324,
+  "glb_sha256": "67b4b498e619bd68b2a55925744c43a648d01320260ee7e025b69c5beb42143c",
+  "glb_bytes": 400308,
   "quality_status": "direct visual QA: original identity, actual multiview/IdleLoop/MoveLoop/status/battle in two resolutions",
   "runtime_budget_basis": "41 monsters plus12 heroes. Device FPS unmeasured.",
   "visual_review": {
@@ -196,5 +196,223 @@
     ],
     "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/monsters/blizzard_wolf/blizzard_wolf.glb",
     "editable_lod_source": "build/character-3d/monster-source/blizzard_wolf/game-lod.blend"
+  },
+  "albedo_grade": {
+    "date": "2026-10-18",
+    "request": "user 2026-10-18: the characters read as a cheap AI-made 3D game; casual overhaul plan \"Lantern Stage\" WP-A \u2014 painted albedos that carry their own light, geometry untouched",
+    "tool": "tools/3d/optimize_native_lod.py --retexture + tools/3d/grade_native_albedo.py; records by tools/3d/publish_native_lod.py",
+    "method": "game-lod.blend opened as the bake target (geometry, UVs, weights, rig, clips, sockets and height untouched), game.blend surfaces appended as bake sources (visible faces first, all sheets as fallback), Cycles EMIT colour bake, AO bake of the reduced mesh alone and a height pass, then the painted grade inside the chart mask: de-speckle, chart-flatten (charts >= 48 texels), light posterise, levels, OKLab chroma with a skin cap, painted light from AO + height, cool shade, edge light, face paint-back; nearest fill, box downsample; clip bytes grafted from the shipped GLB",
+    "grade_version": "2026-10-18.6",
+    "parameters": {
+      "median": 3,
+      "bilateral_radius": 3,
+      "bilateral_sigma_s": 1.6,
+      "bilateral_sigma_r": 0.1,
+      "bilateral_passes": 2,
+      "seam_lambda": 0.3,
+      "seam_gain_min": 0.7,
+      "seam_gain_max": 1.4,
+      "seam_floor": 0.02,
+      "seam_chroma_sigma": 0.08,
+      "seam_small_chart": 96.0,
+      "seam_ratio_sigma": 0.6,
+      "flatten_min_width": 48,
+      "flatten_blur": 24,
+      "flatten_blend": 0.4,
+      "posterize_levels": 6,
+      "posterize_blend": 0.3,
+      "levels_lift": 0.06,
+      "levels_gain": 0.88,
+      "levels_gamma": 0.9,
+      "p10_floor": 0.17,
+      "p50_target": 0.42,
+      "p50_pull": 0.5,
+      "p50_gain_max": 1.5,
+      "dark_additive_lo": 0.04,
+      "dark_additive_hi": 0.16,
+      "lift_saturation_damp": 0.5,
+      "knee_start": 0.78,
+      "knee_slope": 0.45,
+      "knee_saturated_drop": 0.1,
+      "chroma_hero": 1.2,
+      "chroma_monster": 1.15,
+      "chroma_skin": 1.0,
+      "skin_s_cap": 0.5,
+      "s_cap": 0.86,
+      "ao_floor": 0.55,
+      "ao_gamma": 0.8,
+      "ao_smooth": 1.5,
+      "height_low": 0.82,
+      "height_high": 1.12,
+      "height_lo": 0.05,
+      "height_hi": 0.7,
+      "cool_shade": [
+        0.85,
+        0.9,
+        1.12
+      ],
+      "cool_amount": 0.5,
+      "edge_light": 0.06,
+      "edge_lo": 0.92,
+      "skin_hue": [
+        8.0,
+        38.0
+      ],
+      "skin_s": [
+        0.15,
+        0.6
+      ],
+      "skin_v": [
+        0.35,
+        0.98
+      ],
+      "skin_chart_fraction": 0.6,
+      "skin_chart_mixed": 0.3,
+      "skin_chart_s_median_max": 0.55,
+      "skin_chart_s_p90_max": 0.72,
+      "face_contrast": 1.3,
+      "face_dark_fraction": 0.04,
+      "face_dark_lstar": 15.0,
+      "face_blur": 4.0,
+      "face_mark_desaturate": 0.8,
+      "face_mark_lum": 0.35
+    },
+    "override": {},
+    "grade_info": {
+      "charts": 617,
+      "skin_charts_excluded": 0,
+      "seams": {
+        "pairs": 1148,
+        "samples": 6267,
+        "gain_min": 0.8,
+        "gain_max": 1.299,
+        "gain_std": 0.052
+      },
+      "flattened_charts": 28,
+      "levels": {
+        "lum_mean_after_remap": 0.3711,
+        "p50_gain": 1.17,
+        "p10_before": 0.2045,
+        "p10_lift": 0.0,
+        "remap": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.205,
+            0.205
+          ],
+          [
+            0.314,
+            0.367
+          ],
+          [
+            0.553,
+            0.553
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ]
+      },
+      "skin_texels": 0,
+      "ao_mean": 0.8134,
+      "ao_p10": 0.5299
+    },
+    "ao": {
+      "distance_m": 0.246,
+      "samples": 64,
+      "margin": 8
+    },
+    "head_start": 0.675,
+    "clip_donor": "art/models/monsters/blizzard_wolf/blizzard_wolf.glb",
+    "before": {
+      "glb_sha256": "bc132388beb5fe2366093ab1d440db1d30a7357cb48ced1eef683384f03278c8",
+      "glb_bytes": 398324,
+      "texture": [
+        [
+          256,
+          256
+        ]
+      ],
+      "atlas_stats": {
+        "used_texels": 13944,
+        "charts": 494,
+        "mean_lstar": 31.76,
+        "lum_mean": 0.2934,
+        "lum_p10": 0.1332,
+        "lum_p50": 0.268,
+        "lum_p90": 0.4886,
+        "lstar_p10": 13.48,
+        "near_black_fraction": 0.1321,
+        "sat_mean": 0.4588,
+        "sat_p90": 0.5088,
+        "micro_contrast_255": 9.38,
+        "laplacian_mean": 0.0322,
+        "dominant_hues": [
+          {
+            "hue_deg": 202.5,
+            "mass": 0.478
+          }
+        ],
+        "dominant_hue_count": 1
+      }
+    },
+    "after": {
+      "glb_sha256": "67b4b498e619bd68b2a55925744c43a648d01320260ee7e025b69c5beb42143c",
+      "glb_bytes": 400308,
+      "texture": [
+        [
+          256,
+          256
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      },
+      "atlas_stats": {
+        "used_texels": 13944,
+        "charts": 494,
+        "mean_lstar": 39.55,
+        "lum_mean": 0.3617,
+        "lum_p10": 0.1848,
+        "lum_p50": 0.3541,
+        "lum_p90": 0.5555,
+        "lstar_p10": 20.8,
+        "near_black_fraction": 0.0601,
+        "sat_mean": 0.5056,
+        "sat_p90": 0.6067,
+        "micro_contrast_255": 7.62,
+        "laplacian_mean": 0.0208,
+        "dominant_hues": [
+          {
+            "hue_deg": 202.5,
+            "mass": 0.386
+          }
+        ],
+        "dominant_hue_count": 1
+      }
+    },
+    "geometry_sha256": "057a1655693cbb0653acd646f67e16295759b043d6dd3d4317b5c709e1b24b0a",
+    "geometry_bytes_preserved": true,
+    "bake": {
+      "size": 512,
+      "covered_texels": 62678,
+      "missed_texels": 476,
+      "interior_fallback_texels": 181,
+      "miss_fraction": 0.007594371230734867
+    },
+    "visible_faces": {
+      "removed_faces": 134229,
+      "kept_faces": 40359
+    },
+    "removed_extracted_textures": [
+      "blizzard_wolf_blizzard_wolf_lod_albedo.png"
+    ],
+    "editable_lod_source": "build/character-3d/monster-source/blizzard_wolf/game-lod.blend",
+    "evidence": "build/character-3d/lod-2026-10-18/blizzard_wolf"
   }
 }

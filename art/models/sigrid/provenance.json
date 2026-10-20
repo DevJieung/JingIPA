@@ -28,8 +28,8 @@
   "high_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/sigrid/high.blend",
   "game_source": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/sigrid/game.blend",
   "height": 1.7,
-  "glb_bytes": 802880,
-  "glb_sha256": "28754e625206596d520543941d6dc2da8ec6b67802f5ab12e8981522fed3a538",
+  "glb_bytes": 843532,
+  "glb_sha256": "8dbaac44e6175b62be2b33e58e42cd37c8e451faa7069621ddd0483d15dd2711",
   "quality_status": "direct visual QA passed; original identity, multiview, continuous idle/attack, ranks/awakening and mixed battle in two resolutions",
   "surface_strategy": "retained original UV/albedo; moderate collapse LOD and texture resize; no atlas rebake or broad source geometry cuts",
   "visual_review": {
@@ -70,14 +70,24 @@
     "artist_note": "Direct source-to-native identity, full rest and attack turnarounds, continuous runtime idle/attack phases, rank0/4/9 and awakening, and both-resolution selected mixed-battle views inspected. Shift segmented rear hoop, Thalassa teal coat/pressure valves, Snorri winch/anchor, Morrigan leaf armor/chain, Blank human ivory suit, Candela hood/chain, Sigrid triple rear fans and Helga right-hand blue blade retain individual source silhouettes. No visible palm/body strips, equipment tearing or foot jumps in reviewed sequences."
   },
   "motion": {
-    "version": 2,
+    "version": 3,
     "tool": "tools/3d/author_native_motion.py",
-    "authored_utc": "2026-10-10T09:36:48Z",
+    "authored_utc": "2026-10-18T13:33:52Z",
     "clips": {
       "IdleLoop": 6.0,
       "WalkLoop": 1.0,
       "Attack": 1.5,
       "attack_release_time": 1.0
+    },
+    "beats": {
+      "hold_start": 0.8,
+      "hold_dip_h": 0.025,
+      "breath_h": 0.015,
+      "sway_h": 0.025,
+      "fidget_window": [
+        3.0,
+        3.6
+      ]
     },
     "stride": 1.3617,
     "leg_swing": 0.56,
@@ -86,9 +96,9 @@
     "lead": "R",
     "kind": "cast",
     "bounce_scale": 0.85,
-    "previous_glb_sha256": "32fe3e8b5051d10ff61ddf3a2452ed411f83dc28deea4538f0c667ea481504fc",
+    "previous_glb_sha256": "29f570a0dcec220eeeb8a2aaac2f5504a1c7f24298f80f57885b06c97d35243c",
     "editable_backup": "/home/dgxmaruta/pjt/stellardefense/build/character-3d/source/sigrid/game.motion-v1.blend",
-    "geometry_base_sha256": "32fe3e8b5051d10ff61ddf3a2452ed411f83dc28deea4538f0c667ea481504fc",
+    "geometry_base_sha256": "29f570a0dcec220eeeb8a2aaac2f5504a1c7f24298f80f57885b06c97d35243c",
     "geometry_bytes_preserved": true
   },
   "mobile_lod": {
@@ -177,5 +187,243 @@
     ],
     "highpoly_backup": "build/character-3d/highpoly-2026-10-15/art-models/sigrid/sigrid.glb",
     "editable_lod_source": "build/character-3d/source/sigrid/game-lod.blend"
+  },
+  "albedo_grade": {
+    "date": "2026-10-18",
+    "request": "user 2026-10-18: the characters read as a cheap AI-made 3D game; casual overhaul plan \"Lantern Stage\" WP-A \u2014 painted albedos that carry their own light, geometry untouched",
+    "tool": "tools/3d/optimize_native_lod.py --retexture + tools/3d/grade_native_albedo.py; records by tools/3d/publish_native_lod.py",
+    "method": "game-lod.blend opened as the bake target (geometry, UVs, weights, rig, clips, sockets and height untouched), game.blend surfaces appended as bake sources (visible faces first, all sheets as fallback), Cycles EMIT colour bake, AO bake of the reduced mesh alone and a height pass, then the painted grade inside the chart mask: de-speckle, chart-flatten (charts >= 48 texels), light posterise, levels, OKLab chroma with a skin cap, painted light from AO + height, cool shade, edge light, face paint-back; nearest fill, box downsample; clip bytes grafted from the shipped GLB",
+    "grade_version": "2026-10-18.7",
+    "parameters": {
+      "median": 3,
+      "bilateral_radius": 3,
+      "bilateral_sigma_s": 1.6,
+      "bilateral_sigma_r": 0.1,
+      "bilateral_passes": 2,
+      "seam_lambda": 0.3,
+      "seam_gain_min": 0.7,
+      "seam_gain_max": 1.4,
+      "seam_floor": 0.02,
+      "seam_chroma_sigma": 0.08,
+      "seam_small_chart": 96.0,
+      "seam_ratio_sigma": 0.6,
+      "flatten_min_width": 48,
+      "flatten_blur": 24,
+      "flatten_blend": 0.4,
+      "posterize_levels": 6,
+      "posterize_blend": 0.3,
+      "levels_lift": 0.09,
+      "levels_gain": 0.88,
+      "levels_gamma": 0.9,
+      "p10_floor": 0.17,
+      "p50_target": 0.5,
+      "p50_pull": 0.8,
+      "p50_gain_max": 2.2,
+      "dark_additive_lo": 0.04,
+      "dark_additive_hi": 0.16,
+      "lift_saturation_damp": 0.15,
+      "knee_start": 0.78,
+      "knee_slope": 0.45,
+      "knee_saturated_drop": 0.1,
+      "chroma_hero": 1.2,
+      "chroma_monster": 1.15,
+      "chroma_skin": 1.0,
+      "skin_s_cap": 0.5,
+      "s_cap": 0.86,
+      "ao_floor": 0.65,
+      "ao_gamma": 0.8,
+      "ao_smooth": 1.5,
+      "height_low": 0.82,
+      "height_high": 1.12,
+      "height_lo": 0.05,
+      "height_hi": 0.7,
+      "cool_shade": [
+        0.85,
+        0.9,
+        1.12
+      ],
+      "cool_amount": 0.5,
+      "edge_light": 0.06,
+      "edge_lo": 0.92,
+      "skin_hue": [
+        8.0,
+        38.0
+      ],
+      "skin_s": [
+        0.15,
+        0.6
+      ],
+      "skin_v": [
+        0.35,
+        0.98
+      ],
+      "skin_chart_fraction": 0.6,
+      "skin_chart_mixed": 0.3,
+      "skin_chart_s_median_max": 0.55,
+      "skin_chart_s_p90_max": 0.72,
+      "face_contrast": 1.3,
+      "face_dark_fraction": 0.04,
+      "face_dark_lstar": 15.0,
+      "face_blur": 4.0,
+      "face_mark_desaturate": 0.8,
+      "face_mark_lum": 0.35
+    },
+    "override": {},
+    "grade_info": {
+      "charts": 880,
+      "skin_charts_excluded": 10,
+      "seams": {
+        "pairs": 1576,
+        "samples": 10055,
+        "gain_min": 0.729,
+        "gain_max": 1.4,
+        "gain_std": 0.089
+      },
+      "flattened_charts": 98,
+      "levels": {
+        "lum_mean_after_remap": 0.4853,
+        "p50_gain": 1.096,
+        "p10_before": 0.2407,
+        "p10_lift": 0.0,
+        "remap": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            0.241,
+            0.241
+          ],
+          [
+            0.446,
+            0.489
+          ],
+          [
+            0.765,
+            0.765
+          ],
+          [
+            1.0,
+            1.0
+          ]
+        ]
+      },
+      "skin_texels": 6356,
+      "ao_mean": 0.6509,
+      "ao_p10": 0.2263,
+      "face": {
+        "head_texels": 70403,
+        "head_charts": 264,
+        "dark_threshold": 0.1524,
+        "mark_texels": 3077
+      }
+    },
+    "ao": {
+      "distance_m": 0.425,
+      "samples": 64,
+      "margin": 8
+    },
+    "head_start": 0.675,
+    "clip_donor": "art/models/sigrid/sigrid.glb",
+    "before": {
+      "glb_sha256": "3835f8a8da8e13c327a25815e8bc3935498d8fc89d2cb356851d2e8fd0b9752a",
+      "glb_bytes": 840696,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "atlas_stats": {
+        "used_texels": 58770,
+        "charts": 844,
+        "mean_lstar": 40.79,
+        "lum_mean": 0.3793,
+        "lum_p10": 0.1381,
+        "lum_p50": 0.3152,
+        "lum_p90": 0.697,
+        "lstar_p10": 14.7,
+        "near_black_fraction": 0.1374,
+        "sat_mean": 0.395,
+        "sat_p90": 0.9101,
+        "micro_contrast_255": 11.11,
+        "laplacian_mean": 0.0423,
+        "dominant_hues": [
+          {
+            "hue_deg": 217.5,
+            "mass": 0.363
+          }
+        ],
+        "dominant_hue_count": 1,
+        "skin": {
+          "texels": 1313,
+          "mean_lstar": 67.21,
+          "sat_mean": 0.5082,
+          "sat_p90": 0.5614,
+          "sat_max": 0.6648
+        }
+      }
+    },
+    "after": {
+      "glb_sha256": "8dbaac44e6175b62be2b33e58e42cd37c8e451faa7069621ddd0483d15dd2711",
+      "glb_bytes": 843532,
+      "texture": [
+        [
+          512,
+          512
+        ]
+      ],
+      "texture_import": {
+        "compress/mode": "1",
+        "compress/lossy_quality": "0.8"
+      },
+      "atlas_stats": {
+        "used_texels": 58770,
+        "charts": 844,
+        "mean_lstar": 49.2,
+        "lum_mean": 0.4523,
+        "lum_p10": 0.228,
+        "lum_p50": 0.4578,
+        "lum_p90": 0.6904,
+        "lstar_p10": 26.18,
+        "near_black_fraction": 0.0184,
+        "sat_mean": 0.4262,
+        "sat_p90": 0.8732,
+        "micro_contrast_255": 8.3,
+        "laplacian_mean": 0.0271,
+        "dominant_hues": [
+          {
+            "hue_deg": 217.5,
+            "mass": 0.358
+          }
+        ],
+        "dominant_hue_count": 1,
+        "skin": {
+          "texels": 1457,
+          "mean_lstar": 65.13,
+          "sat_mean": 0.4732,
+          "sat_p90": 0.5,
+          "sat_max": 0.5654
+        }
+      }
+    },
+    "geometry_sha256": "48dc35d499ed48da89271f3a2b4608c2bbf26e23c7a885504fd77ed8eba468bf",
+    "geometry_bytes_preserved": true,
+    "bake": {
+      "size": 1024,
+      "covered_texels": 254710,
+      "missed_texels": 825,
+      "interior_fallback_texels": 539,
+      "miss_fraction": 0.003238977660869224
+    },
+    "visible_faces": {
+      "removed_faces": 35977,
+      "kept_faces": 19023
+    },
+    "removed_extracted_textures": [
+      "sigrid_sigrid_lod_albedo.png"
+    ],
+    "editable_lod_source": "build/character-3d/source/sigrid/game-lod.blend",
+    "evidence": "build/character-3d/lod-2026-10-18/sigrid"
   }
 }
