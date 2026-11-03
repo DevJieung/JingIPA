@@ -1,0 +1,10 @@
+[
+  {"id":"demo-1","name":"온기 식당","category":"한식","address":"체험용 식당 · 회사에서 도보 3분 설정","emoji":"🍚"},
+  {"id":"demo-2","name":"소소한 면옥","category":"면 요리","address":"체험용 식당 · 회사에서 도보 5분 설정","emoji":"🍜"},
+  {"id":"demo-3","name":"초록 한 그릇","category":"샐러드","address":"체험용 식당 · 회사에서 도보 2분 설정","emoji":"🥗"},
+  {"id":"demo-4","name":"카츠의 오후","category":"돈가스","address":"체험용 식당 · 회사에서 도보 7분 설정","emoji":"🍱"},
+  {"id":"demo-5","name":"피자 모먼트","category":"양식","address":"체험용 식당 · 회사에서 도보 4분 설정","emoji":"🍕"},
+  {"id":"demo-6","name":"순두부 하는 날","category":"한식","address":"체험용 식당 · 회사에서 도보 6분 설정","emoji":"🥘"},
+  {"id":"demo-7","name":"작은 스시집","category":"일식","address":"체험용 식당 · 회사에서 도보 8분 설정","emoji":"🍣"},
+  {"id":"demo-8","name":"우리 동네 반점","category":"중식","address":"체험용 식당 · 회사에서 도보 5분 설정","emoji":"🥟"}
+]

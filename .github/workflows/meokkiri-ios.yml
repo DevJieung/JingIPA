@@ -1,0 +1,70 @@
+name: 먹끼리 iOS IPA
+
+on:
+  push:
+    branches: [meokkiri]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: meokkiri-ios-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ipa:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.8'
+          channel: stable
+          cache: true
+      - name: 빌드 환경 확인
+        run: |
+          sw_vers
+          xcodebuild -version
+          flutter --version
+      - name: 웹 공통 소스 확인
+        run: python3 scripts/verify_ios_ipa.py --check-source
+      - name: 의존성 복원
+        run: flutter pub get --enforce-lockfile
+      - name: iOS 기기용 release 앱 빌드
+        run: flutter build ios --release --no-codesign --no-pub --dart-define-from-file=config/firebase.mkr-web.ios.json
+      - name: IPA 패키징
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(python3 -c 'import pathlib,re; print(re.search(r"^version: (.+)$",pathlib.Path("pubspec.yaml").read_text(),re.M)[1].replace("+","-"))')
+          mkdir -p build/ipa/Payload
+          ditto build/ios/iphoneos/Runner.app build/ipa/Payload/Runner.app
+          destination="$PWD/build/ipa/meokkiri-${version}-ios-unsigned.ipa"
+          (cd build/ipa && ditto -c -k --keepParent Payload "$destination")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "ipa=$destination" >> "$GITHUB_OUTPUT"
+      - name: IPA 내용 검증
+        run: python3 scripts/verify_ios_ipa.py --ipa '${{ steps.package.outputs.ipa }}' --report build/ipa/validation.json
+      - name: 결과 안내
+        run: |
+          {
+            echo '### 먹끼리 ${{ steps.package.outputs.version }}'
+            echo '웹 공통 소스와 버전을 검증한 iOS 기기용 release AOT 빌드입니다.'
+            echo '서명 없는 IPA입니다. Sideloadly 또는 AltStore에서 본인 Apple ID로 서명해 설치하세요.'
+            echo 'App Store 또는 TestFlight에 업로드하지 않았습니다.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: meokkiri-ipa-${{ steps.package.outputs.version }}-${{ github.run_number }}
+          path: |
+            build/ipa/*.ipa
+            build/ipa/validation.json
+            ci/source-manifest.json
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30

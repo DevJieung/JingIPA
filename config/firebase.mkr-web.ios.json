@@ -1,0 +1,11 @@
+{
+  "USE_FIREBASE": true,
+  "FIREBASE_API_KEY": "AIzaSyDjCOSPL8gpsh9Dss5lKxouOlp8Y6AUR-k",
+  "FIREBASE_APP_ID": "1:40899079170:ios:6c2f7db14076538a3e0b1b",
+  "FIREBASE_MESSAGING_SENDER_ID": "40899079170",
+  "FIREBASE_PROJECT_ID": "mkr-web",
+  "FIREBASE_AUTH_DOMAIN": "mkr-web.firebaseapp.com",
+  "FIREBASE_STORAGE_BUCKET": "mkr-web.firebasestorage.app",
+  "GOOGLE_SERVER_CLIENT_ID": "40899079170-f24qrhuf3p3r8qhu767t4ib6bmkmjr3n.apps.googleusercontent.com",
+  "GOOGLE_IOS_CLIENT_ID": "40899079170-qs64v33ilb13p636ckgjdscp98st1lnj.apps.googleusercontent.com"
+}

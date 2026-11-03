@@ -1,0 +1,13 @@
+.dart_tool/
+.flutter-plugins*
+build/
+*.local.json
+*.p12
+*.p8
+*.key
+*.pem
+*.mobileprovision
+*.keystore
+*.jks
+__pycache__/
+.DS_Store

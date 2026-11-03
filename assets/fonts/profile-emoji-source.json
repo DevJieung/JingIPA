@@ -1,0 +1,12 @@
+{
+  "source": "https://github.com/googlefonts/noto-emoji/blob/main/2D/fonts/NotoColorEmoji.ttf",
+  "downloadUrl": "https://raw.githubusercontent.com/googlefonts/noto-emoji/main/2D/fonts/NotoColorEmoji.ttf",
+  "license": "SIL Open Font License 1.1",
+  "licenseFile": "assets/fonts/NotoColorEmoji-LICENSE.txt",
+  "rebuild": "functions/venv/bin/python scripts/subset_profile_emoji.py",
+  "sha256": {
+    "assets/fonts/NotoColorEmoji.ttf": "15671215ab769fdc7162a045d56fd7d7e477c51b04e6b3c761d914d8fdd6cc44",
+    "assets/fonts/NotoColorEmojiProfile.ttf": "b71fc363ecb919a2e9325ce3d47ed5a74e6750cb183e0d4e174e1f985bdd9791",
+    "assets/fonts/NotoColorEmoji-LICENSE.txt": "6a73f9541c2de74158c0e7cf6b0a58ef774f5a780bf191f2d7ec9cc53efe2bf2"
+  }
+}

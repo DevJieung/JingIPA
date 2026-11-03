@@ -1,0 +1,10 @@
+{
+  "tool": "Built-in image_gen",
+  "use": "AI-generated decorative garden background; real member emoji are rendered separately",
+  "original": "artifacts/waiting-garden-v1-original.png",
+  "runtime": "assets/brand/waiting-garden-v1.webp",
+  "encoding": "WebP quality 86; original composition and colors retained",
+  "prompt": "Use case: illustration-story. Asset type: production background illustration for the waiting room of a Korean meal-meetup mobile app. Create a polished, charming hand-painted editorial gouache and colored-pencil garden meadow, landscape 3:2 composition. The app palette is warm ivory #F2F5F3, very pale sage #EAF2ED, sage leaves, muted forest green #244F43, tiny dusty coral accents #AF4938. Sophisticated cozy storybook art, delicate fine outlines, subtle paper texture, organic botanical shapes and soft afternoon light, with refined detail, no crude geometric shapes or clip-art look. A welcoming small orchard farm garden: tasteful leafy trees and bushes framing the upper left and upper right edges, a short softly weathered wooden fence in the far back near the upper quarter, a tiny simple cream garden shed with a muted terracotta roof tucked into the upper right foliage, tiny white and coral wildflowers scattered along the lower edge, and a narrow warm cream stepping-stone path following the lower edge. IMPORTANT layout: central 75 percent of the image, from 28 percent down to 85 percent down, must be a large calm open very pale sage grassy clearing, nearly flat and light enough for colorful animal emoji to be placed by the app. All foliage and garden details are confined mostly to top 25 percent and outer edges. Calm low contrast, clean mobile readability, delightful crafted illustration quality. Full bleed rectangular image, no border, no frame, no UI elements. No people, no animals, no emoji, no letters, no words, no logos, no watermark. This is only the quiet garden environment; the app renders the waiting people separately.",
+  "runtimeSha256": "74f1285088499d95865fe5d552bf431fd0f07ecdf1b52c0096c2d82395bfc64f",
+  "originalSha256": "ca5c59aff7c1c7a044a8ca4e7906746a2d9389d73ee8b564c4cc4fe7cfff32d9"
+}

@@ -1,0 +1,104 @@
+"""Verify shared release sources and an unsigned, device ARM64 Flutter IPA."""
+
+import argparse
+import hashlib
+import json
+import plistlib
+import re
+import struct
+import zipfile
+from datetime import datetime, timezone
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def verify_source():
+    source = json.loads((ROOT / 'ci/source-manifest.json').read_text())
+    for name, digest in source['files'].items():
+        actual = hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
+        if actual != digest:
+            raise RuntimeError('Shared web source changed: ' + name)
+    config = json.loads((ROOT / 'config/firebase.mkr-web.ios.json').read_text())
+    if (config.get('USE_FIREBASE') is not True
+            or config.get('USE_FIREBASE_EMULATORS', False)
+            or config.get('FIREBASE_PROJECT_ID') != 'mkr-web'
+            or ':ios:' not in config.get('FIREBASE_APP_ID', '')):
+        raise RuntimeError('The registered production Firebase iOS configuration is required.')
+    return source, config
+
+
+def verify_ipa(path):
+    source, config = verify_source()
+    version, build = re.search(
+        r'^version:\s*(\S+)\+(\d+)\s*$', (ROOT / 'pubspec.yaml').read_text(), re.M,
+    ).groups()
+    with zipfile.ZipFile(path) as archive:
+        names = archive.namelist()
+        if len(names) != len(set(names)) or archive.testzip() is not None:
+            raise RuntimeError('IPA contains duplicate entries or corrupt ZIP data.')
+        prefix = 'Payload/Runner.app/'
+        info = plistlib.loads(archive.read(prefix + 'Info.plist'))
+        expected = {
+            'CFBundleIdentifier': 'com.meokkiri.meokkiri',
+            'CFBundleShortVersionString': version,
+            'CFBundleVersion': build,
+        }
+        for key, value in expected.items():
+            if info.get(key) != value:
+                raise RuntimeError('Unexpected IPA metadata: ' + key)
+        binaries = [prefix + info['CFBundleExecutable'], prefix + 'Frameworks/App.framework/App']
+        for name in binaries:
+            magic, cpu = struct.unpack_from('<II', archive.read(name))
+            if magic != 0xFEEDFACF or cpu != 0x0100000C:
+                raise RuntimeError('Expected a device ARM64 Mach-O executable: ' + name)
+        aot = archive.read(binaries[1])
+        markers = [config['FIREBASE_APP_ID'].encode(), b'mkr-web',
+                   b'pod-seats-scroll', b'waiting-garden-scroll']
+        for marker in markers:
+            if marker not in aot:
+                raise RuntimeError('Missing Firebase or release feature marker: ' + repr(marker))
+        assets = prefix + 'Frameworks/App.framework/flutter_assets/'
+        if any(name.endswith('/kernel_blob.bin') for name in names):
+            raise RuntimeError('Debug Dart kernel found in release IPA.')
+        garden = 'assets/brand/waiting-garden-v1.webp'
+        if hashlib.sha256(archive.read(assets + garden)).hexdigest() != source['files'][garden]:
+            raise RuntimeError('Garden illustration differs from the web release.')
+        if prefix + '_CodeSignature/CodeResources' in names or prefix + 'embedded.mobileprovision' in names:
+            raise RuntimeError('This workflow must report an unsigned IPA; unexpected signing data found.')
+    return {
+        'status': 'passed', 'verifiedAt': datetime.now(timezone.utc).isoformat(),
+        'file': path.name, 'sizeBytes': path.stat().st_size,
+        'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+        'versionName': version, 'versionCode': int(build),
+        'bundleId': info['CFBundleIdentifier'], 'deviceFamilies': info.get('UIDeviceFamily'),
+        'minimumOSVersion': info.get('MinimumOSVersion'), 'architecture': 'arm64',
+        'buildMode': 'release', 'releaseAotVerified': True, 'signing': 'unsigned',
+        'firebaseProject': config['FIREBASE_PROJECT_ID'], 'firebaseAppId': config['FIREBASE_APP_ID'],
+        'sameClientSourceVerified': True, 'sourceFilesVerified': len(source['files']),
+        'commonSourceSha256': source['commonSourceSha256'], 'gardenAssetVerified': True,
+        'testFlightUploaded': False, 'deviceInstallationTested': False,
+    }
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--check-source', action='store_true')
+    parser.add_argument('--ipa', type=Path)
+    parser.add_argument('--report', type=Path)
+    args = parser.parse_args()
+    if args.check_source:
+        source, _ = verify_source()
+        print('Verified shared web source files:', len(source['files']))
+    if args.ipa:
+        report = verify_ipa(args.ipa)
+        if args.report:
+            args.report.parent.mkdir(parents=True, exist_ok=True)
+            args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+    if not args.check_source and not args.ipa:
+        parser.error('Use --check-source or --ipa.')
+
+
+if __name__ == '__main__':
+    main()

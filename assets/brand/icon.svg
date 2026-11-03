@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <rect width="180" height="180" rx="36" fill="#fafbf8"/>
+  <circle cx="90" cy="90" r="74" fill="#f0f5ec"/>
+  <g transform="translate(10 0) scale(1.6)" stroke="#2c4e3f" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="25.5" cy="41" rx="16.5" ry="24" fill="#c6d7be"/>
+    <ellipse cx="74.5" cy="41" rx="16.5" ry="24" fill="#c6d7be"/>
+    <ellipse cx="26.5" cy="40.5" rx="11.5" ry="17.5" fill="#ecc1ab" stroke="none"/>
+    <ellipse cx="73.5" cy="40.5" rx="11.5" ry="17.5" fill="#ecc1ab" stroke="none"/>
+    <path d="M27 37C26 8 72 7 74 35L75 53Q75 68 60 71L61 82C62 98 42 96 43 82L44 67C31 69 24 60 27 37Z" fill="#c6d7be"/>
+    <path d="M44 19Q42 10 49 12M49 18Q53 7 56 14" fill="none"/>
+    <g fill="#2c4e3f" stroke="none"><circle cx="40" cy="46" r="1.8"/><circle cx="62" cy="46" r="1.8"/></g>
+    <g fill="#ecc1ab" stroke="none"><ellipse cx="33" cy="56.5" rx="5" ry="2.5"/><ellipse cx="70" cy="56.5" rx="5" ry="2.5"/></g>
+    <path d="M37 57Q41 62 45 58M48 79H56M48 83H55" fill="none"/>
+  </g>
+</svg>
