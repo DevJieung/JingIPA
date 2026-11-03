@@ -36,6 +36,13 @@ jobs:
         run: |
           flutter config --no-enable-swift-package-manager
           flutter pub get --enforce-lockfile
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/CocoaPods
+            ~/.cocoapods
+            ios/Pods
+          key: meokkiri-pods-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pubspec.lock', 'ios/Podfile') }}
       - name: iOS 기기용 release 앱 빌드
         run: flutter build ios --release --no-codesign --no-pub --dart-define-from-file=config/firebase.mkr-web.ios.json
       - name: IPA 패키징
@@ -61,12 +68,14 @@ jobs:
             echo 'App Store 또는 TestFlight에 업로드하지 않았습니다.'
           } >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
+        if: always() && steps.package.outcome == 'success'
         with:
           name: meokkiri-ipa-${{ steps.package.outputs.version }}-${{ github.run_number }}
           path: |
             build/ipa/*.ipa
             build/ipa/validation.json
             ci/source-manifest.json
+            ios/Podfile.lock
           if-no-files-found: error
           compression-level: 0
           retention-days: 30

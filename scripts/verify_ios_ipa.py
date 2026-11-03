@@ -13,6 +13,34 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def verify_arm64_macho(data, name):
+    """Flutter's AOT framework may use a universal container with one ARM64 slice."""
+    if len(data) < 8:
+        raise RuntimeError('Truncated Mach-O executable: ' + name)
+    magic, cpu = struct.unpack_from('<II', data)
+    if magic == 0xFEEDFACF and cpu == 0x0100000C:
+        return
+    formats = {
+        b'\xca\xfe\xba\xbe': ('>', False), b'\xbe\xba\xfe\xca': ('<', False),
+        b'\xca\xfe\xba\xbf': ('>', True), b'\xbf\xba\xfe\xca': ('<', True),
+    }
+    if data[:4] not in formats:
+        raise RuntimeError('Expected a device ARM64 Mach-O executable: ' + name)
+    endian, wide = formats[data[:4]]
+    count = struct.unpack_from(endian + 'I', data, 4)[0]
+    record = endian + ('IIQQII' if wide else 'IIIII')
+    record_size = struct.calcsize(record)
+    if not 1 <= count <= 16 or len(data) < 8 + count * record_size:
+        raise RuntimeError('Invalid universal Mach-O header: ' + name)
+    for index in range(count):
+        cpu, _, offset, size, *_ = struct.unpack_from(record, data, 8 + index * record_size)
+        if (cpu != 0x0100000C or offset < 8 + count * record_size
+                or size < 8 or offset + size > len(data)):
+            raise RuntimeError('Invalid or non-device ARM64 Mach-O slice: ' + name)
+        if struct.unpack_from('<II', data, offset) != (0xFEEDFACF, 0x0100000C):
+            raise RuntimeError('ARM64 slice header does not match the universal table: ' + name)
+
+
 def verify_source():
     source = json.loads((ROOT / 'ci/source-manifest.json').read_text())
     for name, digest in source['files'].items():
@@ -49,9 +77,7 @@ def verify_ipa(path):
                 raise RuntimeError('Unexpected IPA metadata: ' + key)
         binaries = [prefix + info['CFBundleExecutable'], prefix + 'Frameworks/App.framework/App']
         for name in binaries:
-            magic, cpu = struct.unpack_from('<II', archive.read(name))
-            if magic != 0xFEEDFACF or cpu != 0x0100000C:
-                raise RuntimeError('Expected a device ARM64 Mach-O executable: ' + name)
+            verify_arm64_macho(archive.read(name), name)
         aot = archive.read(binaries[1])
         markers = [config['FIREBASE_APP_ID'].encode(), b'mkr-web',
                    b'pod-seats-scroll', b'waiting-garden-scroll']
