@@ -45,7 +45,9 @@
     "lib/ui/round_cutoff_form.dart": "066dbff8cf18bc9e5f49b3c96eec911744073e61ebb5c64f48ae20f83e4d7e67",
     "lib/ui/theme.dart": "dbd699e38ca697edf4a9cfe97e8af0aa9976afef57f11c742bda76511c809c78",
     "pubspec.lock": "2adbb9a769b77ec7e431e3d13ac86ed9c3e6a007f82c94823f05ad7daf974f51",
-    "pubspec.yaml": "c9474ad6148f87db65b6dec0b637b6fd5bde81d1ad6350a5fa3f0eca75483548"
+    "pubspec.yaml": "b0f14fe908aecd9256fb424d57dfbea68e18abd809ffe67e2e8c411f80ec1423"
   },
-  "commonSourceSha256": "3f0c11664835b925a60a84e9d8bba7eddd17224f4056ddbd32512b8cb52a2d9e"
+  "commonSourceSha256": "f972b6407d77c3227cc3138754348f4a99de04cd43fd6db209b3573a244a72ff",
+  "hashAlgorithm": "sha256 of sorted compact JSON file-hash map",
+  "version": "0.20.2+39"
 }
