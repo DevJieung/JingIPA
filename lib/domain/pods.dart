@@ -60,6 +60,8 @@ class LunchPod {
     this.temporaryRestaurant,
     this.finalFormed,
     this.colorCounts = const {},
+    this.occupantEmojis = const [],
+    this.ownSeatIndex,
   });
   final String id, name, creatorId;
   final int minimum, count;
@@ -68,6 +70,8 @@ class LunchPod {
   final TemporaryRestaurant? temporaryRestaurant;
   final bool? finalFormed;
   final Map<String, int> colorCounts;
+  final List<String> occupantEmojis;
+  final int? ownSeatIndex;
   bool get formed => finalFormed ?? count >= minimum;
   factory LunchPod.fromJson(Map<String, dynamic> j) => LunchPod(
     id: j['id'],
@@ -75,6 +79,8 @@ class LunchPod {
     creatorId: j['creatorId'] ?? '',
     minimum: j['minimum'],
     count: j['count'] ?? 0,
+    occupantEmojis: List<String>.from(j['occupantEmojis'] ?? const []),
+    ownSeatIndex: (j['ownSeatIndex'] as num?)?.toInt(),
     restaurantText: j['restaurantText'],
     temporaryRestaurant: j['temporaryRestaurant'] == null
         ? null
@@ -93,6 +99,8 @@ class LunchPod {
     'creatorId': creatorId,
     'minimum': minimum,
     'count': count,
+    'occupantEmojis': occupantEmojis,
+    'ownSeatIndex': ownSeatIndex,
     'restaurant': restaurant?.toJson(),
     'restaurantText': restaurantText,
     'temporaryRestaurant': temporaryRestaurant?.toJson(),
@@ -115,15 +123,18 @@ class PodRoundData {
     this.finalSelections,
     this.formedPodIds,
     Map<String, String>? finalJoins,
+    Map<String, List<String>>? podMemberOrder,
   }) : pods = pods ?? {},
        selections = selections ?? {},
-       finalJoins = finalJoins ?? {};
+       finalJoins = finalJoins ?? {},
+       podMemberOrder = podMemberOrder ?? {};
   final String id, creatorId;
   String? channelId;
   DateTime endsAt;
   final List<String> eligible;
   final Map<String, LunchPod> pods;
   final Map<String, String> selections;
+  final Map<String, List<String>> podMemberOrder;
   Map<String, bool>? attendance;
   Map<String, String>? finalSelections;
   List<String>? formedPodIds;
@@ -131,6 +142,35 @@ class PodRoundData {
   bool cancelled;
   DateTime? cancelledAt;
   bool open(DateTime now) => !cancelled && now.isBefore(endsAt);
+  List<String> orderedMembers(String podId) {
+    final current = selections.entries
+        .where((entry) => entry.value == podId)
+        .map((entry) => entry.key)
+        .toSet();
+    final saved = (podMemberOrder[podId] ?? const <String>[])
+        .where(current.contains)
+        .toSet()
+        .toList();
+    final missing = current.difference(saved.toSet()).toList()..sort();
+    final creator = pods[podId]?.creatorId;
+    if (creator != null && missing.remove(creator)) missing.insert(0, creator);
+    return [...saved, ...missing];
+  }
+
+  void assignPod(String uid, String? podId) {
+    for (final id in pods.keys) {
+      podMemberOrder[id] = orderedMembers(id);
+    }
+    if (podId == null) {
+      selections.remove(uid);
+    } else {
+      selections[uid] = podId;
+    }
+    for (final id in pods.keys) {
+      podMemberOrder[id] = orderedMembers(id);
+    }
+  }
+
   void settle(DateTime now) {
     if (!open(now) && !cancelled) {
       finalSelections ??= Map.of(selections);
@@ -155,6 +195,26 @@ class PodRoundData {
   }) {
     settle(now);
     final finalized = !open(now) && !cancelled;
+    LunchPod projectPod(LunchPod p) {
+      final occupants = orderedMembers(p.id);
+      final ownIndex = occupants.indexOf(uid);
+      return LunchPod(
+        id: p.id,
+        name: p.name,
+        creatorId: p.creatorId,
+        minimum: p.minimum,
+        restaurant: p.restaurant,
+        restaurantText: p.restaurantText,
+        temporaryRestaurant: p.temporaryRestaurant,
+        finalFormed: finalized ? formedPodIds!.contains(p.id) : null,
+        count: occupants.length,
+        occupantEmojis: [
+          for (final person in occupants) channel.memberEmojis[person] ?? '🐘',
+        ],
+        ownSeatIndex: ownIndex < 0 ? null : ownIndex,
+      );
+    }
+
     return RoundView(
       id: id,
       creatorId: creatorId,
@@ -174,20 +234,7 @@ class PodRoundData {
       withdrawn: false,
       podMode: true,
       cutoffControl: true,
-      pods: [
-        for (final p in pods.values)
-          LunchPod(
-            id: p.id,
-            name: p.name,
-            creatorId: p.creatorId,
-            minimum: p.minimum,
-            restaurant: p.restaurant,
-            restaurantText: p.restaurantText,
-            temporaryRestaurant: p.temporaryRestaurant,
-            finalFormed: finalized ? formedPodIds!.contains(p.id) : null,
-            count: selections.values.where((v) => v == p.id).length,
-          ),
-      ],
+      pods: [for (final p in pods.values) projectPod(p)],
       myPodId: selections[uid],
       canJoinFinalPod:
           finalized &&
@@ -233,6 +280,9 @@ class PodRoundData {
         p['id'] as String: LunchPod.fromJson(Map<String, dynamic>.from(p)),
     },
     selections: Map<String, String>.from(j['selections']),
+    podMemberOrder: (j['podMemberOrder'] as Map? ?? {}).map(
+      (key, value) => MapEntry(key as String, List<String>.from(value)),
+    ),
     attendance: j['attendance'] == null
         ? null
         : Map<String, bool>.from(j['attendance']),
@@ -258,6 +308,7 @@ class PodRoundData {
     'eligible': eligible,
     'pods': pods.values.map((p) => p.toJson()).toList(),
     'selections': selections,
+    'podMemberOrder': podMemberOrder,
     'attendance': attendance,
     'finalSelections': finalSelections,
     'formedPodIds': formedPodIds,

@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'theme.dart';
@@ -63,7 +62,7 @@ class _AwningPainter extends CustomPainter {
       archived != oldDelegate.archived;
 }
 
-/// Six seats per row, two visible rows, with anonymous occupants and one door.
+/// Six seats per row, two visible rows, with ordered profile emojis and one door.
 /// More rows scroll inside the room without moving the cards or action buttons.
 class PodSeatingRoom extends StatefulWidget {
   const PodSeatingRoom({
@@ -71,13 +70,16 @@ class PodSeatingRoom extends StatefulWidget {
     required this.count,
     required this.selected,
     required this.emoji,
-    this.animate = true,
+    this.occupantEmojis = const [],
+    this.ownSeatIndex,
     this.archived = false,
     super.key,
   });
   final int minimum, count;
-  final bool selected, animate, archived;
+  final bool selected, archived;
   final String emoji;
+  final List<String> occupantEmojis;
+  final int? ownSeatIndex;
 
   static double heightForWidth(double width) => (width - 77) / 3 + 31;
 
@@ -85,80 +87,16 @@ class PodSeatingRoom extends StatefulWidget {
   State<PodSeatingRoom> createState() => _PodSeatingRoomState();
 }
 
-class _PodSeatingRoomState extends State<PodSeatingRoom>
-    with SingleTickerProviderStateMixin {
+class _PodSeatingRoomState extends State<PodSeatingRoom> {
   final _scroll = ScrollController(keepScrollOffset: false);
-  late final _motion = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1800),
-    value: 1,
-  );
-  Timer? _walkTimer;
-  bool _entering = true;
-  bool _motionEnabled = false;
-  int _walker = 0;
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _configureMotion();
-  }
-
-  @override
-  void didUpdateWidget(PodSeatingRoom oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.count != widget.count) {
-      _walker = 0;
-      _motion.value = 1;
-    }
-    if (oldWidget.selected != widget.selected ||
-        oldWidget.count != widget.count ||
-        oldWidget.animate != widget.animate ||
-        oldWidget.archived != widget.archived) {
-      _configureMotion(enter: widget.selected && !oldWidget.selected);
-    }
-  }
-
-  void _configureMotion({bool enter = false}) {
-    final enabled =
-        widget.animate &&
-        !widget.archived &&
-        widget.count > 0 &&
-        !MediaQuery.disableAnimationsOf(context) &&
-        TickerMode.valuesOf(context).enabled;
-    final start = enabled && (!_motionEnabled || enter);
-    _motionEnabled = enabled;
-    _walkTimer?.cancel();
-    if (!enabled) {
-      _motion.stop();
-      _motion.value = 1;
-      return;
-    }
-    if (start) {
-      _entering = true;
-      _walker = 0;
-      _motion.forward(from: 0);
-    }
-    // Leave a quiet interval between short walks; no perpetual frame loop.
-    _walkTimer = Timer.periodic(const Duration(seconds: 6), (_) {
-      if (!mounted ||
-          !_motionEnabled ||
-          !TickerMode.valuesOf(context).enabled ||
-          (_scroll.hasClients && _scroll.offset > 0)) {
-        return;
-      }
-      _entering = false;
-      _walker = widget.selected
-          ? 0
-          : (_walker + 1) % math.min(widget.count, 12);
-      _motion.forward(from: 0);
-    });
+  int? get _ownIndex {
+    final index = widget.ownSeatIndex ?? 0;
+    return widget.selected && index >= 0 && index < widget.count ? index : null;
   }
 
   @override
   void dispose() {
-    _walkTimer?.cancel();
-    _motion.dispose();
     _scroll.dispose();
     super.dispose();
   }
@@ -183,70 +121,51 @@ class _PodSeatingRoomState extends State<PodSeatingRoom>
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              AnimatedBuilder(
-                animation: _motion,
-                builder: (context, _) => SizedBox(
-                  height: viewport,
-                  child: Stack(
-                    clipBehavior: Clip.hardEdge,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          SizedBox(
-                            width: doorWidth,
-                            child: ExcludeSemantics(
-                              child: CustomPaint(
-                                key: const Key('pod-painted-door'),
-                                painter: _DoorPainter(widget.archived),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: aisle),
-                          Expanded(
-                            child: Scrollbar(
-                              controller: _scroll,
-                              thumbVisibility: rows > 2,
-                              thickness: 3,
-                              radius: const Radius.circular(3),
-                              child:
-                                  NotificationListener<ScrollStartNotification>(
-                                    onNotification: (_) {
-                                      _motion.value = 1;
-                                      return false;
-                                    },
-                                    child: SingleChildScrollView(
-                                      key: const Key('pod-seats-scroll'),
-                                      controller: _scroll,
-                                      primary: false,
-                                      padding: const EdgeInsets.only(right: 6),
-                                      child: SizedBox(
-                                        height: stride * rows - gap,
-                                        child: Stack(
-                                          children: [
-                                            for (var i = 0; i < total; i++)
-                                              Positioned(
-                                                left: (i % 6) * stride,
-                                                top: (i ~/ 6) * stride,
-                                                width: seat,
-                                                height: seat,
-                                                child: _seat(i, seat),
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                            ),
-                          ),
-                        ],
+              SizedBox(
+                height: viewport,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SizedBox(
+                      width: doorWidth,
+                      child: ExcludeSemantics(
+                        child: CustomPaint(
+                          key: const Key('pod-painted-door'),
+                          painter: _DoorPainter(widget.archived),
+                        ),
                       ),
-                      if (widget.count > 0 &&
-                          _motionEnabled &&
-                          _motion.value < 1)
-                        _walkingEmoji(seat, stride),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: aisle),
+                    Expanded(
+                      child: Scrollbar(
+                        controller: _scroll,
+                        thumbVisibility: rows > 2,
+                        thickness: 3,
+                        radius: const Radius.circular(3),
+                        child: SingleChildScrollView(
+                          key: const Key('pod-seats-scroll'),
+                          controller: _scroll,
+                          primary: false,
+                          padding: const EdgeInsets.only(right: 6),
+                          child: SizedBox(
+                            height: stride * rows - gap,
+                            child: Stack(
+                              children: [
+                                for (var i = 0; i < total; i++)
+                                  Positioned(
+                                    left: (i % 6) * stride,
+                                    top: (i ~/ 6) * stride,
+                                    width: seat,
+                                    height: seat,
+                                    child: _seat(i, seat),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 8),
@@ -300,7 +219,12 @@ class _PodSeatingRoomState extends State<PodSeatingRoom>
     final occupied = i < widget.count;
     final minimum = i < widget.minimum;
     final color = minimum ? orange : forest;
-    final walking = _motionEnabled && _motion.value < 1 && i == _walker;
+    final own = i == _ownIndex;
+    final emoji = own
+        ? widget.emoji
+        : i < widget.occupantEmojis.length
+        ? widget.occupantEmojis[i]
+        : '🐘';
     return ExcludeSemantics(
       child: Container(
         key: ValueKey('pod-seat-$i'),
@@ -315,36 +239,21 @@ class _PodSeatingRoomState extends State<PodSeatingRoom>
           ),
           borderRadius: BorderRadius.circular(5),
         ),
-        child: occupied && !walking ? _emoji(i, side) : null,
+        child: !occupied
+            ? null
+            : Text(
+                emoji,
+                key: own
+                    ? const Key('pod-own-emoji')
+                    : ValueKey('pod-occupant-$i'),
+                textScaler: TextScaler.noScaling,
+                style: TextStyle(
+                  fontFamily: 'NotoColorEmoji',
+                  fontSize: side * .76,
+                  height: 1,
+                ),
+              ),
       ),
-    );
-  }
-
-  Widget _emoji(int index, double side) => Text(
-    widget.selected && index == 0 ? widget.emoji : '🐘',
-    key: widget.selected && index == 0 ? const Key('pod-own-emoji') : null,
-    textScaler: TextScaler.noScaling,
-    style: TextStyle(
-      fontFamily: 'NotoColorEmoji',
-      fontSize: side * .76,
-      height: 1,
-    ),
-  );
-
-  Widget _walkingEmoji(double seat, double stride) {
-    final target = Offset(46 + (_walker % 6) * stride, (_walker ~/ 6) * stride);
-    final doorway = Offset(4, stride * .5);
-    final progress = _motion.value;
-    final travel = _entering
-        ? Curves.easeOutCubic.transform(progress)
-        : 1 - math.pow(math.sin(math.pi * progress), 2).toDouble();
-    final position = Offset.lerp(doorway, target, travel)!;
-    return Positioned(
-      left: position.dx,
-      top: position.dy - math.sin(progress * math.pi * 6).abs() * 2,
-      width: seat,
-      height: seat,
-      child: ExcludeSemantics(child: Center(child: _emoji(_walker, seat))),
     );
   }
 }

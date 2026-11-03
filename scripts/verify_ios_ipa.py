@@ -80,7 +80,8 @@ def verify_ipa(path):
             verify_arm64_macho(archive.read(name), name)
         aot = archive.read(binaries[1])
         markers = [config['FIREBASE_APP_ID'].encode(), b'mkr-web',
-                   b'pod-seats-scroll', b'waiting-garden-scroll']
+                   b'pod-seats-scroll', b'waiting-garden-scroll',
+                   b'occupantEmojis', b'ownSeatIndex', b'pod-occupant-']
         for marker in markers:
             if marker not in aot:
                 raise RuntimeError('Missing Firebase or release feature marker: ' + repr(marker))

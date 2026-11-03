@@ -518,7 +518,7 @@ class DemoRepository extends AppRepository {
       restaurantText: direct.isEmpty ? null : direct,
       temporaryRestaurant: temporaryRestaurant,
     );
-    r.selections[user!.id] = id;
+    r.assignPod(user!.id, id);
     await _save();
   }
 
@@ -528,7 +528,7 @@ class DemoRepository extends AppRepository {
     if (!r.pods.containsKey(podId)) {
       throw const LunchException('팟을 다시 확인해 주세요.');
     }
-    r.selections[user!.id] = podId;
+    r.assignPod(user!.id, podId);
     await _save();
   }
 
@@ -552,13 +552,13 @@ class DemoRepository extends AppRepository {
       throw const LunchException('최종 선택은 미배정자만 한 번 할 수 있어요.');
     }
     r.finalJoins[user!.id] = podId;
-    r.selections[user!.id] = podId;
+    r.assignPod(user!.id, podId);
     await _save();
   }
 
   @override
   Future<void> leavePod(String channelId) async {
-    _openPod(channelId).selections.remove(user!.id);
+    _openPod(channelId).assignPod(user!.id, null);
     await _save();
   }
 
