@@ -33,7 +33,9 @@ jobs:
       - name: 웹 공통 소스 확인
         run: python3 scripts/verify_ios_ipa.py --check-source
       - name: 의존성 복원
-        run: flutter pub get --enforce-lockfile
+        run: |
+          flutter config --no-enable-swift-package-manager
+          flutter pub get --enforce-lockfile
       - name: iOS 기기용 release 앱 빌드
         run: flutter build ios --release --no-codesign --no-pub --dart-define-from-file=config/firebase.mkr-web.ios.json
       - name: IPA 패키징

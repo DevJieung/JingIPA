@@ -7,6 +7,9 @@ GitHub 저장소는 https://github.com/DevJieung/JingIPA 이며, 먹끼리 소�
 Flutter 3.47.8로 iOS 기기용 release AOT 앱을 빌드합니다. 빌드 전에는
 `ci/source-manifest.json`으로 현재 웹과 공통인 Dart·자산·의존성 파일의 해시를 검사합니다.
 Firebase는 운영 `mkr-web`의 `com.meokkiri.meokkiri` iOS 앱 설정을 사용합니다.
+고정된 Dart 의존성의 Firebase·Google 로그인 Swift 패키지 요구 버전이 충돌하므로,
+CI에서는 Flutter의 공식 CocoaPods 경로를 사용합니다. FlutterFire 플러그인이 지정한
+CocoaPods용 SDK 버전을 그대로 사용하며 웹·Android의 Dart 의존성은 변경하지 않습니다.
 `config/firebase.mkr-web.ios.json`과 `GoogleService-Info.plist`는 앱의 공개 SDK 설정이며,
 서비스 계정 키·Apple 개인 키·업로드 인증서는 포함하지 않습니다.
 
