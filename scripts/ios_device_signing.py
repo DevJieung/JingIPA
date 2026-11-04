@@ -14,6 +14,7 @@ import os
 import plistlib
 import re
 import secrets
+import shlex
 import shutil
 import subprocess
 import sys
@@ -38,7 +39,8 @@ def command(*args):
                         'code object is not signed at all', 'a sealed resource is missing or invalid']
         output = (result.stdout + result.stderr).decode(errors='replace')
         reason = next((error for error in known_errors if error in output), 'sensitive output withheld')
-        raise RuntimeError(stage + ' failed: ' + reason)
+        target = ' (' + Path(args[-1]).name + ')' if Path(args[0]).name == 'codesign' else ''
+        raise RuntimeError(stage + target + ' failed: ' + reason)
     return result.stdout
 
 
@@ -181,10 +183,14 @@ def sign_app(app, report_path):
         entitlements_path.write_bytes(plistlib.dumps(app_entitlements(profile)))
         keychain = root / 'signing.keychain-db'
         password = secrets.token_urlsafe(32)
+        previous_keychains = shlex.split(command('security', 'list-keychains', '-d', 'user').decode())
         command('security', 'create-keychain', '-p', password, str(keychain))
         try:
             command('security', 'set-keychain-settings', '-lut', '21600', str(keychain))
             command('security', 'unlock-keychain', '-p', password, str(keychain))
+            # codesign's private-key lookup also uses the user search list even
+            # when --keychain selects the certificate. Restore it on all exits.
+            command('security', 'list-keychains', '-d', 'user', '-s', str(keychain), *previous_keychains)
             command('security', 'import', str(cert), '-k', str(keychain), '-P',
                     os.environ.get('MEOKKIRI_IOS_CERTIFICATE_PASSWORD', ''),
                     '-T', '/usr/bin/codesign', '-T', '/usr/bin/security')
@@ -197,9 +203,11 @@ def sign_app(app, report_path):
             if len(set(matches)) != 1:
                 raise ValueError('P12 must contain exactly one valid identity allowed by the profile.')
             identity = matches[0]
+            print('Signing identity matches the device profile.', flush=True)
             nested = set(app.rglob('*.framework')) | set(app.rglob('*.dylib'))
             for path in sorted(nested, key=lambda p: (-len(p.parts), str(p))):
                 if not path.is_symlink():
+                    print('Signing nested code: ' + path.name, flush=True)
                     command('codesign', '--force', '--sign', identity, '--keychain', str(keychain),
                             '--timestamp=none', str(path))
             shutil.copyfile(profile_path, app / 'embedded.mobileprovision')
@@ -211,7 +219,10 @@ def sign_app(app, report_path):
             report_path.write_text(json.dumps(report, indent=2) + '\n')
             print(json.dumps(report, indent=2))
         finally:
-            command('security', 'delete-keychain', str(keychain))
+            try:
+                command('security', 'list-keychains', '-d', 'user', '-s', *previous_keychains)
+            finally:
+                command('security', 'delete-keychain', str(keychain))
 
 
 def main():
