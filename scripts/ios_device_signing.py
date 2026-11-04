@@ -36,6 +36,7 @@ def command(*args):
         stage = Path(args[0]).name + ' ' + args[1]
         known_errors = ['MAC verification failed', 'User interaction is not allowed',
                         'errSecInternalComponent', 'The specified item could not be found',
+                        'No such file or directory', 'invalid argument',
                         'code object is not signed at all', 'a sealed resource is missing or invalid']
         output = (result.stdout + result.stderr).decode(errors='replace')
         reason = next((error for error in known_errors if error in output), 'sensitive output withheld')
@@ -127,14 +128,19 @@ def verify_signed_app(app):
         raise ValueError('Signed app must preserve the registered Meokkiri bundle ID.')
     profile = decoded_profile(app / 'embedded.mobileprovision')
     report = validate_profile(profile)
+    print('Verifying the app and all nested code signatures.', flush=True)
     command('codesign', '--verify', '--deep', '--strict', str(app))
-    actual = plistlib.loads(command('codesign', '-d', '--entitlements', ':-', str(app)))
+    print('Reading the signed ARM64 app entitlements.', flush=True)
+    actual = plistlib.loads(command('codesign', '-d', '--arch', 'arm64', '--entitlements=-', '--xml', str(app)))
     validate_app_entitlements(actual, profile)
     # Confirm the app's leaf signing certificate is one of this profile's
     # certificates, rather than trusting an entitlement's declared Team ID.
     with tempfile.TemporaryDirectory(prefix='meokkiri-cert-check-') as directory:
         prefix = Path(directory) / 'certificate'
-        command('codesign', '-d', '--extract-certificates', str(prefix), str(app))
+        print('Extracting the app signing certificate.', flush=True)
+        # This option has an optional argument, so bind its prefix with '='.
+        # A separate prefix is otherwise treated as another code object.
+        command('codesign', '-d', '--arch', 'arm64', '--extract-certificates=' + str(prefix), str(app))
         leaf = Path(str(prefix) + '0').read_bytes()
         if leaf not in profile['DeveloperCertificates']:
             raise ValueError('App signing certificate is not allowed by its profile.')
