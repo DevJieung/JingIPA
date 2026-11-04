@@ -67,8 +67,35 @@ python3 scripts/verify_ios_ipa.py --ipa <경로> --signing device --report <JSON
 결과는 `meokkiri-signed-ipa-<버전>-<빌드>-<실행번호>` artifact입니다.
 등록된 기기에 Apple Configurator/Xcode 등의 서명 보존 설치 경로로 설치해 확인합니다.
 AltStore로 다시 서명하면 검증한 앱 ID와 서명이 바뀔 수 있으므로 그 결과를 동일시하지 않습니다.
-인증서·기기 프로파일이 아직 없어 **서명 빌드와 실기기 Apple 로그인은 미검증**입니다.
+사용자가 제공한 인증서·기기 프로파일로 P12를 준비했으며, 아래 기록 시점에는
+GitHub Secrets 접근 권한이 없어 **서명 빌드와 실기기 Apple 로그인은 미검증**입니다.
 로컬의 정책 테스트 통과는 macOS에서의 실제 서명 성공을 의미하지 않습니다.
+
+Mac에서 내보낸 P12가 없는 경우를 위해 2026-11-04에 RSA-2048/SHA-256 CSR
+`artifacts/meokkiri-ios-distribution-20261104.csr`를 만들고 요청 서명과 공개 키 일치를 확인했습니다.
+짝 개인 키는 저장소 밖의 `~/.config/meokkiri/ios-signing/meokkiri-distribution-20261104.key`에
+0600 권한으로 보관합니다. 요청 정보는 `artifacts/ios-distribution-csr-20261104.json`에 기록했습니다.
+사용자는 Apple Developer Certificates에서 Apple Distribution 인증서를 추가하며 이 CSR을
+업로드하고 `.cer`를 받습니다. Profiles에서 원래 Meokkiri ID, 방금 발급한 인증서와 테스트
+iPhone을 선택한 Ad Hoc 프로파일도 받습니다. 내려받은 `.cer`의 공개 키가 CSR/개인 키와
+일치함을 검사한 뒤 이 작업 환경에서 P12를 만들 수 있습니다. 개인 키를 재생성하거나
+다른 CSR로 발급한 인증서를 섞지 않습니다.
+
+사용자가 `distribution.cer`와 `Meokkiri_AdHoc.mobileprovision`을 제공했습니다.
+인증서의 공개 키가 위 CSR/개인 키와 일치하며, 프로파일은 원래 앱 ID와 Team ID,
+`com.apple.developer.applesignin = [Default]`, 등록 기기 1대를 포함합니다.
+프로파일 CMS 서명/Apple 신뢰 체인과 인증서의 Apple 신뢰 체인, 프로파일 내 인증서 일치도
+확인했습니다. 프로파일과 인증서는 2027-11-04 13:25:12 UTC까지 유효합니다.
+암호화된 P12에는 일치하는 개인 키·인증서와 Apple WWDR G3 중간 인증서를 넣고,
+암호로 다시 읽어 공개 키 일치를 확인했습니다. 입력과 암호는 저장소 밖의 같은 보호
+디렉터리에만 두며, 값이나 테스트 기기의 UDID를 보고서에 출력하지 않습니다.
+검증 기록은 `artifacts/ios-signing-input-validation.json`입니다.
+
+현재 GitHub 인증으로 `/repos/DevJieung/JingIPA/actions/secrets/public-key`를 조회하면
+HTTP 403 `Resource not accessible by personal access token`이 반환되며 필요한 권한은
+`secrets=read`입니다. 따라서 연결된 인증으로 Actions Secrets를 설정할 수 없습니다.
+사용자가 저장소 Actions Secrets에 위 3개 이름으로 값을 등록하면 `meokkiri` 브랜치의
+서명 빌드를 진행합니다. 서명 입력이 준비된 상태와 실제 macOS 서명 성공은 구분합니다.
 
 다음 배포에서는 웹과 같은 버전·소스로 APK·AAB·IPA를 함께 준비합니다.
 로컬 먹끼리 작업 공간에서 최신 웹 배포의 소스 manifest를 지정해 전용 checkout으로 복사합니다.
