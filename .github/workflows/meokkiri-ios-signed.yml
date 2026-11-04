@@ -8,10 +8,11 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: meokkiri-ios-signed-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   signed-ipa:
@@ -34,7 +35,30 @@ jobs:
           if missing:
               raise SystemExit('Missing GitHub Actions secrets: ' + ', '.join(missing))
           PY
+      - name: 원본 빌드 재사용 요청 확인
+        id: original
+        run: |
+          python3 - <<'PY'
+          import json, os, re
+          from pathlib import Path
+          request = Path('ci/device-signing-request.json')
+          original = json.loads(request.read_text()).get('reuseUnsignedArtifact') if request.exists() else None
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              if original is None:
+                  print('reuse=false', file=output)
+              else:
+                  for name in ['runId', 'artifactId']:
+                      if type(original.get(name)) is not int or original[name] <= 0:
+                          raise SystemExit('Invalid original build identity: ' + name)
+                  if not re.fullmatch('[0-9a-f]{64}', original.get('ipaSha256', '')):
+                      raise SystemExit('Invalid pinned original IPA hash')
+                  print('reuse=true', file=output)
+                  print('run_id=' + str(original['runId']), file=output)
+                  print('artifact_id=' + str(original['artifactId']), file=output)
+                  print('sha256=' + original['ipaSha256'], file=output)
+          PY
       - uses: subosito/flutter-action@v2
+        if: steps.original.outputs.reuse != 'true'
         with:
           flutter-version: '3.47.8'
           channel: stable
@@ -42,10 +66,12 @@ jobs:
       - name: 웹 공통 소스 확인
         run: python3 scripts/verify_ios_ipa.py --check-source
       - name: 의존성 복원
+        if: steps.original.outputs.reuse != 'true'
         run: |
           flutter config --no-enable-swift-package-manager
           flutter pub get --enforce-lockfile
       - uses: actions/cache@v4
+        if: steps.original.outputs.reuse != 'true'
         with:
           path: |
             ~/Library/Caches/CocoaPods
@@ -53,7 +79,19 @@ jobs:
             ios/Pods
           key: meokkiri-pods-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pubspec.lock', 'ios/Podfile') }}
       - name: iOS 기기용 release 앱 빌드
+        if: steps.original.outputs.reuse != 'true'
         run: flutter build ios --release --no-codesign --no-pub --dart-define-from-file=config/firebase.mkr-web.ios.json
+      - uses: actions/download-artifact@v4
+        if: steps.original.outputs.reuse == 'true'
+        with:
+          artifact-ids: ${{ steps.original.outputs.artifact_id }}
+          github-token: ${{ github.token }}
+          run-id: ${{ steps.original.outputs.run_id }}
+          path: build/unsigned-source
+          merge-multiple: true
+      - name: 검증된 원본 IPA 복원
+        if: steps.original.outputs.reuse == 'true'
+        run: python3 scripts/restore_unsigned_ios_app.py --directory build/unsigned-source --sha256 '${{ steps.original.outputs.sha256 }}'
       - name: 원래 앱 ID로 서명 및 Apple 로그인 권한 검증
         env:
           MEOKKIRI_IOS_CERTIFICATE_P12_BASE64: ${{ secrets.MEOKKIRI_IOS_CERTIFICATE_P12_BASE64 }}
