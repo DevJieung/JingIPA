@@ -261,15 +261,32 @@ class _PodLobbyState extends State<PodLobby> {
     }
   }
 
-  Widget _newRound() => FilledButton.icon(
-    key: const Key('new-pod-round'),
-    style: FilledButton.styleFrom(backgroundColor: orange),
-    onPressed: _busy || repo.isGuest || widget.channel!.members.length < 2
-        ? null
-        : () => _deadline(),
-    icon: const Icon(Icons.add_rounded),
-    label: const Text('새 라운드 열기 · 내가 라운드장'),
-  );
+  /// Always shown under the selected group. While a round is running it is
+  /// locked: lock icon, dark gray and not tappable.
+  Widget _newRound({required bool locked}) {
+    final button = FilledButton.icon(
+      key: const Key('new-pod-round'),
+      style: FilledButton.styleFrom(
+        backgroundColor: orange,
+        disabledBackgroundColor: locked ? lockedSurface : null,
+        disabledForegroundColor: locked ? Colors.white : null,
+        disabledIconColor: locked ? Colors.white : null,
+      ),
+      onPressed:
+          locked || _busy || repo.isGuest || widget.channel!.members.length < 2
+          ? null
+          : () => _deadline(),
+      icon: Icon(
+        locked ? Icons.lock_rounded : Icons.add_rounded,
+        key: Key(locked ? 'new-pod-round-locked' : 'new-pod-round-open'),
+      ),
+      label: const Text('새 라운드 열기 · 내가 라운드장'),
+    );
+    return locked
+        ? Tooltip(message: '진행 중인 라운드가 끝나면 새로 열 수 있어요.', child: button)
+        : button;
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = widget.channel;
@@ -342,20 +359,43 @@ class _PodLobbyState extends State<PodLobby> {
         Surface(
           key: const Key('selected-channel'),
           color: sageSurface,
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: Text(
-                  '선택한 모임: ${c.name}',
-                  style: const TextStyle(fontWeight: FontWeight.w800),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '선택한 모임: ${c.name}',
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  TextButton(
+                    key: const Key('change-channel'),
+                    onPressed: widget.onChangeChannel,
+                    child: const Text('모임 변경'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              _newRound(locked: open),
+              if (!open && repo.isGuest)
+                const Padding(
+                  padding: EdgeInsets.only(top: 10),
+                  child: Text(
+                    '라운드를 열려면 내 프로필에서 계정을 연결해 주세요.',
+                    style: TextStyle(fontSize: 12),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              TextButton(
-                key: const Key('change-channel'),
-                onPressed: widget.onChangeChannel,
-                child: const Text('모임 변경'),
-              ),
+              if (!open && c.members.length < 2)
+                const Padding(
+                  padding: EdgeInsets.only(top: 10),
+                  child: Text(
+                    '동료를 초대해 2명 이상 모이면 시작할 수 있어요.',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
             ],
           ),
         ),
@@ -396,32 +436,22 @@ class _PodLobbyState extends State<PodLobby> {
               const Surface(child: Text('만들어진 팟이 없어요.'))
             else
               _podCards(r, false),
-            const SizedBox(height: 20),
-          ],
-          Surface(
-            key: const Key('new-pods-section'),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Center(
-                  child: ElephantArt(size: 100, scene: ElephantScene.together),
-                ),
-                const Text('새 라운드를 열고 밥팟을 모아보세요.', textAlign: TextAlign.center),
-                const SizedBox(height: 16),
-                _newRound(),
-                if (repo.isGuest)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 12),
-                    child: Text('라운드를 열려면 내 프로필에서 계정을 연결해 주세요.'),
+          ] else
+            const Surface(
+              key: Key('new-pods-section'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: ElephantArt(
+                      size: 100,
+                      scene: ElephantScene.together,
+                    ),
                   ),
-                if (c.members.length < 2)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 12),
-                    child: Text('동료를 초대해 2명 이상 모이면 시작할 수 있어요.'),
-                  ),
-              ],
+                  Text('새 라운드를 열고 밥팟을 모아보세요.', textAlign: TextAlign.center),
+                ],
+              ),
             ),
-          ),
         ] else ...[
           Surface(
             key: const Key('new-pods-section'),
@@ -520,10 +550,9 @@ class _PodLobbyState extends State<PodLobby> {
                 ],
               ),
               const SizedBox(height: 12),
-              Text(
-                finalized
-                    ? '함께 갈 팟을 기다리는 동물 친구들이에요.'
-                    : '동물 친구들과 쉬다가 마음에 드는 밥집으로 들어가요.',
+              const Text(
+                '아직 팟에 합류하지 않은 동료들입니다.',
+                key: Key('waiting-room-caption'),
                 style: TextStyle(color: muted, fontSize: 12),
               ),
               if (open && mine != null) ...[
@@ -722,16 +751,78 @@ class _PodLobbyState extends State<PodLobby> {
       ? '🍽️ ${p.restaurantText ?? '식당 미정'}'
       : '${p.restaurant!.emoji} ${p.restaurant!.name}';
 
-  String _podStatus(LunchPod p, RoundView r, bool open) =>
-      '최소 ${p.minimum}명 · ${r.phase == RoundPhase.cancelled
-          ? '모집 취소'
-          : p.formed
-          ? open
-                ? '출발 준비 완료'
-                : '팟 성사'
-          : open
-          ? '${p.minimum - p.count}명 더 필요'
-          : '미성사'}';
+  String _podOutcome(LunchPod p, RoundView r, bool open) =>
+      r.phase == RoundPhase.cancelled
+      ? '모집 취소'
+      : p.formed
+      ? open
+            ? '출발 준비 완료'
+            : '팟 성사'
+      : open
+      ? '${p.minimum - p.count}명 더 필요'
+      : '미성사';
+
+  static const _podTagText = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+  );
+  static const _podTagPadding = EdgeInsets.symmetric(
+    horizontal: 10,
+    vertical: 5,
+  );
+  static const _podTagGap = 6.0;
+
+  /// `최소 #명` in the signboard color, then the outcome: green when formed
+  /// (or ready while recruiting), orange when short or not formed.
+  Widget _podTags(LunchPod p, RoundView r, bool open, bool archived) {
+    final cancelled = r.phase == RoundPhase.cancelled;
+    final (surface, ink) = archived || cancelled
+        ? (historySurface, historyInk)
+        : p.formed
+        ? (formedTagSurface, formedTagInk)
+        : (pendingTagSurface, pendingTagInk);
+    Widget tag(String text, Color color, Color foreground, Key key) =>
+        Container(
+          key: key,
+          padding: _podTagPadding,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(text, style: _podTagText.copyWith(color: foreground)),
+        );
+    return Wrap(
+      key: Key('pod-minimum-${p.id}'),
+      spacing: _podTagGap,
+      runSpacing: _podTagGap,
+      children: [
+        tag(
+          '최소 ${p.minimum}명',
+          archived ? historyCardSurface : shopSignSurface,
+          archived ? historyInk : forest,
+          Key('pod-minimum-tag-${p.id}'),
+        ),
+        tag(
+          _podOutcome(p, r, open),
+          surface,
+          ink,
+          Key('pod-outcome-tag-${p.id}'),
+        ),
+      ],
+    );
+  }
+
+  /// Height of [_podTags] at [width], wrapping to two lines when needed.
+  double _podTagsHeight(LunchPod p, RoundView r, bool open, double width) {
+    final sizes = [
+      for (final text in ['최소 ${p.minimum}명', _podOutcome(p, r, open)])
+        _podTextSize(text, _podTagText, width - _podTagPadding.horizontal) +
+            Offset(_podTagPadding.horizontal, _podTagPadding.vertical),
+    ];
+    return sizes[0].width + _podTagGap + sizes[1].width <= width
+        ? math.max(sizes[0].height, sizes[1].height)
+        : sizes[0].height + _podTagGap + sizes[1].height;
+  }
 
   List<TextStyle> _podStyles(bool archived) => [
     TextStyle(
@@ -741,12 +832,6 @@ class _PodLobbyState extends State<PodLobby> {
     ),
     TextStyle(color: archived ? historyInk : ink, fontWeight: FontWeight.w600),
     TextStyle(fontSize: 11, color: archived ? historyInk : muted),
-    TextStyle(fontSize: 12, color: archived ? historyInk : muted),
-    TextStyle(
-      color: archived ? historyInk : ink,
-      fontSize: archived ? 16 : 20,
-      fontWeight: FontWeight.w900,
-    ),
   ];
 
   Size _podTextSize(String text, TextStyle style, double width) {
@@ -787,14 +872,13 @@ class _PodLobbyState extends State<PodLobby> {
           const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
           double.infinity,
         );
-        heights = List.filled(5, 0);
+        heights = List.filled(4, 0);
         for (final p in r.pods) {
+          heights[3] = math.max(heights[3], _podTagsHeight(p, r, open, width));
           final texts = [
             p.name,
             _podRestaurant(p),
             p.temporaryRestaurant?.address ?? p.restaurant?.address ?? '',
-            _podStatus(p, r, open),
-            '${p.count}명 모임',
           ];
           for (var i = 0; i < texts.length; i++) {
             final height = texts[i].isEmpty
@@ -939,30 +1023,8 @@ class _PodLobbyState extends State<PodLobby> {
                           ),
                   ),
                   const SizedBox(height: 12),
-                  row(
-                    3,
-                    Text(
-                      _podStatus(p, r, open),
-                      key: Key('pod-minimum-${p.id}'),
-                      style: styles[3].copyWith(
-                        color: archived
-                            ? historyInk
-                            : p.formed
-                            ? forest
-                            : muted,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  row(
-                    4,
-                    Text(
-                      '${p.count}명 모임',
-                      key: Key('pod-count-${p.id}'),
-                      style: styles[4],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+                  row(3, _podTags(p, r, open, archived)),
+                  const SizedBox(height: 12),
                   SizedBox(
                     height: PodSeatingRoom.heightForWidth(roomWidth),
                     child: PodSeatingRoom(
@@ -1052,54 +1114,66 @@ class _PodLobbyState extends State<PodLobby> {
             const SizedBox(height: 12),
             const Divider(height: 1),
             const SizedBox(height: 12),
-            Text(
-              '같이 먹을 동료 · ${r.companions.length}명',
-              key: Key('my-companions-${r.id}'),
+            const Text(
+              '축하합니다~! 팟이 성사되었어요 🎉🎉',
+              key: Key('pod-formed-celebration'),
               style: heading,
             ),
-            const SizedBox(height: 8),
-            if (r.companions.isEmpty)
-              const Text(
-                '같은 팟의 동료가 없어요.',
-                style: TextStyle(color: muted, fontSize: 12),
-              )
-            else
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  // Plain pills: Material chips announce as checkboxes.
-                  for (final person in r.companions)
-                    Container(
-                      key: Key('companion-${person.id}'),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: sageSurface,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text.rich(
-                        TextSpan(
-                          children: [
-                            TextSpan(
-                              text: '${person.emoji} ',
-                              style: const TextStyle(
-                                fontFamily: 'NotoColorEmoji',
-                              ),
+            const SizedBox(height: 10),
+            Wrap(
+              key: Key('my-companions-${r.id}'),
+              spacing: 8,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(right: 4),
+                  child: Text(
+                    '함께 하는 동료',
+                    style: TextStyle(
+                      color: forest,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+                if (r.companions.isEmpty)
+                  const Text(
+                    '같은 팟의 동료가 없어요.',
+                    style: TextStyle(color: muted, fontSize: 12),
+                  ),
+                // Plain pills: Material chips announce as checkboxes.
+                for (final person in r.companions)
+                  Container(
+                    key: Key('companion-${person.id}'),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: sageSurface,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: '${person.emoji} ',
+                            style: const TextStyle(
+                              fontFamily: 'NotoColorEmoji',
                             ),
-                            TextSpan(text: person.name),
-                          ],
-                        ),
-                        style: const TextStyle(
-                          color: forest,
-                          fontWeight: FontWeight.w600,
-                        ),
+                          ),
+                          TextSpan(text: person.name),
+                        ],
+                      ),
+                      style: const TextStyle(
+                        color: forest,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                ],
-              ),
+                  ),
+              ],
+            ),
             if (r.finalPodJoined)
               const Padding(
                 padding: EdgeInsets.only(top: 10),

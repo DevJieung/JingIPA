@@ -8,6 +8,7 @@ import '../data/location_access.dart';
 import 'guest_join_dialog.dart';
 import '../domain/models.dart';
 import 'theme.dart';
+import 'app_banner_strip.dart';
 import 'feature_screens.dart';
 import 'profile_permissions.dart';
 import 'pod_lobby.dart';
@@ -277,6 +278,8 @@ class _AppShellState extends State<AppShell> {
                             ),
                           ),
                         ),
+                        if (!desktop && appBannerStripEnabled)
+                          const AppBannerStrip(),
                         if (!desktop) _navigation(),
                         if (_busy)
                           Semantics(

@@ -17,6 +17,13 @@ const historySurface = Color(0xFFE0E5E2);
 const historyCardSurface = Color(0xFFEBEEEC);
 const historyInk = Color(0xFF4F6057);
 const channelOpenSurface = Color(0xFFF1F4F2);
+// Locked actions (e.g. new round while one is running) read as unavailable.
+const lockedSurface = Color(0xFF5B635F);
+// Pod outcome tags on the storefront cards.
+const formedTagSurface = Color(0xFFD3EBDB);
+const formedTagInk = Color(0xFF1D5B3C);
+const pendingTagSurface = Color(0xFFFFE1C2);
+const pendingTagInk = Color(0xFF8F4310);
 const actionHeight = 54.0;
 
 ThemeData appTheme() => ThemeData(
