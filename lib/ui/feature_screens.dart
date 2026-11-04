@@ -885,15 +885,8 @@ class _SearchSheetState extends State<SearchSheet>
 }
 
 class FavoritesPanel extends StatelessWidget {
-  const FavoritesPanel({
-    required this.repository,
-    required this.onChoose,
-    this.channelName,
-    super.key,
-  });
+  const FavoritesPanel({required this.repository, super.key});
   final AppRepository repository;
-  final Future<void> Function(Restaurant) onChoose;
-  final String? channelName;
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: repository,
@@ -963,26 +956,10 @@ class FavoritesPanel extends StatelessWidget {
               ],
             ),
           ),
-        if (repository.favorites.isNotEmpty) ...[
-          Text(
-            '${repository.favorites.length}곳 저장',
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-          ),
-          if (channelName != null)
-            Text(
-              '식당을 누르면 이 식당으로 팟을 만들 수 있어요.',
-              style: const TextStyle(fontSize: 12, color: muted),
-            ),
-          const SizedBox(height: 16),
-        ],
         ResponsiveCards(
           children: [
             for (final r in repository.favorites)
-              RestaurantTile(
-                restaurant: r,
-                repository: repository,
-                onTap: () => onChoose(r),
-              ),
+              RestaurantTile(restaurant: r, repository: repository),
           ],
         ),
       ],
@@ -1526,7 +1503,7 @@ class TabHelpSheet extends StatelessWidget {
         ),
         (
           '없는 식당을 임시로 넣어요',
-          '팟 만들기의 식당 제보창에서 임시로 넣기 또는 그냥 제보만 하기를 골라요. 임시 사용은 팟 생성과 함께 접수되며 식당 옆에 [임시]로 표시해요. 공용 DB와 내 식당에는 자동 저장하지 않아요.',
+          '팟 만들기의 식당 검색에서 DB에 없는 식당을 제보하며 임시로 넣고 제보하기 또는 그냥 제보만 하기를 골라요. 임시로 넣으면 제보가 바로 접수되고 식당 옆에 [임시]로 표시해요. 공용 DB와 내 식당에는 자동 저장하지 않아요.',
         ),
         (
           '참석률과 프로참석러',

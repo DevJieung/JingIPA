@@ -322,35 +322,7 @@ class _AppShellState extends State<AppShell> {
     if (_tab == 1) return _today(channel);
     if (_tab == 0) return _channelList(channels);
     if (_tab == 3) return _profile();
-    return FavoritesPanel(
-      channelName: channel?.name,
-      repository: repo,
-      onChoose: (r) async {
-        if (channel == null) {
-          _message('먼저 채널을 선택해 주세요.');
-          return;
-        }
-        final round = repo.roundFor(channel.id);
-        if (round == null ||
-            ![
-              RoundPhase.submission,
-              RoundPhase.adjusting,
-            ].contains(round.phase)) {
-          _message('식당선택에서 라운드를 먼저 열어 주세요.');
-          return;
-        }
-        await featureSheet<void>(
-          context,
-          PodCreateForm(
-            repository: repo,
-            channel: channel,
-            initialRestaurant: r,
-            locationAccess: widget.locationAccess,
-          ),
-        );
-        if (mounted) setState(() => _tab = 1);
-      },
-    );
+    return FavoritesPanel(repository: repo);
   }
 
   void _selectTab(int index) {

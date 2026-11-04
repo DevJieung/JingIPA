@@ -87,14 +87,12 @@ class PodLobby extends StatefulWidget {
     required this.onChangeChannel,
     required this.onHelp,
     this.locationAccess = const LocationAccess(),
-    this.initialRestaurant,
     super.key,
   });
   final AppRepository repository;
   final LunchChannel? channel;
   final VoidCallback onChangeChannel, onHelp;
   final LocationAccess locationAccess;
-  final Restaurant? initialRestaurant;
   @override
   State<PodLobby> createState() => _PodLobbyState();
 }
@@ -102,13 +100,6 @@ class PodLobby extends StatefulWidget {
 class _PodLobbyState extends State<PodLobby> {
   AppRepository get repo => widget.repository;
   bool _busy = false;
-  @override
-  void initState() {
-    super.initState();
-    if (widget.initialRestaurant != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _create());
-    }
-  }
 
   Future<void> _run(Future<void> Function() action) async {
     if (_busy) return;
@@ -142,7 +133,6 @@ class _PodLobbyState extends State<PodLobby> {
         repository: repo,
         channel: c,
         locationAccess: widget.locationAccess,
-        initialRestaurant: widget.initialRestaurant,
       ),
     );
   }
@@ -399,17 +389,7 @@ class _PodLobbyState extends State<PodLobby> {
             ],
           ),
         ),
-        const SizedBox(height: 12),
-        Text(
-          open
-              ? '새로운 팟 · ${r.pods.length}개'
-              : finalized
-              ? '최종결과'
-              : '새로운 팟',
-          key: const Key('new-pods-heading'),
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         if (!open) ...[
           if (finalized) ...[
             Surface(
@@ -418,9 +398,19 @@ class _PodLobbyState extends State<PodLobby> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Tag('모집 마감', color: lime),
-                  const SizedBox(height: 8),
-                  Text('마감 ${podTime(r.endsAt)}'),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 6,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      const Tag('최종 결과', color: lime),
+                      Text(
+                        '마감 ${podTime(r.endsAt)}',
+                        key: const Key('final-cutoff-time'),
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 8),
                   const Text(
                     '새 라운드를 열기 전까지 최종결과를 여기서 확인할 수 있어요.',
@@ -499,10 +489,9 @@ class _PodLobbyState extends State<PodLobby> {
           const SizedBox(height: 20),
           if (r.pods.isEmpty)
             const Surface(
+              key: Key('empty-pods'),
               child: Column(
                 children: [
-                  ElephantArt(size: 100, scene: ElephantScene.together),
-                  SizedBox(height: 8),
                   Text(
                     '아직 팟이 없어요',
                     style: TextStyle(fontWeight: FontWeight.w800),
@@ -1059,11 +1048,14 @@ class _PodLobbyState extends State<PodLobby> {
     );
   }
 
-  /// The round's own status surface carries "현재 나의 상태": while recruiting
-  /// it shows the pod I am in; after the cutoff it lists the companions of my
-  /// formed pod, or offers the formed pods as a one-time last chance.
+  /// The round's own status surface. While recruiting it shows "현재 나의
+  /// 상태" with the pod I am in. After the cutoff a formed pod replaces that
+  /// heading with the celebration and lists the whole pod (me included) in
+  /// seat order, marking last-chance joiners as 합류; otherwise it offers the
+  /// formed pods as a one-time last chance.
   Widget _myStatus(RoundView r, LunchPod? mine) {
     final open = r.phase == RoundPhase.submission;
+    final formed = !open && mine != null && mine.formed;
     final formedPods = [
       for (final p in r.pods)
         if (p.formed) p,
@@ -1074,6 +1066,14 @@ class _PodLobbyState extends State<PodLobby> {
         ? '이번 라운드에 참여하지 않았어요'
         : '${mine.name} · ${mine.formed ? '팟 성사' : '최소 인원 미달'}';
     const heading = TextStyle(fontWeight: FontWeight.w800, color: forest);
+    final me = repo.user!;
+    final roster = [...r.companions];
+    if (formed) {
+      roster.insert((mine.ownSeatIndex ?? 0).clamp(0, roster.length), me);
+    }
+    bool joinedLate(AppUser person) => person.id == me.id
+        ? r.finalPodJoined
+        : r.finalJoinedIds.contains(person.id);
     return Container(
       key: const Key('my-status-box'),
       padding: const EdgeInsets.all(14),
@@ -1087,39 +1087,36 @@ class _PodLobbyState extends State<PodLobby> {
         children: [
           Row(
             children: [
-              EmojiAvatar(
-                repo.user!.emoji,
-                key: const Key('lobby-profile-emoji'),
-              ),
+              EmojiAvatar(me.emoji, key: const Key('lobby-profile-emoji')),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      '현재 나의 상태',
-                      style: TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                    Text(
-                      status,
-                      key: const Key('my-status-text'),
-                      style: const TextStyle(color: muted, fontSize: 12),
-                    ),
-                  ],
-                ),
+                child: formed
+                    ? Text(
+                        '축하합니다~! "${mine.name}" 팟이 성사되었어요 🎉🎉',
+                        key: const Key('pod-formed-celebration'),
+                        style: heading,
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            '현재 나의 상태',
+                            style: TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                          Text(
+                            status,
+                            key: const Key('my-status-text'),
+                            style: const TextStyle(color: muted, fontSize: 12),
+                          ),
+                        ],
+                      ),
               ),
             ],
           ),
-          if (!open && mine != null && mine.formed) ...[
+          if (formed) ...[
             const SizedBox(height: 12),
             const Divider(height: 1),
             const SizedBox(height: 12),
-            const Text(
-              '축하합니다~! 팟이 성사되었어요 🎉🎉',
-              key: Key('pod-formed-celebration'),
-              style: heading,
-            ),
-            const SizedBox(height: 10),
             Wrap(
               key: Key('my-companions-${r.id}'),
               spacing: 8,
@@ -1129,7 +1126,7 @@ class _PodLobbyState extends State<PodLobby> {
                 const Padding(
                   padding: EdgeInsets.only(right: 4),
                   child: Text(
-                    '함께 하는 동료',
+                    '우리팟 명단',
                     style: TextStyle(
                       color: forest,
                       fontWeight: FontWeight.w800,
@@ -1137,51 +1134,11 @@ class _PodLobbyState extends State<PodLobby> {
                     ),
                   ),
                 ),
-                if (r.companions.isEmpty)
-                  const Text(
-                    '같은 팟의 동료가 없어요.',
-                    style: TextStyle(color: muted, fontSize: 12),
-                  ),
                 // Plain pills: Material chips announce as checkboxes.
-                for (final person in r.companions)
-                  Container(
-                    key: Key('companion-${person.id}'),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: sageSurface,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: '${person.emoji} ',
-                            style: const TextStyle(
-                              fontFamily: 'NotoColorEmoji',
-                            ),
-                          ),
-                          TextSpan(text: person.name),
-                        ],
-                      ),
-                      style: const TextStyle(
-                        color: forest,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
+                for (final person in roster)
+                  _rosterPill(person, joinedLate: joinedLate(person)),
               ],
             ),
-            if (r.finalPodJoined)
-              const Padding(
-                padding: EdgeInsets.only(top: 10),
-                child: Text(
-                  '마지막 기회로 이 팟에 합류했어요.',
-                  style: TextStyle(color: muted, fontSize: 12),
-                ),
-              ),
           ] else if (r.canJoinFinalPod) ...[
             const SizedBox(height: 12),
             const Divider(height: 1),
@@ -1209,6 +1166,53 @@ class _PodLobbyState extends State<PodLobby> {
       ),
     );
   }
+
+  Widget _rosterPill(AppUser person, {required bool joinedLate}) => Container(
+    key: Key('companion-${person.id}'),
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    decoration: BoxDecoration(
+      color: sageSurface,
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '${person.emoji} ',
+                  style: const TextStyle(fontFamily: 'NotoColorEmoji'),
+                ),
+                TextSpan(text: person.name),
+              ],
+            ),
+            style: const TextStyle(color: forest, fontWeight: FontWeight.w600),
+          ),
+        ),
+        if (joinedLate) ...[
+          const SizedBox(width: 6),
+          Container(
+            key: Key('final-joined-${person.id}'),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: orange,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: const Text(
+              '합류',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
+      ],
+    ),
+  );
 
   Widget _finalChoice(LunchPod p) => OutlinedButton(
     key: Key('final-join-${p.id}'),
@@ -1335,7 +1339,7 @@ class _PodCreateFormState extends State<PodCreateForm> {
   final _restaurantText = TextEditingController();
   PodRestaurantMode _mode = PodRestaurantMode.catalog;
   final _form = GlobalKey<FormState>();
-  late Restaurant? _restaurant = widget.initialRestaurant;
+  Restaurant? _restaurant;
   TemporaryRestaurant? _temporary;
   final _requestId = DateTime.now().microsecondsSinceEpoch.toString();
   int _minimum = 2;
@@ -1505,7 +1509,7 @@ class _PodCreateFormState extends State<PodCreateForm> {
                           ),
                         if (_temporary != null)
                           const Text(
-                            '팟을 만들면 제보도 함께 접수해요. DB 등록 전까지 이 팟에서만 임시로 사용해요.',
+                            '제보를 접수했어요. DB 등록 전까지 이 팟에서만 임시로 사용해요.',
                             style: TextStyle(fontSize: 12, color: orange),
                           ),
                         if (field.hasError)
@@ -1533,30 +1537,6 @@ class _PodCreateFormState extends State<PodCreateForm> {
                       helperText: '입력한 내용은 이 팟에만 표시해요.',
                     ),
                   ),
-                TextButton.icon(
-                  key: const Key('report-pod-restaurant'),
-                  onPressed: _busy
-                      ? null
-                      : () async {
-                          final temporary =
-                              await featureSheet<TemporaryRestaurant>(
-                                context,
-                                RestaurantReportForm(
-                                  repository: widget.repository,
-                                  allowTemporary: true,
-                                ),
-                              );
-                          if (temporary != null && mounted) {
-                            setState(() {
-                              _temporary = temporary;
-                              _restaurant = null;
-                              _mode = PodRestaurantMode.catalog;
-                            });
-                          }
-                        },
-                  icon: const Icon(Icons.add_location_alt_outlined),
-                  label: const Text('DB에 없는 식당 제보·임시 사용'),
-                ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<int>(
                   key: const Key('pod-minimum'),
@@ -1616,6 +1596,37 @@ class _RestaurantReportFormState extends State<RestaurantReportForm> {
     super.dispose();
   }
 
+  /// Files the report now, then hands the place to the pod form for
+  /// temporary use. Report IDs derive from owner, name and address, so the
+  /// pod creation's own report for the same place is not duplicated.
+  Future<void> _useTemporaryAndReport() async {
+    if (!_form.currentState!.validate()) return;
+    final temporary = TemporaryRestaurant(
+      _name.text.trim(),
+      _address.text.trim(),
+    );
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await widget.repository.reportRestaurant(
+        temporary.name,
+        temporary.address,
+        '음식점',
+        note: '팟에서 임시 사용하며 제보한 식당',
+      );
+      if (mounted) Navigator.pop(context, temporary);
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _error = '$e';
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) => SafeArea(
     child: Padding(
@@ -1639,7 +1650,7 @@ class _RestaurantReportFormState extends State<RestaurantReportForm> {
               const SizedBox(height: 12),
               Text(
                 widget.allowTemporary
-                    ? '이번 팟에서 임시로 쓰거나 제보만 할 수 있어요. 임시 사용은 팟 생성과 함께 제보되며, 운영자 확인 전에는 공용 DB·내 식당에 저장되지 않아요.'
+                    ? '이번 팟에 임시로 넣으면서 제보하거나 제보만 할 수 있어요. 운영자 확인 전에는 공용 DB·내 식당에 저장되지 않아요.'
                     : '운영자가 확인해 DB에 등록한 뒤 검색·선택할 수 있어요.',
                 style: TextStyle(fontSize: 12, color: muted),
               ),
@@ -1667,19 +1678,8 @@ class _RestaurantReportFormState extends State<RestaurantReportForm> {
               if (widget.allowTemporary) ...[
                 FilledButton(
                   key: const Key('use-temporary-restaurant'),
-                  onPressed: _busy
-                      ? null
-                      : () {
-                          if (!_form.currentState!.validate()) return;
-                          Navigator.pop(
-                            context,
-                            TemporaryRestaurant(
-                              _name.text.trim(),
-                              _address.text.trim(),
-                            ),
-                          );
-                        },
-                  child: const Text('임시로 넣기'),
+                  onPressed: _busy ? null : _useTemporaryAndReport,
+                  child: const Text('임시로 넣고 제보하기'),
                 ),
                 const SizedBox(height: 8),
               ],

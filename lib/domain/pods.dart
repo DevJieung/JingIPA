@@ -215,6 +215,18 @@ class PodRoundData {
       );
     }
 
+    final mine = selections[uid];
+    final companions = open(now) || mine == null || !pods.containsKey(mine)
+        ? <AppUser>[]
+        : [
+            for (final person in orderedMembers(mine))
+              if (person != uid && channel.members.containsKey(person))
+                AppUser(
+                  person,
+                  channel.members[person]!,
+                  emoji: channel.memberEmojis[person] ?? '🐘',
+                ),
+          ];
     return RoundView(
       id: id,
       creatorId: creatorId,
@@ -255,17 +267,12 @@ class PodRoundData {
                 (finalized && !formedPodIds!.contains(selections[id])),
           )
           .length,
-      companions: open(now) || selections[uid] == null
-          ? []
-          : [
-              for (final e in channel.members.entries)
-                if (e.key != uid && selections[e.key] == selections[uid])
-                  AppUser(
-                    e.key,
-                    e.value,
-                    emoji: channel.memberEmojis[e.key] ?? '🐘',
-                  ),
-            ],
+      // Seat order, like the server; last-chance joiners are marked 합류.
+      companions: companions,
+      finalJoinedIds: {
+        for (final person in companions)
+          if (finalJoins[person.id] == selections[uid]) person.id,
+      },
     );
   }
 

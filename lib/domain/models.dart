@@ -220,6 +220,7 @@ class RoundView {
     this.undecidedCount = 0,
     this.undecidedColorCounts = const {},
     this.companions = const [],
+    this.finalJoinedIds = const {},
     this.lateJoinOptions = const [],
     this.lateJoinUsed = false,
     this.tokenEquipped = false,
@@ -245,6 +246,9 @@ class RoundView {
   final int undecidedCount;
   final Map<String, int> undecidedColorCounts;
   final List<AppUser> companions;
+
+  /// Companions who joined my formed pod as a last chance after the cutoff.
+  final Set<String> finalJoinedIds;
   final List<RestaurantCount> lateJoinOptions;
   final bool lateJoinUsed;
   final bool manualControl;
@@ -330,6 +334,10 @@ class RoundView {
     companions: (j['companions'] as List? ?? [])
         .map((e) => AppUser(e['id'], e['name'], emoji: e['emoji'] ?? '🐘'))
         .toList(),
+    finalJoinedIds: {
+      for (final e in j['companions'] as List? ?? [])
+        if (e['finalJoined'] == true) e['id'] as String,
+    },
   );
 }
 
