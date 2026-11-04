@@ -67,9 +67,9 @@ python3 scripts/verify_ios_ipa.py --ipa <경로> --signing device --report <JSON
 결과는 `meokkiri-signed-ipa-<버전>-<빌드>-<실행번호>` artifact입니다.
 등록된 기기에 Apple Configurator/Xcode 등의 서명 보존 설치 경로로 설치해 확인합니다.
 AltStore로 다시 서명하면 검증한 앱 ID와 서명이 바뀔 수 있으므로 그 결과를 동일시하지 않습니다.
-사용자가 제공한 인증서·기기 프로파일로 P12를 준비했으며, 아래 기록 시점에는
-GitHub Secrets 접근 권한이 없어 **서명 빌드와 실기기 Apple 로그인은 미검증**입니다.
-로컬의 정책 테스트 통과는 macOS에서의 실제 서명 성공을 의미하지 않습니다.
+Windows에서는 Sideloadly의 Advanced Options → Normal Install 모드로 서명된 IPA를 설치합니다.
+기본 Apple ID Sideload 모드는 다시 서명하므로 이 전달본의 검증된 서명을 유지하는 모드와 구분합니다.
+아래 완료 기록의 빌드/서명 검증과 **실제 iPhone 설치·Apple 로그인 완료**는 별도입니다.
 
 Mac에서 내보낸 P12가 없는 경우를 위해 2026-11-04에 RSA-2048/SHA-256 CSR
 `artifacts/meokkiri-ios-distribution-20261104.csr`를 만들고 요청 서명과 공개 키 일치를 확인했습니다.
@@ -94,8 +94,29 @@ iPhone을 선택한 Ad Hoc 프로파일도 받습니다. 내려받은 `.cer`의 
 현재 GitHub 인증으로 `/repos/DevJieung/JingIPA/actions/secrets/public-key`를 조회하면
 HTTP 403 `Resource not accessible by personal access token`이 반환되며 필요한 권한은
 `secrets=read`입니다. 따라서 연결된 인증으로 Actions Secrets를 설정할 수 없습니다.
-사용자가 저장소 Actions Secrets에 위 3개 이름으로 값을 등록하면 `meokkiri` 브랜치의
-서명 빌드를 진행합니다. 서명 입력이 준비된 상태와 실제 macOS 서명 성공은 구분합니다.
+사용자가 저장소 Actions Secrets에 위 3개 이름으로 값을 등록했고, CI에서 입력 복호화·인증서
+가져오기와 실제 서명을 완료했습니다. 이 연결의 Secrets 관리 권한과 CI의 소비 권한은 구분합니다.
+
+2026-11-04 [서명 실행 41845639448](https://github.com/DevJieung/JingIPA/actions/runs/41845639448)이
+성공했습니다. 기존 macOS 기기용 빌드 `41786939801`의 artifact `13303197522`를 재사용했고,
+IPA SHA-256 `99dd15f7d0838aa9ef3bbefd3b5ba65d80d0df71ffdeb29c3ab1459927be4b25`와
+현재 웹의 공통 소스 manifest 전체가 일치함을 확인했습니다. 재사용 요청은
+`ci/device-signing-request.json`의 `reuseUnsignedArtifact`에 원본 run/artifact ID와 IPA SHA-256을
+명시합니다. `scripts/restore_unsigned_ios_app.py`는 manifest 또는 파일 해시가 다르면 거부합니다.
+이 값이 없는 요청은 기존 전체 Flutter 컴파일 경로를 사용합니다.
+
+서명 과정에서는 임시 keychain을 사용자 검색 목록에 추가한 뒤 기존 목록을 복원합니다.
+`codesign`의 선택적 출력 prefix는 `--extract-certificates=<prefix>`처럼 묶고,
+ARM64를 명시해 XML entitlement와 leaf 인증서를 확인합니다.
+최종 IPA는 [artifact 13332140669](https://github.com/DevJieung/JingIPA/actions/runs/41845639448/artifacts/13332140669)의
+`meokkiri-0.20.3-40-ios-ad-hoc.ipa`, 24,686,980바이트이며 SHA-256은
+`9665f6744044c38607495c6b5a7405cc51be725f860dc7cdee0bec18048b8476`입니다.
+Mac에서 전체 코드 서명·프로파일·인증서 일치를 통과했고, 로컬에서도 artifact/IPA 해시,
+주 실행 파일의 CMS 서명과 코드 페이지 380개, Info.plist·리소스·XML/DER entitlement 해시,
+Apple 신뢰 프로파일과 권한, 기기용 ARM64 36개 슬라이스를 확인했습니다.
+실행 파일의 한 바이트를 바꾼 검증 입력은 코드 해시 검사에서 거부됐습니다.
+기록은 `artifacts/ios-signed-0.20.3-40-release.json` 및 같은 prefix의 remote/local validation입니다.
+실제 기기 설치와 Apple 계정 로그인 완료는 아직 검증하지 않았습니다.
 
 다음 배포에서는 웹과 같은 버전·소스로 APK·AAB·IPA를 함께 준비합니다.
 로컬 먹끼리 작업 공간에서 최신 웹 배포의 소스 manifest를 지정해 전용 checkout으로 복사합니다.
