@@ -1,0 +1,9 @@
+{
+  "requestedAt": "2026-11-04T14:00:28.138917+00:00",
+  "version": "0.20.3+40",
+  "reason": "Apple login AuthorizationError 1000: verify original bundle ID and device signing",
+  "teamId": "V4FGY5SRSX",
+  "bundleId": "com.meokkiri.meokkiri",
+  "sourceManifest": "ci/source-manifest.json",
+  "commonSourceSha256": "f063ddc9ef1a6ad4e774d8953931aaaf0ca14cbfdcc26d629ef1834ed7f7950b"
+}
