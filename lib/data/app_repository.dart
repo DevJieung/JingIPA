@@ -57,6 +57,8 @@ abstract class AppRepository extends ChangeNotifier {
       throw const LunchException('최종 팟 선택을 지원하지 않아요.');
   Future<void> leavePod(String channelId) =>
       throw const LunchException('대기실 이동을 지원하지 않아요.');
+  Future<void> setPodWatch(String channelId, String targetId) =>
+      throw const LunchException('알림 동료 지정을 지원하지 않아요.');
   Future<void> changePodDeadline(String channelId, DateTime endsAt) =>
       throw const LunchException('마감을 변경할 수 없어요.');
   List<LunchChannel> get channels;

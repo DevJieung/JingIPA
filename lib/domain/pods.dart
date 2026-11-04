@@ -124,10 +124,12 @@ class PodRoundData {
     this.formedPodIds,
     Map<String, String>? finalJoins,
     Map<String, List<String>>? podMemberOrder,
+    Map<String, String>? watches,
   }) : pods = pods ?? {},
        selections = selections ?? {},
        finalJoins = finalJoins ?? {},
-       podMemberOrder = podMemberOrder ?? {};
+       podMemberOrder = podMemberOrder ?? {},
+       watches = watches ?? {};
   final String id, creatorId;
   String? channelId;
   DateTime endsAt;
@@ -139,6 +141,9 @@ class PodRoundData {
   Map<String, String>? finalSelections;
   List<String>? formedPodIds;
   final Map<String, String> finalJoins;
+
+  /// Designator → 알림 동료, one per member per round.
+  final Map<String, String> watches;
   bool cancelled;
   DateTime? cancelledAt;
   bool open(DateTime now) => !cancelled && now.isBefore(endsAt);
@@ -273,6 +278,15 @@ class PodRoundData {
         for (final person in companions)
           if (finalJoins[person.id] == selections[uid]) person.id,
       },
+      watch: switch (watches[uid]) {
+        final target? when channel.members.containsKey(target) => PodWatch(
+          id: target,
+          name: channel.members[target]!,
+          emoji: channel.memberEmojis[target] ?? '🐘',
+          here: open(now) && mine != null && selections[target] == mine,
+        ),
+        _ => null,
+      },
     );
   }
 
@@ -300,6 +314,7 @@ class PodRoundData {
         ? null
         : List<String>.from(j['formedPodIds']),
     finalJoins: Map<String, String>.from(j['finalJoins'] ?? {}),
+    watches: Map<String, String>.from(j['watches'] ?? {}),
     cancelled: j['cancelled'] == true,
     cancelledAt: j['cancelledAt'] == null
         ? null
@@ -320,6 +335,7 @@ class PodRoundData {
     'finalSelections': finalSelections,
     'formedPodIds': formedPodIds,
     'finalJoins': finalJoins,
+    'watches': watches,
     'cancelled': cancelled,
     'cancelledAt': cancelledAt?.millisecondsSinceEpoch,
   };

@@ -221,6 +221,7 @@ class RoundView {
     this.undecidedColorCounts = const {},
     this.companions = const [],
     this.finalJoinedIds = const {},
+    this.watch,
     this.lateJoinOptions = const [],
     this.lateJoinUsed = false,
     this.tokenEquipped = false,
@@ -249,6 +250,7 @@ class RoundView {
 
   /// Companions who joined my formed pod as a last chance after the cutoff.
   final Set<String> finalJoinedIds;
+  final PodWatch? watch;
   final List<RestaurantCount> lateJoinOptions;
   final bool lateJoinUsed;
   final bool manualControl;
@@ -338,6 +340,28 @@ class RoundView {
       for (final e in j['companions'] as List? ?? [])
         if (e['finalJoined'] == true) e['id'] as String,
     },
+    watch: j['watch'] == null
+        ? null
+        : PodWatch.fromJson(Map<String, dynamic>.from(j['watch'] as Map)),
+  );
+}
+
+/// My 알림 동료 for the current round. Only I receive it; [here] is true
+/// while recruiting when that person sits in my pod (the pod shows a bell).
+class PodWatch {
+  const PodWatch({
+    required this.id,
+    required this.name,
+    this.emoji = '🐘',
+    this.here = false,
+  });
+  final String id, name, emoji;
+  final bool here;
+  factory PodWatch.fromJson(Map<String, dynamic> j) => PodWatch(
+    id: j['id'] as String,
+    name: j['name'] as String? ?? '',
+    emoji: j['emoji'] as String? ?? '🐘',
+    here: j['here'] == true,
   );
 }
 

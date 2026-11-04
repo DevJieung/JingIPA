@@ -1159,6 +1159,9 @@ class FirebaseRepository extends AppRepository with WidgetsBindingObserver {
   Future<void> leavePod(String channelId) =>
       _podCall('leavePod', channelId, {});
   @override
+  Future<void> setPodWatch(String channelId, String targetId) =>
+      _podCall('setPodWatch', channelId, {'targetId': targetId});
+  @override
   Future<void> changePodDeadline(String channelId, DateTime endsAt) => _podCall(
     'setRoundCutoffs',
     channelId,

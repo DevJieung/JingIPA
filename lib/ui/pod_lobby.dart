@@ -11,6 +11,7 @@ import 'round_cooldown_dialog.dart';
 import 'load_notice.dart';
 import 'pod_farm.dart';
 import 'pod_storefront.dart';
+import 'rewarded_ad_gate.dart';
 
 String podTime(DateTime t) =>
     '${t.month}/${t.day} ${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
@@ -910,6 +911,7 @@ class _PodLobbyState extends State<PodLobby> {
     List<double>? heights,
   }) {
     final selected = p.id == r.myPodId;
+    final bell = selected && open && !archived && r.watch?.here == true;
     final styles = _podStyles(archived);
     Widget row(int index, Widget child) => SizedBox(
       height: heights?[index],
@@ -926,124 +928,162 @@ class _PodLobbyState extends State<PodLobby> {
         color: archived ? historyCardSurface : Colors.white,
         borderRadius: BorderRadius.circular(22),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            PodAwning(archived: archived),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 2, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: archived ? historySurface : shopSignSurface,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: row(
-                      0,
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              p.name,
-                              style: styles[0].copyWith(
-                                color: archived ? historyInk : forest,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Visibility(
-                            visible: selected,
-                            maintainSize: true,
-                            maintainAnimation: true,
-                            maintainState: true,
-                            child: Tag(
-                              '내 팟',
-                              color: archived
-                                  ? historyCardSurface
-                                  : Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+      // The bell hangs over the awning so it never shifts the measured rows.
+      child: Stack(
+        children: [
+          _podBody(p, r, open, roomWidth, archived, selected, styles, row),
+          if (bell)
+            Positioned(
+              top: 6,
+              right: 10,
+              child: Semantics(
+                label: '알림 동료가 이 팟에 있어요',
+                child: Container(
+                  key: Key('pod-watch-bell-${p.id}'),
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: orange, width: 1.5),
                   ),
-                  const SizedBox(height: 10),
-                  row(
-                    1,
-                    p.temporaryRestaurant == null
-                        ? Text(_podRestaurant(p), style: styles[1])
-                        : Text.rich(
-                            TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: '🍽️ ${p.temporaryRestaurant!.name} ',
-                                ),
-                                TextSpan(
-                                  text: '[임시]',
-                                  style: TextStyle(
-                                    color: archived ? historyInk : orange,
-                                    backgroundColor: archived
-                                        ? historySurface
-                                        : peachSurface,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            style: styles[1],
-                          ),
+                  child: const Icon(
+                    Icons.notifications_active_rounded,
+                    size: 18,
+                    color: orange,
                   ),
-                  row(
-                    2,
-                    p.restaurant == null && p.temporaryRestaurant == null
-                        ? const SizedBox.shrink()
-                        : Text(
-                            p.temporaryRestaurant?.address ??
-                                p.restaurant!.address,
-                            style: styles[2],
-                          ),
-                  ),
-                  const SizedBox(height: 12),
-                  row(3, _podTags(p, r, open, archived)),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: PodSeatingRoom.heightForWidth(roomWidth),
-                    child: PodSeatingRoom(
-                      key: Key('pod-members-${p.id}'),
-                      minimum: p.minimum,
-                      count: p.count,
-                      selected: selected,
-                      emoji: repo.user!.emoji,
-                      occupantEmojis: p.occupantEmojis,
-                      ownSeatIndex: p.ownSeatIndex,
-                      archived: archived,
-                    ),
-                  ),
-                  if (open) ...[
-                    const SizedBox(height: 20),
-                    FilledButton(
-                      key: Key('join-${p.id}'),
-                      onPressed: selected || _busy
-                          ? null
-                          : () => _run(
-                              () => repo.joinPod(widget.channel!.id, p.id),
-                            ),
-                      child: Text(selected ? '✓ 내 팟' : '이 팟에 참여'),
-                    ),
-                  ],
-                ],
+                ),
               ),
             ),
-          ],
-        ),
+        ],
+      ),
+    );
+  }
+
+  Widget _podBody(
+    LunchPod p,
+    RoundView r,
+    bool open,
+    double roomWidth,
+    bool archived,
+    bool selected,
+    List<TextStyle> styles,
+    Widget Function(int, Widget) row,
+  ) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          PodAwning(archived: archived),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 2, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: archived ? historySurface : shopSignSurface,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: row(
+                    0,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            p.name,
+                            style: styles[0].copyWith(
+                              color: archived ? historyInk : forest,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Visibility(
+                          visible: selected,
+                          maintainSize: true,
+                          maintainAnimation: true,
+                          maintainState: true,
+                          child: Tag(
+                            '내 팟',
+                            color: archived ? historyCardSurface : Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                row(
+                  1,
+                  p.temporaryRestaurant == null
+                      ? Text(_podRestaurant(p), style: styles[1])
+                      : Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: '🍽️ ${p.temporaryRestaurant!.name} ',
+                              ),
+                              TextSpan(
+                                text: '[임시]',
+                                style: TextStyle(
+                                  color: archived ? historyInk : orange,
+                                  backgroundColor: archived
+                                      ? historySurface
+                                      : peachSurface,
+                                ),
+                              ),
+                            ],
+                          ),
+                          style: styles[1],
+                        ),
+                ),
+                row(
+                  2,
+                  p.restaurant == null && p.temporaryRestaurant == null
+                      ? const SizedBox.shrink()
+                      : Text(
+                          p.temporaryRestaurant?.address ??
+                              p.restaurant!.address,
+                          style: styles[2],
+                        ),
+                ),
+                const SizedBox(height: 12),
+                row(3, _podTags(p, r, open, archived)),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: PodSeatingRoom.heightForWidth(roomWidth),
+                  child: PodSeatingRoom(
+                    key: Key('pod-members-${p.id}'),
+                    minimum: p.minimum,
+                    count: p.count,
+                    selected: selected,
+                    emoji: repo.user!.emoji,
+                    occupantEmojis: p.occupantEmojis,
+                    ownSeatIndex: p.ownSeatIndex,
+                    archived: archived,
+                  ),
+                ),
+                if (open) ...[
+                  const SizedBox(height: 20),
+                  FilledButton(
+                    key: Key('join-${p.id}'),
+                    onPressed: selected || _busy
+                        ? null
+                        : () => _run(
+                            () => repo.joinPod(widget.channel!.id, p.id),
+                          ),
+                    child: Text(selected ? '✓ 내 팟' : '이 팟에 참여'),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1113,6 +1153,7 @@ class _PodLobbyState extends State<PodLobby> {
               ),
             ],
           ),
+          if (open) ...[const SizedBox(height: 10), _watchRow(r)],
           if (formed) ...[
             const SizedBox(height: 12),
             const Divider(height: 1),
@@ -1165,6 +1206,94 @@ class _PodLobbyState extends State<PodLobby> {
         ],
       ),
     );
+  }
+
+  /// While recruiting: pick one 알림 동료 per round, or show who it is.
+  Widget _watchRow(RoundView r) {
+    final watch = r.watch;
+    if (watch == null) {
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: OutlinedButton.icon(
+          key: const Key('pod-watch-open'),
+          onPressed: _busy ? null : _chooseWatch,
+          icon: const Icon(Icons.notifications_none_rounded, size: 18),
+          label: const Text('알림 동료 지정'),
+        ),
+      );
+    }
+    return Row(
+      key: const Key('pod-watch-status'),
+      children: [
+        Icon(
+          watch.here
+              ? Icons.notifications_active_rounded
+              : Icons.notifications_none_rounded,
+          size: 18,
+          color: watch.here ? orange : muted,
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text.rich(
+            TextSpan(
+              children: [
+                const TextSpan(text: '알림 동료 '),
+                TextSpan(
+                  text: '${watch.emoji} ',
+                  style: const TextStyle(fontFamily: 'NotoColorEmoji'),
+                ),
+                TextSpan(
+                  text: watch.name,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ],
+            ),
+            style: const TextStyle(color: forest, fontSize: 13),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _chooseWatch() async {
+    final c = widget.channel!;
+    final me = repo.user!.id;
+    final person = await featureSheet<AppUser>(
+      context,
+      _WatchPicker(
+        people: [
+          for (final e in c.members.entries)
+            if (e.key != me)
+              AppUser(e.key, e.value, emoji: c.memberEmojis[e.key] ?? '🐘'),
+        ],
+      ),
+    );
+    if (person == null || !mounted) return;
+    const ads = RewardedAdGate();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        key: const Key('pod-watch-confirm'),
+        title: Text('${person.name} 님을 알림 동료로 지정할까요?'),
+        content: const Text(
+          '이 동료가 내 팟에 들어오면 내 팟에 🔔가 표시돼요. 라운드마다 한 명만 지정할 수 있고 이번 라운드에는 바꿀 수 없어요. 상대에게는 알리지 않아요.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            key: const Key('pod-watch-yes'),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(ads.configured ? '광고 보고 지정하기' : '지정하기'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    if (!await ads.show(context) || !mounted) return;
+    await _run(() => repo.setPodWatch(c.id, person.id));
   }
 
   Widget _rosterPill(AppUser person, {required bool joinedLate}) => Container(
@@ -1724,6 +1853,51 @@ class _RestaurantReportFormState extends State<RestaurantReportForm> {
             ],
           ),
         ),
+      ),
+    ),
+  );
+}
+
+class _WatchPicker extends StatelessWidget {
+  const _WatchPicker({required this.people});
+  final List<AppUser> people;
+  @override
+  Widget build(BuildContext context) => ConstrainedBox(
+    constraints: BoxConstraints(
+      maxHeight: MediaQuery.sizeOf(context).height * .75,
+    ),
+    child: Padding(
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('알림 동료 지정', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8),
+          const Text(
+            '고른 동료가 내 팟에 들어오면 내 팟에 🔔가 표시돼요. 라운드마다 한 명이에요.',
+            style: TextStyle(color: muted, fontSize: 12),
+          ),
+          const SizedBox(height: 12),
+          if (people.isEmpty)
+            const Text('지정할 수 있는 동료가 없어요.', style: TextStyle(color: muted))
+          else
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (final person in people)
+                    ListTile(
+                      key: Key('pod-watch-pick-${person.id}'),
+                      contentPadding: EdgeInsets.zero,
+                      leading: EmojiAvatar(person.emoji),
+                      title: Text(person.name),
+                      onTap: () => Navigator.pop(context, person),
+                    ),
+                ],
+              ),
+            ),
+        ],
       ),
     ),
   );

@@ -563,6 +563,25 @@ class DemoRepository extends AppRepository {
   }
 
   @override
+  Future<void> setPodWatch(String channelId, String targetId) async {
+    final channel = _channel(channelId);
+    final r = _podRounds[channel.roundId];
+    if (r == null || !r.open(now)) {
+      throw const LunchException('모집 중에만 알림 동료를 지정할 수 있어요.');
+    }
+    if (targetId == user!.id || !channel.members.containsKey(targetId)) {
+      throw const LunchException('알림 동료를 다시 선택해 주세요.');
+    }
+    final current = r.watches[user!.id];
+    if (current == targetId) return;
+    if (current != null) {
+      throw const LunchException('이번 라운드의 알림 동료는 이미 지정했어요.');
+    }
+    r.watches[user!.id] = targetId;
+    await _save();
+  }
+
+  @override
   Future<void> changePodDeadline(String channelId, DateTime endsAt) async {
     final r = _openPod(channelId);
     if (r.creatorId != user!.id) {
