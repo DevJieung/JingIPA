@@ -1,9 +1,14 @@
 {
-  "requestedAt": "2026-11-04T14:00:28.138917+00:00",
+  "requestedAt": "2026-11-04T14:09:43.321733+00:00",
   "version": "0.20.3+40",
   "reason": "Apple login AuthorizationError 1000: verify original bundle ID and device signing",
   "teamId": "V4FGY5SRSX",
   "bundleId": "com.meokkiri.meokkiri",
   "sourceManifest": "ci/source-manifest.json",
-  "commonSourceSha256": "f063ddc9ef1a6ad4e774d8953931aaaf0ca14cbfdcc26d629ef1834ed7f7950b"
+  "commonSourceSha256": "f063ddc9ef1a6ad4e774d8953931aaaf0ca14cbfdcc26d629ef1834ed7f7950b",
+  "reuseUnsignedArtifact": {
+    "runId": 41786939801,
+    "artifactId": 13303197522,
+    "ipaSha256": "99dd15f7d0838aa9ef3bbefd3b5ba65d80d0df71ffdeb29c3ab1459927be4b25"
+  }
 }
