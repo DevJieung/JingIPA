@@ -14,7 +14,9 @@ concurrency:
 
 jobs:
   ipa:
-    runs-on: macos-latest
+    # Avoid the macOS ARM64 pool that failed to acquire a runner for release 40.
+    # The host is Intel; flutter build ios still produces a device ARM64 app.
+    runs-on: macos-15-intel
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
@@ -28,6 +30,7 @@ jobs:
       - name: 빌드 환경 확인
         run: |
           sw_vers
+          uname -m
           xcodebuild -version
           flutter --version
       - name: 웹 공통 소스 확인

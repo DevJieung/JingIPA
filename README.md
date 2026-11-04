@@ -3,7 +3,7 @@
 GitHub 저장소는 https://github.com/DevJieung/JingIPA 이며, 먹끼리 소스와 빌드는
 전용 `meokkiri` 브랜치에서 관리합니다. 다른 앱의 브랜치와 워크플로는 유지합니다.
 
-`meokkiri` 브랜치에 push하면 `.github/workflows/meokkiri-ios.yml`이 macOS 러너에서
+`meokkiri` 브랜치에 push하면 `.github/workflows/meokkiri-ios.yml`이 `macos-15-intel` 러너에서
 Flutter 3.47.8로 iOS 기기용 release AOT 앱을 빌드합니다. 빌드 전에는
 `ci/source-manifest.json`으로 현재 웹과 공통인 Dart·자산·의존성 파일의 해시를 검사합니다.
 Firebase는 운영 `mkr-web`의 `com.meokkiri.meokkiri` iOS 앱 설정을 사용합니다.
@@ -35,3 +35,13 @@ python3 scripts/export_ipa_source.py \
 사용합니다. 복사 내용을 검토하고 커밋한 뒤 `git push origin meokkiri`를 실행합니다.
 GitHub 인증은 이 환경에 이미 구성된 Git credential helper를 사용하며 토큰은 출력하지 않습니다.
 빌드가 끝나면 IPA를 내려받아 내용을 검증하고 관측한 Actions·artifact 링크를 전달합니다.
+
+2026-11-04에 확인한 `0.20.3+40`의 첫 실행
+([41672967295](https://github.com/DevJieung/JingIPA/actions/runs/41672967295))은
+macOS ARM64 러너 수용량 부족으로 작업을 배정받지 못해 약 15분 뒤 실패했습니다.
+실행 단계와 컴파일 로그가 없었으며, check annotation에
+`The job was not acquired by Runner of type hosted even after multiple attempts`가 기록됐습니다.
+따라서 `macos-latest` 대신 GitHub가 제공하는 `macos-15-intel`로 빌드 호스트를 고정합니다.
+([공식 러너 목록](https://github.com/actions/runner-images))
+호스트 아키텍처와 별개로 결과는 기존과 같은 iPhone/iPad 기기용 ARM64 release AOT이며,
+워크플로와 로컬 검증에서 IPA의 아키텍처를 확인합니다. 앱 버전과 웹 공통 소스는 변경하지 않습니다.
