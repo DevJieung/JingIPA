@@ -18,7 +18,7 @@ jobs:
     # Avoid the macOS ARM64 pool that failed to acquire a runner for release 40.
     # The host is Intel; flutter build ios still produces a device ARM64 app.
     runs-on: macos-15-intel
-    timeout-minutes: 45
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
         with:
