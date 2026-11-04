@@ -1,4 +1,4 @@
-"""Verify shared release sources and an unsigned, device ARM64 Flutter IPA."""
+"""Verify shared release sources and a device ARM64 Flutter IPA."""
 
 import argparse
 import hashlib
@@ -56,7 +56,9 @@ def verify_source():
     return source, config
 
 
-def verify_ipa(path):
+def verify_ipa(path, *, signing='unsigned'):
+    if signing not in {'unsigned', 'device'}:
+        raise ValueError('Unsupported IPA signing mode.')
     source, config = verify_source()
     version, build = re.search(
         r'^version:\s*(\S+)\+(\d+)\s*$', (ROOT / 'pubspec.yaml').read_text(), re.M,
@@ -91,8 +93,17 @@ def verify_ipa(path):
         garden = 'assets/brand/waiting-garden-v1.webp'
         if hashlib.sha256(archive.read(assets + garden)).hexdigest() != source['files'][garden]:
             raise RuntimeError('Garden illustration differs from the web release.')
-        if prefix + '_CodeSignature/CodeResources' in names or prefix + 'embedded.mobileprovision' in names:
+        has_signing_data = (prefix + '_CodeSignature/CodeResources' in names
+                            or prefix + 'embedded.mobileprovision' in names)
+        if signing == 'unsigned' and has_signing_data:
             raise RuntimeError('This workflow must report an unsigned IPA; unexpected signing data found.')
+        if signing == 'device' and not has_signing_data:
+            raise RuntimeError('Device-signed IPA has no signing data.')
+    signing_report = {'signing': 'unsigned', 'signatureCryptographicallyVerified': False,
+                      'appleSignInEntitlementVerified': False}
+    if signing == 'device':
+        from ios_device_signing import verify_signed_ipa
+        signing_report = verify_signed_ipa(path)
     return {
         'status': 'passed', 'verifiedAt': datetime.now(timezone.utc).isoformat(),
         'file': path.name, 'sizeBytes': path.stat().st_size,
@@ -100,7 +111,7 @@ def verify_ipa(path):
         'versionName': version, 'versionCode': int(build),
         'bundleId': info['CFBundleIdentifier'], 'deviceFamilies': info.get('UIDeviceFamily'),
         'minimumOSVersion': info.get('MinimumOSVersion'), 'architecture': 'arm64',
-        'buildMode': 'release', 'releaseAotVerified': True, 'signing': 'unsigned',
+        'buildMode': 'release', 'releaseAotVerified': True, **signing_report,
         'firebaseProject': config['FIREBASE_PROJECT_ID'], 'firebaseAppId': config['FIREBASE_APP_ID'],
         'sameClientSourceVerified': True, 'sourceFilesVerified': len(source['files']),
         'commonSourceSha256': source['commonSourceSha256'], 'gardenAssetVerified': True,
@@ -113,12 +124,13 @@ def main():
     parser.add_argument('--check-source', action='store_true')
     parser.add_argument('--ipa', type=Path)
     parser.add_argument('--report', type=Path)
+    parser.add_argument('--signing', choices=['unsigned', 'device'], default='unsigned')
     args = parser.parse_args()
     if args.check_source:
         source, _ = verify_source()
         print('Verified shared web source files:', len(source['files']))
     if args.ipa:
-        report = verify_ipa(args.ipa)
+        report = verify_ipa(args.ipa, signing=args.signing)
         if args.report:
             args.report.parent.mkdir(parents=True, exist_ok=True)
             args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')

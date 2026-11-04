@@ -21,6 +21,55 @@ IPA와 함께 버전·번들 ID·ARM64·AOT·Firebase 앱 ID·공통 소스·정
 Sideloadly 또는 AltStore에서 본인의 Apple ID로 서명해 설치해야 합니다.
 App Store·TestFlight 배포와 Apple 로그인·Push의 실제 iOS 기기 동작은 별도 검증입니다.
 
+2026-11-04 iPhone에서 Apple 로그인 `AuthorizationError 1000`이 보고됐습니다.
+사용자는 유료 개발자 계정의 Team ID가 `V4FGY5SRSX`임을 확인했고,
+`identifier.png`에는 AltStore용 `com.meokkiri.meokkiri.V4FGY5SRSX`와
+원래 `com.meokkiri.meokkiri`가 각각 등록돼 있습니다.
+사용자는 AltStore용 ID를 기존 기본 앱과 그룹화하고 Refresh한 뒤에도 같은 1000을 확인했습니다.
+1000은 원인을 특정하는 코드가 아니므로 그룹화만으로 해결됐다고 판단하지 않습니다.
+설치본의 실제 서명 entitlement와 프로파일을 확보하지 못해 누락 여부는 미확정입니다.
+Apple의 기기 인증 실패와 이후 Firebase 토큰 검증 실패도 구분합니다.
+
+원래 앱 ID를 유지한 개발자 서명을 검증하려면 별도
+`.github/workflows/meokkiri-ios-signed.yml`을 사용합니다. 기존 unsigned 워크플로는 유지합니다.
+이 경로는 App Store용 export가 아닌 **development/ad hoc 기기 설치용**입니다.
+GitHub 저장소 Settings → Secrets and variables → Actions에 다음 repository secrets를 설정합니다.
+
+| Secret | 값 |
+| --- | --- |
+| `MEOKKIRI_IOS_CERTIFICATE_P12_BASE64` | 개인 키가 포함된 유효한 Apple 서명 인증서 `.p12`의 base64 |
+| `MEOKKIRI_IOS_CERTIFICATE_PASSWORD` | 위 `.p12`의 암호. 암호 없는 P12는 빈 값 |
+| `MEOKKIRI_IOS_PROFILE_BASE64` | 아래 조건을 충족한 `.mobileprovision`의 base64 |
+
+프로파일은 Team `V4FGY5SRSX`, App ID `com.meokkiri.meokkiri`의 명시적
+development 또는 ad hoc 프로파일이어야 합니다. Sign in with Apple을 활성화한 뒤
+프로파일을 재생성하고 테스트할 iPhone을 포함해야 합니다. `.p12`의 인증서와 개인 키는
+해당 프로파일에 허용된 인증서와 일치해야 합니다.
+기존 Sign in with Apple `.p8` 키와 Team ID는 앱 설치용 서명 자격 증명을 대신하지 않습니다.
+서명 파일이나 base64·암호를 채팅·소스·공개 artifact에 넣지 않습니다.
+
+빌드는 기존 웹과 같은 source manifest를 export한 전용 `meokkiri` checkout에서 실행합니다.
+기본 브랜치가 다른 앱의 `main`이므로 새 워크플로를 등록하려고 그 브랜치를 수정하지 않습니다.
+서명 secrets를 설정한 후 `ci/device-signing-request.json`에 요청 시각을 기록해
+`meokkiri`에 push하면 별도 서명 워크플로가 실행됩니다. GitHub에서 수동 실행이 제공되는
+경우에도 반드시 `meokkiri` ref를 지정합니다. 입력이 없으면 즉시 실패하며 unsigned 파일로
+대체해 성공 처리하지 않습니다.
+
+`scripts/ios_device_signing.py`는 임시 keychain에 인증서를 가져오고 중첩 framework와 앱을
+서명한 뒤, `codesign --verify --deep --strict`와 앱/프로파일/인증서 일치를 확인합니다.
+프로파일의 wildcard keychain 권한은 먹끼리의 기본 그룹으로 좁히고, 앱 소스가 요청하지 않은
+기능은 추가하지 않습니다. IPA로 패키징한 후에도 다음 명령으로 macOS에서 다시 검사합니다.
+
+```bash
+python3 scripts/verify_ios_ipa.py --ipa <경로> --signing device --report <JSON경로>
+```
+
+결과는 `meokkiri-signed-ipa-<버전>-<빌드>-<실행번호>` artifact입니다.
+등록된 기기에 Apple Configurator/Xcode 등의 서명 보존 설치 경로로 설치해 확인합니다.
+AltStore로 다시 서명하면 검증한 앱 ID와 서명이 바뀔 수 있으므로 그 결과를 동일시하지 않습니다.
+인증서·기기 프로파일이 아직 없어 **서명 빌드와 실기기 Apple 로그인은 미검증**입니다.
+로컬의 정책 테스트 통과는 macOS에서의 실제 서명 성공을 의미하지 않습니다.
+
 다음 배포에서는 웹과 같은 버전·소스로 APK·AAB·IPA를 함께 준비합니다.
 로컬 먹끼리 작업 공간에서 최신 웹 배포의 소스 manifest를 지정해 전용 checkout으로 복사합니다.
 
