@@ -1015,8 +1015,18 @@ class FirebaseRepository extends AppRepository with WidgetsBindingObserver {
               'account-exists-with-different-credential',
             ].contains(error.code)
         ? '이미 가입된 계정이에요. 다른 계정을 연결하거나 라운드를 마친 뒤 기존 계정으로 로그인해 주세요. 비회원 참여 기록은 그대로 유지돼요.'
+        : error.code == 'account-exists-with-different-credential'
+        ? '같은 이메일로 다른 로그인 방법(Google 또는 Apple)으로 가입된 계정이 있어요. 처음 가입한 방법으로 로그인해 주세요.'
         : error.message ?? '로그인을 완료하지 못했어요.',
   );
+
+  // Apple shares the e-mail only when it is requested; without it the account
+  // has no e-mail and a later Google sign-in with the same address cannot be
+  // recognised as the same person.
+  AppleAuthProvider _appleProvider() =>
+      AppleAuthProvider()
+        ..addScope('email')
+        ..addScope('name');
 
   @override
   Future<void> signInGoogle() async {
@@ -1056,12 +1066,12 @@ class FirebaseRepository extends AppRepository with WidgetsBindingObserver {
       late final UserCredential result;
       if (kIsWeb) {
         result = guest != null
-            ? await guest.linkWithPopup(AppleAuthProvider())
-            : await _auth.signInWithPopup(AppleAuthProvider());
+            ? await guest.linkWithPopup(_appleProvider())
+            : await _auth.signInWithPopup(_appleProvider());
       } else {
         result = guest != null
-            ? await guest.linkWithProvider(AppleAuthProvider())
-            : await _auth.signInWithProvider(AppleAuthProvider());
+            ? await guest.linkWithProvider(_appleProvider())
+            : await _auth.signInWithProvider(_appleProvider());
       }
       await _completeSignIn(result, linking: guest != null);
     } on FirebaseAuthException catch (e) {

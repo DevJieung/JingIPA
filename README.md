@@ -13,6 +13,9 @@ CocoaPods용 SDK 버전을 그대로 사용하며 웹·Android의 Dart 의존성
 `config/firebase.mkr-web.ios.json`과 `GoogleService-Info.plist`는 앱의 공개 SDK 설정이며,
 서비스 계정 키·Apple 개인 키·업로드 인증서는 포함하지 않습니다.
 
+2026-11-05 기준 `macos-15-intel`의 기기용 release 빌드 단계만 43~47분이 걸려 job 제한을 90분으로 둡니다.
+45분 제한이던 release 44는 IPA 업로드까지 마친 뒤 시간 초과로 `cancelled` 표시됐으므로, 결론만 보지 말고 Artifacts와 단계별 결과를 함께 확인합니다.
+
 결과는 실행 화면의 Artifacts에 `meokkiri-ipa-<버전>-<빌드>-<실행번호>`로 보관합니다.
 IPA와 함께 버전·번들 ID·ARM64·AOT·Firebase 앱 ID·공통 소스·정원 자산 검증 결과를 제공합니다.
 로컬로 받은 IPA도 `python3 scripts/verify_ios_ipa.py --ipa <경로> --report <JSON경로>`로 검사합니다.
