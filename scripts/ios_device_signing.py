@@ -32,7 +32,13 @@ def command(*args):
     # subprocess exceptions, or arbitrary tool output in build logs.
     result = subprocess.run(args, capture_output=True)
     if result.returncode:
-        raise RuntimeError(Path(args[0]).name + ' failed; sensitive output withheld.')
+        stage = Path(args[0]).name + ' ' + args[1]
+        known_errors = ['MAC verification failed', 'User interaction is not allowed',
+                        'errSecInternalComponent', 'The specified item could not be found',
+                        'code object is not signed at all', 'a sealed resource is missing or invalid']
+        output = (result.stdout + result.stderr).decode(errors='replace')
+        reason = next((error for error in known_errors if error in output), 'sensitive output withheld')
+        raise RuntimeError(stage + ' failed: ' + reason)
     return result.stdout
 
 

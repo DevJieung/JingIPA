@@ -3,6 +3,7 @@ name: 먹끼리 iOS IPA
 on:
   push:
     branches: [meokkiri]
+    paths-ignore: [ci/device-signing-request.json]
   workflow_dispatch:
 
 permissions:
