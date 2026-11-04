@@ -1,5 +1,5 @@
 {
-  "requestedAt": "2026-11-04T14:09:43.321733+00:00",
+  "requestedAt": "2026-11-04T14:11:48.986281+00:00",
   "version": "0.20.3+40",
   "reason": "Apple login AuthorizationError 1000: verify original bundle ID and device signing",
   "teamId": "V4FGY5SRSX",
@@ -10,5 +10,6 @@
     "runId": 41786939801,
     "artifactId": 13303197522,
     "ipaSha256": "99dd15f7d0838aa9ef3bbefd3b5ba65d80d0df71ffdeb29c3ab1459927be4b25"
-  }
+  },
+  "signingAttempt": 2
 }
