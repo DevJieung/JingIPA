@@ -1,5 +1,5 @@
 {
-  "version": "0.20.3+40",
+  "version": "0.20.4+41",
   "files": {
     "assets/brand/icon.svg": "5926f5b0543f29b36a2b19a4170c1ecc760053abcc9ae1a6d3ea23138f20d16d",
     "assets/brand/waiting-garden-source.json": "3a7fe39c3c3fd99bd78605c43b0fb3e8da220acbcafd44855ddec68b7a47eb75",
@@ -37,7 +37,7 @@
     "lib/ui/location_consent_dialog.dart": "9a885004b629f04c4c372bf5cbb1152bcf72906132666975ba73a5162df24258",
     "lib/ui/name_guide.dart": "7f6cbc746c069d5d38fce0d0d863b8643a5e15c9861926a51518e2066c4e2fe2",
     "lib/ui/pod_farm.dart": "88c18fa73a83869efb59af64872093eae008f9b6c2d61ae3756695eb90e6ae81",
-    "lib/ui/pod_lobby.dart": "df20040253b944e05e75bd7b10c970d2d6b1bb996f3a080936d54220a001ebe4",
+    "lib/ui/pod_lobby.dart": "444dd3a3352b42bd9e1ff956e2fb5e5acbdadd16550e7c66bd56fa01590a3e47",
     "lib/ui/pod_storefront.dart": "802a187b24b4d08e50cd59a3a1127ca31fe79ee394325d7e5978f9c84fbede5e",
     "lib/ui/profile_editor.dart": "e8628267e480e2a422e3bc9bfc7a238ea3fc45ad1070f8d1b792b416a2e89e0c",
     "lib/ui/profile_permissions.dart": "02815aacb103302ae529a5f83ff7f1536c0a832769f9dc2e42aa60a20591b8fe",
@@ -46,8 +46,8 @@
     "lib/ui/round_cutoff_form.dart": "066dbff8cf18bc9e5f49b3c96eec911744073e61ebb5c64f48ae20f83e4d7e67",
     "lib/ui/theme.dart": "dbd699e38ca697edf4a9cfe97e8af0aa9976afef57f11c742bda76511c809c78",
     "pubspec.lock": "2adbb9a769b77ec7e431e3d13ac86ed9c3e6a007f82c94823f05ad7daf974f51",
-    "pubspec.yaml": "bfc4a4316f999cac11da487968c29681475f5a72b7ef00fb2987201613cfd37e"
+    "pubspec.yaml": "8dd5033f0130bd574104a76151363d203e122b06cd337472dbbcc1ed829e22b6"
   },
-  "commonSourceSha256": "f063ddc9ef1a6ad4e774d8953931aaaf0ca14cbfdcc26d629ef1834ed7f7950b",
+  "commonSourceSha256": "d843e508a717a0f1f9c18dfc7428ee6c72350521a925ab4fd9ac1a4d2b188999",
   "hashAlgorithm": "sha256 of sorted compact JSON file-hash map"
 }

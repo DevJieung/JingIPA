@@ -386,22 +386,8 @@ class _PodLobbyState extends State<PodLobby> {
                     '새 라운드를 열기 전까지 최종결과를 여기서 확인할 수 있어요.',
                     style: TextStyle(fontSize: 12, color: forest),
                   ),
-                  if (r.canJoinFinalPod) ...[
-                    const SizedBox(height: 12),
-                    const Text(
-                      '아직 함께 갈 팟이 없나요?',
-                      style: TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                    const Text(
-                      '대기실에 남았거나 팟이 미성사라면, 성사된 팟 중 한 곳을 최종 선택할 수 있어요. 한 번 선택하면 바꿀 수 없어요.',
-                    ),
-                  ] else if (r.finalPodJoined) ...[
-                    const SizedBox(height: 12),
-                    const Text('최종 선택 완료! 내 팟의 동료를 확인해 보세요.'),
-                  ] else if (!r.pods.any((p) => p.formed)) ...[
-                    const SizedBox(height: 12),
-                    const Text('성사된 팟이 없어 최종 선택을 할 수 없어요.'),
-                  ],
+                  const SizedBox(height: 12),
+                  _myStatus(r, mine),
                 ],
               ),
             ),
@@ -410,7 +396,6 @@ class _PodLobbyState extends State<PodLobby> {
               const Surface(child: Text('만들어진 팟이 없어요.'))
             else
               _podCards(r, false),
-            if (mine != null) _myResult(r, mine),
             const SizedBox(height: 20),
           ],
           Surface(
@@ -476,6 +461,8 @@ class _PodLobbyState extends State<PodLobby> {
                     icon: const Icon(Icons.schedule, size: 18),
                     label: const Text('마감 변경'),
                   ),
+                const SizedBox(height: 12),
+                _myStatus(r, mine),
               ],
             ),
           ),
@@ -514,39 +501,6 @@ class _PodLobbyState extends State<PodLobby> {
       ],
     ];
     final sidebar = <Widget>[
-      Surface(
-        child: Row(
-          children: [
-            EmojiAvatar(
-              repo.user!.emoji,
-              key: const Key('lobby-profile-emoji'),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '현재 나의 상태',
-                    style: const TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                  Text(
-                    open
-                        ? mine?.name ?? '대기실에서 기다리는 중'
-                        : finalized
-                        ? mine == null
-                              ? '이번 라운드에 참여하지 않았어요'
-                              : '${mine.name} · ${mine.formed ? '팟 성사' : '최소 인원 미달'}'
-                        : '새 라운드를 기다리는 중',
-                    style: const TextStyle(color: muted, fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-      const SizedBox(height: 12),
       if (c != null)
         Surface(
           child: Column(
@@ -1033,13 +987,6 @@ class _PodLobbyState extends State<PodLobby> {
                             ),
                       child: Text(selected ? '✓ 내 팟' : '이 팟에 참여'),
                     ),
-                  ] else if (!archived && r.canJoinFinalPod && p.formed) ...[
-                    const SizedBox(height: 20),
-                    FilledButton(
-                      key: Key('final-join-${p.id}'),
-                      onPressed: _busy ? null : () => _finalJoin(p),
-                      child: const Text('이 팟으로 최종 선택'),
-                    ),
                   ],
                 ],
               ),
@@ -1050,22 +997,194 @@ class _PodLobbyState extends State<PodLobby> {
     );
   }
 
+  /// The round's own status surface carries "현재 나의 상태": while recruiting
+  /// it shows the pod I am in; after the cutoff it lists the companions of my
+  /// formed pod, or offers the formed pods as a one-time last chance.
+  Widget _myStatus(RoundView r, LunchPod? mine) {
+    final open = r.phase == RoundPhase.submission;
+    final formedPods = [
+      for (final p in r.pods)
+        if (p.formed) p,
+    ];
+    final status = open
+        ? mine?.name ?? '대기실에서 기다리는 중'
+        : mine == null
+        ? '이번 라운드에 참여하지 않았어요'
+        : '${mine.name} · ${mine.formed ? '팟 성사' : '최소 인원 미달'}';
+    const heading = TextStyle(fontWeight: FontWeight.w800, color: forest);
+    return Container(
+      key: const Key('my-status-box'),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              EmojiAvatar(
+                repo.user!.emoji,
+                key: const Key('lobby-profile-emoji'),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '현재 나의 상태',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    Text(
+                      status,
+                      key: const Key('my-status-text'),
+                      style: const TextStyle(color: muted, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (!open && mine != null && mine.formed) ...[
+            const SizedBox(height: 12),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            Text(
+              '같이 먹을 동료 · ${r.companions.length}명',
+              key: Key('my-companions-${r.id}'),
+              style: heading,
+            ),
+            const SizedBox(height: 8),
+            if (r.companions.isEmpty)
+              const Text(
+                '같은 팟의 동료가 없어요.',
+                style: TextStyle(color: muted, fontSize: 12),
+              )
+            else
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  // Plain pills: Material chips announce as checkboxes.
+                  for (final person in r.companions)
+                    Container(
+                      key: Key('companion-${person.id}'),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: sageSurface,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: '${person.emoji} ',
+                              style: const TextStyle(
+                                fontFamily: 'NotoColorEmoji',
+                              ),
+                            ),
+                            TextSpan(text: person.name),
+                          ],
+                        ),
+                        style: const TextStyle(
+                          color: forest,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            if (r.finalPodJoined)
+              const Padding(
+                padding: EdgeInsets.only(top: 10),
+                child: Text(
+                  '마지막 기회로 이 팟에 합류했어요.',
+                  style: TextStyle(color: muted, fontSize: 12),
+                ),
+              ),
+          ] else if (r.canJoinFinalPod) ...[
+            const SizedBox(height: 12),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            const Text('마지막 기회! 성사된 팟에 합류해요', style: heading),
+            const SizedBox(height: 4),
+            const Text(
+              '눌러서 함께 갈 팟을 정해요. 한 번만 선택할 수 있어요.',
+              style: TextStyle(color: muted, fontSize: 12),
+            ),
+            const SizedBox(height: 10),
+            for (final p in formedPods)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _finalChoice(p),
+              ),
+          ] else if (!open && formedPods.isEmpty) ...[
+            const SizedBox(height: 12),
+            const Text(
+              '성사된 팟이 없어 최종 선택을 할 수 없어요.',
+              style: TextStyle(color: muted, fontSize: 12),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _finalChoice(LunchPod p) => OutlinedButton(
+    key: Key('final-join-${p.id}'),
+    style: OutlinedButton.styleFrom(
+      backgroundColor: sageSurface,
+      foregroundColor: forest,
+      side: const BorderSide(color: line),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      minimumSize: const Size.fromHeight(actionHeight),
+      alignment: Alignment.centerLeft,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    ),
+    onPressed: _busy ? null : () => _finalJoin(p),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
+            p.name,
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '${p.count}명',
+          key: Key('final-join-count-${p.id}'),
+          style: const TextStyle(fontWeight: FontWeight.w900),
+        ),
+        const Icon(Icons.chevron_right_rounded),
+      ],
+    ),
+  );
+
   Future<void> _finalJoin(LunchPod pod) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('함께 갈 팟을 정할까요?'),
+        key: const Key('final-join-confirm'),
+        title: const Text('정말 이 팟으로 참여하시겠습니까?'),
         content: Text(
-          '${pod.name}에 참여해요. 최종 선택은 한 번만 할 수 있고, 선택 후에는 변경하거나 대기실로 돌아갈 수 없어요.',
+          '${pod.name} · 현재 ${pod.count}명\n한 번 참여하면 다른 팟으로 바꾸거나 대기실로 돌아갈 수 없어요.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            child: const Text('아니요'),
           ),
           FilledButton(
+            key: const Key('final-join-yes'),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('최종 선택하기'),
+            child: const Text('예'),
           ),
         ],
       ),
