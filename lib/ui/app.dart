@@ -8,7 +8,7 @@ import '../data/location_access.dart';
 import 'guest_join_dialog.dart';
 import '../domain/models.dart';
 import 'theme.dart';
-import 'app_banner_strip.dart';
+import 'app_header_banner.dart';
 import 'feature_screens.dart';
 import 'profile_permissions.dart';
 import 'pod_lobby.dart';
@@ -278,8 +278,6 @@ class _AppShellState extends State<AppShell> {
                             ),
                           ),
                         ),
-                        if (!desktop && appBannerStripEnabled)
-                          const AppBannerStrip(),
                         if (!desktop) _navigation(),
                         if (_busy)
                           Semantics(
@@ -591,38 +589,20 @@ class _AppShellState extends State<AppShell> {
       ),
     ],
   );
-  Widget _header() => Container(
-    decoration: const BoxDecoration(
-      color: Colors.white,
-      border: Border(bottom: BorderSide(color: line)),
-    ),
-    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-    child: Row(
-      children: [
-        if (MediaQuery.sizeOf(context).width < 1000)
-          const BrandMark()
-        else
-          Text('오늘 밥, 우리끼리', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Wrap(
-            alignment: WrapAlignment.end,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 4,
-            children: [
-              if (repo.isDemo)
-                TextButton(onPressed: _demoTools, child: const Text('체험 모드')),
-              if (repo.isLocal)
-                TextButton(
-                  key: const Key('local-tools'),
-                  onPressed: _localTools,
-                  child: const Text('로컬 Firebase'),
-                ),
-            ],
-          ),
+  Widget _header() => AppHeaderBanner(
+    placeholder: MediaQuery.sizeOf(context).width < 1000
+        ? const BrandMark()
+        : Text('오늘 밥, 우리끼리', style: Theme.of(context).textTheme.titleMedium),
+    trailing: [
+      if (repo.isDemo)
+        TextButton(onPressed: _demoTools, child: const Text('체험 모드')),
+      if (repo.isLocal)
+        TextButton(
+          key: const Key('local-tools'),
+          onPressed: _localTools,
+          child: const Text('로컬 Firebase'),
         ),
-      ],
-    ),
+    ],
   );
   Widget _pageActions(String title) => PageHeading(
     title: title,

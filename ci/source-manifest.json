@@ -1,5 +1,5 @@
 {
-  "version": "0.20.11+48",
+  "version": "0.20.12+49",
   "files": {
     "assets/brand/icon.svg": "5926f5b0543f29b36a2b19a4170c1ecc760053abcc9ae1a6d3ea23138f20d16d",
     "assets/brand/waiting-garden-source.json": "3a7fe39c3c3fd99bd78605c43b0fb3e8da220acbcafd44855ddec68b7a47eb75",
@@ -27,8 +27,8 @@
     "lib/domain/models.dart": "fc725e065a34cd0113c644abbe71bd808ab847367a960ef44c4625bd9460e499",
     "lib/domain/pods.dart": "9161c5d373d9673bdfce00a67fe3c7325ed809eaaaadddc499cfc3130850f82c",
     "lib/main.dart": "a090fe2ea7b2db91d80c3408d1bda15210bca8cf853c8950414cb074faa46bfc",
-    "lib/ui/app.dart": "bbf4ca249e16d128c56024242f1f04a0b6628a900d02a8d9a0c82fe2a4df333e",
-    "lib/ui/app_banner_strip.dart": "34fca18dbd879fe3c0918f93480c98ca5a8fae6ad9c44be2273d48137fdadbf6",
+    "lib/ui/app.dart": "322b64f954d141f25c104312c37119005b0f65f1f7c4d577be81569f80e285d0",
+    "lib/ui/app_header_banner.dart": "5762e3f64bfcafe9cd7c1c800fd15bc925981ff336acac0aec1325396e70ba16",
     "lib/ui/brand_art.dart": "506540e28028316cb89ccef4569c0ce209fb5b9435c27f8fc63860c7e8bd09eb",
     "lib/ui/card_grid.dart": "1010028a8f86a3a1b8f82504e17f7fd81f198d606266be49a4b54af976d5bc78",
     "lib/ui/feature_screens.dart": "079f0a601496192748c5c3ce02fd99a9e20cfdf9c666738a041cd22d4983e28d",
@@ -48,8 +48,8 @@
     "lib/ui/round_cutoff_form.dart": "066dbff8cf18bc9e5f49b3c96eec911744073e61ebb5c64f48ae20f83e4d7e67",
     "lib/ui/theme.dart": "bb49d5585a68c161a2892e764428efa7a3f1b3dcdad42d3a4279bbe10be6415b",
     "pubspec.lock": "2adbb9a769b77ec7e431e3d13ac86ed9c3e6a007f82c94823f05ad7daf974f51",
-    "pubspec.yaml": "5d117684b9808803a4c3afba710439a0d49ce7427916ca7ae4c801fd6b6b2390"
+    "pubspec.yaml": "ea3cb2d665ea5f7459051bdf0abd831b3cf690958e9418e3c25b47f44941447b"
   },
-  "commonSourceSha256": "84d02f14bf26a446e58bb97933e7ff07910c2abd2c79bd2f42642e4a68e56285",
+  "commonSourceSha256": "e839e3148d902d3f935fe1a966496f0850d15ff7151ef88d099a6ab0404c282a",
   "hashAlgorithm": "sha256 of sorted compact JSON file-hash map"
 }
