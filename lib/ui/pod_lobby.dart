@@ -11,7 +11,6 @@ import 'round_cooldown_dialog.dart';
 import 'load_notice.dart';
 import 'pod_farm.dart';
 import 'pod_storefront.dart';
-import 'rewarded_ad_gate.dart';
 
 String podTime(DateTime t) =>
     '${t.month}/${t.day} ${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
@@ -252,6 +251,34 @@ class _PodLobbyState extends State<PodLobby> {
     }
   }
 
+  /// Only the round host may cancel (the server enforces the same rule).
+  Future<void> _explode() async {
+    final c = widget.channel!;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        key: const Key('explode-round-confirmation'),
+        title: const Text('정말 방을 폭파할까요?'),
+        content: const Text(
+          '진행 중인 라운드를 바로 취소해요. 만든 팟은 모두 성사되지 않고, 이 라운드는 과거 이력에 모집 취소로 남아요.\n\n취소 뒤 5분 동안은 누구도 새 라운드를 열 수 없어요.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('그만두기'),
+          ),
+          TextButton(
+            key: const Key('confirm-explode-round'),
+            style: TextButton.styleFrom(foregroundColor: dangerInk),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('폭파하기'),
+          ),
+        ],
+      ),
+    );
+    if (ok == true && mounted) await _run(() => repo.cancelRound(c.id));
+  }
+
   /// Always shown under the selected group. While a round is running it is
   /// locked: lock icon, dark gray and not tappable.
   Widget _newRound({required bool locked}) {
@@ -322,6 +349,20 @@ class _PodLobbyState extends State<PodLobby> {
         const Divider(),
         const SizedBox(height: 16),
         _history(history),
+        if (open && r.creatorId == repo.user!.id) ...[
+          const SizedBox(height: 20),
+          Center(
+            child: TextButton(
+              key: const Key('explode-round'),
+              style: TextButton.styleFrom(foregroundColor: dangerInk),
+              onPressed: _busy ? null : _explode,
+              child: const Text(
+                '방폭파하기',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
+          ),
+        ],
       ],
     ];
     final main = <Widget>[
@@ -911,7 +952,6 @@ class _PodLobbyState extends State<PodLobby> {
     List<double>? heights,
   }) {
     final selected = p.id == r.myPodId;
-    final bell = selected && open && !archived && r.watch?.here == true;
     final styles = _podStyles(archived);
     Widget row(int index, Widget child) => SizedBox(
       height: heights?[index],
@@ -928,34 +968,7 @@ class _PodLobbyState extends State<PodLobby> {
         color: archived ? historyCardSurface : Colors.white,
         borderRadius: BorderRadius.circular(22),
       ),
-      // The bell hangs over the awning so it never shifts the measured rows.
-      child: Stack(
-        children: [
-          _podBody(p, r, open, roomWidth, archived, selected, styles, row),
-          if (bell)
-            Positioned(
-              top: 6,
-              right: 10,
-              child: Semantics(
-                label: '알림 동료가 이 팟에 있어요',
-                child: Container(
-                  key: Key('pod-watch-bell-${p.id}'),
-                  padding: const EdgeInsets.all(5),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: orange, width: 1.5),
-                  ),
-                  child: const Icon(
-                    Icons.notifications_active_rounded,
-                    size: 18,
-                    color: orange,
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
+      child: _podBody(p, r, open, roomWidth, archived, selected, styles, row),
     );
   }
 
@@ -1153,7 +1166,6 @@ class _PodLobbyState extends State<PodLobby> {
               ),
             ],
           ),
-          if (open) ...[const SizedBox(height: 10), _watchRow(r)],
           if (formed) ...[
             const SizedBox(height: 12),
             const Divider(height: 1),
@@ -1206,94 +1218,6 @@ class _PodLobbyState extends State<PodLobby> {
         ],
       ),
     );
-  }
-
-  /// While recruiting: pick one 알림 동료 per round, or show who it is.
-  Widget _watchRow(RoundView r) {
-    final watch = r.watch;
-    if (watch == null) {
-      return Align(
-        alignment: Alignment.centerLeft,
-        child: OutlinedButton.icon(
-          key: const Key('pod-watch-open'),
-          onPressed: _busy ? null : _chooseWatch,
-          icon: const Icon(Icons.notifications_none_rounded, size: 18),
-          label: const Text('알림 동료 지정'),
-        ),
-      );
-    }
-    return Row(
-      key: const Key('pod-watch-status'),
-      children: [
-        Icon(
-          watch.here
-              ? Icons.notifications_active_rounded
-              : Icons.notifications_none_rounded,
-          size: 18,
-          color: watch.here ? orange : muted,
-        ),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Text.rich(
-            TextSpan(
-              children: [
-                const TextSpan(text: '알림 동료 '),
-                TextSpan(
-                  text: '${watch.emoji} ',
-                  style: const TextStyle(fontFamily: 'NotoColorEmoji'),
-                ),
-                TextSpan(
-                  text: watch.name,
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
-            style: const TextStyle(color: forest, fontSize: 13),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _chooseWatch() async {
-    final c = widget.channel!;
-    final me = repo.user!.id;
-    final person = await featureSheet<AppUser>(
-      context,
-      _WatchPicker(
-        people: [
-          for (final e in c.members.entries)
-            if (e.key != me)
-              AppUser(e.key, e.value, emoji: c.memberEmojis[e.key] ?? '🐘'),
-        ],
-      ),
-    );
-    if (person == null || !mounted) return;
-    const ads = RewardedAdGate();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        key: const Key('pod-watch-confirm'),
-        title: Text('${person.name} 님을 알림 동료로 지정할까요?'),
-        content: const Text(
-          '이 동료가 내 팟에 들어오면 내 팟에 🔔가 표시돼요. 라운드마다 한 명만 지정할 수 있고 이번 라운드에는 바꿀 수 없어요. 상대에게는 알리지 않아요.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
-          ),
-          FilledButton(
-            key: const Key('pod-watch-yes'),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(ads.configured ? '광고 보고 지정하기' : '지정하기'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-    if (!await ads.show(context) || !mounted) return;
-    await _run(() => repo.setPodWatch(c.id, person.id));
   }
 
   Widget _rosterPill(AppUser person, {required bool joinedLate}) => Container(
@@ -1853,51 +1777,6 @@ class _RestaurantReportFormState extends State<RestaurantReportForm> {
             ],
           ),
         ),
-      ),
-    ),
-  );
-}
-
-class _WatchPicker extends StatelessWidget {
-  const _WatchPicker({required this.people});
-  final List<AppUser> people;
-  @override
-  Widget build(BuildContext context) => ConstrainedBox(
-    constraints: BoxConstraints(
-      maxHeight: MediaQuery.sizeOf(context).height * .75,
-    ),
-    child: Padding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text('알림 동료 지정', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          const Text(
-            '고른 동료가 내 팟에 들어오면 내 팟에 🔔가 표시돼요. 라운드마다 한 명이에요.',
-            style: TextStyle(color: muted, fontSize: 12),
-          ),
-          const SizedBox(height: 12),
-          if (people.isEmpty)
-            const Text('지정할 수 있는 동료가 없어요.', style: TextStyle(color: muted))
-          else
-            Flexible(
-              child: ListView(
-                shrinkWrap: true,
-                children: [
-                  for (final person in people)
-                    ListTile(
-                      key: Key('pod-watch-pick-${person.id}'),
-                      contentPadding: EdgeInsets.zero,
-                      leading: EmojiAvatar(person.emoji),
-                      title: Text(person.name),
-                      onTap: () => Navigator.pop(context, person),
-                    ),
-                ],
-              ),
-            ),
-        ],
       ),
     ),
   );

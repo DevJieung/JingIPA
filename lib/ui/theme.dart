@@ -24,6 +24,8 @@ const formedTagSurface = Color(0xFFD3EBDB);
 const formedTagInk = Color(0xFF1D5B3C);
 const pendingTagSurface = Color(0xFFFFE1C2);
 const pendingTagInk = Color(0xFF8F4310);
+// Destructive text actions such as blowing up the running round.
+const dangerInk = Color(0xFFC62828);
 const actionHeight = 54.0;
 
 ThemeData appTheme() => ThemeData(
