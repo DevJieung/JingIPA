@@ -529,35 +529,18 @@ class _PodLobbyState extends State<PodLobby> {
             ),
           ),
           const SizedBox(height: 20),
+          // voc5_.png: the create button is a dashed, pod-sized slot. With no
+          // pods it sits inside the empty box; otherwise it follows the pods.
           if (r.pods.isEmpty)
-            const Surface(
-              key: Key('empty-pods'),
-              child: Column(
-                children: [
-                  Text(
-                    '아직 팟이 없어요',
-                    style: TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                  Text(
-                    '+ 버튼으로 첫 팟을 만들어 보세요.',
-                    style: TextStyle(color: muted, fontSize: 12),
-                  ),
-                ],
+            Surface(
+              key: const Key('empty-pods'),
+              child: ResponsiveCards(
+                minWidth: 235,
+                children: [_createPodCard(empty: true)],
               ),
-            ),
-          if (r.pods.isNotEmpty) _podCards(r, open),
-          if (open) ...[
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              key: const Key('create-pod'),
-              onPressed: _busy ? null : _create,
-              icon: const Icon(Icons.add_rounded, size: 28),
-              label: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 18),
-                child: Text('팟 만들기'),
-              ),
-            ),
-          ],
+            )
+          else
+            _podCards(r, open, trailing: _createPodCard()),
         ],
       ],
     ];
@@ -880,10 +863,70 @@ class _PodLobbyState extends State<PodLobby> {
     return size;
   }
 
+  Widget _createPodCard({bool empty = false}) => CustomPaint(
+    key: const Key('create-pod-card'),
+    foregroundPainter: const _DashedBorderPainter(color: dashedLine),
+    child: Material(
+      color: Colors.transparent,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      child: InkWell(
+        key: const Key('create-pod'),
+        onTap: _busy ? null : _create,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 200),
+          child: Padding(
+            padding: const EdgeInsets.all(22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (empty)
+                  const Text(
+                    '아직 팟이 없어요',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                  ),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.add_rounded,
+                            size: 26,
+                            color: forest,
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              '팟 만들기',
+                              style: TextStyle(
+                                color: _busy ? muted : forest,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
   Widget _podCards(
     RoundView r,
     bool open, {
     bool archived = false,
+    Widget? trailing,
   }) => LayoutBuilder(
     builder: (context, box) {
       final columns = ResponsiveCards.columnsFor(
@@ -938,6 +981,7 @@ class _PodLobbyState extends State<PodLobby> {
               archived: archived,
               heights: heights,
             ),
+          ?trailing,
         ],
       );
     },
@@ -1324,6 +1368,35 @@ class _PodLobbyState extends State<PodLobby> {
       await _run(() => repo.joinFinalPod(widget.channel!.id, pod.id));
     }
   }
+}
+
+/// Rounded dashed outline drawn over the "+ 팟 만들기" slot.
+class _DashedBorderPainter extends CustomPainter {
+  const _DashedBorderPainter({required this.color});
+  final Color color;
+  static const radius = 22.0, stroke = 2.0, dash = 9.0, gap = 6.0;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke;
+    final rect = (Offset.zero & size).deflate(stroke / 2);
+    final path = Path()
+      ..addRRect(RRect.fromRectAndRadius(rect, const Radius.circular(radius)));
+    for (final metric in path.computeMetrics()) {
+      for (var d = 0.0; d < metric.length; d += dash + gap) {
+        canvas.drawPath(
+          metric.extractPath(d, math.min(d + dash, metric.length)),
+          paint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedBorderPainter old) => old.color != color;
 }
 
 class PodMemberBar extends StatelessWidget {

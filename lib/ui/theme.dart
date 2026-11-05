@@ -26,6 +26,8 @@ const pendingTagSurface = Color(0xFFFFE1C2);
 const pendingTagInk = Color(0xFF8F4310);
 // Destructive text actions such as blowing up the running round.
 const dangerInk = Color(0xFFC62828);
+// Dashed outline of the "+ 팟 만들기" slot in the pod grid.
+const dashedLine = Color(0xFF8C9A94);
 const actionHeight = 54.0;
 
 ThemeData appTheme() => ThemeData(
