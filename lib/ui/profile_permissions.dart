@@ -147,7 +147,7 @@ class _ProfilePermissionsState extends State<ProfilePermissions>
               _locationOn && _locationFailure != null
                   ? '켜짐 설정 · 기기의 위치 권한을 확인해 주세요'
                   : _locationOn
-                  ? '켜짐 · 같은 이름의 식당을 가까운 순으로 정렬해요'
+                  ? '켜짐 · 검색한 식당을 가까운 순으로 정렬해요'
                   : '꺼짐 · 위치 없이 이름으로 검색할 수 있어요',
               style: const TextStyle(color: muted, fontSize: 12),
             ),

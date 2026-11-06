@@ -7,7 +7,7 @@ Future<bool> confirmLocationConsent(BuildContext context) async =>
         title: const Text('위치 사용 동의'),
         content: const SingleChildScrollView(
           child: Text(
-            '검색한 식당 중 이름이 같은 곳을 현재 위치에서 가까운 순으로 정렬해요.\n\n'
+            '검색한 식당을 현재 위치에서 가까운 순으로 정렬해요.\n\n'
             '위도·경도는 검색을 위해 먹끼리 서버로 전송해 처리하며, 계정이나 위치 이력으로 DB에 저장하지 않아요. '
             '백그라운드 위치 추적은 하지 않아요.\n\n'
             '선택 동의이며, 허용하지 않아도 식당 이름 검색과 직접추가를 이용할 수 있어요. '

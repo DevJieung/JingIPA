@@ -526,7 +526,8 @@ class _SearchSheetState extends State<SearchSheet>
         generation == _generation &&
         !_distanceAttempted &&
         _near == null &&
-        _results.map((r) => r.name).toSet().length < _results.length &&
+        // Saved consent sorts any multi-result name search, e.g. branches of one brand.
+        _results.length > 1 &&
         await widget.locationAccess.consentGranted()) {
       if (!mounted || generation != _generation) {
         return;
@@ -671,10 +672,10 @@ class _SearchSheetState extends State<SearchSheet>
                     key: const Key('use-nearby-location'),
                     onPressed: _locating ? null : _useLocation,
                     icon: const Icon(Icons.my_location_rounded, size: 18),
-                    label: Text(_locating ? '현재 위치 확인 중…' : '같은 이름은 거리순으로'),
+                    label: Text(_locating ? '현재 위치 확인 중…' : '검색 결과 거리순으로'),
                   )
                 : const Text(
-                    '같은 이름의 식당 · 거리순',
+                    '검색 결과 · 가까운 순',
                     style: TextStyle(color: forest, fontSize: 12),
                   ),
           ),
@@ -1516,7 +1517,7 @@ class TabHelpSheet extends StatelessWidget {
       [
         (
           'DB에 등록된 식당을 저장해요',
-          '식당 이름으로 검색해 저장해요. 같은 이름의 결과는 위치에 동의하면 거리순으로 볼 수 있어요.',
+          '식당 이름으로 검색해 저장해요. 위치에 동의하면 검색 결과를 가까운 순으로 볼 수 있어요.',
         ),
         (
           '없는 식당은 운영자에게 제보해요',

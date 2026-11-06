@@ -1,5 +1,5 @@
 {
-  "version": "0.20.12+49",
+  "version": "0.20.13+50",
   "files": {
     "assets/brand/icon.svg": "5926f5b0543f29b36a2b19a4170c1ecc760053abcc9ae1a6d3ea23138f20d16d",
     "assets/brand/waiting-garden-source.json": "3a7fe39c3c3fd99bd78605c43b0fb3e8da220acbcafd44855ddec68b7a47eb75",
@@ -31,25 +31,25 @@
     "lib/ui/app_header_banner.dart": "5762e3f64bfcafe9cd7c1c800fd15bc925981ff336acac0aec1325396e70ba16",
     "lib/ui/brand_art.dart": "506540e28028316cb89ccef4569c0ce209fb5b9435c27f8fc63860c7e8bd09eb",
     "lib/ui/card_grid.dart": "1010028a8f86a3a1b8f82504e17f7fd81f198d606266be49a4b54af976d5bc78",
-    "lib/ui/feature_screens.dart": "079f0a601496192748c5c3ce02fd99a9e20cfdf9c666738a041cd22d4983e28d",
+    "lib/ui/feature_screens.dart": "05abf0a83983da9c2c851210d7809c1a75b09638aeabbdaaabc49a01a6da190d",
     "lib/ui/guest_join_dialog.dart": "85b020e0e5a15dd7fdde93fb5f9b224bc062306d787db317fa3fc21d14f6199b",
     "lib/ui/live_people.dart": "2d45d35f3b46eee68eaa62cc407ddb2907481518791aac3db949b0d98e3447ea",
     "lib/ui/load_notice.dart": "f5e5dd701b9ae7edd128dfbf0c043ac0853adf0ceb8506ba49ac23c57931edc2",
-    "lib/ui/location_consent_dialog.dart": "9a885004b629f04c4c372bf5cbb1152bcf72906132666975ba73a5162df24258",
+    "lib/ui/location_consent_dialog.dart": "507d5784c7692751bc05d2dba8240d7e000a14a329709bb9d4da6c8b59ba6b6d",
     "lib/ui/name_guide.dart": "7f6cbc746c069d5d38fce0d0d863b8643a5e15c9861926a51518e2066c4e2fe2",
     "lib/ui/pod_farm.dart": "88c18fa73a83869efb59af64872093eae008f9b6c2d61ae3756695eb90e6ae81",
     "lib/ui/pod_lobby.dart": "8ed13d0295b6c5176d5772902ed4383b7d4ac9efec59e0f047f478acde019582",
     "lib/ui/pod_storefront.dart": "802a187b24b4d08e50cd59a3a1127ca31fe79ee394325d7e5978f9c84fbede5e",
     "lib/ui/profile_editor.dart": "e8628267e480e2a422e3bc9bfc7a238ea3fc45ad1070f8d1b792b416a2e89e0c",
-    "lib/ui/profile_permissions.dart": "02815aacb103302ae529a5f83ff7f1536c0a832769f9dc2e42aa60a20591b8fe",
+    "lib/ui/profile_permissions.dart": "24c4982ce1f39c082902a231dfd566746d27aef2bf53fb1e580978e5cb18ebd2",
     "lib/ui/rewarded_ad_gate.dart": "07263d346ed16a522c6c59101aca28971183a38ce3eedf6db275d8a84e4e2296",
     "lib/ui/round_approval_dialog.dart": "90cc4a022c873de7e051486daed76bf0bdbe53a7884a2c4d7bfe55b89b0920d7",
     "lib/ui/round_cooldown_dialog.dart": "d071346fdef75a97a8885ee029e2e5e0022ea574bb7cad19dbd3be7ffe851b2e",
     "lib/ui/round_cutoff_form.dart": "066dbff8cf18bc9e5f49b3c96eec911744073e61ebb5c64f48ae20f83e4d7e67",
     "lib/ui/theme.dart": "bb49d5585a68c161a2892e764428efa7a3f1b3dcdad42d3a4279bbe10be6415b",
     "pubspec.lock": "2adbb9a769b77ec7e431e3d13ac86ed9c3e6a007f82c94823f05ad7daf974f51",
-    "pubspec.yaml": "ea3cb2d665ea5f7459051bdf0abd831b3cf690958e9418e3c25b47f44941447b"
+    "pubspec.yaml": "4264899e053848ff6dc148814a978fd6744c717ff95d7d4a09348a7b6cb1d72b"
   },
-  "commonSourceSha256": "e839e3148d902d3f935fe1a966496f0850d15ff7151ef88d099a6ab0404c282a",
+  "commonSourceSha256": "37bb739e44142c3a6f3d234532323ae3531e4674e7de05deb296d17f1681ac26",
   "hashAlgorithm": "sha256 of sorted compact JSON file-hash map"
 }
