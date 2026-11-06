@@ -71,6 +71,10 @@ class FirebaseRepository extends AppRepository with WidgetsBindingObserver {
   final Set<String> _roundAgain = {};
   final Map<String, int> _roundVersions = {};
   final Map<String, String> _roundRevisions = {};
+  // Last signal revision handled per channel, and signals held back while a
+  // mutation for that channel is in flight.
+  final Map<String, String> _signalRevisions = {}, _deferredSignals = {};
+  final Map<String, int> _actionsInFlight = {};
   final Map<String, Future<void>> _historyTasks = {};
   final Map<String, DateTime> _deadlineChecks = {};
   Future<void>? _attendanceTask, _favoritesTask;
@@ -416,6 +420,9 @@ class FirebaseRepository extends AppRepository with WidgetsBindingObserver {
     _roundErrors.clear();
     _roundVersions.clear();
     _roundRevisions.clear();
+    _signalRevisions.clear();
+    _deferredSignals.clear();
+    _actionsInFlight.clear();
     _roundTasks.clear();
     _roundAgain.clear();
     _historyTasks.clear();
@@ -563,16 +570,9 @@ class FirebaseRepository extends AppRepository with WidgetsBindingObserver {
             notifyListeners();
           },
         );
-    // One migration per session, outside the startup/refresh request chain.
-    unawaited(_migrateAdmission(generation));
-  }
-
-  Future<void> _migrateAdmission(int generation) async {
-    try {
-      await _call('getChannelJoinRequests');
-    } catch (_) {
-      /* Retried explicitly on reconnect; never block the current round. */
-    }
+    // Approval requests were retired and every stored request has been
+    // admitted, so startup no longer calls getChannelJoinRequests. The server
+    // keeps that function for installed older apps.
   }
 
   @override
@@ -607,13 +607,60 @@ class FirebaseRepository extends AppRepository with WidgetsBindingObserver {
   @override
   Future<void> loadChannelSummaries() async {
     // Two at a time keeps a large group list from flooding callable requests.
+    // A loaded round with a live signal listener is already current: its
+    // listener refetches on every server change, including the cutoff write.
     final pending = channels
-        .where((c) => c.roundId != null && c.id != _selectedChannelId)
+        .where(
+          (c) =>
+              c.roundId != null &&
+              c.id != _selectedChannelId &&
+              !_roundIsLive(c.id, c.roundId!),
+        )
         .toList();
     for (var start = 0; start < pending.length; start += 2) {
       await Future.wait(
         pending.skip(start).take(2).map((c) => _refreshRound(c.id)),
       );
+    }
+  }
+
+  bool _roundIsLive(String channelId, String roundId) {
+    final view = _views[channelId];
+    if (view == null ||
+        view.id != roundId ||
+        _roundStates[channelId] != LoadStatus.ready ||
+        !_streams.containsKey('meta-$roundId')) {
+      return false;
+    }
+    // A passed cutoff that the server has not reported yet is refreshed.
+    return !(view.phase == RoundPhase.submission &&
+        !now.isBefore(view.endsAt));
+  }
+
+  /// Runs a round mutation for [channelId]. Signal events that arrive while it
+  /// is in flight are checked once against the revision in its response, so
+  /// the caller does not fetch the state it has just received.
+  Future<Map<String, dynamic>> _roundAction(
+    String channelId,
+    Future<Map<String, dynamic>> Function() action,
+  ) async {
+    _actionsInFlight[channelId] = (_actionsInFlight[channelId] ?? 0) + 1;
+    try {
+      return await action();
+    } finally {
+      final left = (_actionsInFlight[channelId] ?? 1) - 1;
+      if (left > 0) {
+        _actionsInFlight[channelId] = left;
+      } else {
+        _actionsInFlight.remove(channelId);
+        final deferred = _deferredSignals.remove(channelId);
+        if (deferred != null &&
+            deferred != _roundRevisions[channelId] &&
+            !_disposed &&
+            channels.any((c) => c.id == channelId)) {
+          unawaited(_refreshRound(channelId));
+        }
+      }
     }
   }
 
@@ -738,9 +785,19 @@ class FirebaseRepository extends AppRepository with WidgetsBindingObserver {
                 return;
               }
               _retryAttempts.remove('meta-${view.id}');
-              if (snapshot.data()?['revision'] != null &&
-                  snapshot.data()?['revision'] == _roundRevisions[channelId]) {
-                return;
+              final revision = snapshot.data()?['revision'];
+              if (revision is String) {
+                // Skip the state already held and repeated events (metadata
+                // changes re-deliver the same revision).
+                if (revision == _roundRevisions[channelId] ||
+                    revision == _signalRevisions[channelId]) {
+                  return;
+                }
+                _signalRevisions[channelId] = revision;
+                if ((_actionsInFlight[channelId] ?? 0) > 0) {
+                  _deferredSignals[channelId] = revision;
+                  return;
+                }
               }
               unawaited(_refreshRound(channelId));
             },
@@ -821,7 +878,12 @@ class FirebaseRepository extends AppRepository with WidgetsBindingObserver {
         return;
       }
       if (version != (_roundVersions[channelId] ?? 0)) {
-        _roundAgain.add(channelId);
+        // A mutation response landed meanwhile. Fetch again only when this
+        // response is not that same state.
+        final revision = response['revision'];
+        if (revision is! String || revision != _roundRevisions[channelId]) {
+          _roundAgain.add(channelId);
+        }
         return;
       }
       _accept(channelId, response);
@@ -843,10 +905,13 @@ class FirebaseRepository extends AppRepository with WidgetsBindingObserver {
       return;
     }
     final id = _selectedChannelId;
+    // Attendance changes only when a round closes (_accept reloads it then) and
+    // favorites only through this device's own saves, so a refresh reloads
+    // them only after a failure.
     await Future.wait([
       if (id != null) _refreshRound(id),
-      loadAttendance(force: true),
-      if (_favoritesStatus != LoadStatus.idle) loadFavorites(force: true),
+      loadAttendance(),
+      if (_favoritesStatus != LoadStatus.idle) loadFavorites(),
     ]);
   }
 
@@ -1132,14 +1197,18 @@ class FirebaseRepository extends AppRepository with WidgetsBindingObserver {
     Map<String, dynamic> data,
   ) async {
     final generation = _authGeneration;
-    final response = await _call(action, {
-      'channelId': channelId,
-      'roundId': roundFor(channelId)?.id,
-      ...data,
+    await _roundAction(channelId, () async {
+      final response = await _call(action, {
+        'channelId': channelId,
+        'roundId': roundFor(channelId)?.id,
+        ...data,
+      });
+      if (generation == _authGeneration) {
+        _accept(channelId, response);
+        notifyListeners();
+      }
+      return response;
     });
-    if (generation != _authGeneration) return;
-    _accept(channelId, response);
-    notifyListeners();
   }
 
   @override
@@ -1322,14 +1391,18 @@ class FirebaseRepository extends AppRepository with WidgetsBindingObserver {
 
   Future<void> _mutate(String action, String channelId, [String? id]) async {
     final generation = _authGeneration;
-    final response = await _call(action, {
-      'channelId': channelId,
-      'restaurantId': ?id,
-      'roundId': roundFor(channelId)?.id,
+    await _roundAction(channelId, () async {
+      final response = await _call(action, {
+        'channelId': channelId,
+        'restaurantId': ?id,
+        'roundId': roundFor(channelId)?.id,
+      });
+      if (generation == _authGeneration) {
+        _accept(channelId, response);
+        notifyListeners();
+      }
+      return response;
     });
-    if (generation != _authGeneration) return;
-    _accept(channelId, response);
-    notifyListeners();
   }
 
   @override

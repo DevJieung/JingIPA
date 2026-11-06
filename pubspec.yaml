@@ -1,7 +1,7 @@
 name: meokkiri
 description: 눈치 없이 고르고, 취향이 맞는 동료끼리 먹는 밥.
 publish_to: none
-version: 0.20.13+50
+version: 0.20.14+51
 environment:
   sdk: '>=3.10.0 <4.0.0'
 dependencies:

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../domain/models.dart';
@@ -12,8 +13,19 @@ abstract class PushAccess {
 
 /// Device-local choices, separate from OS permission and server registration.
 class PushPreferences extends ChangeNotifier {
-  PushPreferences({required this.access, required this.writeDevice});
+  PushPreferences({
+    required this.access,
+    required this.writeDevice,
+    DateTime Function()? clock,
+  }) : _clock = clock ?? DateTime.now;
   final PushAccess access;
+  final DateTime Function() _clock;
+
+  /// An unchanged registration is re-sent to the server at most this often.
+  static const registrationRefresh = Duration(days: 7);
+  // Device-wide: the server keys a device by its token, so only one account
+  // can hold this registration at a time.
+  static const _registrationKey = 'meokkiri.pushRegistration.v1';
   final Future<void> Function(String uid, String token, bool enabled)
   writeDevice;
   String? accountId;
@@ -25,6 +37,49 @@ class PushPreferences extends ChangeNotifier {
   bool get busy => _pending > 0;
   String _choiceKey(String uid) => 'meokkiri.pushEnabled.v1.$uid';
   String _tokenKey(String uid) => 'meokkiri.pushDevice.v1.$uid';
+
+  bool _recentlyRegistered(SharedPreferences prefs, String uid, String token) {
+    try {
+      final raw = prefs.getString(_registrationKey);
+      if (raw == null) return false;
+      final row = jsonDecode(raw) as Map<String, dynamic>;
+      final age = _clock().difference(
+        DateTime.fromMillisecondsSinceEpoch(row['at'] as int),
+      );
+      return row['uid'] == uid &&
+          row['token'] == token &&
+          !age.isNegative &&
+          age < registrationRefresh;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Writes the server registration and remembers which account holds it.
+  Future<void> _write(String uid, String token, bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!enabled) {
+      await writeDevice(uid, token, false);
+      try {
+        final raw = prefs.getString(_registrationKey);
+        if (raw != null && (jsonDecode(raw) as Map)['token'] == token) {
+          await prefs.remove(_registrationKey);
+        }
+      } catch (_) {
+        await prefs.remove(_registrationKey);
+      }
+      return;
+    }
+    await writeDevice(uid, token, true);
+    await prefs.setString(
+      _registrationKey,
+      jsonEncode({
+        'uid': uid,
+        'token': token,
+        'at': _clock().millisecondsSinceEpoch,
+      }),
+    );
+  }
 
   void _notify() {
     if (!_disposed) notifyListeners();
@@ -165,7 +220,11 @@ class PushPreferences extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_tokenKey(uid), token);
     if (!_current(uid, epoch) || !_desired) return;
-    await writeDevice(uid, token, true);
+    // Resuming the app re-checks permission and the token, but an unchanged
+    // registration confirmed recently is not written to the server again.
+    if (!_recentlyRegistered(prefs, uid, token)) {
+      await _write(uid, token, true);
+    }
     if (_current(uid, epoch) && _desired) {
       enabled = true;
       message = null;
@@ -181,11 +240,11 @@ class PushPreferences extends ChangeNotifier {
       final previous = prefs.getString(_tokenKey(uid));
       if (previous == token && enabled) return;
       if (previous != null && previous != token) {
-        await writeDevice(uid, previous, false);
+        await _write(uid, previous, false);
       }
       await prefs.setString(_tokenKey(uid), token);
       if (!_current(uid, epoch) || !_desired) return;
-      await writeDevice(uid, token, true);
+      await _write(uid, token, true);
       if (_current(uid, epoch) && _desired) enabled = true;
     });
   }
@@ -196,7 +255,7 @@ class PushPreferences extends ChangeNotifier {
     var removed = false, unregistered = false;
     if (token != null) {
       try {
-        await writeDevice(uid, token, false);
+        await _write(uid, token, false);
         await prefs.remove(_tokenKey(uid));
         removed = true;
       } catch (_) {

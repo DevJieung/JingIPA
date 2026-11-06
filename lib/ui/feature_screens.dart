@@ -476,6 +476,9 @@ class _SearchSheetState extends State<SearchSheet>
   bool _loading = false, _locating = false;
   bool _distanceAttempted = false;
   String? _error;
+  // Query and location of the results on screen, to skip repeating a search.
+  String? _shownQuery;
+  SearchLocation? _shownNear;
   int _generation = 0, _locationGeneration = 0;
   late int _tab = _initialTab;
   int get _initialTab =>
@@ -496,23 +499,52 @@ class _SearchSheetState extends State<SearchSheet>
     setState(() => _tab = _tabs.index);
   }
 
-  Future<void> _load(String query) async {
+  static String _searchKey(String query) =>
+      query.replaceAll(RegExp(r'\s+'), '').toLowerCase();
+
+  /// Typing searches only complete words of 2+ characters. Each server search
+  /// reads up to 200 restaurants, and a single syllable or a Hangul consonant
+  /// being composed (e.g. `만ㄷ`) matches thousands. Submitting still searches.
+  static bool _autoSearchable(String key) {
+    final runes = key.runes.toList();
+    if (runes.length < 2) return false;
+    final last = runes.last;
+    return !(last >= 0x3131 && last <= 0x318E) &&
+        !(last >= 0x1100 && last <= 0x11FF);
+  }
+
+  Future<void> _load(String query, {bool auto = false}) async {
     final generation = ++_generation;
-    if (query.trim().isEmpty) {
+    final key = _searchKey(query);
+    if (key.isEmpty || (auto && !_autoSearchable(key))) {
       setState(() {
         _results = [];
+        _shownQuery = null;
         _loading = false;
         _error = null;
       });
       return;
+    }
+    if (key == _shownQuery &&
+        identical(_near, _shownNear) &&
+        _error == null &&
+        !_loading) {
+      return; // e.g. pressing search right after the typing search finished
     }
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
-      final rows = await widget.repository.search(query, near: _near);
-      if (mounted && generation == _generation) setState(() => _results = rows);
+      final near = _near;
+      final rows = await widget.repository.search(query, near: near);
+      if (mounted && generation == _generation) {
+        setState(() {
+          _results = rows;
+          _shownQuery = key;
+          _shownNear = near;
+        });
+      }
     } catch (_) {
       if (mounted && generation == _generation) {
         setState(() => _error = '검색 결과를 불러오지 못했어요. 다시 시도해 주세요.');
@@ -546,7 +578,10 @@ class _SearchSheetState extends State<SearchSheet>
       ++_locationGeneration;
       setState(() => _locating = false);
     }
-    _debounce = Timer(const Duration(milliseconds: 350), () => _load(query));
+    _debounce = Timer(
+      const Duration(milliseconds: 350),
+      () => _load(query, auto: true),
+    );
   }
 
   void _submitSearch(String query) {
@@ -607,6 +642,7 @@ class _SearchSheetState extends State<SearchSheet>
       _locating = false;
       _locationFailure = null;
       _results = [];
+      _shownQuery = null;
     });
     await _load(_controller.text);
   }
@@ -626,6 +662,8 @@ class _SearchSheetState extends State<SearchSheet>
             child: Text(
               _controller.text.trim().isEmpty
                   ? '식당 이름을 검색해 주세요.'
+                  : _shownQuery == null
+                  ? '두 글자 이상 입력하거나 검색을 눌러 주세요.'
                   : '검색된 식당이 없어요.\n운영자에게 제보하면 확인 후 등록돼요.',
               textAlign: TextAlign.center,
               style: const TextStyle(color: muted),
