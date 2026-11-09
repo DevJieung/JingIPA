@@ -1012,13 +1012,23 @@ class _AppShellState extends State<AppShell> {
       Surface(
         child: Row(
           children: [
+            // The brand elephant, not a personal emoji: profiles carry none.
             Semantics(
-              label: '이름과 이모지 편집',
+              label: '이름 편집',
               button: true,
               child: InkWell(
-                key: const Key('profile-emoji'),
+                key: const Key('profile-avatar'),
                 onTap: _editProfile,
-                child: EmojiAvatar(repo.user!.emoji, size: 58),
+                child: Container(
+                  width: 58,
+                  height: 58,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: sageSurface,
+                    borderRadius: BorderRadius.circular(17),
+                  ),
+                  child: const ElephantArt(size: 46, headOnly: true),
+                ),
               ),
             ),
             const SizedBox(width: 16),

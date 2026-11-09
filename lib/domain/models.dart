@@ -4,7 +4,10 @@ export 'pods.dart';
 enum RoundPhase { submission, adjusting, finalized, cancelled }
 
 class AppUser {
-  const AppUser(this.id, this.name, {this.emoji = '🐘'});
+  const AppUser(this.id, this.name, {this.emoji = defaultRoundEmoji});
+
+  /// The emoji this person uses in one round (waiting room, seats, result
+  /// roster). Profiles carry none: everyone starts each round as 🐘.
   final String emoji;
   final String id;
   final String name;
@@ -61,12 +64,10 @@ class LunchChannel {
     this.revealMinute = 680,
     this.additionalMinutes = 10,
     this.roundId,
-    this.memberEmojis = const {},
   });
   final String id, name, inviteCode;
   String ownerId;
   final Map<String, String> members;
-  Map<String, String> memberEmojis;
   int revealMinute, additionalMinutes;
   String? roundId;
   factory LunchChannel.fromJson(Map<String, dynamic> j) => LunchChannel(
@@ -82,14 +83,12 @@ class LunchChannel {
     revealMinute: j['revealMinute'] ?? 680,
     additionalMinutes: j['additionalMinutes'] ?? 10,
     roundId: j['roundId'],
-    memberEmojis: Map<String, String>.from(j['memberEmojis'] ?? {}),
   );
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
     'ownerId': ownerId,
     'members': members,
-    'memberEmojis': memberEmojis,
     'memberIds': members.keys.toList(),
     'inviteCode': inviteCode,
     'revealMinute': revealMinute,
@@ -200,13 +199,19 @@ class RoundView {
   final List<LunchPod> pods;
   final String? myPodId;
   final int waitingCount;
+
+  /// Anonymous slots: the server sends no member IDs for the waiting room.
   final List<AppUser> waitingMembers;
+
+  /// My emoji in this round only; [defaultRoundEmoji] until I pick another.
+  final String myEmoji;
   const RoundView({
     this.podMode = false,
     this.pods = const [],
     this.myPodId,
     this.waitingCount = 0,
     this.waitingMembers = const [],
+    this.myEmoji = defaultRoundEmoji,
     this.canJoinFinalPod = false,
     this.finalPodJoined = false,
     required this.id,
@@ -270,12 +275,19 @@ class RoundView {
         .map((p) => LunchPod.fromJson(Map<String, dynamic>.from(p)))
         .toList(),
     myPodId: j['myPodId'],
+    myEmoji: roundEmojis.contains(j['myEmoji'])
+        ? j['myEmoji'] as String
+        : defaultRoundEmoji,
     canJoinFinalPod: j['canJoinFinalPod'] == true,
     finalPodJoined: j['finalPodJoined'] == true,
     waitingCount: j['waitingCount'] ?? 0,
     waitingMembers: (j['waitingMembers'] as List? ?? [])
         .map(
-          (p) => AppUser(p['id'], p['name'] ?? '', emoji: p['emoji'] ?? '🐘'),
+          (p) => AppUser(
+            p['id'],
+            p['name'] ?? '',
+            emoji: p['emoji'] ?? defaultRoundEmoji,
+          ),
         )
         .toList(),
     lateJoinUsed: j['lateJoinUsed'] == true,
@@ -334,7 +346,13 @@ class RoundView {
         )
         .toList(),
     companions: (j['companions'] as List? ?? [])
-        .map((e) => AppUser(e['id'], e['name'], emoji: e['emoji'] ?? '🐘'))
+        .map(
+          (e) => AppUser(
+            e['id'],
+            e['name'],
+            emoji: e['emoji'] ?? defaultRoundEmoji,
+          ),
+        )
         .toList(),
     finalJoinedIds: {
       for (final e in j['companions'] as List? ?? [])

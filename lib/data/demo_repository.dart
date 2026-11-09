@@ -184,11 +184,8 @@ class DemoRepository extends AppRepository {
           _podRounds[pod.id] = pod;
         }
         if (j['user'] != null) {
-          _user = AppUser(
-            j['user']['id'],
-            j['user']['name'],
-            emoji: j['user']['emoji'] ?? '🐘',
-          );
+          // Saved demo data may still hold a profile emoji; it is ignored.
+          _user = AppUser(j['user']['id'], j['user']['name']);
         }
         _offset = Duration(milliseconds: j['offset'] ?? 0);
         _balances.addAll(
@@ -244,12 +241,6 @@ class DemoRepository extends AppRepository {
             r.open(now) &&
             c.members.length < 100) {
           c.members[row['requesterId']] = row['displayName'];
-          c.memberEmojis = {
-            ...c.memberEmojis,
-            row['requesterId']: row['requesterId'] == user?.id
-                ? user!.emoji
-                : '🐘',
-          };
         }
       }
       _joinRequests.clear();
@@ -325,9 +316,7 @@ class DemoRepository extends AppRepository {
     await _preferences?.setString(
       'meokkiri.demo.v1',
       jsonEncode({
-        'user': user == null
-            ? null
-            : {'id': user!.id, 'name': user!.name, 'emoji': user!.emoji},
+        'user': user == null ? null : {'id': user!.id, 'name': user!.name},
         'podRounds': _podRounds.values.map((r) => r.toJson()).toList(),
         'channels': _channels.map((c) => c.toJson()).toList(),
         'rounds': _rounds.values.map((r) => r.toJson()).toList(),
@@ -355,16 +344,7 @@ class DemoRepository extends AppRepository {
 
   @override
   Future<void> enterDemo() async {
-    _user = AppUser(
-      'me',
-      '윤수빈',
-      emoji:
-          _channels
-              .where((c) => c.members.containsKey('me'))
-              .firstOrNull
-              ?.memberEmojis['me'] ??
-          '🐘',
-    );
+    _user = const AppUser('me', '윤수빈');
     if (_channels.isEmpty) _seed();
     await _save();
   }
@@ -394,23 +374,16 @@ class DemoRepository extends AppRepository {
   }
 
   @override
-  Future<void> updateProfile(String name, String emoji) async {
+  Future<void> updateName(String name) async {
     if (name.trim().isEmpty || name.trim().length > 20) {
       throw const LunchException('이름은 1~20자로 입력해 주세요.');
     }
-    if (!profileEmojis.contains(emoji)) {
-      throw const LunchException('목록에서 이모지를 선택해 주세요.');
-    }
-    _user = AppUser(user!.id, name.trim(), emoji: emoji);
+    _user = AppUser(user!.id, name.trim());
     for (final c in channels) {
       c.members[user!.id] = user!.name;
-      c.memberEmojis = {...c.memberEmojis, user!.id: emoji};
     }
     await _save();
   }
-
-  @override
-  Future<void> updateEmoji(String emoji) => updateProfile(user!.name, emoji);
 
   @override
   Future<void> startPodRound(
@@ -601,6 +574,24 @@ class DemoRepository extends AppRepository {
   }
 
   @override
+  Future<void> setPodEmoji(String channelId, String emoji) async {
+    final channel = _channel(channelId);
+    final r = _podRounds[channel.roundId];
+    if (r == null || !r.open(now) || !channel.members.containsKey(user!.id)) {
+      throw const LunchException('모집 중에만 이번 라운드 이모지를 바꿀 수 있어요.');
+    }
+    if (!roundEmojis.contains(emoji)) {
+      throw const LunchException('목록에서 이모지를 골라 주세요.');
+    }
+    if (emoji == defaultRoundEmoji) {
+      r.emojis.remove(user!.id);
+    } else {
+      r.emojis[user!.id] = emoji;
+    }
+    await _save();
+  }
+
+  @override
   Future<void> changePodDeadline(String channelId, DateTime endsAt) async {
     final r = _openPod(channelId);
     if (r.creatorId != user!.id) {
@@ -621,9 +612,6 @@ class DemoRepository extends AppRepository {
     r.settle(now);
     await _save();
   }
-
-  @override
-  Future<void> updateName(String name) => updateProfile(name, user!.emoji);
 
   @override
   Future<void> deleteAccount() async {
@@ -931,7 +919,6 @@ class DemoRepository extends AppRepository {
     }
     _joinRequests.removeWhere((r) => r['id'] == '${channel.id}_${user!.id}');
     channel.members[user!.id] = user!.name;
-    channel.memberEmojis = {...channel.memberEmojis, user!.id: user!.emoji};
     await _save();
   }
 
@@ -1169,16 +1156,7 @@ class DemoRepository extends AppRepository {
         .expand((c) => c.members.entries)
         .firstWhere((e) => e.key == uid)
         .value;
-    _user = AppUser(
-      uid,
-      name,
-      emoji:
-          _channels
-              .where((c) => c.members.containsKey(uid))
-              .firstOrNull
-              ?.memberEmojis[uid] ??
-          '🐘',
-    );
+    _user = AppUser(uid, name);
     await _save();
   }
 

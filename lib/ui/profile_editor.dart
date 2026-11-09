@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../data/app_repository.dart';
-import '../domain/models.dart';
 import 'theme.dart';
 import 'name_guide.dart';
 
@@ -47,7 +46,6 @@ class ProfileEditor extends StatefulWidget {
 class _ProfileEditorState extends State<ProfileEditor> {
   final _form = GlobalKey<FormState>();
   late final _name = TextEditingController(text: widget.repository.user!.name);
-  late String _emoji = widget.repository.user!.emoji;
   bool _busy = false;
   String? _error;
 
@@ -64,7 +62,7 @@ class _ProfileEditorState extends State<ProfileEditor> {
       _error = null;
     });
     try {
-      await widget.repository.updateProfile(_name.text, _emoji);
+      await widget.repository.updateName(_name.text);
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
@@ -124,45 +122,12 @@ class _ProfileEditorState extends State<ProfileEditor> {
                 validator: (v) =>
                     v == null || v.trim().isEmpty ? '이름을 입력해 주세요.' : null,
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  EmojiAvatar(_emoji, size: 48),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      '나를 표현하는 이모지',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
+              // 2026-11-09: no profile emoji. A fixed emoji let colleagues
+              // learn who was who; emojis are now picked per round.
               const Text(
-                '대기실에서는 실명이 아닌 이모지로 보여요!',
-                style: TextStyle(fontSize: 13, color: muted),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final emoji in profileEmojis)
-                    Semantics(
-                      selected: _emoji == emoji,
-                      child: IconButton(
-                        key: Key('emoji-$emoji'),
-                        tooltip: '프로필 $emoji',
-                        style: IconButton.styleFrom(
-                          backgroundColor: _emoji == emoji ? lime : paper,
-                        ),
-                        onPressed: _busy
-                            ? null
-                            : () => setState(() => _emoji = emoji),
-                        icon: EmojiAvatar(emoji, size: 40),
-                      ),
-                    ),
-                ],
+                '프로필에는 이모지가 없어요. 라운드마다 모두 코끼리로 시작하고, 식당 정하기의 대기실에서 그 라운드에만 쓸 이모지를 골라요.',
+                key: Key('profile-emoji-note'),
+                style: TextStyle(fontSize: 13, color: muted, height: 1.5),
               ),
               if (_error != null)
                 Padding(

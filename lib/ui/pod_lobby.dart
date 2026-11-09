@@ -569,6 +569,7 @@ class _PodLobbyState extends State<PodLobby> {
                 key: Key('waiting-room-caption'),
                 style: TextStyle(color: muted, fontSize: 12),
               ),
+              if (open) ...[const SizedBox(height: 12), _roundEmojiSlot(c, r)],
               if (open && mine != null) ...[
                 const SizedBox(height: 12),
                 OutlinedButton(
@@ -582,16 +583,13 @@ class _PodLobbyState extends State<PodLobby> {
               const SizedBox(height: 14),
               WaitingFarm(
                 key: const Key('waiting-farm'),
+                // Without a round everyone is an anonymous elephant.
                 members: open || finalized
                     ? r.waitingMembers
-                    : [
-                        for (final e in c.members.entries)
-                          AppUser(
-                            e.key,
-                            '',
-                            emoji: c.memberEmojis[e.key] ?? '🐘',
-                          ),
-                      ],
+                    : List.generate(
+                        c.members.length,
+                        (index) => AppUser('waiting-$index', ''),
+                      ),
               ),
             ],
           ),
@@ -742,7 +740,10 @@ class _PodLobbyState extends State<PodLobby> {
             spacing: 10,
             runSpacing: 8,
             children: [
-              for (final person in [repo.user!, ...r.companions])
+              for (final person in [
+                AppUser(repo.user!.id, repo.user!.name, emoji: r.myEmoji),
+                ...r.companions,
+              ])
                 Chip(
                   backgroundColor: archived ? historyCardSurface : sageSurface,
                   avatar: Text(
@@ -1119,7 +1120,7 @@ class _PodLobbyState extends State<PodLobby> {
                     minimum: p.minimum,
                     count: p.count,
                     selected: selected,
-                    emoji: repo.user!.emoji,
+                    emoji: r.myEmoji,
                     occupantEmojis: p.occupantEmojis,
                     ownSeatIndex: p.ownSeatIndex,
                     archived: archived,
@@ -1178,7 +1179,7 @@ class _PodLobbyState extends State<PodLobby> {
         ? '이번 라운드에 참여하지 않았어요'
         : '${mine.name} · ${mine.formed ? '팟 성사' : '최소 인원 미달'}';
     const heading = TextStyle(fontWeight: FontWeight.w800, color: forest);
-    final me = repo.user!;
+    final me = AppUser(repo.user!.id, repo.user!.name, emoji: r.myEmoji);
     final roster = [...r.companions];
     if (formed) {
       roster.insert((mine.ownSeatIndex ?? 0).clamp(0, roster.length), me);
@@ -1408,6 +1409,132 @@ class _PodLobbyState extends State<PodLobby> {
       if (confirmed != true || !mounted) return;
     }
     await _run(() => repo.deletePod(channel.id, pod.id));
+  }
+
+  /// The waiting room's own slot for this round's emoji. Everyone starts as
+  /// [defaultRoundEmoji]; the pick lasts only this round and only I see that
+  /// it is mine (the server sends others emojis without member IDs).
+  // Its own semantics node (container), so the waiting-room card does not
+  // turn into one big button; the InkWell supplies the tap action.
+  Widget _roundEmojiSlot(LunchChannel c, RoundView r) => Semantics(
+    container: true,
+    button: true,
+    label: '이번 라운드 내 이모지 ${r.myEmoji}, 눌러서 바꾸기',
+    child: Material(
+      color: sageSurface,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        key: const Key('round-emoji-slot'),
+        borderRadius: BorderRadius.circular(14),
+        onTap: _busy ? null : () => _pickRoundEmoji(c, r),
+        child: ExcludeSemantics(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 10, 14, 10),
+            child: Row(
+              children: [
+                EmojiAvatar(
+                  r.myEmoji,
+                  size: 44,
+                  key: const Key('round-emoji-current'),
+                ),
+                const SizedBox(width: 12),
+                // The action sits under the copy so narrow, large-text
+                // layouts keep the full width for the title.
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '이번 라운드 내 이모지',
+                        style: TextStyle(
+                          color: forest,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        '모두 코끼리로 시작해요. 이번 라운드에만 보여요.',
+                        style: TextStyle(
+                          color: muted,
+                          fontSize: 11,
+                          height: 1.4,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        '눌러서 바꾸기 ›',
+                        style: TextStyle(
+                          color: forest,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+
+  Future<void> _pickRoundEmoji(LunchChannel c, RoundView r) async {
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          key: const Key('round-emoji-picker'),
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                '이번 라운드 내 이모지',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                '대기실과 팟 자리에 이 이모지로 보여요. 다음 라운드는 다시 코끼리로 시작해요.',
+                style: TextStyle(fontSize: 13, color: muted, height: 1.5),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final emoji in roundEmojis)
+                    Semantics(
+                      selected: emoji == r.myEmoji,
+                      child: IconButton(
+                        key: Key('round-emoji-$emoji'),
+                        tooltip: '이번 라운드 $emoji',
+                        style: IconButton.styleFrom(
+                          backgroundColor: emoji == r.myEmoji ? lime : paper,
+                        ),
+                        onPressed: () => Navigator.pop(ctx, emoji),
+                        // The tooltip already names the emoji once.
+                        icon: ExcludeSemantics(
+                          child: EmojiAvatar(emoji, size: 40),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (picked == null || picked == r.myEmoji || !mounted) return;
+    await _run(() => repo.setPodEmoji(c.id, picked));
   }
 
   Future<void> _finalJoin(LunchPod pod) async {

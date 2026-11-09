@@ -1,6 +1,11 @@
 import 'models.dart';
 
-const profileEmojis = [
+/// Everyone starts every round as this elephant (2026-11-09: a fixed profile
+/// emoji let colleagues learn who was who, so emojis now last one round).
+const defaultRoundEmoji = '🐘';
+
+/// The emojis a member may pick for one round. The server checks the same list.
+const roundEmojis = [
   '🐘',
   '🐼',
   '🐱',
@@ -133,12 +138,14 @@ class PodRoundData {
     Map<String, List<String>>? podMemberOrder,
     Map<String, String>? watches,
     List<String>? deletedPodIds,
+    Map<String, String>? emojis,
   }) : pods = pods ?? {},
        selections = selections ?? {},
        finalJoins = finalJoins ?? {},
        podMemberOrder = podMemberOrder ?? {},
        watches = watches ?? {},
-       deletedPodIds = deletedPodIds ?? [];
+       deletedPodIds = deletedPodIds ?? [],
+       emojis = emojis ?? {};
   final String id, creatorId;
   String? channelId;
   DateTime endsAt;
@@ -156,6 +163,13 @@ class PodRoundData {
 
   /// Pods their creators deleted; retried create/delete requests stay no-ops.
   final List<String> deletedPodIds;
+
+  /// Member → emoji picked for this round. Absent means [defaultRoundEmoji].
+  final Map<String, String> emojis;
+  String emojiOf(String uid) => switch (emojis[uid]) {
+    final emoji? when roundEmojis.contains(emoji) => emoji,
+    _ => defaultRoundEmoji,
+  };
   bool cancelled;
   DateTime? cancelledAt;
   bool open(DateTime now) => !cancelled && now.isBefore(endsAt);
@@ -225,9 +239,7 @@ class PodRoundData {
         temporaryRestaurant: p.temporaryRestaurant,
         finalFormed: finalized ? formedPodIds!.contains(p.id) : null,
         count: occupants.length,
-        occupantEmojis: [
-          for (final person in occupants) channel.memberEmojis[person] ?? '🐘',
-        ],
+        occupantEmojis: [for (final person in occupants) emojiOf(person)],
         ownSeatIndex: ownIndex < 0 ? null : ownIndex,
         createdByMe: p.creatorId == uid,
       );
@@ -242,9 +254,16 @@ class PodRoundData {
                 AppUser(
                   person,
                   channel.members[person]!,
-                  emoji: channel.memberEmojis[person] ?? '🐘',
+                  emoji: emojiOf(person),
                 ),
           ];
+    // Like the server: emojis only, ordered by the emoji list, never by member.
+    final waiting = [
+      for (final id in channel.members.keys)
+        if (!selections.containsKey(id) ||
+            (finalized && !formedPodIds!.contains(selections[id])))
+          emojiOf(id),
+    ]..sort((a, b) => roundEmojis.indexOf(a) - roundEmojis.indexOf(b));
     return RoundView(
       id: id,
       creatorId: creatorId,
@@ -266,6 +285,7 @@ class PodRoundData {
       cutoffControl: true,
       pods: [for (final p in pods.values) projectPod(p)],
       myPodId: selections[uid],
+      myEmoji: emojiOf(uid),
       canJoinFinalPod:
           finalized &&
           formedPodIds!.isNotEmpty &&
@@ -273,18 +293,10 @@ class PodRoundData {
           !finalJoins.containsKey(uid),
       finalPodJoined: finalJoins.containsKey(uid),
       waitingMembers: [
-        for (final e in channel.members.entries)
-          if (!selections.containsKey(e.key) ||
-              (finalized && !formedPodIds!.contains(selections[e.key])))
-            AppUser(e.key, '', emoji: channel.memberEmojis[e.key] ?? '🐘'),
+        for (final (index, emoji) in waiting.indexed)
+          AppUser('waiting-$index', '', emoji: emoji),
       ],
-      waitingCount: channel.members.keys
-          .where(
-            (id) =>
-                !selections.containsKey(id) ||
-                (finalized && !formedPodIds!.contains(selections[id])),
-          )
-          .length,
+      waitingCount: waiting.length,
       // Seat order, like the server; last-chance joiners are marked 합류.
       companions: companions,
       finalJoinedIds: {
@@ -295,7 +307,7 @@ class PodRoundData {
         final target? when channel.members.containsKey(target) => PodWatch(
           id: target,
           name: channel.members[target]!,
-          emoji: channel.memberEmojis[target] ?? '🐘',
+          emoji: emojiOf(target),
           here: open(now) && mine != null && selections[target] == mine,
         ),
         _ => null,
@@ -329,6 +341,7 @@ class PodRoundData {
     finalJoins: Map<String, String>.from(j['finalJoins'] ?? {}),
     watches: Map<String, String>.from(j['watches'] ?? {}),
     deletedPodIds: List<String>.from(j['deletedPodIds'] ?? const []),
+    emojis: Map<String, String>.from(j['emojis'] ?? const {}),
     cancelled: j['cancelled'] == true,
     cancelledAt: j['cancelledAt'] == null
         ? null
@@ -351,6 +364,7 @@ class PodRoundData {
     'finalJoins': finalJoins,
     'watches': watches,
     'deletedPodIds': deletedPodIds,
+    'emojis': emojis,
     'cancelled': cancelled,
     'cancelledAt': cancelledAt?.millisecondsSinceEpoch,
   };

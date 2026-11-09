@@ -32,11 +32,12 @@ abstract class AppRepository extends ChangeNotifier {
   Future<void> loadFavorites({bool force = false}) async {}
   LoadStatus historyStatusFor(String channelId) => LoadStatus.ready;
   Future<void> loadHistory(String channelId, {bool force = false}) async {}
-  Future<void> updateProfile(String name, String emoji) =>
-      throw const LunchException('프로필을 변경할 수 없어요.');
   Attendance get attendance => const Attendance();
-  Future<void> updateEmoji(String emoji) =>
-      throw const LunchException('이모지를 변경할 수 없어요.');
+
+  /// My emoji for the current round only, while recruiting. Everyone starts
+  /// each round as [defaultRoundEmoji]; profiles carry no emoji.
+  Future<void> setPodEmoji(String channelId, String emoji) =>
+      throw const LunchException('이번 라운드 이모지를 바꿀 수 없어요.');
   Future<void> startPodRound(
     String channelId,
     DateTime endsAt,

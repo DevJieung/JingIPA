@@ -101,7 +101,8 @@ class _WaitingFarmState extends State<WaitingFarm> {
                             final person = widget.members[index];
                             return ExcludeSemantics(
                               child: SizedBox(
-                                key: Key('waiting-${person.id}'),
+                                // Slots are anonymous: keyed by position.
+                                key: Key('waiting-$index'),
                                 child: Stack(
                                   alignment: Alignment.center,
                                   children: [

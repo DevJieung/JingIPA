@@ -364,7 +364,6 @@ class FirebaseRepository extends AppRepository with WidgetsBindingObserver {
     _user = AppUser(
       firebaseUser.uid,
       p.data()?['displayName'] as String? ?? '',
-      emoji: p.data()?['emoji'] as String? ?? '🐘',
     );
     _sessionStatus = _user!.name.isEmpty
         ? SessionStatus.needsProfile
@@ -550,9 +549,7 @@ class FirebaseRepository extends AppRepository with WidgetsBindingObserver {
               if (c.roundId != null &&
                   (old == null ||
                       old.roundId != c.roundId ||
-                      old.members.toString() != c.members.toString() ||
-                      old.memberEmojis.toString() !=
-                          c.memberEmojis.toString())) {
+                      old.members.toString() != c.members.toString())) {
                 unawaited(_refreshRound(selected));
               }
             }
@@ -1173,9 +1170,6 @@ class FirebaseRepository extends AppRepository with WidgetsBindingObserver {
   @override
   Attendance get attendance => _attendance;
   @override
-  Future<void> updateEmoji(String emoji) => updateProfile(user!.name, emoji);
-
-  @override
   Future<void> startPodRound(
     String channelId,
     DateTime endsAt,
@@ -1242,6 +1236,9 @@ class FirebaseRepository extends AppRepository with WidgetsBindingObserver {
   Future<void> setPodWatch(String channelId, String targetId) =>
       _podCall('setPodWatch', channelId, {'targetId': targetId});
   @override
+  Future<void> setPodEmoji(String channelId, String emoji) =>
+      _podCall('setPodEmoji', channelId, {'emoji': emoji});
+  @override
   Future<void> changePodDeadline(String channelId, DateTime endsAt) => _podCall(
     'setRoundCutoffs',
     channelId,
@@ -1249,22 +1246,18 @@ class FirebaseRepository extends AppRepository with WidgetsBindingObserver {
   );
 
   @override
-  Future<void> updateProfile(String name, String emoji) async {
+  Future<void> updateName(String name) async {
     final generation = _authGeneration;
-    await _call('registerProfile', {'name': name, 'emoji': emoji});
+    await _call('registerProfile', {'name': name});
     if (generation != _authGeneration || _disposed) return;
     final current = _auth.currentUser;
     if (current == null) return;
-    _user = AppUser(current.uid, name.trim(), emoji: emoji);
+    _user = AppUser(current.uid, name.trim());
     _sessionStatus = _user!.name.isEmpty
         ? SessionStatus.needsProfile
         : SessionStatus.ready;
     notifyListeners();
   }
-
-  @override
-  Future<void> updateName(String name) =>
-      updateProfile(name, user?.emoji ?? '🐘');
 
   @override
   Future<void> deleteAccount() async {
