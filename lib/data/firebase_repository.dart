@@ -633,8 +633,7 @@ class FirebaseRepository extends AppRepository with WidgetsBindingObserver {
       return false;
     }
     // A passed cutoff that the server has not reported yet is refreshed.
-    return !(view.phase == RoundPhase.submission &&
-        !now.isBefore(view.endsAt));
+    return !(view.phase == RoundPhase.submission && !now.isBefore(view.endsAt));
   }
 
   /// Runs a round mutation for [channelId]. Signal events that arrive while it
@@ -1088,10 +1087,9 @@ class FirebaseRepository extends AppRepository with WidgetsBindingObserver {
   // Apple shares the e-mail only when it is requested; without it the account
   // has no e-mail and a later Google sign-in with the same address cannot be
   // recognised as the same person.
-  AppleAuthProvider _appleProvider() =>
-      AppleAuthProvider()
-        ..addScope('email')
-        ..addScope('name');
+  AppleAuthProvider _appleProvider() => AppleAuthProvider()
+    ..addScope('email')
+    ..addScope('name');
 
   @override
   Future<void> signInGoogle() async {
@@ -1237,6 +1235,9 @@ class FirebaseRepository extends AppRepository with WidgetsBindingObserver {
   @override
   Future<void> leavePod(String channelId) =>
       _podCall('leavePod', channelId, {});
+  @override
+  Future<void> deletePod(String channelId, String podId) =>
+      _podCall('deletePod', channelId, {'podId': podId});
   @override
   Future<void> setPodWatch(String channelId, String targetId) =>
       _podCall('setPodWatch', channelId, {'targetId': targetId});

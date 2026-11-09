@@ -62,6 +62,7 @@ class LunchPod {
     this.colorCounts = const {},
     this.occupantEmojis = const [],
     this.ownSeatIndex,
+    this.createdByMe = false,
   });
   final String id, name, creatorId;
   final int minimum, count;
@@ -72,6 +73,10 @@ class LunchPod {
   final Map<String, int> colorCounts;
   final List<String> occupantEmojis;
   final int? ownSeatIndex;
+
+  /// True only in the requester's own view of pods they created. The server
+  /// never sends creator UIDs before the cutoff.
+  final bool createdByMe;
   bool get formed => finalFormed ?? count >= minimum;
   factory LunchPod.fromJson(Map<String, dynamic> j) => LunchPod(
     id: j['id'],
@@ -81,6 +86,7 @@ class LunchPod {
     count: j['count'] ?? 0,
     occupantEmojis: List<String>.from(j['occupantEmojis'] ?? const []),
     ownSeatIndex: (j['ownSeatIndex'] as num?)?.toInt(),
+    createdByMe: j['createdByMe'] == true,
     restaurantText: j['restaurantText'],
     temporaryRestaurant: j['temporaryRestaurant'] == null
         ? null
@@ -101,6 +107,7 @@ class LunchPod {
     'count': count,
     'occupantEmojis': occupantEmojis,
     'ownSeatIndex': ownSeatIndex,
+    'createdByMe': createdByMe,
     'restaurant': restaurant?.toJson(),
     'restaurantText': restaurantText,
     'temporaryRestaurant': temporaryRestaurant?.toJson(),
@@ -125,11 +132,13 @@ class PodRoundData {
     Map<String, String>? finalJoins,
     Map<String, List<String>>? podMemberOrder,
     Map<String, String>? watches,
+    List<String>? deletedPodIds,
   }) : pods = pods ?? {},
        selections = selections ?? {},
        finalJoins = finalJoins ?? {},
        podMemberOrder = podMemberOrder ?? {},
-       watches = watches ?? {};
+       watches = watches ?? {},
+       deletedPodIds = deletedPodIds ?? [];
   final String id, creatorId;
   String? channelId;
   DateTime endsAt;
@@ -144,6 +153,9 @@ class PodRoundData {
 
   /// Designator → 알림 동료, one per member per round.
   final Map<String, String> watches;
+
+  /// Pods their creators deleted; retried create/delete requests stay no-ops.
+  final List<String> deletedPodIds;
   bool cancelled;
   DateTime? cancelledAt;
   bool open(DateTime now) => !cancelled && now.isBefore(endsAt);
@@ -217,6 +229,7 @@ class PodRoundData {
           for (final person in occupants) channel.memberEmojis[person] ?? '🐘',
         ],
         ownSeatIndex: ownIndex < 0 ? null : ownIndex,
+        createdByMe: p.creatorId == uid,
       );
     }
 
@@ -315,6 +328,7 @@ class PodRoundData {
         : List<String>.from(j['formedPodIds']),
     finalJoins: Map<String, String>.from(j['finalJoins'] ?? {}),
     watches: Map<String, String>.from(j['watches'] ?? {}),
+    deletedPodIds: List<String>.from(j['deletedPodIds'] ?? const []),
     cancelled: j['cancelled'] == true,
     cancelledAt: j['cancelledAt'] == null
         ? null
@@ -336,6 +350,7 @@ class PodRoundData {
     'formedPodIds': formedPodIds,
     'finalJoins': finalJoins,
     'watches': watches,
+    'deletedPodIds': deletedPodIds,
     'cancelled': cancelled,
     'cancelledAt': cancelledAt?.millisecondsSinceEpoch,
   };

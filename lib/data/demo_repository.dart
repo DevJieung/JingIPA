@@ -497,7 +497,7 @@ class DemoRepository extends AppRepository {
       throw const LunchException('DB에 등록된 식당만 선택할 수 있어요.');
     }
     final id = 'pod-${user!.id}-$requestId';
-    if (r.pods.containsKey(id)) return;
+    if (r.pods.containsKey(id) || r.deletedPodIds.contains(id)) return;
     if (r.pods.length >= 50) {
       throw const LunchException('팟은 최대 50개까지 만들 수 있어요.');
     }
@@ -559,6 +559,25 @@ class DemoRepository extends AppRepository {
   @override
   Future<void> leavePod(String channelId) async {
     _openPod(channelId).assignPod(user!.id, null);
+    await _save();
+  }
+
+  @override
+  Future<void> deletePod(String channelId, String podId) async {
+    final r = _openPod(channelId);
+    if (r.deletedPodIds.contains(podId)) return;
+    final pod = r.pods[podId];
+    if (pod == null) throw const LunchException('팟을 다시 확인해 주세요.');
+    if (pod.creatorId != user!.id) {
+      throw const LunchException('팟을 만든 사람만 삭제할 수 있어요.');
+    }
+    if (r.orderedMembers(podId).any((person) => person != user!.id)) {
+      throw const LunchException('다른 동료가 들어와 있는 팟은 삭제할 수 없어요.');
+    }
+    if (r.selections[user!.id] == podId) r.assignPod(user!.id, null);
+    r.pods.remove(podId);
+    r.podMemberOrder.remove(podId);
+    r.deletedPodIds.add(podId);
     await _save();
   }
 

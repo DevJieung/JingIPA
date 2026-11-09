@@ -1136,6 +1136,21 @@ class _PodLobbyState extends State<PodLobby> {
                           ),
                     child: Text(selected ? '✓ 내 팟' : '이 팟에 참여'),
                   ),
+                  if (p.createdByMe) ...[
+                    const SizedBox(height: 4),
+                    // Text only: a new Material icon would change the
+                    // tree-shaken icon font and with it the cached /shared/
+                    // web assets every returning visitor reuses.
+                    TextButton(
+                      key: Key('delete-pod-${p.id}'),
+                      style: TextButton.styleFrom(foregroundColor: dangerInk),
+                      onPressed: _busy ? null : () => _deletePod(p),
+                      child: const Text(
+                        '팟 삭제',
+                        style: TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                  ],
                 ],
               ],
             ),
@@ -1341,6 +1356,59 @@ class _PodLobbyState extends State<PodLobby> {
       ],
     ),
   );
+
+  /// Only the creator sees 팟 삭제. Another member inside blocks it; deleting
+  /// the pod I sit in alone sends me back to the waiting room after a
+  /// confirmation; an empty pod (I am elsewhere) goes without a dialog. The
+  /// server repeats these checks in its transaction.
+  Future<void> _deletePod(LunchPod pod) async {
+    final channel = widget.channel!;
+    final inside = pod.ownSeatIndex != null;
+    if (pod.count > (inside ? 1 : 0)) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          key: const Key('delete-pod-blocked'),
+          title: const Text('팟을 삭제할 수 없어요'),
+          content: Text(
+            '"${pod.name}" 팟에 다른 동료가 들어와 있어요.\n나 말고 아무도 없을 때만 삭제할 수 있어요.',
+          ),
+          actions: [
+            TextButton(
+              key: const Key('delete-pod-blocked-ok'),
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('확인'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    if (inside) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          key: const Key('delete-pod-confirm'),
+          title: const Text('팟을 삭제할까요?'),
+          content: Text('"${pod.name}" 팟을 삭제하고 대기실로 돌아가요.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('취소'),
+            ),
+            FilledButton(
+              key: const Key('confirm-delete-pod'),
+              style: FilledButton.styleFrom(backgroundColor: dangerInk),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('확인'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !mounted) return;
+    }
+    await _run(() => repo.deletePod(channel.id, pod.id));
+  }
 
   Future<void> _finalJoin(LunchPod pod) async {
     final confirmed = await showDialog<bool>(
